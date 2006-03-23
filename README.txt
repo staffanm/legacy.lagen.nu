@@ -4,161 +4,161 @@ This is the source code for lagen.nu 2.0 (or at least it will be)
 tankar.txt
 bDet globala formatet
 
-* Formatet kommer bygga pŒ ett antal olika namespaces.
-* Det mŒste gŒ fšr en tredjepart att bygga valida dokument utan att
-  nŒn sorts globalt "master-schema" ska Šndras. Denna tredje part fŒr
-  bygga ett eget schema med de taggar han behšver, och referera till
-  det genom lŠmpligt namespace.
-* Den tŠnkta annoteringstillŠmpningen ska, Œtminstone backendmŠssigt,
-  gŒ att bygga pŒ godtyckligt dokument vars ingŒende schemata fšljer
-  nŒgra enkla grundlŠggande regler.
-* Huvud-namespacet har mycket fŒ taggar. €n sŒ lŠnge:
+* Formatet kommer bygga på ett antal olika namespaces.
+* Det måste gå för en tredjepart att bygga valida dokument utan att
+  nån sorts globalt "master-schema" ska ändras. Denna tredje part får
+  bygga ett eget schema med de taggar han behöver, och referera till
+  det genom lämpligt namespace.
+* Den tänkta annoteringstillämpningen ska, åtminstone backendmässigt,
+  gå att bygga på godtyckligt dokument vars ingående schemata följer
+  några enkla grundläggande regler.
+* Huvud-namespacet har mycket få taggar. Än så länge:
   * document
   * id (kanske ett "type"-attribut?)
   * baseurl ?
-* Huvud-namespacet har tvŒ attribut ("structure" och "meaning"), som
-  hŠngs pŒ taggar frŒn andras namespace, fšr att tala om ungefŠr
-  vilken klass av data det Šr frŒgan om:
+* Huvud-namespacet har två attribut ("structure" och "meaning"), som
+  hängs på taggar från andras namespace, för att tala om ungefär
+  vilken klass av data det är frågan om:
 
   <ec:preamble-note id="1" legal:structure="paragraph">
-     I fšrdraget fšreskrivs upprŠttandet...
+     I fördraget föreskrivs upprättandet...
   </ec:preamble-note>
 
   structure-attributet talar om vilken sorts typografisk/strukturell
-  hŠrad vi ršr oss i, och meaning-attributet talar om vad noden har
-  fšr juridisk betydelse (bestŠmmande, fšrklarande, metadata etc) --
-  det hŠr skulle gšra det mšjligt/enklare att implementera generell
+  härad vi rör oss i, och meaning-attributet talar om vad noden har
+  för juridisk betydelse (bestämmande, förklarande, metadata etc) --
+  det här skulle göra det möjligt/enklare att implementera generell
   annotering.
 
   
-LŠnk-schemat:
-* Ett typ-attribut fšr att ange vilken "familj" av dokument man lŠnkar
-  till. "EC" fšr all EG-rŠtt (fšrdrag, direktiv, domslut), "SE" fšr
-  allt inom svensk lagstiftning etc, "UN", "WIPO", "ILO" etc fšr
+Länk-schemat:
+* Ett typ-attribut för att ange vilken "familj" av dokument man länkar
+  till. "EC" för all EG-rätt (fördrag, direktiv, domslut), "SE" för
+  allt inom svensk lagstiftning etc, "UN", "WIPO", "ILO" etc för
   internationella organisationers dokument.
 
-Fotnštter:
-* En tag (note) vars innehŒll kan vara godtycklig PCDATA. Fotnottexten
-  lŠggs inline i dokumentet. id-attribut
+Fotnötter:
+* En tag (note) vars innehåll kan vara godtycklig PCDATA. Fotnottexten
+  läggs inline i dokumentet. id-attribut
   
 SFS-schemat:
 
-* Det Šr OK med svenska tecken i taggarna
-* Det Šr OK att plocka bort tecken som Šr rent strukturbŠrande. Exv i "2
-  Kap. InskrŠkningar i ..." sŒ Šr det OK att plocka bort "2 Kap. ", sŒ
-  lŠnge som siffran 2 bevaras i ett ID-attribut. Samma sak med sjŠlva
-  "¤"-tecknet. 
+* Det är OK med svenska tecken i taggarna
+* Det är OK att plocka bort tecken som är rent strukturbärande. Exv i "2
+  Kap. Inskräkningar i ..." så är det OK att plocka bort "2 Kap. ", så
+  länge som siffran 2 bevaras i ett ID-attribut. Samma sak med själva
+  "§"-tecknet. 
 
-? Ska vi mŠrka upp meningar (<sfs:mening>SŒsom
-  framstŠllning...</sfs:mening>) -- referenser kan ju vara
-  pŒ formen "fšrsta stycket, tredje meningen"
-? €r švergŒngsbestŠmmelser en del av den konsoliderade lagtexten,
-  Šr det metainformation, Šr det ett eget namespace?
-? Bilagor som Šr andra rŠttskŠllor (Europakonventionen etc), ska vi
-  tvinga in dem i SFS-schemat (kan gŒ att gšra automatiskt med lite
-  slš heuristik) eller lŠgga in en rŠttskŠllespecifik version (krŠver
-  minst lite manuell handpŒlŠggning)
+? Ska vi märka upp meningar (<sfs:mening>Såsom
+  framställning...</sfs:mening>) -- referenser kan ju vara
+  på formen "första stycket, tredje meningen"
+? Är övergångsbestämmelser en del av den konsoliderade lagtexten,
+  är det metainformation, är det ett eget namespace?
+? Bilagor som är andra rättskällor (Europakonventionen etc), ska vi
+  tvinga in dem i SFS-schemat (kan gå att göra automatiskt med lite
+  slö heuristik) eller lägga in en rättskällespecifik version (kräver
+  minst lite manuell handpåläggning)
 
 SFS-meta-schemat:
 
-* TŠnkt fšr saker som finns i Rixlex och i lagtext, men som inte Šr
-  betydelsebŠrande. Exempelvis "€ndring infšrd: t.o.m. SFS 2000:665" i
+* Tänkt för saker som finns i Rixlex och i lagtext, men som inte är
+  betydelsebärande. Exempelvis "Ändring införd: t.o.m. SFS 2000:665" i
   preambeln, eller "Lag (1994:190)." i slutet av vissa paragrafer.
 
-EG-rŠtt:
+EG-rätt:
 
-* Alla taggar Šr pŒ engelska.
-* xml:lang-attributet anvŠnds, helst pŒ toppnivŒ
-* preamble-note: en fšr varje numrerat stycke, paragraph anvŠnds fšr
+* Alla taggar är på engelska.
+* xml:lang-attributet används, helst på toppnivå
+* preamble-note: en för varje numrerat stycke, paragraph används för
   de onumrerade innan.
-* punktlistor i direktiv kan nŠstlas; den fšrsta nivŒn Šr siffror, den
-  andra bokstŠver. Den fšrsta nivŒn avskils frŒn resten av texten med
-  punkt ("1. ") den andra med hšgerparantes ("2) "). Vi plockar bort
-  det hŠr separatortecknet.
+* punktlistor i direktiv kan nästlas; den första nivån är siffror, den
+  andra bokstäver. Den första nivån avskils från resten av texten med
+  punkt ("1. ") den andra med högerparantes ("2) "). Vi plockar bort
+  det här separatortecknet.
   
 
 ? Preambeln: Ska numreringen "(12)" ligga i texten, eller ska numret
-  lŠggas i ett id-attribut?
+  läggas i ett id-attribut?
 ? De stycken i ett direktiv som traditionellt skrivs i versaler (exv
-  kapitelrubriker), Šr det OK att lowercasa dem?
-? vad ska vi kalla det som fšljer preambeln? body?
-? €r det ok att gšra om "KAPITEL II\n\nR€TTIGHETER OCH UNDANTAG" till
-  <ec:chapter id="2" title="R€TTIGHETER OCH UNDANTAG">
-? Fšljs artiklarna *alltid* av en rubrik? €r det ok att transformera
-  "Artikel 4\n\nSpridningsrŠtt" till <ec:article id="4"
-  title="SpridningsrŠtt">
-? €r de numrerade punkter som fšrekommer under direktiven verkligen
-  att beteckna som numrerade punktlistor, pŒ samma sŠtt som de
-  bokstavsnumrerade punktlistor som ibland kommer pŒ lŠgre
-  nivŒ. typografin i PDF'en antyder mer att det skulle vara
-  styckeidentifierare (fšrutom att en del har flera faktiska stycken)
+  kapitelrubriker), är det OK att lowercasa dem?
+? vad ska vi kalla det som följer preambeln? body?
+? Är det ok att göra om "KAPITEL II\n\nRÄTTIGHETER OCH UNDANTAG" till
+  <ec:chapter id="2" title="RÄTTIGHETER OCH UNDANTAG">
+? Följs artiklarna *alltid* av en rubrik? Är det ok att transformera
+  "Artikel 4\n\nSpridningsrätt" till <ec:article id="4"
+  title="Spridningsrätt">
+? Är de numrerade punkter som förekommer under direktiven verkligen
+  att beteckna som numrerade punktlistor, på samma sätt som de
+  bokstavsnumrerade punktlistor som ibland kommer på lägre
+  nivå. typografin i PDF'en antyder mer att det skulle vara
+  styckeidentifierare (förutom att en del har flera faktiska stycken)
     
 Domslut-schemat:
 
-* €r skillnaden mellan HD och AD-domar fšr stora fšr att fŒ plats i
-  ett schema? Vilka gemensamma nŠmnare finns?
+* Är skillnaden mellan HD och AD-domar för stora för att få plats i
+  ett schema? Vilka gemensamma nämnare finns?
 * Hur hanterar vi en NJA-publicerad dom med referat till HovR och
   TR-domarna?
 
 arkitektur.txt
 
-Arkitektur fšr lagen.nu 2.0
+Arkitektur för lagen.nu 2.0
 
-Systemet byggs upp kring en serie rŠttskŠllor, dŠr de viktigaste Šr:
+Systemet byggs upp kring en serie rättskällor, där de viktigaste är:
 
 * Svensk lagtext (SFS)
-** Ska vi gšra skillnad pŒ konsoliderad lagtext och
-   Šndringsfšrfattningar? Ska vi šht addressera det senare problemet?
-* svenska fšrarbeten (Prop, SOU/DS och ev kommittdirektiv,
-  utskottsbetŠnkanden och riksdagsskrivelser)
-* Svenska rŠttsfall
+** Ska vi göra skillnad på konsoliderad lagtext och
+   ändringsförfattningar? Ska vi öht addressera det senare problemet?
+* svenska förarbeten (Prop, SOU/DS och ev kommittédirektiv,
+  utskottsbetänkanden och riksdagsskrivelser)
+* Svenska rättsfall
 * Europeiska direktiv
-* RŠttsfall frŒn europadomstolen
+* Rättsfall från europadomstolen
 * Enstaka one-off-dokument (genevekonventionen, FN's barnkonvention,
-  Europeiska konventionen om de mŠnskliga rŠttigheterna, WIPOs
+  Europeiska konventionen om de mänskliga rättigheterna, WIPOs
   romkonvention...)
 
-Fšr varje rŠttsfŠlla byggs fyra komponenter
+För varje rättsfälla byggs fyra komponenter
 
 * Ett RelaxNG-schema i ferenda-familjen som kan uttrycka de dokument
-  som ingŒr i rŠttskŠllan. I detta arbete ingŒr ocksŒ ett kanoniskt
-  sŠtt att identifiera dokumenten, samt hur de lagras pŒ lokal disk.
-* En "grabber" -- denna ska kunna hŠmta namngivna dokument genom de ID
-  som bestŠms ovan, samt Šven gšra operationen "hŠmta alla nytillkomna
-  dokument". Dokumenten sparas i samma form som de ligger ute pŒ nŠtet
-  eller var de nu ligger nŒnstans, dvs HTML, word, PDF, whatever.
-* En "parser" -- denna tar dokument som ligger pŒ disk och gšr
-  ferenda-XML av dem. Det kan ibland betyda att gšra ett mŒldokument
-  av flera kŠlldokument eller vice versa.
-* Ett "site manager"-komponent -- denna Šr ansvarig fšr att ta
-  ferenda-XML-dokument och gšra HTML av dem, vilket sŒ lŒngt som
-  mšjligt kommer innefatta en XSLT-transformation. Den hŠr komponenten
-  kommer fšrmodligen arbeta tight ihop med "site manager"-komponenter
-  fšr andra rŠttskŠllor.
+  som ingår i rättskällan. I detta arbete ingår också ett kanoniskt
+  sätt att identifiera dokumenten, samt hur de lagras på lokal disk.
+* En "grabber" -- denna ska kunna hämta namngivna dokument genom de ID
+  som bestäms ovan, samt även göra operationen "hämta alla nytillkomna
+  dokument". Dokumenten sparas i samma form som de ligger ute på nätet
+  eller var de nu ligger nånstans, dvs HTML, word, PDF, whatever.
+* En "parser" -- denna tar dokument som ligger på disk och gör
+  ferenda-XML av dem. Det kan ibland betyda att göra ett måldokument
+  av flera källdokument eller vice versa.
+* Ett "site manager"-komponent -- denna är ansvarig för att ta
+  ferenda-XML-dokument och göra HTML av dem, vilket så långt som
+  möjligt kommer innefatta en XSLT-transformation. Den här komponenten
+  kommer förmodligen arbeta tight ihop med "site manager"-komponenter
+  för andra rättskällor.
   
-Grabbers, parser och site managers ska vara lšst kopplade och kan
-implementeras i olika sprŒk. grabbers och parsers kan tillochmed
-ersŠttas av mankraft.
+Grabbers, parser och site managers ska vara löst kopplade och kan
+implementeras i olika språk. grabbers och parsers kan tillochmed
+ersättas av mankraft.
 
   
 main.py
-# Varje rŠttskŠlletyp hanteras av en separat modul
-# Exempel pŒ rŠttskŠllor: svenska fšrfattningar, svenska domslut (ska de delas
-# upp i AD-domar, MD-domar, fšrvaltnings, vanliga etc)?, myndighetsyttranden
-# (JO, ARN etc), fšrarbeten, doktrin (bšcker, tidskrifter), EG-direktiv/fšrdrag,
+# Varje rättskälletyp hanteras av en separat modul
+# Exempel på rättskällor: svenska författningar, svenska domslut (ska de delas
+# upp i AD-domar, MD-domar, förvaltnings, vanliga etc)?, myndighetsyttranden
+# (JO, ARN etc), förarbeten, doktrin (böcker, tidskrifter), EG-direktiv/fördrag,
 # internationella konventioner, osv osv.
 
-# En rŠttskŠllemodul ska kunna
-# * Ladda ner de senaste versionerna av rŒmaterialet pŒ ett bandbreddseffektivt sŠtt
-# * Konvertera rŒmaterialet till XML
-# * Tala om vilka rŠttskŠlledokument som finns (vad innebŠr detta fšr doktrin?)
+# En rättskällemodul ska kunna
+# * Ladda ner de senaste versionerna av råmaterialet på ett bandbreddseffektivt sätt
+# * Konvertera råmaterialet till XML
+# * Tala om vilka rättskälledokument som finns (vad innebär detta för doktrin?)
 #   * Inkl de 50 senaste/de nytillkomna eller uppdaterade den senaste veckan
-# * (ev) konvertera rŠttskŠlledokument till XHTML och XSL-FO
+# * (ev) konvertera rättskälledokument till XHTML och XSL-FO
 
-# RŠttskŠllehierarki (anpassad efter rŠttskŠllornas faktiska egenskaper som
-# de publiceras pŒ nŠtet - exv gšrs ingen skillnad pŒ svenska lagar och
-# svenska fšrfattningar)
-# - fšrfattningar
+# Rättskällehierarki (anpassad efter rättskällornas faktiska egenskaper som
+# de publiceras på nätet - exv görs ingen skillnad på svenska lagar och
+# svenska författningar)
+# - författningar
 # - domar
 # -- HD / HovR / TR
 # -- RegR / KamR / LR
@@ -166,31 +166,31 @@ main.py
 # - myndighetsbeslut
 # -- JO
 # -- ARN
-# - fšrarbeten
+# - förarbeten
 # -- Direktiv
-# -- Del/slutbetŠnkande (SOU/Ds)
+# -- Del/slutbetänkande (SOU/Ds)
 # -- Proposition
-# -- UtskottsbetŠnkande
+# -- Utskottsbetänkande
 # - doktrin
 # -- monografier
 # -- artiklar (i tidskrift eller samlingsvolym)
-# - EG-rŠttsakter
-# -- Fšrdrag
+# - EG-rättsakter
+# -- Fördrag
 # -- Direktiv
-# -- Fšrordning
+# -- Förordning
 # - Internationella konventioner
 
-# En rŠttskŠlletyp kan vara: statisk (dom) eller updaterbar (fšrfattning)
-#    en Šndringsfšrfattning Šr statisk
-# En rŠttskŠlla kan vara bibliografisk (bara metadata) eller 
-# En rŠttskŠlla har: minst en unik identifierare (rŠttskŠllespecifik) inom ett visst
+# En rättskälletyp kan vara: statisk (dom) eller updaterbar (författning)
+#    en ändringsförfattning är statisk
+# En rättskälla kan vara bibliografisk (bara metadata) eller 
+# En rättskälla har: minst en unik identifierare (rättskällespecifik) inom ett visst
 # namespace ("urn:sfs:1960:729" eller "urn:celex:C34000420240",
-# "urn:doktrin:jt2004/05s123"). Det finns inte nšdvŠndigtvis en 1:1 mappning
-# mellan namespace och rŠttskŠlla. Ett 
+# "urn:doktrin:jt2004/05s123"). Det finns inte nödvändigtvis en 1:1 mappning
+# mellan namespace och rättskälla. Ett 
 
 # kontrollprogrammet ska kunna
-# * hitta alla rŠttskŠllemoduler
-# * be dem uppdatera rŒmaterialet
+# * hitta alla rättskällemoduler
+# * be dem uppdatera råmaterialet
 # * be dem konvetera till XML
 # * 
 
