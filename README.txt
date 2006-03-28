@@ -1,8 +1,60 @@
 This is the source code for lagen.nu 2.0 (or at least it will be)
 
+Arkitektur för lagen.nu 2.0
 
-tankar.txt
-bDet globala formatet
+"Gamla" lagen.nu var i stort sett uppbyggt kring SFS, med lite lös
+koppling till rättsfall och förarbeten. Lagen.nu 2.0 kommer ta ett
+bredare grepp och fokusera på att presentera en serie olika
+rättskällor med smart koppling mellan dem.
+
+De viktigaste rättskällorna kommer att vara:
+
+* Svensk lagtext (SFS)
+* svenska förarbeten (Prop, SOU/DS och ev kommittédirektiv,
+  utskottsbetänkanden och riksdagsskrivelser)
+* Svenska rättsfall
+* Europeiska direktiv
+* Rättsfall från europadomstolen
+* Enstaka one-off-dokument (genevekonventionen, FN's barnkonvention,
+  Europeiska konventionen om de mänskliga rättigheterna, WIPOs
+  romkonvention...)
+
+För varje rättsfälla byggs fyra komponenter
+
+* Ett RelaxNG-schema i ferenda-familjen som kan uttrycka de dokument
+  som ingår i rättskällan. I detta arbete ingår också ett kanoniskt
+  sätt att identifiera dokumenten, samt hur de lagras på lokal disk.
+* En "grabber" -- denna ska kunna hämta namngivna dokument genom de ID
+  som bestäms ovan, samt även göra operationen "hämta alla nytillkomna
+  dokument". Dokumenten sparas i samma form som de ligger ute på nätet
+  eller var de nu ligger nånstans, dvs HTML, word, PDF, whatever.
+* En "parser" -- denna tar dokument som ligger på disk och gör
+  ferenda-XML av dem. Det kan ibland betyda att göra ett måldokument
+  av flera källdokument eller vice versa.
+* Ett "site manager"-komponent -- denna är ansvarig för att ta
+  ferenda-XML-dokument och göra HTML av dem, vilket så långt som
+  möjligt kommer innefatta en XSLT-transformation. Den här komponenten
+  kommer förmodligen arbeta tight ihop med "site manager"-komponenter
+  för andra rättskällor.
+  
+Grabbers, parser och site managers ska vara löst kopplade och kan
+implementeras i olika språk. grabbers och parsers kan tillochmed
+ersättas av mankraft.
+
+
+Det globala XML-formatet (LML?)
+
+Tanken är att specificera en familj av XML-format som ska kunna
+användas för att märka upp rättskälledokument. Ett
+"rättskälledokument". Eftersom det finns ett obestämt antal
+rättskällor (lagtext, förarbeten, domstolspraxis, standardavtal,
+sedvänja...), och några av dessa inte kan uttryckas i dokumentform
+(handelsbruk etc) är det nödvändigt att ha ett ganska öppet system för
+formaten. Samtidigt måste olika rättskälledokument kunna behandlas
+lika så långt det är möjligt (det måste gå att presentera alla
+rättskälledokument med någon sorts grafisk presentation utan att
+presentationskoden anpassas specifikt för varje rättskälla, till
+exempel)
 
 * Formatet kommer bygga på ett antal olika namespaces.
 * Det måste gå för en tredjepart att bygga valida dokument utan att
@@ -26,9 +78,10 @@ bDet globala formatet
 
   structure-attributet talar om vilken sorts typografisk/strukturell
   härad vi rör oss i, och meaning-attributet talar om vad noden har
-  för juridisk betydelse (bestämmande, förklarande, metadata etc) --
-  det här skulle göra det möjligt/enklare att implementera generell
-  annotering.
+  för juridisk betydelse (bestämmande/normativ,
+  förklarande/informativ, metadata etc) -- det här skulle göra det
+  möjligt/enklare att implementera generell annotering.
+
 
   
 Länk-schemat:
@@ -36,12 +89,19 @@ Länk-schemat:
   till. "EC" för all EG-rätt (fördrag, direktiv, domslut), "SE" för
   allt inom svensk lagstiftning etc, "UN", "WIPO", "ILO" etc för
   internationella organisationers dokument.
-
+* Kan vi göra något baserat på URN eller ngt URN-liknande
+  ("urn:sfs:1960:729","urn:sfs:1960:729" eller
+  "urn:celex:C34000420240", "urn:doktrin:jt2004/05s123"). Det finns
+  inte nödvändigtvis en 1:1 mappning mellan namespace och rättskälla
+  
 Fotnötter:
 * En tag (note) vars innehåll kan vara godtycklig PCDATA. Fotnottexten
   läggs inline i dokumentet. id-attribut
   
 SFS-schemat:
+
+** Ska vi göra skillnad på konsoliderad lagtext och
+   ändringsförfattningar? Ska vi öht addressera det senare problemet?
 
 * Det är OK med svenska tecken i taggarna
 * Det är OK att plocka bort tecken som är rent strukturbärande. Exv i "2
@@ -102,43 +162,6 @@ Domslut-schemat:
 
 arkitektur.txt
 
-Arkitektur för lagen.nu 2.0
-
-Systemet byggs upp kring en serie rättskällor, där de viktigaste är:
-
-* Svensk lagtext (SFS)
-** Ska vi göra skillnad på konsoliderad lagtext och
-   ändringsförfattningar? Ska vi öht addressera det senare problemet?
-* svenska förarbeten (Prop, SOU/DS och ev kommittédirektiv,
-  utskottsbetänkanden och riksdagsskrivelser)
-* Svenska rättsfall
-* Europeiska direktiv
-* Rättsfall från europadomstolen
-* Enstaka one-off-dokument (genevekonventionen, FN's barnkonvention,
-  Europeiska konventionen om de mänskliga rättigheterna, WIPOs
-  romkonvention...)
-
-För varje rättsfälla byggs fyra komponenter
-
-* Ett RelaxNG-schema i ferenda-familjen som kan uttrycka de dokument
-  som ingår i rättskällan. I detta arbete ingår också ett kanoniskt
-  sätt att identifiera dokumenten, samt hur de lagras på lokal disk.
-* En "grabber" -- denna ska kunna hämta namngivna dokument genom de ID
-  som bestäms ovan, samt även göra operationen "hämta alla nytillkomna
-  dokument". Dokumenten sparas i samma form som de ligger ute på nätet
-  eller var de nu ligger nånstans, dvs HTML, word, PDF, whatever.
-* En "parser" -- denna tar dokument som ligger på disk och gör
-  ferenda-XML av dem. Det kan ibland betyda att göra ett måldokument
-  av flera källdokument eller vice versa.
-* Ett "site manager"-komponent -- denna är ansvarig för att ta
-  ferenda-XML-dokument och göra HTML av dem, vilket så långt som
-  möjligt kommer innefatta en XSLT-transformation. Den här komponenten
-  kommer förmodligen arbeta tight ihop med "site manager"-komponenter
-  för andra rättskällor.
-  
-Grabbers, parser och site managers ska vara löst kopplade och kan
-implementeras i olika språk. grabbers och parsers kan tillochmed
-ersättas av mankraft.
 
   
 main.py
@@ -184,9 +207,7 @@ main.py
 #    en ändringsförfattning är statisk
 # En rättskälla kan vara bibliografisk (bara metadata) eller 
 # En rättskälla har: minst en unik identifierare (rättskällespecifik) inom ett visst
-# namespace ("urn:sfs:1960:729" eller "urn:celex:C34000420240",
-# "urn:doktrin:jt2004/05s123"). Det finns inte nödvändigtvis en 1:1 mappning
-# mellan namespace och rättskälla. Ett 
+# namespace (. Ett 
 
 # kontrollprogrammet ska kunna
 # * hitta alla rättskällemoduler
