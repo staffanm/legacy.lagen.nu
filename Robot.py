@@ -1,4 +1,5 @@
 import sys
+import time
 sys.path.append('3rdparty')
 import ClientCookie
 
@@ -35,12 +36,18 @@ __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
 #        
 
 class ThrottlingProcessor(ClientCookie.BaseHandler):
+    def __init__(self,throttleDelay):
+        self.throttleDelay = throttleDelay
+        
     def http_request(self,request):
-        print "ThrottlingProcessor called"
-        print dir(request)
+        time.sleep(5) # FIXME: throttle smarter
         return request
 
+
 class CacheHandler(ClientCookie.BaseHandler):
+    def __init__(self,cacheLocation):
+        self.cacheLocation = cacheLocation
+        
     def default_open(self,request):
         print "CacheProcessor called"
         import mimetools
@@ -57,33 +64,44 @@ class CachedResponse(StringIO.StringIO):
         return self.headers
     def geturl(self):
         return self.url
-    
-def Get(url,method="GET",parameters={},RespectRobotsTxt=True,RespectThrottling=True,UseCache=True):
-    # check cache
-    # check robots.txt
-    # check throttling timeout
-    # construct the request, stream
-        
-    print "%sting %s" % (method, url)
 
-    handlers = []
-
-    if UseCache:
-        handlers.append(CacheHandler)
-
-    if RespectRobotsTxt:
+def GetExtended(url,
+                respectRobotsTxt=True,
+                useThrottling=True,
+                throttleDelay=5,
+                useCache=True,
+                cacheLocation="cache"):
+    handlers=[]
+    if useCache:
+        handlers.append(CacheHandler(cacheLocation))
+    if respectRobotsTxt:
         handlers.append(ClientCookie.HTTPRobotRulesProcessor)
-
-    if RespectThrottling:
-        handlers.append(ThrottlingProcessor)
-
+    if useThrottling:
+        handlers.append(ThrottlingProcessor(throttleDelay))
     opener = ClientCookie.build_opener(*handlers)
-
+    opener.addheaders = [('User-agent', 'Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)')]
     response = opener.open(url)
-    print response.info()
-    print response.read(100)
-    
+    return response
 
+def Get(url,
+        respectRobotsTxt=True,
+        useThrottling=True,
+        throttleDelay=5,
+        useCache=True,
+        cacheLocation="cache"):
+    return GetExtended(url,
+                       respectRobotsTxt,
+                       useThrottling,
+                       throttleDelay,
+                       useCache,
+                       cacheLocation).read()
 
-def GetStore(url,method="GET", parameters={}):
+def GetStore(url,
+             urlPattern,
+             filePattern,
+             respectRobotsTxt,
+             useThrottling,
+             throttleDelay,
+             useCache,
+             cacheLocation):
     pass
