@@ -1,14 +1,19 @@
 #!/usr/local/bin/python
 # -*- coding: iso-8859-1 -*-
 import sys
+import os
+import unittest
 sys.path.append('..')
 import Robot
-import unittest
+reload(Robot)
+
 class Get(unittest.TestCase):
     def setUp(self):
+        # print "Setting up things...."
         self.responseData = Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
                                       useThrottling=False,
-                                      useCache=False)
+                                      useCache=False,
+                                      respectRobotsTxt=False)
 
     def testGet(self):
         self.assertEqual(self.responseData[:27], "Sample for testing Robot.py")
@@ -20,13 +25,21 @@ class Get(unittest.TestCase):
         self.assertTrue("HTTP_USER_AGENT: Lagen.nu-bot" in self.responseData)
 
     def testStore(self):
-        self.Store("http://lagen.nu/cgi-bin/unittest.py?key1=something&key2=and:other",
-                   "key1=\w+&key2=\w+:\w+",
-                   "\1-\3-\2.txt",
+#        Robot.Store("http://lagen.nu/1960:729",
+#                    r"http://lagen.nu/(\d+):(\d+)",
+#                    r"store/\1/\2.html")
+        Robot.Store("http://lagen.nu/cgi-bin/unittest.py?key1=something&key2=and:other",
+                   r'http://lagen.nu/cgi-bin/unittest.py\?key1=(\w+)&key2=(\w+):(\w+)',
+                   r'\1/\3/\2.txt',
                    useThrottling=False,
                    useCache=False,
                    respectRobotsTxt=False)
-        self.assertExists("something-other-and.txt")
+        self.assert_(os.path.exists("something/other/and.txt"))
+        fileContents = open("something/other/and.txt").read()
+        self.assertEqual(fileContents[:27], "Sample for testing Robot.py")
+        self.assertTrue("I18N: Iñtërnâtiônàlizætiøn" in fileContents)
+        os.unlink("something/other/and.txt")
+
         
 
 class Post(unittest.TestCase):
@@ -36,12 +49,23 @@ class Post(unittest.TestCase):
                                        useThrottling=False,
                                        useCache=False,
                                        respectRobotsTxt=False)
+
+    def testPost(self):
+        self.assertTrue("key1=val1" in self.responseData)
+        self.assertTrue("key2=r%E4ksm%F6rg%E5s" in self.responseData)
+        self.assertTrue("key3=" in self.responseData)
+
         
 class Throttling(unittest.TestCase):
     def testThrottle(self):
-        Robot.Get("http://lagen.nu/cgi-bin/unittest.py")
-        resp = Robot.GetExtended("http://lagen.nu/cgi-bin/unittest.py")
-        self.assertEquals(resp.info().getheader('X-throttling','yes'))
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
+                  useCache=False,
+                  respectRobotsTxt=False)
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                          useCache=False,
+                          respectRobotsTxt=False)
+        print resp.info().headers
+        self.assertEquals(resp.info().getheader('X-throttling'),'yes')
 
 class RobotsTxt(unittest.TestCase):
     def textRobotTxt(self):
@@ -69,5 +93,5 @@ class Cache(unittest.TestCase):
         
 if __name__ == "__main__":
     #suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.BasicTests.testGet")
-    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.BasicTests")
-    unittest.TextTestRunner(verbosity=1).run(suite)
+    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Throttling")
+    unittest.TextTestRunner(verbosity=2).run(suite)

@@ -14,7 +14,7 @@ De viktigaste rättskällorna kommer att vara:
   utskottsbetänkanden och riksdagsskrivelser)
 * Svenska rättsfall
 * Europeiska direktiv
-* Rättsfall från europadomstolen
+* Rättsfall från EG-domstolen (och europadomstolen?)
 * Enstaka one-off-dokument (genevekonventionen, FN's barnkonvention,
   Europeiska konventionen om de mänskliga rättigheterna, WIPOs
   romkonvention...)
@@ -41,6 +41,15 @@ Grabbers, parser och site managers ska vara löst kopplade och kan
 implementeras i olika språk. grabbers och parsers kan tillochmed
 ersättas av mankraft.
 
+Den smarta kopplingen
+
+Utmaningen Ã¤r att frÃ¥n en given rÃ¤ttskÃ¤lla hitta andra rÃ¤ttskÃ¤llor som
+Ã¤r relevanta. Vissa lagparagrafer behÃ¶ver kopplas till rÃ¤ttsfall som
+illustrerar dem. Vissa rÃ¤ttsfall behÃ¶ver kopplas ihop med
+doktrin. EG-domstolsbeslut, nationella domstolsbeslut, EG-direktiv och
+svenska fÃ¶rarbeten hÃ¤nger alla ihop. 
+
+
 
 Det globala XML-formatet (LML?)
 
@@ -55,6 +64,8 @@ lika så långt det är möjligt (det måste gå att presentera alla
 rättskälledokument med någon sorts grafisk presentation utan att
 presentationskoden anpassas specifikt för varje rättskälla, till
 exempel)
+
+
 
 * Formatet kommer bygga på ett antal olika namespaces.
 * Det måste gå för en tredjepart att bygga valida dokument utan att
@@ -160,10 +171,6 @@ Domslut-schemat:
 * Hur hanterar vi en NJA-publicerad dom med referat till HovR och
   TR-domarna?
 
-arkitektur.txt
-
-
-  
 main.py
 # Varje rättskälletyp hanteras av en separat modul
 # Exempel på rättskällor: svenska författningar, svenska domslut (ska de delas
@@ -214,6 +221,3 @@ main.py
 # * be dem uppdatera råmaterialet
 # * be dem konvetera till XML
 # * 
-
-
-
