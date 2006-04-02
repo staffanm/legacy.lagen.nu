@@ -2,6 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 import sys
 import os
+import time
 import unittest
 sys.path.append('..')
 import Robot
@@ -60,12 +61,20 @@ class Throttling(unittest.TestCase):
     def testThrottle(self):
         Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
                   useCache=False,
+                  throttleDelay=5,
                   respectRobotsTxt=False)
         resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
                           useCache=False,
-                          respectRobotsTxt=False)
-        print resp.info().headers
-        self.assertEquals(resp.info().getheader('X-throttling'),'yes')
+                          respectRobotsTxt=False,
+                          throttleDelay=5)
+        self.assert_('x-throttling' in resp.info())
+        time.sleep(6)
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                          useCache=False,
+                          respectRobotsTxt=False,
+                          throttleDelay=5)
+        self.assert_('x-throttling' not in resp.info())
+        
 
 class RobotsTxt(unittest.TestCase):
     def textRobotTxt(self):

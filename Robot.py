@@ -1,3 +1,10 @@
+"""Fetch content from websites in a simple, efficient fashion.
+
+This module wraps urllib2 and ClientCookie in easy-to-use wrapper, and
+adds support for Request throttling, caching and robots.txt
+support. It contains only static methods, no Robot object is ever
+created."""
+
 import sys
 import time
 import re
@@ -8,41 +15,10 @@ sys.path.append('../3rdparty')
 import ClientCookie
 
 import StringIO
-# the robot should
-# * throttle traffic
-# * respect robots.txt
-# * handle cookies
-# * automatically cache everything (incl index pages), based on URL,
-#   POST variables and maybe cookies, and check this cache before
-#   doing actual HTTP requests
-#
-# All of the above should be optional
-#
-# * Be able to save things using a configurable naming scheme
-#   eg URL  http://somesite.com/data.cgi?year=%s&id=%s
-#      FILE documents/%s/%s.html
 
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
-__doc__ = """Fetch content from websites in a simple, efficient fashion.
 
-This module wraps urllib2 and ClientCookie in easy-to-use wrapper, and
-adds support for Request throttling, caching and robots.txt
-support. It contains only static methods, no Robot object is ever
-created."""
-
-#class Robot:
-#
-#    # Using a Borg design pattern (similar to a Singleton, but simpler
-#    # implementation, at the expense of more objects for the GC to
-#    # keep track of). Implementation from
-#    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66531
-#    __shared_state = {}
-#    def __init__(self):
-#        self.__dict__ = self.__shared_state
-#        # create a urllib object
-#        # init cookie and robots.txt stuff
-#        
 
 class ThrottlingProcessor(ClientCookie.BaseHandler):
     """Prevents overloading the remote web server by delaying requests.
@@ -53,40 +29,28 @@ class ThrottlingProcessor(ClientCookie.BaseHandler):
     __shared_state = {}
     def __init__(self,throttleDelay=5):
         """The number of seconds to wait between subsequent requests"""
+        # Using the Borg design pattern to achieve shared state between object instances:
         self.__dict__ = self.__shared_state
         self.throttleDelay = throttleDelay
-        if not 'lastRequestTime' in dir(self):
+        if not hasattr(self,'lastRequestTime'):
             self.lastRequestTime = {}
-        print self.lastRequestTime
         
     def http_request(self,request):
-        # print dir(request)
-        print "ThrottlingProcessor.http_request"
         currentTime = time.time()
-        if not request.host in self.lastRequestTime:
-            print "We haven't seemed to requested from this host previously"
         if ((request.host in self.lastRequestTime) and
             (time.time() - self.lastRequestTime[request.host] < self.throttleDelay)):
             self.throttleTime = (self.throttleDelay -
                                  (currentTime - self.lastRequestTime[request.host]))
-            print "Sleeping for %s seconds" % self.throttleTime
+            # print "Sleeping for %s seconds" % self.throttleTime
             time.sleep(self.throttleTime)
 
-
-        print "Setting lastRequestTime"
         self.lastRequestTime[request.host] = currentTime
-        if not request.host in self.lastRequestTime:
-            print "It didn't take?"
-            
         return request
 
     def http_response(self,request,response):
-        # print help(response.info())
         if hasattr(self,'throttleTime'):
-            response.info().addheader("X-throttling", "%s seconds\r\n" % self.throttleTime)
-            print "Header: '%s'" % response.info().getheader("X-throttling")
-            self.throttleTime = 0
-            # print response.info().headers
+            response.info().addheader("x-throttling", "%s seconds" % self.throttleTime)
+            del(self.throttleTime)
         return response
 
 class CacheHandler(ClientCookie.BaseHandler):
@@ -119,9 +83,6 @@ class CachedResponse(StringIO.StringIO):
         return self.headers
     def geturl(self):
         return self.url
-
-
-
 
 def Open(url,
          method="GET",
