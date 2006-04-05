@@ -91,7 +91,8 @@ def Open(url,
          useThrottling=True,
          throttleDelay=5,
          useCache=True,
-         cacheLocation="cache"):
+         cacheLocation="cache",
+         userAgent="Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)"):
     """Returns the contents of a URL as a file-like object.
 
     To find out more about the response, use the .info() and .geturl() methods.
@@ -104,7 +105,8 @@ def Open(url,
     if useThrottling:
         handlers.append(ThrottlingProcessor(throttleDelay))
     opener = ClientCookie.build_opener(*handlers)
-    opener.addheaders = [('User-agent', 'Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)')]
+    # 
+    opener.addheaders = [('User-agent', userAgent)]
     ### here we need to build smart retry functionality
     if (method == "POST"):
         data = urllib.urlencode(parameters)
@@ -120,7 +122,8 @@ def Get(url,
         useThrottling=True,
         throttleDelay=5,
         useCache=True,
-        cacheLocation="cache"):
+        cacheLocation="cache",
+        userAgent="Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)"):
     """Returns the content of a given URL."""
     return Open(url,
                 "GET",
@@ -129,7 +132,8 @@ def Get(url,
                 useThrottling,
                 throttleDelay,
                 useCache,
-                cacheLocation).read()
+                cacheLocation,
+                userAgent).read()
 
 def Post(url,
          parameters,
@@ -137,7 +141,8 @@ def Post(url,
          useThrottling=True,
          throttleDelay=5,
          useCache=True,
-         cacheLocation="cache"):
+         cacheLocation="cache",
+         userAgent="Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)"):
     """Returns the content of a given URL."""
     return Open(url,
                 "POST",
@@ -146,7 +151,8 @@ def Post(url,
                 useThrottling,
                 throttleDelay,
                 useCache,
-                cacheLocation).read()
+                cacheLocation,
+                userAgent).read()
 
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
 def _mkdir(newdir):
@@ -175,7 +181,8 @@ def Store(url,
           useThrottling=True,
           throttleDelay=5,
           useCache=True,
-          cacheLocation="cache"):
+          cacheLocation="cache",
+          userAgent="Lagen.nu-bot/0.1 (http://lagen.nu/om/bot.html)"):
     """Fetch the contents of a given URL, and store it on disk.
 
     The urlPattern is a regexp that should match the URL being
@@ -202,7 +209,7 @@ def Store(url,
     _mkdir(os.path.dirname(filename))
     fp = open(filename,"w")
     resp = Open(url,"GET",{}, respectRobotsTxt, useThrottling, throttleDelay,
-                useCache, cacheLocation)
+                useCache, cacheLocation, userAgent)
     fp.write(resp.read())
     fp.close()
         

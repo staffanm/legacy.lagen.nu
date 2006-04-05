@@ -5,6 +5,9 @@ import os
 import time
 import unittest
 sys.path.append('..')
+sys.path.append('../3rdparty')
+from ClientCookie import RobotExclusionError
+from urllib2 import HTTPError
 import Robot
 reload(Robot)
 
@@ -26,9 +29,6 @@ class Get(unittest.TestCase):
         self.assertTrue("HTTP_USER_AGENT: Lagen.nu-bot" in self.responseData)
 
     def testStore(self):
-#        Robot.Store("http://lagen.nu/1960:729",
-#                    r"http://lagen.nu/(\d+):(\d+)",
-#                    r"store/\1/\2.html")
         Robot.Store("http://lagen.nu/cgi-bin/unittest.py?key1=something&key2=and:other",
                    r'http://lagen.nu/cgi-bin/unittest.py\?key1=(\w+)&key2=(\w+):(\w+)',
                    r'\1/\3/\2.txt',
@@ -61,26 +61,45 @@ class Throttling(unittest.TestCase):
     def testThrottle(self):
         Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
                   useCache=False,
-                  throttleDelay=5,
+                  throttleDelay=2,
                   respectRobotsTxt=False)
         resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
                           useCache=False,
                           respectRobotsTxt=False,
-                          throttleDelay=5)
+                          throttleDelay=2)
         self.assert_('x-throttling' in resp.info())
-        time.sleep(6)
+        time.sleep(2)
         resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
                           useCache=False,
                           respectRobotsTxt=False,
-                          throttleDelay=5)
+                          throttleDelay=2)
         self.assert_('x-throttling' not in resp.info())
         
 
 class RobotsTxt(unittest.TestCase):
-    def textRobotTxt(self):
-        self.assertRaises(RobotsTxtError,Robot.Get("http://lagen.nu/notallowed"))
-        self.assertSuccess(RobotsTxt,Robot.Get("http://lagen.nu/notallowed",
-                                               UserAgent="Somethingelse/0.1"))
+    def testDisallowed(self):
+        # can't seem to get self.asserRaises to work -- this is
+        # a low-tech way of achieving same
+        try:
+            Robot.Get("http://lagen.nu/notallowed",
+                      useCache=False,
+                      useThrottling=False)
+        except RobotExclusionError:
+            return
+        self.fail("RobotExclusionError never recieved")
+            
+    def testAllowed(self):
+        try:
+            Robot.Get("http://lagen.nu/notallowed",
+                      userAgent="Somethingelse/0.1",
+                      useCache=False,
+                      useThrottling=False)
+        except RobotExclusionError:
+            self.fail("RobotExclusionError recieved even though the User-Agent should have been allowed")
+        except HTTPError:
+            # this is probably a 404 - that's OK
+            return
+
 
 class Cache(unittest.TestCase):
 
@@ -91,16 +110,16 @@ class Cache(unittest.TestCase):
                                  RespectRobotsTxt=False,
                                  UseCache=True,
                                  CacheLocation="testcache")
-        self.assertRaises(KeyError,data.info['X-cache'])
+        self.assertRaises(KeyError,data.info['x-cache'])
         data = Robot.GetExtended("http://lagen.nu/cgi-bin/unittest.py",
                                  RespectThrottling=False,
                                  RespectRobotsTxt=False,
                                  UseCache=True,
                                  CacheLocation="testcache")
-        self.assertEquals(data.info['X-cache'], "abcd.txt")
+        self.assertEquals(data.info['x-cache'], "abcd.txt")
 
         
 if __name__ == "__main__":
     #suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.BasicTests.testGet")
-    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Throttling")
+    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Cache")
     unittest.TextTestRunner(verbosity=2).run(suite)
