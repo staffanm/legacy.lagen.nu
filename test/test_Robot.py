@@ -5,9 +5,11 @@ import os
 import time
 import unittest
 sys.path.append('..')
+sys.path.append('.')
 sys.path.append('../3rdparty')
 from ClientCookie import RobotExclusionError
 from urllib2 import HTTPError
+
 import Robot
 reload(Robot)
 
