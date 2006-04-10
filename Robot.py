@@ -10,6 +10,9 @@ import time
 import re
 import os
 import urllib # for urllib.urlencode
+import md5
+import mimetools
+
 sys.path.append('3rdparty')
 sys.path.append('../3rdparty')
 import ClientCookie
@@ -61,24 +64,54 @@ class CacheHandler(ClientCookie.BaseHandler):
     def __init__(self,cacheLocation):
         """The location of the cache directory"""
         self.cacheLocation = cacheLocation
-        
+        if not os.path.exists(self.cacheLocation):
+            os.mkdir(self.cacheLocation)
+            
     def default_open(self,request):
-        print "CacheProcessor called"
-        import mimetools
-        msg = mimetools.Message(
-            StringIO.StringIO("Server: Fake cache\r\n\r\n"))
+        if CachedResponse.ExistsInCache(self.cacheLocation, request.get_full_url()):
+            return CachedResponse(self.cacheLocation, request.get_full_url())	
+        else:
+            return None # lets the next handler try to handle the request
 
-        return CachedResponse(200, "OK", msg, "This is the response body", "http://fakeurl.com/")
+    def http_response(self, request, response):
+        # move this to CachedResponse somehow
+        hash = md5.new(request.get_full_url()).hexdigest()
+        f = open(self.cacheLocation + "/" + hash + ".headers", "w")
+        headers = str(response.info())
+        f.write(headers)
+        f.close()
+        f = open(self.cacheLocation + "/" + hash + ".body", "w")
+        f.write(response.read())
+        f.close()
+        
+        return CachedResponse(self.cacheLocation, request.get_full_url(),setCacheHeader=False)
 
 class CachedResponse(StringIO.StringIO):
     """An urllib2.response-like object for cached responses.
 
     To determine wheter a response is cached or coming directly from
     the network, check the X-cache header rather than the object type."""
+    import md5
     
-    def __init__(self, code, msg, headers, data, url=None):
-        StringIO.StringIO.__init__(self, data)
-        self.code, self.msg, self.headers, self.url = code, msg, headers, url
+    def ExistsInCache(cacheLocation, url):
+        hash = md5.new(url).hexdigest()
+        return (os.path.exists(cacheLocation + "/" + hash + ".headers") and 
+                os.path.exists(cacheLocation + "/" + hash + ".body"))
+    ExistsInCache = staticmethod(ExistsInCache)
+    
+    def __init__(self, cacheLocation,url,setCacheHeader=True):
+        self.cacheLocation = cacheLocation
+        hash = md5.new(url).hexdigest()
+        StringIO.StringIO.__init__(self, file(self.cacheLocation + "/" + hash+".body"))
+        self.url     = url
+        self.code    = 200
+        self.msg     = "OK"
+        headerbuf = file(self.cacheLocation + "/" + hash+".headers").read()
+        if setCacheHeader:
+            headerbuf += "x-cache: %s/%s\r\n" % (self.cacheLocation,hash)
+        
+        self.headers = mimetools.Message(StringIO.StringIO(headerbuf))
+
     def info(self):
         return self.headers
     def geturl(self):
@@ -213,5 +246,13 @@ def Store(url,
     fp.write(resp.read())
     fp.close()
         
-    
+def ClearCache(cacheLocation="cache"):
+    print "Clearing cache..."
+    if os.path.exists(cacheLocation):
+        for f in os.listdir(cacheLocation):
+            os.unlink("%s/%s" % (cacheLocation, f))
+        # os.unlink(cacheLocation)
+
+
+
     

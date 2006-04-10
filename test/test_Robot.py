@@ -106,20 +106,21 @@ class RobotsTxt(unittest.TestCase):
 class Cache(unittest.TestCase):
 
     def testCache(self):
-        Robot.ClearCache(CacheLocation="testcache")
-        data = Robot.GetExtended("http://lagen.nu/cgi-bin/unittest.py",
-                                 RespectThrottling=False,
-                                 RespectRobotsTxt=False,
-                                 UseCache=True,
-                                 CacheLocation="testcache")
-        self.assertRaises(KeyError,data.info['x-cache'])
-        data = Robot.GetExtended("http://lagen.nu/cgi-bin/unittest.py",
-                                 RespectThrottling=False,
-                                 RespectRobotsTxt=False,
-                                 UseCache=True,
-                                 CacheLocation="testcache")
-        self.assertEquals(data.info['x-cache'], "abcd.txt")
+        Robot.ClearCache(cacheLocation="testcache")
 
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                         useThrottling=False,
+                         respectRobotsTxt=False,
+                         useCache=True,
+                         cacheLocation="testcache")
+        self.assert_('x-cache' not in resp.info())
+
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                         useThrottling=False,
+                         respectRobotsTxt=False,
+                         useCache=True,
+                         cacheLocation="testcache")
+        self.assert_('x-cache' in resp.info())
         
 if __name__ == "__main__":
     #suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.BasicTests.testGet")
