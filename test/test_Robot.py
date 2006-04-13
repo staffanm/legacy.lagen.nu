@@ -4,9 +4,11 @@ import sys
 import os
 import time
 import unittest
+import md5
 sys.path.append('..')
 sys.path.append('.')
 sys.path.append('../3rdparty')
+sys.path.append('3rdparty')
 from ClientCookie import RobotExclusionError
 from urllib2 import HTTPError
 
@@ -70,6 +72,11 @@ class Throttling(unittest.TestCase):
                           respectRobotsTxt=False,
                           throttleDelay=2)
         self.assert_('x-throttling' in resp.info())
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                          useCache=False,
+                          respectRobotsTxt=False,
+                          throttleDelay=2)
+        self.assert_('x-throttling' in resp.info())
         time.sleep(2)
         resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
                           useCache=False,
@@ -114,6 +121,8 @@ class Cache(unittest.TestCase):
                          useCache=True,
                          cacheLocation="testcache")
         self.assert_('x-cache' not in resp.info())
+        html1 = resp.read()
+        check1 = md5.new(html1).hexdigest()
 
         resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
                          useThrottling=False,
@@ -121,8 +130,86 @@ class Cache(unittest.TestCase):
                          useCache=True,
                          cacheLocation="testcache")
         self.assert_('x-cache' in resp.info())
+        html2 = resp.read()
+        check2 = md5.new(html2).hexdigest()
+        header2 = str(resp.info())
+        headercheck2 = md5.new(header2).hexdigest()
+        self.assertEqual(check1,check2)
+
+        # third time to catch any possible "every other time" type errors
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                         useThrottling=False,
+                         respectRobotsTxt=False,
+                         useCache=True,
+                         cacheLocation="testcache")
+        self.assert_('x-cache' in resp.info())
+        html3 = resp.read()
+        check3 = md5.new(html3).hexdigest()
+        header3 = str(resp.info())
+        headercheck3 = md5.new(header3).hexdigest()
+        self.assertEqual(check1,check3)
+        self.assertEqual(headercheck2,headercheck3)
         
+    def testPost(self):
+        Robot.ClearCache(cacheLocation="testcache")
+
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                          method="POST",
+                          useThrottling=False,
+                          respectRobotsTxt=False,
+                          useCache=True,
+                          cacheLocation="testcache")
+        self.assert_('x-cache' not in resp.info())
+
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                          method="POST",
+                          useThrottling=False,
+                          respectRobotsTxt=False,
+                          useCache=True,
+                          cacheLocation="testcache")
+        self.assert_('x-cache' not in resp.info())
+
+class Combined(unittest.TestCase):
+    def testThrottleAndCache(self):
+        Robot.ClearCache(cacheLocation="testcache")
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
+                  useThrottling=True,
+                  useCache=True,
+                  cacheLocation="testcache",
+                  respectRobotsTxt=False)
+        print "initial GET finished"
+        # the second request should trigger the cache, thereby bypassing
+        # the throttling mechanism alltogether
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                         useThrottling=True,
+                         useCache=True,
+                         cacheLocation="testcache",
+                         respectRobotsTxt=False)
+        self.assert_('x-cache' in resp.info())
+        self.assert_('x-throttling' not in resp.info())
+    
+    def testThrottleAndCacheMiss(self):
+        Robot.ClearCache(cacheLocation="testcache")
+        Robot.ClearThrottleTimeouts()
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py",
+                  useThrottling=True,
+                  useCache=True,
+                  cacheLocation="testcache",
+                  respectRobotsTxt=False)
+        print "initial GET finished"
+        Robot.ClearCache(cacheLocation="testcache")
+        # the second request should trigger the throttling, but not the cache (now that we've cleared it)
+        resp = Robot.Open("http://lagen.nu/cgi-bin/unittest.py",
+                         useThrottling=True,
+                         useCache=True,
+                         cacheLocation="testcache",
+                         respectRobotsTxt=False)
+        self.assert_('x-cache' not in resp.info())
+        self.assert_('x-throttling' in resp.info())
+        
+    
 if __name__ == "__main__":
-    #suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.BasicTests.testGet")
-    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Cache")
+    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot")
+    # suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Combined.testThrottleAndCacheMiss")
+    # suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Throttling.testThrottle")
     unittest.TextTestRunner(verbosity=2).run(suite)

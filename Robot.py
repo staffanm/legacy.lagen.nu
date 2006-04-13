@@ -10,8 +10,10 @@ import time
 import re
 import os
 import urllib # for urllib.urlencode
+import urllib2
+import httplib
 import md5
-import mimetools
+# import mimetools
 
 sys.path.append('3rdparty')
 sys.path.append('../3rdparty')
@@ -23,7 +25,7 @@ __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
 
 
-class ThrottlingProcessor(ClientCookie.BaseHandler):
+class ThrottlingProcessor(urllib2.BaseHandler):
     """Prevents overloading the remote web server by delaying requests.
 
     Causes subsequent requests to the same web server to be delayed
@@ -38,17 +40,18 @@ class ThrottlingProcessor(ClientCookie.BaseHandler):
         if not hasattr(self,'lastRequestTime'):
             self.lastRequestTime = {}
         
-    def http_request(self,request):
+#    def http_request(self,request):
+    def default_open(self,request):
         currentTime = time.time()
         if ((request.host in self.lastRequestTime) and
             (time.time() - self.lastRequestTime[request.host] < self.throttleDelay)):
             self.throttleTime = (self.throttleDelay -
                                  (currentTime - self.lastRequestTime[request.host]))
-            # print "Sleeping for %s seconds" % self.throttleTime
+            print "ThrottlingProcessor: Sleeping for %s seconds" % self.throttleTime
             time.sleep(self.throttleTime)
-
         self.lastRequestTime[request.host] = currentTime
-        return request
+
+        return None
 
     def http_response(self,request,response):
         if hasattr(self,'throttleTime'):
@@ -56,7 +59,7 @@ class ThrottlingProcessor(ClientCookie.BaseHandler):
             del(self.throttleTime)
         return response
 
-class CacheHandler(ClientCookie.BaseHandler):
+class CacheHandler(urllib2.BaseHandler):
     """Stores responses in a persistant on-disk cache.
 
     If a subsequent GET request is made for the same URL, the stored
@@ -68,24 +71,23 @@ class CacheHandler(ClientCookie.BaseHandler):
             os.mkdir(self.cacheLocation)
             
     def default_open(self,request):
-        if CachedResponse.ExistsInCache(self.cacheLocation, request.get_full_url()):
-            return CachedResponse(self.cacheLocation, request.get_full_url())	
+        if ((request.get_method() == "GET") and 
+            (CachedResponse.ExistsInCache(self.cacheLocation, request.get_full_url()))):
+            print "CacheHandler: Returning CACHED response for %s" % request.get_full_url()
+            return CachedResponse(self.cacheLocation, request.get_full_url(), setCacheHeader=True)	
         else:
-            return None # lets the next handler try to handle the request
+            return None # let the next handler try to handle the request
 
     def http_response(self, request, response):
-        # move this to CachedResponse somehow
-        hash = md5.new(request.get_full_url()).hexdigest()
-        f = open(self.cacheLocation + "/" + hash + ".headers", "w")
-        headers = str(response.info())
-        f.write(headers)
-        f.close()
-        f = open(self.cacheLocation + "/" + hash + ".body", "w")
-        f.write(response.read())
-        f.close()
-        
-        return CachedResponse(self.cacheLocation, request.get_full_url(),setCacheHeader=False)
-
+        if request.get_method() == "GET":
+            if 'x-cache' not in response.info():
+                CachedResponse.StoreInCache(self.cacheLocation, request.get_full_url(), response)
+                return CachedResponse(self.cacheLocation, request.get_full_url(), setCacheHeader=False)
+            else:
+                return CachedResponse(self.cacheLocation, request.get_full_url(), setCacheHeader=True)
+        else:
+            return response
+    
 class CachedResponse(StringIO.StringIO):
     """An urllib2.response-like object for cached responses.
 
@@ -98,19 +100,29 @@ class CachedResponse(StringIO.StringIO):
         return (os.path.exists(cacheLocation + "/" + hash + ".headers") and 
                 os.path.exists(cacheLocation + "/" + hash + ".body"))
     ExistsInCache = staticmethod(ExistsInCache)
+
+    def StoreInCache(cacheLocation, url, response):
+        hash = md5.new(url).hexdigest()
+        f = open(cacheLocation + "/" + hash + ".headers", "w")
+        headers = str(response.info())
+        f.write(headers)
+        f.close()
+        f = open(cacheLocation + "/" + hash + ".body", "w")
+        f.write(response.read())
+        f.close()
+    StoreInCache = staticmethod(StoreInCache)
     
     def __init__(self, cacheLocation,url,setCacheHeader=True):
         self.cacheLocation = cacheLocation
         hash = md5.new(url).hexdigest()
-        StringIO.StringIO.__init__(self, file(self.cacheLocation + "/" + hash+".body"))
+        StringIO.StringIO.__init__(self, file(self.cacheLocation + "/" + hash+".body").read())
         self.url     = url
         self.code    = 200
         self.msg     = "OK"
         headerbuf = file(self.cacheLocation + "/" + hash+".headers").read()
         if setCacheHeader:
             headerbuf += "x-cache: %s/%s\r\n" % (self.cacheLocation,hash)
-        
-        self.headers = mimetools.Message(StringIO.StringIO(headerbuf))
+        self.headers = httplib.HTTPMessage(StringIO.StringIO(headerbuf))
 
     def info(self):
         return self.headers
@@ -137,7 +149,13 @@ def Open(url,
         handlers.append(ClientCookie.HTTPRobotRulesProcessor)
     if useThrottling:
         handlers.append(ThrottlingProcessor(throttleDelay))
+    
+    # ClientCookie is a extended wrapper around urllib2 that adds 
+    # automatic cookie handling and other stuff. It also provides the 
+    # HTTPRobotRulesProcessor. However, the other handlers (CacheHandlers,
+    # and ThrottlingProcessor) can be used with vanilla urllib2 as well.
     opener = ClientCookie.build_opener(*handlers)
+    # opener = urllib2.build_opener(*handlers)
     # 
     opener.addheaders = [('User-agent', userAgent)]
     ### here we need to build smart retry functionality
@@ -247,11 +265,15 @@ def Store(url,
     fp.close()
         
 def ClearCache(cacheLocation="cache"):
-    print "Clearing cache..."
+    # print "Clearing cache..."
     if os.path.exists(cacheLocation):
         for f in os.listdir(cacheLocation):
             os.unlink("%s/%s" % (cacheLocation, f))
         # os.unlink(cacheLocation)
+
+def ClearThrottleTimeouts():
+    t = ThrottlingProcessor()
+    t.lastRequestTime.clear()
 
 
 
