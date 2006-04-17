@@ -257,6 +257,11 @@ class PageElement:
             return chunk in howToMatch
         if hasattr(howToMatch, 'items'):
             return howToMatch.has_key(chunk)
+        if type(howToMatch) == types.UnicodeType:
+            if type(chunk) == types.StringType:
+                return howToMatch == unicode(chunk,'iso-8859-1')
+            else:
+                return howToMatch == chunk
         #It's just a string
         return str(howToMatch) == chunk
 

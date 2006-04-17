@@ -34,13 +34,13 @@ class ThrottlingProcessor(urllib2.BaseHandler):
     __shared_state = {}
     def __init__(self,throttleDelay=5):
         """The number of seconds to wait between subsequent requests"""
-        # Using the Borg design pattern to achieve shared state between object instances:
+        # Using the Borg design pattern to achieve shared state
+        # between object instances:
         self.__dict__ = self.__shared_state
         self.throttleDelay = throttleDelay
         if not hasattr(self,'lastRequestTime'):
             self.lastRequestTime = {}
         
-#    def http_request(self,request):
     def default_open(self,request):
         currentTime = time.time()
         if ((request.host in self.lastRequestTime) and
@@ -129,6 +129,11 @@ class CachedResponse(StringIO.StringIO):
     def geturl(self):
         return self.url
 
+
+# ensure that the same instance of HTTPRobotRulesProcessor is reused
+# -- otherwise the robots.txt file is requested for each ordinary
+# request, wheter cached or not -- not that friendly
+robotRulesProcessor = ClientCookie.HTTPRobotRulesProcessor()
 def Open(url,
          method="GET",
          parameters={},
@@ -146,7 +151,7 @@ def Open(url,
     if useCache:
         handlers.append(CacheHandler(cacheLocation))
     if respectRobotsTxt:
-        handlers.append(ClientCookie.HTTPRobotRulesProcessor)
+        handlers.append(robotRulesProcessor)
     if useThrottling:
         handlers.append(ThrottlingProcessor(throttleDelay))
     
@@ -158,15 +163,21 @@ def Open(url,
     # opener = urllib2.build_opener(*handlers)
     # 
     opener.addheaders = [('User-agent', userAgent)]
-    ### here we need to build smart retry functionality
-    if (method == "POST"):
-        data = urllib.urlencode(parameters)
-        #print "POSTing data: %s" % data
-        response = opener.open(url,data)
-    else:
-        response = opener.open(url)
-    
-    return response
+    retries = 3
+    while retries > 0:
+        try:
+            if (method == "POST"):
+                data = urllib.urlencode(parameters)
+                #print "POSTing data: %s" % data
+                response = opener.open(url,data)
+            else:
+                response = opener.open(url)
+            return response
+        except urllib2.URLError:
+            retries = retries - 1
+            print "WARNING: Robot.Open got a URLError, %s retries left" % retries
+            
+
 
 def Get(url,
         respectRobotsTxt=True,
@@ -247,20 +258,33 @@ def Store(url,
 
     should create a file called 'downloaded/1960/729.html'.
 
+    If urlPattern is None, filePattern is treated as a normal filename.
+    
+    If both urlPattern and filePattern is Null, the last part of the URL path
+    is used as a filename (and if that part is not usable as a filename by
+    containing chars like : and &, all hell breaks loose)
+
     This method only handles GET requests -- for POSTS you need to
     roll your own using Open()
     """
     # print "        url: %s" % url
     # print " urlPattern: %s" % urlPattern
     # print "filePattern: %s" % filePattern
-    pattern = re.compile(urlPattern)
-    assert(pattern.match(url))
-    filename = pattern.sub(filePattern,url)
+    if urlPattern == None:
+        if filePattern == None:
+            filename = url.split('/')[-1]
+        else:
+            filename = filePattern
+    else:
+        pattern = re.compile(urlPattern)
+        assert(pattern.match(url))
+        filename = pattern.sub(filePattern,url)
+        
     # print "Let's store stuff as %s" % filename
-    _mkdir(os.path.dirname(filename))
-    fp = open(filename,"w")
     resp = Open(url,"GET",{}, respectRobotsTxt, useThrottling, throttleDelay,
                 useCache, cacheLocation, userAgent)
+    _mkdir(os.path.dirname(filename))
+    fp = open(filename,"w")
     fp.write(resp.read())
     fp.close()
         

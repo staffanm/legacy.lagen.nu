@@ -45,7 +45,18 @@ class Get(unittest.TestCase):
         self.assertTrue("I18N: Iñtërnâtiônàlizætiøn" in fileContents)
         os.unlink("something/other/and.txt")
 
+    def testSimpleStore(self):
+        Robot.Store("http://lagen.nu/cgi-bin/unittest.py", None, "something.txt", 
+                    useThrottling=False,
+                    useCache=False)
+        self.assert_(os.path.exists("something.txt"))
+        os.unlink("something.txt")
         
+        Robot.Store("http://lagen.nu/cgi-bin/unittest.py/pathinfo.txt", None, None,
+                    useThrottling=True,
+                    useCache=False)
+        self.assert_(os.path.exists("pathinfo.txt"))
+        os.unlink("pathinfo.txt")
 
 class Post(unittest.TestCase):
     def setUp(self):
@@ -109,6 +120,11 @@ class RobotsTxt(unittest.TestCase):
             # this is probably a 404 - that's OK
             return
 
+    def testMultiple(self):
+        print "testMultiple"
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py")
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py")
+        Robot.Get("http://lagen.nu/cgi-bin/unittest.py")
 
 class Cache(unittest.TestCase):
 
@@ -209,7 +225,7 @@ class Combined(unittest.TestCase):
         
     
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot")
+    # suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot")
     # suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Combined.testThrottleAndCacheMiss")
-    # suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.Throttling.testThrottle")
+    suite = unittest.defaultTestLoader.loadTestsFromName("test_Robot.RobotsTxt.testMultiple")
     unittest.TextTestRunner(verbosity=2).run(suite)

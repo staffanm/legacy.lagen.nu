@@ -1,9 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: iso-8859-1 -*-
-"""Hanterar referat från Allmäna Reklamationsnämnden, www.arn.se.
+"""Hanterar beslut från Riksdagens Ombudsmän, www.jo.se
 
-Modulen hanterar hämtande av referat från ARNs webbplats samt omvandlande av dessa till XML.
-
+Modulen hanterar hämtande av beslut från JOs webbplats samt
+omvandlande av dessa till XML.
 """
 import unittest
 import sys
@@ -16,7 +16,7 @@ import urllib
 
 import LegalSource
 import Robot
-
+import Util
 
 sys.path.append('3rdparty')
 import BeautifulSoup
@@ -25,10 +25,10 @@ import elementtree.ElementTree as ET
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
 
-class ARNDownloader(LegalSource.LegalSourceDownloader):
+class JODownloader(LegalSource.LegalSourceDownloader):
     
     def __init__(self,baseDir="data"):
-        self.dir = baseDir + "/arn/downloaded"
+        self.dir = baseDir + "/jo/downloaded"
         if not os.path.exists(self.dir):
             Util.mkdir(self.dir)
         self.ids = {}
@@ -39,22 +39,9 @@ class ARNDownloader(LegalSource.LegalSourceDownloader):
         # make noncached requests -- a stale index page would not be
         # good. Alternatively just request descisions for the current
         # year or similar.
-        
-        # this idiom of getting a first page of results, then
-        # iterating until there is no more "next" links, is common -
-        # think about refactoring it to a superclass method
-        html = Robot.Get("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=%40DOCN&s2=&s3=&s4=&s5=&s6=")
+        html = Robot.Get("http://www.jo.se/Page.aspx?MenuId=106&MainMenuId=106&Language=sv&ObjectClass=DynamX_SFS_Decisions&Action=Search&Reference=&Category=0&Text=&FromDate=&ToDate=&submit=S%F6k")
         soup = BeautifulSoup.BeautifulSoup(html)
         self._downloadDecisions(soup)
-        nexttags = soup.first('img', {'src' : '/netaicon/nxtlspg.gif'})
-        
-        while nexttags:
-            nexturl = urllib.basejoin("http://www.arn.se/",nexttags.parent['href'])
-            html = Robot.Get(nexturl)
-            soup = BeautifulSoup.BeautifulSoup(html)
-            self._downloadDecisions(soup)
-            nexttags = soup.first('img', {'src' : '/netaicon/nxtlspg.gif'})
-            
         self._saveIndex()
         
     def DownloadNew(self):
@@ -76,33 +63,41 @@ class ARNDownloader(LegalSource.LegalSourceDownloader):
         tree = ET.ElementTree(file=self.dir + "/index.xml")
         for node in tree.getroot():
             id = node.get("id")
-            resource = DownloadedResource(id)
+            resource = LegalSource.DownloadedResource(id)
             resource.url = node.get("url")
             resource.localFile = node.get("localFile")
             resource.fetched = time.strptime(node.get("fetched"), TIME_FORMAT)
             self.ids[id] = resource
         
     def _downloadDecisions(self,soup):
-        for tag in soup('a', {'href': re.compile(r'/netacgi/brs.pl.*f=G')}):
-            id = tag.string
-            if id != "Ärendenummer saknas":
-                url = "http://www.arn.se" + tag['href']
+        re_descPattern = re.compile('Beslutsdatum: (\d+-\d+-\d+) Diarienummer: (\d+-\d+)')
+        for result in soup.first('div', {'class': 'SearchResult'}):
+            if result.a['href']:
+                url = urllib.basejoin("http://www.jo.se/",result.a['href'])
+                # Seems to be a bug in BeautifulSoup - properly
+                # escaped & entities are not de-escaped
+                url = url.replace('&amp;','&')
+                desc = result.contents[-1].string
+                m = re_descPattern.match(desc)
+                beslutsdatum = m.group(1)
+                id = m.group(2)
                 filename = id + ".html"
-
-                resource = DownloadedResource(id)
+                
+                resource = LegalSource.DownloadedResource(id)
                 resource.url = url
                 resource.localFile = filename
+                print "Storing %s as %s" % (url,filename)
                 Robot.Store(url, None, self.dir + "/" + id + ".html")
                 resource.fetched = time.localtime()
                 if id in self.ids:
                     print "WARNING: replacing URL of id '%s' to '%s' (was '%s')" % (id, url, self.ids[id].url)
                 self.ids[id] = resource
 
-class ARNParser(LegalSource.LegalSourceParser):
+class JOParser(LegalSource.LegalSourceParser):
 
     def __init__(self,id,file,baseDir):
         self.id = id
-        self.dir = baseDir + "/arn/parsed"
+        self.dir = baseDir + "/jo/parsed"
         if not os.path.exists(self.dir):
             Util.mkdir(self.dir)
         self.file = file
@@ -140,22 +135,22 @@ class ARNParser(LegalSource.LegalSourceParser):
         tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
     
 
-class TestARNCollection(unittest.TestCase):
+class TestJOCollection(unittest.TestCase):
     baseDir = "testdata"
     def testDownloadAll(self):
-        c = ARNDownloader(self.baseDir)
+        c = JODownloader(self.baseDir)
         c.DownloadAll()
         # FIXME: come up with some actual tests
 
     def testParse(self):
-        p = ARNParser("1997-2944", "testdata/arn/downloaded/1997-2944.html", self.baseDir)
+        p = JOParser("1997-2944", "testdata/jo/downloaded/1997-2944.html", self.baseDir)
         p.parse()
         # FIXME: come up with actual test (like comparing the
         # resulting XML file to a known good file)
         
 if __name__ == "__main__":
     # unittest.main()
-    suite = unittest.defaultTestLoader.loadTestsFromName("ARN.TestARNCollection.testParse")
+    suite = unittest.defaultTestLoader.loadTestsFromName("JO.TestJOCollection.testDownloadAll")
     unittest.TextTestRunner(verbosity=2).run(suite)
     
     
