@@ -164,7 +164,7 @@ def Open(url,
     # 
     opener.addheaders = [('User-agent', userAgent)]
     retries = 3
-    while retries > 0:
+    while retries >= 0:
         try:
             if (method == "POST"):
                 data = urllib.urlencode(parameters)
@@ -173,9 +173,12 @@ def Open(url,
             else:
                 response = opener.open(url)
             return response
-        except urllib2.URLError:
+        except urllib2.URLError, e:
             retries = retries - 1
-            print "WARNING: Robot.Open got a URLError, %s retries left" % retries
+            if retries < 0:
+                raise e
+            else:
+                print "WARNING: Robot.Open got a URLError, %s retries left" % retries
             
 
 
@@ -264,12 +267,14 @@ def Store(url,
     is used as a filename (and if that part is not usable as a filename by
     containing chars like : and &, all hell breaks loose)
 
+    Returns the name of the downloaded file as created on disk
+
     This method only handles GET requests -- for POSTS you need to
     roll your own using Open()
     """
-    # print "        url: %s" % url
-    # print " urlPattern: %s" % urlPattern
-    # print "filePattern: %s" % filePattern
+    #print "        url: %s" % url
+    #print " urlPattern: %s" % urlPattern
+    #print "filePattern: %s" % filePattern
     if urlPattern == None:
         if filePattern == None:
             filename = url.split('/')[-1]
@@ -279,7 +284,8 @@ def Store(url,
         pattern = re.compile(urlPattern)
         assert(pattern.match(url))
         filename = pattern.sub(filePattern,url)
-        
+    #print "   filename: %s" % filePattern
+
     # print "Let's store stuff as %s" % filename
     resp = Open(url,"GET",{}, respectRobotsTxt, useThrottling, throttleDelay,
                 useCache, cacheLocation, userAgent)
@@ -287,6 +293,7 @@ def Store(url,
     fp = open(filename,"w")
     fp.write(resp.read())
     fp.close()
+    return filename
         
 def ClearCache(cacheLocation="cache"):
     # print "Clearing cache..."

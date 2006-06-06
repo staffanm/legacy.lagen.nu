@@ -24,8 +24,9 @@ import elementtree.ElementTree as ET
 
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = "Beslut från JO"
 
-class JODownloader(LegalSource.LegalSourceDownloader):
+class JODownloader(LegalSource.Downloader):
     
     def __init__(self,baseDir="data"):
         self.dir = baseDir + "/jo/downloaded"
@@ -47,30 +48,8 @@ class JODownloader(LegalSource.LegalSourceDownloader):
     def DownloadNew(self):
         pass
         
-    def _saveIndex(self):
-        indexroot = ET.Element("index")
-        for k in self.ids.keys():
-            resource = ET.SubElement(indexroot, "resource")
-            resource.set("id", k)
-            resource.set("url", self.ids[k].url)
-            resource.set("localFile", self.ids[k].localFile)
-            resource.set("fetched", time.strftime(TIME_FORMAT,self.ids[k].fetched))
-        tree = ET.ElementTree(indexroot)
-        tree.write(self.dir + "/index.xml")
-
-    def _loadIndex(self):
-        self.ids.clear()
-        tree = ET.ElementTree(file=self.dir + "/index.xml")
-        for node in tree.getroot():
-            id = node.get("id")
-            resource = LegalSource.DownloadedResource(id)
-            resource.url = node.get("url")
-            resource.localFile = node.get("localFile")
-            resource.fetched = time.strptime(node.get("fetched"), TIME_FORMAT)
-            self.ids[id] = resource
-        
     def _downloadDecisions(self,soup):
-        re_descPattern = re.compile('Beslutsdatum: (\d+-\d+-\d+) Diarienummer: (\d+-\d+)')
+        re_descPattern = re.compile('Beslutsdatum: (\d+-\d+-\d+) Diarienummer: (.*)')
         for result in soup.first('div', {'class': 'SearchResult'}):
             if result.a['href']:
                 url = urllib.basejoin("http://www.jo.se/",result.a['href'])
@@ -81,19 +60,19 @@ class JODownloader(LegalSource.LegalSourceDownloader):
                 m = re_descPattern.match(desc)
                 beslutsdatum = m.group(1)
                 id = m.group(2)
-                filename = id + ".html"
+                filename = id.replace('/','-') + ".html"
                 
                 resource = LegalSource.DownloadedResource(id)
                 resource.url = url
                 resource.localFile = filename
                 print "Storing %s as %s" % (url,filename)
-                Robot.Store(url, None, self.dir + "/" + id + ".html")
+                Robot.Store(url, None, self.dir + "/" + id.replace('/','-') + ".html")
                 resource.fetched = time.localtime()
                 if id in self.ids:
                     print "WARNING: replacing URL of id '%s' to '%s' (was '%s')" % (id, url, self.ids[id].url)
                 self.ids[id] = resource
 
-class JOParser(LegalSource.LegalSourceParser):
+class JOParser(LegalSource.Parser):
 
     def __init__(self,id,file,baseDir):
         self.id = id
@@ -133,6 +112,11 @@ class JOParser(LegalSource.LegalSourceParser):
 
         tree = ET.ElementTree(root)
         tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
+
+
+class JOManager(LegalSource.Manager):
+    def __init__(self,baseDir):
+        self.baseDir = baseDir
     
 
 class TestJOCollection(unittest.TestCase):
@@ -152,6 +136,3 @@ if __name__ == "__main__":
     # unittest.main()
     suite = unittest.defaultTestLoader.loadTestsFromName("JO.TestJOCollection.testDownloadAll")
     unittest.TextTestRunner(verbosity=2).run(suite)
-    
-    
-    

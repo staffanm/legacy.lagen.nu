@@ -24,8 +24,9 @@ import elementtree.ElementTree as ET
 
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = "Referat från ARN"
 
-class ARNDownloader(LegalSource.LegalSourceDownloader):
+class ARNDownloader(LegalSource.Downloader):
     
     def __init__(self,baseDir="data"):
         self.dir = baseDir + "/arn/downloaded"
@@ -60,28 +61,6 @@ class ARNDownloader(LegalSource.LegalSourceDownloader):
     def DownloadNew(self):
         pass
         
-    def _saveIndex(self):
-        indexroot = ET.Element("index")
-        for k in self.ids.keys():
-            resource = ET.SubElement(indexroot, "resource")
-            resource.set("id", k)
-            resource.set("url", self.ids[k].url)
-            resource.set("localFile", self.ids[k].localFile)
-            resource.set("fetched", time.strftime(TIME_FORMAT,self.ids[k].fetched))
-        tree = ET.ElementTree(indexroot)
-        tree.write(self.dir + "/index.xml")
-
-    def _loadIndex(self):
-        self.ids.clear()
-        tree = ET.ElementTree(file=self.dir + "/index.xml")
-        for node in tree.getroot():
-            id = node.get("id")
-            resource = DownloadedResource(id)
-            resource.url = node.get("url")
-            resource.localFile = node.get("localFile")
-            resource.fetched = time.strptime(node.get("fetched"), TIME_FORMAT)
-            self.ids[id] = resource
-        
     def _downloadDecisions(self,soup):
         for tag in soup('a', {'href': re.compile(r'/netacgi/brs.pl.*f=G')}):
             id = tag.string
@@ -98,7 +77,7 @@ class ARNDownloader(LegalSource.LegalSourceDownloader):
                     print "WARNING: replacing URL of id '%s' to '%s' (was '%s')" % (id, url, self.ids[id].url)
                 self.ids[id] = resource
 
-class ARNParser(LegalSource.LegalSourceParser):
+class ARNParser(LegalSource.Parser):
 
     def __init__(self,id,file,baseDir):
         self.id = id
@@ -138,7 +117,10 @@ class ARNParser(LegalSource.LegalSourceParser):
 
         tree = ET.ElementTree(root)
         tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
-    
+
+class ARNManager(LegalSource.Manager):
+    def __init__(self,baseDir):
+        self.baseDir = baseDir
 
 class TestARNCollection(unittest.TestCase):
     baseDir = "testdata"

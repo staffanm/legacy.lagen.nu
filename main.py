@@ -1,4 +1,5 @@
 import Robot
 reload(Robot)
 
-Robot.Get("http://www.regeringen.se/", UseCache=True)
+if __name__ == "__main__":
+    Robot.Get("http://www.regeringen.se/", UseCache=True)
