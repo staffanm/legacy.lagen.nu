@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/sw/bin/python
 # -*- coding: iso-8859-1 -*-
 """Hanterar lagförarbeten från Regeringskansliet (SOU/Ds och propositioner)
 
@@ -83,13 +83,8 @@ class RegPublParser(LegalSource.Parser):
                         os.path.splitext(os.path.basename(f))[0])
 
 
-class RegPublManager(LegalSource.Manager):
-    def __init__(self,baseDir):
-        self.baseDir = baseDir
 
-    def parse(self,id):
-        # find out id somehow
-        pass
+class RegPublManager(LegalSource.Manager):
 
     def download(self,id):
         rd = RegPublDownloader(self.baseDir)

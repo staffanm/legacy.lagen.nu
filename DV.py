@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/sw/bin/python
 # -*- coding: iso-8859-1 -*-
 """Hanterar domslut (detaljer och referat) från Domstolsverket, www.rattsinfosok.dom.se
 

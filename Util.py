@@ -1,9 +1,22 @@
-#!/usr/local/bin/python
+#!/sw/bin/python
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 import os
 import subprocess
 
+class ValidationError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class TransformError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+# FIXME: need to rewrite this
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
 def mkdir(newdir):
     """works the way a good mkdir should :)
@@ -23,7 +36,8 @@ def mkdir(newdir):
             #print "mkdir %s" % repr(newdir)
         if tail:
             os.mkdir(newdir)
-                
+
+# FIXME: need to rewrite this
 # from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135435
 def numsort(alist):
     """
@@ -72,6 +86,48 @@ def indentXmlFile(filename):
     (ret,stdout,stderr) = runcmd("xmllint --format %s > tmp.xml" % filename)
     os.remove(filename)
     os.rename("tmp.xml",filename)
+
+def tidyHtmlFile(filename):    
+    """Neatifies an existing XHTML file in-place by running tidy"""
+    if os.sys.platform == "darwin":
+        tidycmd = "/usr/local/bin/tidy"
+    else:
+        tidycmd = "tidy"
+    (ret,stdout,stderr) = runcmd("%s -q -n -i -asxhtml -latin1 -w 120 --doctype strict %s > tmp.xml" % (tidycmd,filename))
+    # tidy always exists with a non-0 return code if there were any
+    # hrefs with spaces in them, so let's just silently ignore errors
+    # for now
+    #if (ret != 0):
+    #    raise TidyError(stderr)
+    
+    # os.system("xmllint --format %s > tmp.xml" % filename)
+    os.remove(filename)
+    os.rename("tmp.xml",filename)
+
+def transform(stylesheet,infile,outfile,parameters={},validate=True):
+    """Does a XSLT transform with the selected stylesheet. Afterwards, tidies the resulting HTML tree and validates it"""
+    param_str = ""
+    for p in parameters.keys():
+        # this double style quoting is needed for lawlist.xsl when
+        # using the tagname parameter on macos. Maybe for other
+        # reasons as well, I dunno
+        param_str += "--param %s \"'%s'\" " % (p,parameters[p])
+    
+    cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,outfile)
+    # print cmdline
+    (ret,stdout,stderr) = runcmd(cmdline)
+    if (ret != 0):
+        raise TransformError(stderr)
+
+    # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
+    # tidyHtmlFile(outfile)
+    indentXmlFile(outfile)
+
+    if validate:
+        cmdline = "xmllint --noout --nonet --nowarning --dtdvalid %s/dtd/xhtml1-strict.dtd %s" % (basepath,outfile)
+        (ret,stdout,stderr) = runcmd(cmdline)
+        if (ret != 0):
+            raise ValidationError(stderr)
 
 def uniqueList(*lists):
     slots = {}

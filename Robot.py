@@ -1,3 +1,5 @@
+#!/sw/bin/python
+# -*- coding: iso-8859-1 -*-
 """Fetch content from websites in a simple, efficient fashion.
 
 This module wraps urllib2 and ClientCookie in easy-to-use wrapper, and

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/sw/bin/python
 # -*- coding: iso-8859-1 -*-
 """Base classes for Downloaders and Parsers. Also utility classes (should be moved?)"""
 import sys, os, re, codecs, types, htmlentitydefs
@@ -80,13 +80,27 @@ class Parser:
         return self.normalizeSpace(''.join([e for e in element.recursiveChildGenerator() if isinstance(e,unicode)]))
 
 class Manager:
+    def __init__(self,baseDir):
+        self.baseDir = baseDir
+        print "LegalSource.py: self.baseDir set to " + self.baseDir
+
+    def print_usage(self):
+        print "Syntax: %s [action] [id]" % argv[0]
+        
     def run(self,argv):
-        action = argv[1]
-        id = argv[2]
-        if action == "parse":
-            self.parse(id)
-        elif action == "download":
-            self.download(id)
+        if len(sys.argv) < 3:
+            self.print_usage(argv)
+        else:
+            action = argv[1]
+            id = argv[2]
+            if id == 'all':
+                action += "All"
+            m = getattr(self,action)
+            if m:
+                m(id)
+            else:
+                print "Unknown action %s" % action
+                
     def parse(self,id):
         raise NotImplementedError
     
@@ -94,6 +108,10 @@ class Manager:
         raise NotImplementedError
     
     def parseAll(self):
+        raise NotImplementedError
+
+    def generate(self):
+        """generate does the basic XML-to-HTML-ahead-of-time conversion"""
         raise NotImplementedError
 
 
