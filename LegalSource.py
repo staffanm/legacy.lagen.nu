@@ -84,7 +84,7 @@ class Manager:
         self.baseDir = baseDir
         print "LegalSource.py: self.baseDir set to " + self.baseDir
 
-    def print_usage(self):
+    def print_usage(self,argv):
         print "Syntax: %s [action] [id]" % argv[0]
         
     def run(self,argv):
