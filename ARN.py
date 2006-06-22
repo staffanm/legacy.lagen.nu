@@ -88,7 +88,7 @@ class ARNParser(LegalSource.Parser):
         self.file = file
         print "Loading file %s" % file
 
-    def parse(self):
+    def Parse(self):
         import codecs
         soup = BeautifulSoup.BeautifulSoup(codecs.open(self.file,encoding="iso-8859-1",errors='replace').read())
         
