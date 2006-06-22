@@ -1,4 +1,4 @@
-Arkitektur för lagen.nu 2.0-- det här ska in i trac-wikin när den kommer upp
+Arkitektur för lagen.nu 2.0 -- det här ska in i trac-wikin när den kommer upp
 
 "Gamla" lagen.nu var i stort sett uppbyggt kring SFS, med lite lös
 koppling till rättsfall och förarbeten. Lagen.nu 2.0 kommer ta ett
@@ -41,11 +41,11 @@ ersättas av mankraft.
 
 Den smarta kopplingen
 
-Utmaningen Ã¤r att frÃ¥n en given rÃ¤ttskÃ¤lla hitta andra rÃ¤ttskÃ¤llor som
-Ã¤r relevanta. Vissa lagparagrafer behÃ¶ver kopplas till rÃ¤ttsfall som
-illustrerar dem. Vissa rÃ¤ttsfall behÃ¶ver kopplas ihop med
+Utmaningen är att från en given rättskälla hitta andra rättskällor som
+är relevanta. Vissa lagparagrafer behöver kopplas till rättsfall som
+illustrerar dem. Vissa rättsfall behöver kopplas ihop med
 doktrin. EG-domstolsbeslut, nationella domstolsbeslut, EG-direktiv och
-svenska fÃ¶rarbeten hÃ¤nger alla ihop. 
+svenska förarbeten hänger alla ihop. 
 
 
 
