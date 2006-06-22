@@ -1,8 +1,4 @@
-Anonymous users shouldn't be able to change this!
-
-This is the source code for lagen.nu 2.0 (or at least it will be)
-
-Arkitektur för lagen.nu 2.0
+Arkitektur för lagen.nu 2.0-- det här ska in i trac-wikin när den kommer upp
 
 "Gamla" lagen.nu var i stort sett uppbyggt kring SFS, med lite lös
 koppling till rättsfall och förarbeten. Lagen.nu 2.0 kommer ta ett
