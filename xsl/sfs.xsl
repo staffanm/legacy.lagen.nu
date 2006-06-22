@@ -217,7 +217,7 @@
 </xsl:template>
 
 <xsl:template match="chapter">
-  <!--<a name="K{@id}"/>-->
+  <a name="K{@id}"/>
   <xsl:apply-templates/>
 </xsl:template>
 
@@ -240,7 +240,7 @@
       </td>
       <td>
   <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
-  <p class="comment">R<xsl:value-of select="@id"/>: click to edit!</p>
+  <p class="clicktoedit" id="R{@id}">R<xsl:value-of select="@id"/>: Klicka för att kommentera</p>
   <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
       </td>
     </tr>
@@ -304,7 +304,7 @@
       <xsl:if test="$id != ''">
       <td>
 	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="comment">[<xsl:value-of select="$id"/>] click to edit!</p>
+	<p class="clicktoedit" id="{$id}"><xsl:value-of select="$id"/> Klicka för att kommentera</p>
 	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
       </td>
       </xsl:if>
@@ -330,7 +330,7 @@
       </td>
       <td>
 	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="comment"><xsl:value-of select="$id"/>: click to edit!</p>
+	<p class="clicktoedit" id="{$id}"><xsl:value-of select="$id"/>: klicka för att kommentera</p>
 	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
       </td>
     </tr>

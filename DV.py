@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Hanterar domslut (detaljer och referat) från Domstolsverket, www.rattsinfosok.dom.se
 
@@ -87,50 +87,7 @@ class DVParser(LegalSource.Parser):
             Util.mkdir(self.dir)
         self.files = files
 
-    def _createUrn(self,data):
-        domstolar = {
-            u'Marknadsdomstolen':                 u'md',
-            u'Hovrätten för Övre Norrland':       u'hovr:övrenorrland',
-            u'Hovrätten för Nedre Norrland':      u'hovr:nedrenorrland',
-            u'Hovrätten över Skåne och Blekinge': u'hovr:skåne',
-            u'Svea hovrätt':                      u'hovr:svea',
-            u'Hovrätten för Västra Sverige':      u'hovr:västra',
-            u'G\xf6ta hovr\xe4tt':                u'hovr:göta',
-            u'Kammarr\xe4tten i G\xf6teborg':     u'kamr:göteborg',
-            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'kamr:jönkoping',
-            u'Kammarr\xe4tten i Stockholm':       u'kamr:stockholm',
-            u'Kammarr\xe4tten i Sundsvall':       u'kamr:sundsvall',
-            u'Arbetsdomstolen':                   u'ad',
-            u'Högsta domstolen':                  u'hd',
-            u'Regeringsrätten':                   u'regr',
-            u'Patentbesvärsrätten':               u'pbr',
-            u'Rättshjälpsnämnden':                u'rhn',
-            u'Miljööverdomstolen':                u'möd',
-             }
-        idfield = {
-            u'Marknadsdomstolen':                 u'Domsnummer',
-            u'Hovrätten för Övre Norrland':       u'Målnummer',
-            u'Hovrätten för Nedre Norrland':      u'Målnummer',
-            u'Hovrätten över Skåne och Blekinge': u'Målnummer',
-            u'Svea hovrätt':                      u'Målnummer',
-            u'Hovrätten för Västra Sverige':      u'Målnummer',
-            u'G\xf6ta hovr\xe4tt':                u'Målnummer',
-            u'Kammarr\xe4tten i G\xf6teborg':     u'Målnummer',
-            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'Målnummer',
-            u'Kammarr\xe4tten i Stockholm':       u'Målnummer',
-            u'Kammarr\xe4tten i Sundsvall':       u'Målnummer',
-            u'Arbetsdomstolen':                   u'Domsnummer',
-            u'Högsta domstolen':                  u'Målnummer',
-            u'Regeringsrätten':                   u'Målnummer',
-            u'Patentbesvärsrätten':               u'Målnummer',
-            u'Rättshjälpsnämnden':                u'Diarienummer',
-            u'Miljööverdomstolen':                u'Målnummer',
-            }
-        domstol = data['Domstol']
-        urn = "urn:x-dom:%s:%s" % (domstolar[domstol], data[idfield[domstol]])
-        return urn
-
-    def parse(self):
+    def Parse(self):
         import codecs
         soup = self.loadDoc(self.files['detalj'])
         data = {}
@@ -160,7 +117,7 @@ class DVParser(LegalSource.Parser):
                             data["Alt"+key] = m.group(2)
                         data[key] = val
 
-        urn = self._createUrn(data)
+        urn = self.__createUrn(data)
 
         referat = []
         if 'referat' in self.files:
@@ -228,7 +185,50 @@ class DVParser(LegalSource.Parser):
         Util.indentXmlFile(self.dir+"/"+self.id+".xml")
 
         return tree
-        
+
+    def __createUrn(self,data):
+        domstolar = {
+            u'Marknadsdomstolen':                 u'md',
+            u'Hovrätten för Övre Norrland':       u'hovr:övrenorrland',
+            u'Hovrätten för Nedre Norrland':      u'hovr:nedrenorrland',
+            u'Hovrätten över Skåne och Blekinge': u'hovr:skåne',
+            u'Svea hovrätt':                      u'hovr:svea',
+            u'Hovrätten för Västra Sverige':      u'hovr:västra',
+            u'G\xf6ta hovr\xe4tt':                u'hovr:göta',
+            u'Kammarr\xe4tten i G\xf6teborg':     u'kamr:göteborg',
+            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'kamr:jönkoping',
+            u'Kammarr\xe4tten i Stockholm':       u'kamr:stockholm',
+            u'Kammarr\xe4tten i Sundsvall':       u'kamr:sundsvall',
+            u'Arbetsdomstolen':                   u'ad',
+            u'Högsta domstolen':                  u'hd',
+            u'Regeringsrätten':                   u'regr',
+            u'Patentbesvärsrätten':               u'pbr',
+            u'Rättshjälpsnämnden':                u'rhn',
+            u'Miljööverdomstolen':                u'möd',
+             }
+        idfield = {
+            u'Marknadsdomstolen':                 u'Domsnummer',
+            u'Hovrätten för Övre Norrland':       u'Målnummer',
+            u'Hovrätten för Nedre Norrland':      u'Målnummer',
+            u'Hovrätten över Skåne och Blekinge': u'Målnummer',
+            u'Svea hovrätt':                      u'Målnummer',
+            u'Hovrätten för Västra Sverige':      u'Målnummer',
+            u'G\xf6ta hovr\xe4tt':                u'Målnummer',
+            u'Kammarr\xe4tten i G\xf6teborg':     u'Målnummer',
+            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'Målnummer',
+            u'Kammarr\xe4tten i Stockholm':       u'Målnummer',
+            u'Kammarr\xe4tten i Sundsvall':       u'Målnummer',
+            u'Arbetsdomstolen':                   u'Domsnummer',
+            u'Högsta domstolen':                  u'Målnummer',
+            u'Regeringsrätten':                   u'Målnummer',
+            u'Patentbesvärsrätten':               u'Målnummer',
+            u'Rättshjälpsnämnden':                u'Diarienummer',
+            u'Miljööverdomstolen':                u'Målnummer',
+            }
+        domstol = data['Domstol']
+        urn = "urn:x-dom:%s:%s" % (domstolar[domstol], data[idfield[domstol]])
+        return urn
+
 class DVManager(LegalSource.Manager):
     def __init__(self,baseDir):
         self.baseDir = baseDir

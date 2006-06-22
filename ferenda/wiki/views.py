@@ -4,6 +4,9 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect
 from ferenda.wiki.models import Article
 from datetime import datetime
+import sys
+sys.path.append("..")
+from DocComments import AnnotatedDoc
 
 def article(request,art_title="Blahonga"):
     #utitle = unicode(art_title,'utf-8')
@@ -25,14 +28,19 @@ def edit(request,art_title):
         art.body = "Skriv artikeltexten h&auml;r"
     return render_to_response('wiki/edit.html', {'article':art})
 
-def save(request,art_title):
+def save(request,art_title, art_section=None):
     try:
         art = Article.objects.get(pk=art_title)
     except Article.DoesNotExist:
         art = Article()
         art.title = art_title
 
-    art.body = request.POST['body']
+    if art_section:
+        ad = AnnotatedDoc()
+        art.body = ad.Update(art.body,art_section,request.POST["text"])
+    else:
+        art.body = request.POST['body']
+        
     art.last_changed = datetime.now()
     art.save()
     return HttpResponseRedirect('/%s' % art_title)

@@ -12,28 +12,7 @@ class DispatchMixin:
 Note that your class cannot have a method called `dispatch`
     """
 
-    def __printValidCommands(self):
-        
-        print "Valid commands are:", ", ".join(
-            [str(m) for m in dir(self) if (m != "dispatch" and
-                                           not m.startswith("_") and
-                                           callable(getattr(self, m)))]
-            )
-             
-    def __printArguments(self,func):
-        args = inspect.getargspec(func)[0][1:]
-        defaultArgs = list(inspect.getargspec(func)[3] or ())
-        # 'pad' defaultArgs so that it's the same len as args
-        for i in range(len(args)-len(defaultArgs)):
-            defaultArgs.insert(0,None)
-            
-        for i in range(len(args)):
-            if not defaultArgs[i]:
-                print "* %s" % args[i]
-            else:
-                print "* %s=%s" % (args[i], defaultArgs[i])
-            
-    def dispatch(self,argv=sys.argv):
+    def Dispatch(self,argv=sys.argv):
         if len(argv) < 2:
             print "No command argument given"
             self.__printValidCommands()
@@ -61,6 +40,28 @@ Note that your class cannot have a method called `dispatch`
             else:
                 combinedArgs = tuple(providedArgs) + defaultArgs[-(neededDefaultArgs):]
         func(*combinedArgs)
+
+    def __printValidCommands(self):
+        
+        print "Valid commands are:", ", ".join(
+            [str(m) for m in dir(self) if (m != "Dispatch" and
+                                           not m.startswith("_") and
+                                           callable(getattr(self, m)))]
+            )
+             
+    def __printArguments(self,func):
+        args = inspect.getargspec(func)[0][1:]
+        defaultArgs = list(inspect.getargspec(func)[3] or ())
+        # 'pad' defaultArgs so that it's the same len as args
+        for i in range(len(args)-len(defaultArgs)):
+            defaultArgs.insert(0,None)
+            
+        for i in range(len(args)):
+            if not defaultArgs[i]:
+                print "* %s" % args[i]
+            else:
+                print "* %s=%s" % (args[i], defaultArgs[i])
+            
     
 class Test:
 

@@ -17,7 +17,6 @@ table {
 .outer tr td {
    vertical-align: top;
    clear: both;
-   width: 480pt;
    padding: 0;
    margin: 0;
 }
@@ -35,8 +34,9 @@ h2 {
    margin: 0;
    font-size: 12pt;
 }
+
 .legaldoc { 
-   width: 400pt;
+   width: 310pt;
    display: inline;
    font-family: Didot, Times New Roman, serif;
    background-color: #ddd;
@@ -53,6 +53,24 @@ h2 {
    float: right;
    margin: 0;
    padding: 0;
+}
+
+textarea {
+    font: 8pt Optima, Arial, sans-serif;
+    width: 95%;
+}
+.commentid {
+    display: none;   
+}
+.clicktoedit {
+    width: 160pt;
+    cursor: text;
+    float: right;
+    font: italic 8pt Optima, Arial, sans-serif;
+}
+
+.invisible {
+    text-color: #eee;
 }
 
 .sfsid {
@@ -102,7 +120,7 @@ h2 {
 
 #toc { 
    /* border: black 1pt solid; */
-   width: 400;
+   width: 400pt ;
    font-family: Verdana, sans-serif;
    font-size: 10pt;
    margin-top: 10pt;

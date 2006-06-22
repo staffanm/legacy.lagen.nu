@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="E2EF40CB-833C-4960-AE14-3657574A4A85" name="ferenda-web" kpf_version="2">
+<preference-set id="">
+  <string id="import_dirname">C:\Documents and Settings\staffan\svn\trunk\ferenda</string>
+</preference-set>
+<file url="ferenda/initialdata.sql" id="CCA37976-0790-4436-A5ED-7964C0F3E902" name="initialdata.sql">
+</file>
+<file url="ferenda/manage.py" id="3F9C8F35-C5C3-4D4E-8659-38E0DD33917B" name="manage.py">
+</file>
+<file url="ferenda/settings.py" id="E047F648-794C-4ED5-8D2C-0373B388DB03" name="settings.py">
+</file>
+<file url="ferenda/sitecustomize.py" id="CA0DFFC4-1663-4C6D-BB11-00CD03F8EA58" name="sitecustomize.py">
+</file>
+<file url="ferenda/urls.py" id="0CA6CF69-F0FA-4289-B3BC-E6EFEFF72359" name="urls.py">
+</file>
+<file url="ferenda/__init__.py" id="0A15269F-F70B-4B0A-97DA-B19B716B4863" name="__init__.py">
+</file>
+<folder url="ferenda/docview" id="F7276ECA-D3D6-407A-8DAA-0D6ABB855D02" name="docview">
+<file url="ferenda/docview/models.py" id="836A138C-ED0D-4BEB-8D31-43524E418048" name="models.py">
+</file>
+<file url="ferenda/docview/views.py" id="DA64FC98-490B-4D57-99AB-372D58D4361C" name="views.py">
+</file>
+<file url="ferenda/docview/__init__.py" id="A8D32FFA-79EF-4BCE-BA89-35481B7CA1B7" name="__init__.py">
+</file>
+</folder>
+<folder url="ferenda/static" id="2800D72A-80AF-48F3-9F96-7140F511763F" name="static">
+<file url="ferenda/static/729.html" id="72D7DF8B-36F8-4BFB-9845-BFA1074D5FEA" name="729.html">
+</file>
+<file url="ferenda/static/default.css" id="D5C25466-F1F2-4201-8DAB-01FAFB9A39CF" name="default.css">
+</file>
+<file url="ferenda/static/stuff.js" id="26EAA600-B588-452D-803C-87AC93C72717" name="stuff.js">
+</file>
+</folder>
+<folder url="ferenda/templates" id="587A378E-A91F-43EA-9A5F-14EFEEC6D079" name="templates">
+<folder url="ferenda/templates/docview" id="C1591215-486C-4D55-96DF-D080FC34F829" name="docview">
+<file url="ferenda/templates/docview/view.html" id="A04C28E6-D01D-4AF6-8299-C09DBF2963D9" name="view.html">
+</file>
+</folder>
+<folder url="ferenda/templates/wiki" id="81E29C80-E538-43A9-B12C-1F161D5AEE9D" name="wiki">
+<file url="ferenda/templates/wiki/display.html" id="6C342D8D-95F0-4EF1-9DE3-2F64F44C09F1" name="display.html">
+</file>
+<file url="ferenda/templates/wiki/edit.html" id="1B503167-E16B-4A33-A89C-FCF3BEC2045D" name="edit.html">
+</file>
+</folder>
+</folder>
+<folder url="ferenda/wiki" id="BD3D4FE1-DE93-44ED-8ADE-962262626ABE" name="wiki">
+<file url="ferenda/wiki/models.py" id="426A5683-8FD9-41A4-B3B1-C881CB7812CF" name="models.py">
+</file>
+<file url="ferenda/wiki/views.py" id="9F0DD4DA-0568-49FD-A410-AC1A31F88F7A" name="views.py">
+</file>
+<file url="ferenda/wiki/__init__.py" id="1181D029-1D1C-42D1-9CEA-3B03A3FD4D3D" name="__init__.py">
+</file>
+</folder>
+</project>

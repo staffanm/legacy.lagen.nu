@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """High-level classes that coordinates various Downloaders, Parsers
 and Renderers to create the static HTML files and other stuff"""
@@ -16,7 +16,7 @@ class ParseManager:
             parser.parse()
 
 
-def pairlist_to_assoc(pairlist):
+def PairlistToAssoc(pairlist):
     """maybe this could be done w/ list comprehensions (can they
     return an associative array?)"""
     a = {}
@@ -24,7 +24,7 @@ def pairlist_to_assoc(pairlist):
         a[p[0]] = p[1]
     return a
 
-def find_modules():
+def FindModules():
     res = {}
     for f in [f for f in os.listdir(".") if f.endswith(".py") and f != "sitecustomize.py"]:
         modulename = inspect.getmodulename(f)
@@ -38,9 +38,9 @@ def find_modules():
                 res[modulename] = '<no description>'
     return res
 
-def find_manager(module):
+def FindManager(module):
     import LegalSource
-    classes = pairlist_to_assoc(inspect.getmembers(module,inspect.isclass))
+    classes = PairlistToAssoc(inspect.getmembers(module,inspect.isclass))
     for classname in classes.keys():
         if LegalSource.Manager in inspect.getmro(classes[classname]):
             return classes[classname]
@@ -53,20 +53,20 @@ ACTIONS = {'download': 'download everything',
            'test'    : 'do internal regression tests',
            'all'     : 'do everything in a sensible order'}
 
-def print_usage():
+def PrintUsage():
     print "Syntax: %s [action] [module]"
     print "action can be one of:"
     for a in ACTIONS.keys():
         print "  * %s: %s" % (a,ACTIONS[a])
     print "modules can be one of:"
-    modules = find_modules()
+    modules = FindModules()
     for m in modules.keys():
         print "  * %s: %s" % (m,modules[m])
     print "  or `all' to do it to all modules"
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print_usage()
+        PrintUsage()
     else:
         # fixme: ensure action/module are valid
         action = sys.argv[1]

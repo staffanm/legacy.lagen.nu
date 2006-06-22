@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Base classes for Downloaders and Parsers. Also utility classes (should be moved?)"""
 import sys, os, re, codecs, types, htmlentitydefs
@@ -71,11 +71,16 @@ class Parser:
 
     def __init__(self,baseDir):
         pass
-    def normalizeSpace(self,string):
-        return self.re_NormalizeSpace(' ',string).strip()
-    def loadDoc(self,filename,encoding='iso-8859-1'):
+    
+    def Parse(self):
+        raise NotImplementedError
+    
+    # Misc useful methods for subclassed classes
+    def LoadDoc(self,filename,encoding='iso-8859-1'):
         return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read())
-    def elementText(self,element):
+    def NormalizeSpace(self,string):
+        return self.re_NormalizeSpace(' ',string).strip()
+    def ElementText(self,element):
         """finds the plaintext contained in a BeautifulSoup element"""
         return self.normalizeSpace(''.join([e for e in element.recursiveChildGenerator() if isinstance(e,unicode)]))
 
@@ -84,10 +89,10 @@ class Manager:
         self.baseDir = baseDir
         print "LegalSource.py: self.baseDir set to " + self.baseDir
 
-    def print_usage(self,argv):
+    def PrintUsage(self,argv):
         print "Syntax: %s [action] [id]" % argv[0]
         
-    def run(self,argv):
+    def Run(self,argv):
         if len(sys.argv) < 3:
             self.print_usage(argv)
         else:
@@ -101,16 +106,16 @@ class Manager:
             else:
                 print "Unknown action %s" % action
                 
-    def parse(self,id):
+    def Parse(self,id):
         raise NotImplementedError
     
-    def download(self,id):
+    def Download(self,id):
         raise NotImplementedError
     
-    def parseAll(self):
+    def ParseAll(self):
         raise NotImplementedError
 
-    def generate(self):
+    def Generate(self):
         """generate does the basic XML-to-HTML-ahead-of-time conversion"""
         raise NotImplementedError
 

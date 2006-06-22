@@ -1,0 +1,10 @@
+P1: Övergångsbestämmelse.
+
+P1S1: Något sådant här ID förekommer inte i källtexten.
+
+P2: Här är en längre kommentar som sträcker sig över flera
+rader. Donec pellentesque, orci condimentum tempus pharetra, orci
+mauris euismod nibh, non euismod leo nibh ac quam. Sed a pede a urna
+tincidunt accumsan. In metus.
+
+P3: En avslutande kommentar.

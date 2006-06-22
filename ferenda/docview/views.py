@@ -11,12 +11,14 @@ import DocComments
 def view(request,displayid):
     try:
         d = LegalDocument.objects.get(displayid=displayid)
-        #try:
-        #    c = Article.objects.get(title=displayid)
-        #    generated = DocComments.weave(d.getHtml(),c.body)
-        #except Article.DoesNotExist:
-        generated = d.getHtml()
+        try:
+            c = Article.objects.get(title=displayid)
+            ad = DocComments.AnnotatedDoc(d.htmlpath)
+            generated = ad.Combine(unicode(c.body, 'utf-8'))
+        except Article.DoesNotExist:
+            generated = unicode(d.getHtml(), 'iso-8859-1').encode('utf-8')
         return render_to_response('docview/view.html', {'doc':d,
+                                                        'displayid':displayid,
                                                         'generated':generated})
     except LegalDocument.DoesNotExist:
         return render_to_response('docview/404.html')

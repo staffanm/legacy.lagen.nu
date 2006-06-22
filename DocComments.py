@@ -6,19 +6,23 @@ annotations/comments on it.
 The module is primarly used from the web interface -- speed is
 therefore important (consider a 500K+ document with 100s of
 comments)."""
-# import elementtree.ElementTree as ET
-import sys,re
-import cElementTree as ET
+import sys,os,re
 import codecs
 import pprint
 import cPickle
 from cStringIO import StringIO
 from DispatchMixin import DispatchMixin
 
+try:
+    import cElementTree as ET
+except ImportError:
+    import elementtree.ElementTree as ET
+
+
 class AnnotatedDoc:
     """Utility class for combining a legal document of some kind (in
     HTML format) with annotations/comments on it. Requires that the
-    HTML document be prepared with markers in the form of HTML
+    HTML document be prepared with markers in the form of HTML 
     comments to indicate where the individual comments should go."""
 
     def __init__(self, filename=None):
@@ -27,25 +31,39 @@ class AnnotatedDoc:
     def Prepare(self):
         """Create a index of where in the HTML file the comment markers
         are, so that Combine can locate them quickly. Typically done offline."""
-        indexfname = self.fname +".idx"
-        self.__saveIndex(indexfname,self.__buildIndex(htmlfname))
+        indexfname = self.filename +".idx"
+        self.__saveIndex(indexfname,self.__buildIndex(self.filename))
 
-    def Combine(self):
+    def Combine(self,comments=""):
         """Combines the HTML document with comments. Comments should be a
         free-form string (look at the testcases for details on how it
         should be formatted). Typically done at runtime (via the web
         interface)"""
-        indexfname = htmlfname + ".idx"
+        indexfname = self.filename + ".idx"
         if not os.path.exists(indexfname):
             self.Prepare()
-        return self.__weave(htmlfname,
+        res = self.__weave(self.filename,
                             self.__loadIndex(indexfname),
                             self.__parseComments(comments))
+        
+        return res
 
     def Test(self, commentfile):
         print "test(%s) called" % commentfile
-        self.__parseComments(file(commentfile).read())
-    
+        # pprint.pprint(self.__parseComments(file(commentfile).read()))
+        print self.Combine(codecs.open(commentfile, encoding='iso-8859-1').read())
+
+    def Update(self, comments, id, comment):
+        """Update the free-form comment string with a new comment (possibly
+        replacing an old)"""
+        commentDict = self.__parseComments(comments)
+        if id in commentDict:
+            oldcomment = commentDict[id]
+        else:
+            oldcomment = None
+        commentDict[id] = comment
+        print "Changing comment for %s from %s to %s" % (id, oldcomment, comment)
+        return self.__serializeComments(commentDict);
 
     def __buildIndex(self, htmlfname):
         """Builds an index over file positions in the HTML file where
@@ -57,7 +75,7 @@ class AnnotatedDoc:
         start_or_end_iter = re.compile(r'<!--(start|end):(\w+)-->').finditer
         index = []
 
-        data = file(htmlfname).read()
+        data = codecs.open(htmlfname, encoding="iso-8859-1").read()
         startmatch = None
         endmatch = None
         for m in start_or_end_iter(data):
@@ -73,36 +91,40 @@ class AnnotatedDoc:
         return index
 
     def __saveIndex(self, indexfname,indexes):
-        cPickle.dump(indexes, open(indexfname,"w"),cPickle.HIGHEST_PROTOCOL)
-
+        f = open(indexfname,"w")
+        cPickle.dump(indexes, f)
+        f.close()
+        
     def __loadIndex(self, indexfname):
         return cPickle.load(file(indexfname))
 
     def __weave(self, htmlfname,indexes=(),comments={}):
         """'Weave' together the HTML document with the comments"""
-        # fsock = codecs.open(htmlfname, encoding="iso-8859-1")
-        fsock = open(htmlfname)
+        fsock = codecs.open(htmlfname, encoding="iso-8859-1")
+        # fsock = open(htmlfname)
         # strsock = StringIO()
-        strsock = open(htmlfname.replace(".html", ".out.html"),"w")
+        # strsock = open(htmlfname.replace(".html", ".out.html"),"w")
+        strsock = codecs.open(htmlfname.replace(".html", ".out.html"), "w", encoding="iso-8859-1", errors="replace")
         pos = 0
         # get first start idx
-        for c in [c for c in indexes if c[2] in commentsMap]:
+        for c in [c for c in indexes if c[2] in comments]:
             numbytes = c[0] - pos
             print "%s writing %d bytes" % (c[2], numbytes)
             strsock.write(fsock.read(numbytes))
             numbytes = c[1] - c[0]
             # read and throw away
-            print "%s throwing %d bytes" % (c[2],numbytes)
-            fsock.read(numbytes)
+            throw = fsock.read(numbytes)
+            print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
+            
             # write comment instead
-            strsock.write('<div class="comment"><span class="commentid">%s</span>%s</span>' % (c[2], commentsMap[c[2]]))
+            strsock.write('<p class="comment"><span class="commentid">%s</span>%s</p>' % (c[2], comments[c[2]]))
             pos = c[1]
         strsock.write(fsock.read())
         strsock.close()
         if hasattr(strsock, "getvalue"):
             return strsock.getvalue()
         else:
-            return file(htmlfname.replace(".html",".out.html").read())
+            return codecs.open(htmlfname.replace(".html",".out.html"), encoding="iso-8859-1").read()
 
     def __parseComments(self, comments=""):
         inSection = False
@@ -112,16 +134,21 @@ class AnnotatedDoc:
         for line in comments.splitlines():
             if inSection == False and ":" in line:
                 if sectionid: # add the previous section
-                    sections[sectionid] = sectioncomment + "\n"
+                    sections[sectionid] = sectioncomment
                 sectionid, sectioncomment = line.split(":",1)
             elif line.strip() == "":
                 inSection = False
             else:
                 inSection = True
                 sectioncomment = sectioncomment + line + "\n"
-        sections[sectionid] = sectioncomment + "\n"
-        pprint.pprint(sections)
+        if sectioncomment:
+            sections[sectionid] = sectioncomment
 
+        return sections
+        # pprint.pprint(sections)
+       
+    def __serializeComments(self, comments):
+        return "\n\n".join(["%s: %s" % (k, v) for (k, v) in comments.items()])
 
 
 # def weaveXML(htmlbodyfname,comments):
@@ -185,8 +212,8 @@ if __name__ == "__main__":
         print "usage: %s [htmlfile] [commentsfile]" % sys.argv[0]
     else:
         AnnotatedDoc.__bases__ += (DispatchMixin,)
-        ad = AnnotatedDoc()
-        ad.dispatch()
+        ad = AnnotatedDoc("testdata/sfs/generated/1960/729.html")
+        ad.Dispatch()
         # ad.Test("test/data/DocComments/01-comments.txt")
         # prep(sys.argv[1])
         # generate(sys.argv[1])

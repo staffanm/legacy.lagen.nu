@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="31D77781-6FB0-4495-8639-03B2649A460F" name="ferenda-cmdline" kpf_version="2">
+<preference-set id="">
+</preference-set>
+<file url="Util.py" id="06E91242-DF57-4D7E-BD61-EC762C565D49" name="Util.py">
+<preference-set id="">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string id="filename">C:\Documents and Settings\staffan\svn\trunk\Util.py</string>
+  <string id="executable-params"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
+  <string id="mpostparams"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+</file>
+<file url="ARN.py" id="0E839C46-53D0-4ED0-B6C8-A4EB5DC093FD" name="ARN.py">
+</file>
+<file url="DispatchMixin.py" id="A8CBD291-84B8-4251-86E6-B0A33A52CB44" name="DispatchMixin.py">
+</file>
+<file url="DocComments.py" id="98AFB824-94BB-4711-B4F2-2481F8021ECF" name="DocComments.py">
+<preference-set id="">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="userEnvironment"></string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string id="executable-params"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params">Test test/data/DocComments/00-empty.txt</string>
+  <string id="mpostparams"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="filename">C:\Documents and Settings\staffan\svn\trunk\DocComments.py</string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+</file>
+<file url="DV.py" id="2848D6B4-B12E-4F4F-831D-BC123AB9D717" name="DV.py">
+</file>
+<file url="JO.py" id="CC5123FD-6A10-41BF-A3D9-534B4527F0A8" name="JO.py">
+</file>
+<file url="LegalSource.py" id="C825C824-8349-42FA-854C-280AF9883670" name="LegalSource.py">
+</file>
+<file url="Manager.py" id="0ABEEAC0-C150-42DD-82B0-A9A9CA207967" name="Manager.py">
+</file>
+<file url="RegPubl.py" id="E5373D0B-BFA4-4F72-8041-96A2C3A880D5" name="RegPubl.py">
+</file>
+<file url="Robot.py" id="D4FF24BD-B46E-4155-9DA9-90560EE1440B" name="Robot.py">
+</file>
+<file url="SFS.py" id="5260D6B1-E408-41BE-B11E-30DEB98872BC" name="SFS.py">
+<preference-set id="">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string id="filename">C:\Documents and Settings\staffan\svn\trunk\SFS.py</string>
+  <string id="executable-params"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params">Parse 1960:729</string>
+  <string id="mpostparams"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+</file>
+<folder id="35827795-510D-4248-B69C-E929AD9930EF" name="xsl">
+<file url="xsl/base.xsl" id="385CDA86-5574-4381-A0DC-1220087B22B1" name="base.xsl">
+</file>
+<file url="xsl/link.xsl" id="2FFE3670-5159-4F0B-AF4B-1F5228C300D7" name="link.xsl">
+</file>
+<file url="xsl/sfs.xsl" id="3EE81480-3D51-4929-BB97-CB32EF71A93E" name="sfs.xsl">
+</file>
+<file url="xsl/tune-width.xsl" id="1C4A55EE-99B2-4055-B7AA-2DD357726E79" name="tune-width.xsl">
+</file>
+</folder>
+</project>

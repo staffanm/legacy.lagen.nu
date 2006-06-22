@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 import os
@@ -15,6 +15,37 @@ class TransformError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
+# FIXME: rewrite this to inherit the built-in dict object
+class OrderedDict:
+    """A combination of a list and a dictionary. There probably exists
+    a much-better built-in version somewhere"""
+    
+    def __init__(self):
+        self.list = []
+        self.dict = {}
+
+    def append(self,key,value):
+        self.list.append([key,value])
+        self.dict[key] = self.list[-1]
+
+    def append_to_value(self,key,value):
+        #print "append_to_value: initial value: '%s'" % self.dict[key][1]
+        #print "append_to_value: value to append: '%s'" % value
+        l = self.dict[key]
+        l[1] += value
+        #print "append_to_value: final value: '%s'" % self.dict[key][1]
+        
+    def item(self,key):
+        return self.dict[key][1]
+
+    def has_key(self,key):
+        return self.dict.has_key(key)
+
+    def extend(self,dict2):
+        for item in dict2.list:
+            self.list.append(item)
+
 
 # FIXME: need to rewrite this
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
@@ -46,40 +77,39 @@ def numsort(alist):
     is sorted into:
         ['aaa6', 'aaa35', 'aaa261']
     """
+
+    def _generate_index(str):
+        """
+        Splits a string into alpha and numeric elements, which
+        is used as an index for sorting
+        """
+        #
+        # the index is built progressively
+        # using the _append function
+        #
+        index = []
+        def _append(fragment, alist=index):
+            if fragment.isdigit(): fragment = int(fragment)
+            alist.append(fragment)
+    
+        # initialize loop
+        prev_isdigit = str[0].isdigit()
+        current_fragment = ''
+        # group a string into digit and non-digit parts
+        for char in str:
+            curr_isdigit = char.isdigit()
+            if curr_isdigit == prev_isdigit:
+                current_fragment += char
+            else:
+                _append(current_fragment)
+                current_fragment = char
+                prev_isdigit = curr_isdigit
+        _append(current_fragment)
+        return tuple(index)
     indices = map(_generate_index, alist)
     decorated = zip(indices, alist)
     decorated.sort()
     return [ item for index, item in decorated ]
-
-def _generate_index(str):
-    """
-    Splits a string into alpha and numeric elements, which
-    is used as an index for sorting
-    """
-    #
-    # the index is built progressively
-    # using the _append function
-    #
-    index = []
-    def _append(fragment, alist=index):
-        if fragment.isdigit(): fragment = int(fragment)
-        alist.append(fragment)
-
-    # initialize loop
-    prev_isdigit = str[0].isdigit()
-    current_fragment = ''
-    # group a string into digit and non-digit parts
-    for char in str:
-        curr_isdigit = char.isdigit()
-        if curr_isdigit == prev_isdigit:
-            current_fragment += char
-        else:
-            _append(current_fragment)
-            current_fragment = char
-            prev_isdigit = curr_isdigit
-    _append(current_fragment)
-    return tuple(index)
-
 
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
@@ -144,3 +174,5 @@ def runcmd(cmdline):
     ret = p.wait()
     return (ret,stdout,stderr)
 
+def normalizeSpace(string):
+    return " ".join(string.split())

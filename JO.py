@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Hanterar beslut från Riksdagens Ombudsmän, www.jo.se
 
@@ -82,7 +82,7 @@ class JOParser(LegalSource.Parser):
         self.file = file
         print "Loading file %s" % file
 
-    def parse(self):
+    def Parse(self):
         import codecs
         soup = BeautifulSoup.BeautifulSoup(codecs.open(self.file,encoding="iso-8859-1",errors='replace').read())
         

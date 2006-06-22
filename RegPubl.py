@@ -1,4 +1,4 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Hanterar lagförarbeten från Regeringskansliet (SOU/Ds och propositioner)
 
@@ -70,7 +70,7 @@ class RegPublParser(LegalSource.Parser):
             Util.mkdir(self.dir)
         self.files = files
 
-    def parse(self):
+    def Parse(self):
         soup = self.loadDoc("/regpubl/downloaded/%s/index.html")
         node = soup.find("div", "articleContent")
         # first, create metadata-XML from the HTML index page
