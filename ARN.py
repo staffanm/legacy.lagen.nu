@@ -1,8 +1,9 @@
-#!/sw/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Hanterar referat från Allmäna Reklamationsnämnden, www.arn.se.
 
-Modulen hanterar hämtande av referat från ARNs webbplats samt omvandlande av dessa till XML.
+Modulen hanterar hämtande av referat från ARNs webbplats samt
+omvandlande av dessa till XML.
 
 """
 import unittest
