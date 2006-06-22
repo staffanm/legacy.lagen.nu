@@ -1,3 +1,5 @@
+Anonymous users shouldn't be able to change this!
+
 This is the source code for lagen.nu 2.0 (or at least it will be)
 
 Arkitektur för lagen.nu 2.0
