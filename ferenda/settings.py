@@ -72,7 +72,8 @@ ROOT_URLCONF = 'ferenda.urls'
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates".
     "templates",
-    "ferenda/templates"
+    "ferenda/templates",
+    "/Library/WebServer/Documents/ferenda.lagen.nu/ferenda/templates",
 )
 
 INSTALLED_APPS = (

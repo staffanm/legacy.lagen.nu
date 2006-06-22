@@ -7,11 +7,12 @@ The module is primarly used from the web interface -- speed is
 therefore important (consider a 500K+ document with 100s of
 comments)."""
 import sys,os,re
+import os.path
 import codecs
 import pprint
 import cPickle
 from cStringIO import StringIO
-from DispatchMixin import DispatchMixin
+# from DispatchMixin import DispatchMixin
 
 try:
     import cElementTree as ET
@@ -26,7 +27,9 @@ class AnnotatedDoc:
     comments to indicate where the individual comments should go."""
 
     def __init__(self, filename=None):
-        self.filename = filename
+        if filename:
+            self.filename = os.path.join(os.path.dirname(__file__),filename)
+        
 
     def Prepare(self):
         """Create a index of where in the HTML file the comment markers
@@ -74,7 +77,6 @@ class AnnotatedDoc:
         """
         start_or_end_iter = re.compile(r'<!--(start|end):(\w+)-->').finditer
         index = []
-
         data = codecs.open(htmlfname, encoding="iso-8859-1").read()
         startmatch = None
         endmatch = None
@@ -100,30 +102,33 @@ class AnnotatedDoc:
 
     def __weave(self, htmlfname,indexes=(),comments={}):
         """'Weave' together the HTML document with the comments"""
-        fsock = codecs.open(htmlfname, encoding="iso-8859-1")
+        indata = codecs.open(htmlfname, encoding="iso-8859-1")
         # fsock = open(htmlfname)
-        # strsock = StringIO()
-        # strsock = open(htmlfname.replace(".html", ".out.html"),"w")
-        strsock = codecs.open(htmlfname.replace(".html", ".out.html"), "w", encoding="iso-8859-1", errors="replace")
+        buf = StringIO()
+        outdata = codecs.getwriter('iso-8859-1')(buf)
+        # buf = None
+        # out = codecs.open(htmlfname.replace(".html", ".out.html"), "w", encoding="iso-8859-1", errors="replace")
+
         pos = 0
         # get first start idx
         for c in [c for c in indexes if c[2] in comments]:
             numbytes = c[0] - pos
             print "%s writing %d bytes" % (c[2], numbytes)
-            strsock.write(fsock.read(numbytes))
+            outdata.write(indata.read(numbytes))
             numbytes = c[1] - c[0]
             # read and throw away
-            throw = fsock.read(numbytes)
+            throw = indata.read(numbytes)
             print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
             
             # write comment instead
-            strsock.write('<p class="comment"><span class="commentid">%s</span>%s</p>' % (c[2], comments[c[2]]))
+            outdata.write('<p class="comment"><span class="commentid">%s</span>%s</p>' % (c[2], comments[c[2]]))
             pos = c[1]
-        strsock.write(fsock.read())
-        strsock.close()
-        if hasattr(strsock, "getvalue"):
-            return strsock.getvalue()
+        outdata.write(indata.read())
+        if hasattr(buf, "getvalue"):
+            return unicode(buf.getvalue(), 'iso-8859-1')
+            outdata.close()
         else:
+            outdata.close()
             return codecs.open(htmlfname.replace(".html",".out.html"), encoding="iso-8859-1").read()
 
     def __parseComments(self, comments=""):
@@ -207,15 +212,15 @@ class AnnotatedDoc:
 #                 
 #     return ET.tostring(tree)
 
-if __name__ == "__main__":
-    if len(sys.argv) < 1:
-        print "usage: %s [htmlfile] [commentsfile]" % sys.argv[0]
-    else:
-        AnnotatedDoc.__bases__ += (DispatchMixin,)
-        ad = AnnotatedDoc("testdata/sfs/generated/1960/729.html")
-        ad.Dispatch()
-        # ad.Test("test/data/DocComments/01-comments.txt")
-        # prep(sys.argv[1])
-        # generate(sys.argv[1])
-        # weaveXML(sys.argv[1], None)
+# if __name__ == "__main__":
+#     if len(sys.argv) < 1:
+#         print "usage: %s [htmlfile] [commentsfile]" % sys.argv[0]
+#     else:
+#         AnnotatedDoc.__bases__ += (DispatchMixin,)
+#         ad = AnnotatedDoc("testdata/sfs/generated/1960/729.html")
+#         ad.Dispatch()
+#         # ad.Test("test/data/DocComments/01-comments.txt")
+#         # prep(sys.argv[1])
+#         # generate(sys.argv[1])
+#         # weaveXML(sys.argv[1], None)
 
