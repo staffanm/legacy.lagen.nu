@@ -44,7 +44,7 @@ h2 {
 }
 
 .comment {
-   border: black 1px solid;
+   /*border: black 1px solid;*/
    padding: 4pt;
    font-size: 8pt;
    font-family: Optima, Arial, sans-serif;
@@ -54,23 +54,30 @@ h2 {
    margin: 0;
    padding: 0;
 }
-
-textarea {
-    font: 8pt Optima, Arial, sans-serif;
-    width: 95%;
-}
-.commentid {
-    display: none;   
-}
-.clicktoedit {
+.commentplaceholder {
     width: 160pt;
     cursor: text;
     float: right;
     font: italic 8pt Optima, Arial, sans-serif;
 }
-
+textarea {
+    font: 8pt Optima, Arial, sans-serif;
+    width: 95%;
+}
+.commentid {
+    /* display: none; */
+    font: bold italic 8pt Optima, Arial, sans-serif;
+}
 .invisible {
-    text-color: #eee;
+    color: #eee;
+}
+.error {
+    color: red;
+    font-weight: bold;
+}
+.editor {
+    border: solid 3px red;
+    font-size: 8pt;
 }
 
 .sfsid {

@@ -2,13 +2,16 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns(
     '',
+    
+    # (r'^static/(.*)$', 'django.views.static.serve', {'document_root': '/Library/WebServer/Documents/ferenda.lagen.nu/ferenda/static'}),
+    (r'^static/(.*)$', 'django.views.static.serve', {'document_root': 'ferenda/static'}),
     # Uncomment this for admin:
-    (r'^static/(.*)$', 'django.views.static.serve', {'document_root': '/Library/WebServer/Documents/ferenda.lagen.nu/ferenda/static'}),
     (r'^admin/', include('django.contrib.admin.urls')),
     (r'^(?P<displayid>\d{4}:\d+)$', 'ferenda.docview.views.view'),
     (r'^NJA_(?P<nja_year>\d{4})_s_(?P<nja_page>\d+)$', 'ferenda.docview.views.njadisplay'),
     (r'^edit/(?P<art_title>.*)$', 'ferenda.wiki.views.edit'),
     (r'^save/(?P<art_title>[^/]*)/(?P<art_section>.*)$', 'ferenda.wiki.views.save'),
     (r'^save/(?P<art_title>[^/]*)$', 'ferenda.wiki.views.save'),
+    (r'^savexhr/(?P<docid>[^/]*)/(?P<docsection>.*)$', 'ferenda.wiki.views.savexhr'),
     (r'^(?P<art_title>.*)$', 'ferenda.wiki.views.article')
 )

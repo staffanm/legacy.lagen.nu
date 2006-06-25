@@ -13,7 +13,7 @@ import pprint
 import cPickle
 from cStringIO import StringIO
 # from DispatchMixin import DispatchMixin
-
+import Util
 try:
     import cElementTree as ET
 except ImportError:
@@ -113,15 +113,15 @@ class AnnotatedDoc:
         # get first start idx
         for c in [c for c in indexes if c[2] in comments]:
             numbytes = c[0] - pos
-            print "%s writing %d bytes" % (c[2], numbytes)
+            # print "%s writing %d bytes" % (c[2], numbytes)
             outdata.write(indata.read(numbytes))
             numbytes = c[1] - c[0]
             # read and throw away
             throw = indata.read(numbytes)
-            print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
+            # print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
             
             # write comment instead
-            outdata.write('<p class="comment"><span class="commentid">%s</span>%s</p>' % (c[2], comments[c[2]]))
+            outdata.write('<p class="comment clicktoedit" id="comment-%s"><span class="commentid">%s</span>%s</p>' % (c[2], c[2], comments[c[2]]))
             pos = c[1]
         outdata.write(indata.read())
         if hasattr(buf, "getvalue"):
@@ -132,6 +132,8 @@ class AnnotatedDoc:
             return codecs.open(htmlfname.replace(".html",".out.html"), encoding="iso-8859-1").read()
 
     def __parseComments(self, comments=""):
+        # FIXME: the use of Util.normalizeSpace might not be a good idea if
+        # we want to do real wiki formatting of text
         inSection = False
         sectionid = None
         sectioncomment = None
@@ -139,18 +141,20 @@ class AnnotatedDoc:
         for line in comments.splitlines():
             if inSection == False and ":" in line:
                 if sectionid: # add the previous section
-                    sections[sectionid] = sectioncomment
+                    sections[sectionid] = Util.normalizeSpace(sectioncomment)
                 sectionid, sectioncomment = line.split(":",1)
+                # print "%r->%r" % (sectionid,sectioncomment)
             elif line.strip() == "":
                 inSection = False
             else:
                 inSection = True
-                sectioncomment = sectioncomment + line + "\n"
+                sectioncomment = sectioncomment + "\n"
         if sectioncomment:
-            sections[sectionid] = sectioncomment
+            sections[sectionid] = Util.normalizeSpace(sectioncomment)
 
+        # pprint.pprint(sections)    
         return sections
-        # pprint.pprint(sections)
+        
        
     def __serializeComments(self, comments):
         return "\n\n".join(["%s: %s" % (k, v) for (k, v) in comments.items()])

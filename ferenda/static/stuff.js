@@ -1,131 +1,91 @@
-function addEvent(elm, evType, fn, useCapture)
-// cross-browser event handling for IE5+, NS6+ and Mozilla/Gecko
-// By Scott Andrew
-{
-  if (elm.addEventListener) {
-    elm.addEventListener(evType, fn, useCapture); 
-    return true; 
-  } else if (elm.attachEvent) {
-    var r = elm.attachEvent('on' + evType, fn); 
-    return r; 
-  } else {
-    elm['on' + evType] = fn;
-  }
-}
-
-function removeEvent(elm, evType, fn )
-{
-  if (elm.removeEventListener) {
-    elm.removeEventListener( type, fn, false );
-    return true;
-  } else if (elm.detachEvent) {
-    var r = elm.detachEvent( "on"+type, fn);
-    return r;
-  } else {
-    elm["on" + type+fn] = null;
-  }
-}
-
-function Logmsg(msg) {
-  if (window.console) {
-    window.console.log(msg);
-  }
-}
-
-
-/* finds an appropriate box for which to align the comment box */
-function FindPreviousBox(element) {
-  Logmsg("FindPreviousBox called: node %s class %s", element.nodeName, element.className)
-  if ((element.nodeName == "P" && element.className == "") ||
-      (element.nodeName == "P" && element.className == "legaldoc") ||
-      (element.nodeName == "H1") ||
-      (element.nodeName == "H2")) {
-    return element;
-  } else if (element.previousSibling == null) {
-    return null;
-  } else {
-    return FindPreviousBox(element.previousSibling);
-  }
-}
-
-function MoveComments()
-{
-  var ps = document.getElementsByTagName('p');
-  for (var i=0; ps.length >= i; i++) {
-    if (ps[i].className.search(/\bcomment\b/) != -1) {
-      Logmsg("Calling FindPreviousBox")
-      pe = FindPreviousBox(ps[i].previousSibling)
-	ps[i].style.top = pe.offsetTop + "px"
-	var spans = ps[i].getElementsByTagName('span');
-      for (var j=0; spans.length > j; j++) {
-	if (spans[j].className.search(/\blabel\b/) != -1) {
-	  spans[j].style.display = "none";
-	}
-      }
-      ps[i].style.display = "block";
-             
+Editable = {
+  origtexts: {},
+  deferred: null,
+  curEditor: null,
+  curCommentid: null,
+  edit: function(e) {
+    log("Making editable");
+    if (hasElementClass(e.src(),"editor")) {
+      log("was already editable!");
+      return;
     }
-  }
-}
-
-function PrepareEditFields()
-{
+    commentid = e.src().id.substr(8); //trim off initial "comment-"
+    log("edit: commentid is", commentid);
+    //Editable.origtext = scrapeText(e.src());
+    textarr = scrapeText(e.src(),true);
+    textarr[0]="";
+    Editable.origtexts[commentid] = textarr.join("");
+    log("edit: origtext is", Editable.origtexts[commentid]);
+    var action = "/save/" + document.body.id + "/" + commentid;
+    var submit = INPUT({'type':'button','value':'Spara'});
+    var cancel = INPUT({'type':'button','value':'Ångra'});
+    var form = FORM({'method':'POST','action':action},
+		   TEXTAREA({'name':'text','rows':'5','cols':'6'},Editable.origtexts[commentid]),
+		   BR(),
+		   submit,
+		   cancel
+		  );
+    connect(submit,'onclick',Editable.save);
+    connect(cancel,'onclick',Editable.cancel);
+    replaceChildNodes(e.src(),form);
+    addElementClass(e.src(),'editor');
+  },
+    
+  cancel: function(e) {
+    log("Canceling editor");
+    editor = e.src().parentNode.parentNode;
+    commentid = editor.id.substr(8);  // trim off initial "comment-"
+    replaceChildNodes(editor,
+		      SPAN({'class':'commentid'},commentid),Editable.origtexts[commentid]);
+    removeElementClass(editor,"editor");
+  },
   
-  Logmsg("installing handlers");
-  iCnt = 0;
-  var ps = document.getElementsByTagName('p');
-  for (var i=0; ps.length > i; i++) {
-    if (ps[i].className.search(/\bclicktoedit\b/) != -1) {
-      iCnt++;
-      addEvent(ps[i],'mouseover',ShowBox,false);
-      addEvent(ps[i],'mouseout',HideBox);
-      addEvent(ps[i], 'click', EditBox);
-    }
+  save: function(e) {
+    log("Doing fancy XHR call");
+    editor = e.src().parentNode.parentNode;
+    commentid = editor.id.substr(8);
+    Editable.curEditor = editor;
+    Editable.curCommentid = commentid;
+    text = editor.getElementsByTagName("textarea")[0].value;
+    log("value",text);
+    xhr = getXMLHttpRequest();
+    actionUrl = "/savexhr/" + document.body.id + "/" + commentid;
+    log("action", actionUrl);
+    xhr.open("POST",actionUrl,true);
+    replaceChildNodes(editor,
+		      SPAN({'class':'commentid'},commentid),"...sparar...");
+    Editable.deferred = sendXMLHttpRequest(xhr, queryString(['text'],[text]));
+    Editable.deferred.addCallbacks(Editable.saved,Editable.saveFailed);
+    removeElementClass(editor,"editor");    
+    return false;
+  },
+  saved: function(xhr) {
+    log("save succeeded");
+    replaceChildNodes(Editable.curEditor,
+		      SPAN({'class':'commentid'},Editable.curCommentid),xhr.responseText);
+    Editable.deferred = null;
+  },
+  saveFailed: function(xhr) {
+    log("save failed");
+    // note that we have to use xhr.req.responseText here, as opposed to xhr.responseText -- some mochikit
+    // magic that I have yet to understand.
+    replaceChildNodes(Editable.curEditor,
+		      SPAN({'class':'commentid'},Editable.curCommentid),SPAN({'class':'error'},xhr.req.responseText));
+    Editable.deferred = null;
   }
-  Logmsg("installed " + iCnt + "handlers");
 }
-
-function ShowBox(e)
-{
-  //e.target.style.visibility = 'visible';
-  Logmsg("showing box");
-  this.className.replace('visible','');
-}
-
-function HideBox(e)
-{
-  //e.target.style.visibility = 'hidden';
-  Logmsg("'hiding' box");
-  this.className += ' invisible';
-}
-
-function EditBox(e)
-{
-  Logmsg("making box editable");
-  var forms = this.getElementsByTagName("form");
-  if (forms.length > 0) {
-    Logmsg("it was already editable");
-    return;
-  }
-
-  while (this.firstChild) {
-    this.removeChild(this.firstChild);
-  }
-  form = document.createElement("form");
-  form.method = "POST";
-  form.action = "/save/" + document.body.id + "/" + this.id
-  textarea = document.createElement("textarea");
-  text = document.createTextNode("Skriv text");
-  textarea.appendChild(text);
-  textarea.name = "text";
-  submit = document.createElement("input");
-  submit.type = "submit";
-  submit.value = "Spara";
-  form.appendChild(textarea);
-  form.appendChild(submit);
-  this.appendChild(form);
-}
-
 
 /* addEvent(window,'load',MoveComments,false); */
-addEvent(window,'load',PrepareEditFields,false);      
+/* addEvent(window,'load',PrepareEditFields,false); */
+connect(window, 'onload', function(e) {
+    var origtext;
+    var elems = getElementsByTagAndClassName("p", "clicktoedit");
+    log("connecting", elems.length, "elements");
+    for (var i = 0; i < elems.length; i++) { 
+      var elem = elems[i];
+      connect(elem,'onclick',Editable.edit);
+      elem.title = "Click to edit";
+      //appendChildNodes(elem, "[foo]");
+    }
+  }
+);

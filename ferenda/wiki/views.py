@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # Create your views here.
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from ferenda.wiki.models import Article
 from datetime import datetime
 import sys
@@ -44,3 +44,21 @@ def save(request,art_title, art_section=None):
     art.last_changed = datetime.now()
     art.save()
     return HttpResponseRedirect('/%s' % art_title)
+
+def savexhr(request,docid,docsection):
+    print "savexhr called: %s, %s" % (docid,docsection)
+    try:
+        art = Article.objects.get(pk=docid)
+    except Article.DoesNotExist:
+        print "article %s does not exist" % docid
+        return HttpResponseServerError("article %s does not exist" % docid)
+    try:
+        ad = AnnotatedDoc()
+        art.body = ad.Update(art.body,docsection,request.POST["text"])
+        art.last_changed = datetime.now()
+        art.save()
+        return HttpResponse(request.POST["text"])
+    except Exception, e:
+        print "General error: %s" % str(e)
+        return HttpResponseServerError("Ett fel uppstod: %s " %str(e))
+    

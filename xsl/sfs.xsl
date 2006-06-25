@@ -240,7 +240,7 @@
       </td>
       <td>
   <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
-  <p class="clicktoedit" id="R{@id}">R<xsl:value-of select="@id"/>: Klicka för att kommentera</p>
+  <p class="commentplaceholder clicktoedit" id="comment-R{@id}"><span class="commentid">R<xsl:value-of select="@id"/></span>Klicka för att kommentera</p>
   <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
       </td>
     </tr>
@@ -252,25 +252,7 @@
   INTRODUCTION:<br/>
   <xsl:apply-templates/>
 </xsl:template>
-<!--
-<xsl:template match="section">
-  <xsl:variable name="sectionid">
-    <xsl:value-of select="string(@id)"/>
-  </xsl:variable>
-  <xsl:variable name="chapterid">
-    <xsl:if test="$hasChapters">
-      <xsl:value-of select="string(../@id)"/>
-    </xsl:if>
-  </xsl:variable>
-    <a>
-      <xsl:attribute name="name">
-	<xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../@id"/></xsl:if>P<xsl:value-of select="@id"/>
-      </xsl:attribute>
-    </a>
-      <span class="sectionid"><xsl:value-of select="@id"/> §</span>
-      <xsl:apply-templates/>
-</xsl:template>
--->
+
 
 <xsl:template match="p">
   <!-- depending on wheter this is is a paragraph inside of a
@@ -304,7 +286,7 @@
       <xsl:if test="$id != ''">
       <td>
 	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="clicktoedit" id="{$id}"><xsl:value-of select="$id"/> Klicka för att kommentera</p>
+	<p class="commentplaceholder clicktoedit" id="comment-{$id}"><span class="commentid"><xsl:value-of select="$id"/></span>Klicka för att kommentera</p>
 	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
       </td>
       </xsl:if>
@@ -330,7 +312,7 @@
       </td>
       <td>
 	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="clicktoedit" id="{$id}"><xsl:value-of select="$id"/>: klicka för att kommentera</p>
+	<p class="commentplaceholder clicktoedit" id ="comment-{$id}"><span class="commentid"><xsl:value-of select="$id"/></span>klicka för att kommentera</p>
 	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
       </td>
     </tr>
