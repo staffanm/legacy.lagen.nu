@@ -61,7 +61,8 @@ class Downloader:
             resource.fetched = time.strptime(node.get("fetched"), self.TIME_FORMAT)
             self.ids[id] = resource
     def loadDoc(self,filename,encoding='iso-8859-1'):
-        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read())
+        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
+                                           convertEntities='html')
 
 
 
@@ -77,12 +78,13 @@ class Parser:
     
     # Misc useful methods for subclassed classes
     def LoadDoc(self,filename,encoding='iso-8859-1'):
-        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read())
+        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
+                                           convertEntities='html')
     def NormalizeSpace(self,string):
         return self.re_NormalizeSpace(' ',string).strip()
     def ElementText(self,element):
         """finds the plaintext contained in a BeautifulSoup element"""
-        return self.normalizeSpace(''.join([e for e in element.recursiveChildGenerator() if isinstance(e,unicode)]))
+        return self.NormalizeSpace(''.join([e for e in element.recursiveChildGenerator() if isinstance(e,unicode)]))
 
 class Manager:
     def __init__(self,baseDir):

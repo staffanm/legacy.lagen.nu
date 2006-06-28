@@ -9,6 +9,7 @@ import unittest
 import pprint
 import types
 import datetime
+import codecs
 from cStringIO import StringIO
 
 # 3rdparty libs
@@ -21,11 +22,30 @@ import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
 from DocComments import AnnotatedDoc
+from LegalRef import SFSRefParser,ParseError
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Författningar i SFS"
 __moduledir__ = "sfs"
+
+# module global utility functions
+def _SFSidToFilename(sfsid):
+    """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
+    s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
+    id."""
+    if sfsid.find(":") < 0: return None
+    return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
+
+def _filenameToSFSid(filename):
+    """converts a filename, sans suffix, to a sfsid, eg:
+    '1909/bih._29_s.1' => '1909:bih. 29 s.1'"""
+    (dir,file)=filename.split("/")
+    if file.startswith('RFS'):
+        return re.sub(r'(\d{4})/([A-Z]*)(\d*)',r'\2\1:\3', filename.replace('_',' '))
+    else:
+        return re.sub(r'(\d{4})/(\d*)',r'\1:\2', filename.replace('_',' '))
+
 
 class SFSDownloader(LegalSource.Downloader):
     def __init__(self,baseDir="data"):
@@ -64,33 +84,63 @@ class SFSParser(LegalSource.Parser):
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
     re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
     
-    
-    
     def Parse(self,id,files,baseDir):
         self.id = id
         self.baseDir = baseDir
         self.verbose = True
 
-        # extract lawtext (handle twoparter mode here)
-        txtfilename = files[0].replace("downloaded","generated-text").replace(".html", ".txt")
-        lawtext = file(txtfilename).read()
-
-        # extract and parse bibliography (AKA changelog)
-        self.bibliography = self.__parseBiography()
+        # extract and parse registry (AKA changelog)
+        registry = self.__parseRegistry(files['sfsr'])
+        lawtext = self.__extractLawtext(files['sfst'])
+        parsed = self.__parseLawtext(lawtext, registry)
+        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, _SFSidToFilename(id))
+        Util.mkdir(os.path.dirname(filename))
+        print "saving as %s" % filename
+        out = file(filename, "w")
+        out.write(parsed)
+        out.close()
+        Util.indentXmlFile(filename)
         
-        # parse lawtext
-        self.lawtext = self.__parseLawtext(lawtext)
+    def __parseRegistry(self, files):
+        """Parsear SFSR-registret som innehåller alla ändringar i lagtexten"""
+        soup = self.LoadDoc(files[0])
+        tables = soup.body('table')[3:-2]
         
-        # write it to XML
-        
+        all_attribs = []
+        for table in tables:
+            sfsid = None
+            entry_attribs = []
+            for row in table('tr'):
+                key = self.ElementText(row('td')[0])
+                val = self.ElementText(row('td')[1])
+                if val != "":
+                    entry_attribs.append([key,val])
+                    if key==u'SFS-nummer:':
+                        sfsid = val
+            all_attribs.append([sfsid, entry_attribs])
+        return all_attribs
     
-    def __extractLawtext(self, files = []):
-        parse
-    
-    def __parseLawtext(self, lawtext):
-        # adapted from _init() in extract.py
+    def __extractLawtext(self, files = [], keepHead=True):
+        print "extractLawtext: %r %r" % (files,keepHead)
+        if not files:
+            return ""
+        soup = self.LoadDoc(files[0])
+        idx = 0
+        if keepHead == False: # find out where the <hr> that separates the header from the body is
+            for el in soup.body('pre')[1].contents:
+                if (hasattr(el,'name') and el.name == 'hr'):
+                    break
+                idx += 1
+            print "idx: %s" % idx
+            txt = ''.join([e for e in startElement.nextGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
+        else:
+            txt = ''.join([e for e in soup.body('pre')[1].recursiveChildGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
         
+        return txt + self.__extractLawtext(files[1:],keepHead=False)
+    
+    def __parseLawtext(self, lawtext, registry):
         paras = lawtext.split("\n\n")
+        print "%s paragraphs" % len(paras)
         index = 0
         self.preamble = []
         self.lawtext = []
@@ -101,11 +151,12 @@ class SFSParser(LegalSource.Parser):
         current_part = self.preamble
         for p in paras:
             sp = p.strip()
+            print "p: %r" % sp
             if (sp == " -----------" or sp == ""):
                 if (not self.lawtext):
                     self.lawtext = []
                     current_part = self.lawtext
-            elif sp == "Övergångsbestämmelser":
+            elif sp == u"Övergångsbestämmelser":
                 self.transitional = []
                 current_part = self.transitional
             elif sp == "Bilaga" or sp == "Bilaga 1":
@@ -116,12 +167,12 @@ class SFSParser(LegalSource.Parser):
                 current_part.append(p)
             
 
-        #self.log.info("_init (%s): preamble: %d, lawtext: %d, transitional: %d, appendix: %d" % (
-        #    self.sfsid,
-        #    len(self.preamble),
-        #    len(self.lawtext),
-        #    len(self.transitional),
-        #    len(self.appendix)))
+        print("_init (%s): preamble: %d, lawtext: %d, transitional: %d, appendix: %d" % (
+            self.id,
+            len(self.preamble),
+            len(self.lawtext),
+            len(self.transitional),
+            len(self.appendix)))
         
 
         # first do the preamble
@@ -164,8 +215,8 @@ class SFSParser(LegalSource.Parser):
         self.paras = paras[index+1:]
 
         # Now parse. adapted from _txt_to_xml() in extract.py
-        
-        self.f = StringIO()
+        buf = StringIO()
+        self.f = codecs.getwriter('iso-8859-1')(buf)
         self.f.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>")
         self.f.write("<law>")
         # create some metadata
@@ -250,7 +301,7 @@ class SFSParser(LegalSource.Parser):
 
                 
             elif self.is_section(p):
-                print "SEC: %s" % p[0:30]
+                print "SEC: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 # self.close_para()
@@ -291,10 +342,10 @@ class SFSParser(LegalSource.Parser):
             # best we can in that case
             #if not re.match(r'^\d{4}:\d+\s*$', self.transitional[0]):
             if not self.re_SimpleSfsId(self.transitional[0]):
-                current_changelog = OrderedDict()
-                current_changelog.append('Övergångsbestämmelser','')
-                current_changelog.append('SFS-nummer','okänt')
-                self.changelog.append(current_changelog)
+                current_changelog = [u'okänt',
+                                     [[u'Övergångsbestämmelser',u''],
+                                      [u'SFS-nummer',u'okänt']]]
+                self.registry.append(current_changelog)
             for p in self.transitional:
                 # print 'doing transitional para %s' % p
                 #if re.match(r'^\d{4}:\d+\s*$', p):
@@ -302,18 +353,21 @@ class SFSParser(LegalSource.Parser):
                     current_transitional_id = p
                     in_transitional = 1
                     current_changelog = None
-                    for c in self.bibliography:
-                        if c.item('SFS-nummer') == current_transitional_id:
+                    for c in registry:
+                        if c[0] == current_transitional_id:
                             current_changelog = c
-                            current_changelog.append('Övergångsbestämmelser', '')
+                            transitional_idx = len(current_changelog[1])
+                            current_changelog[1].append([u'Övergångsbestämmelser', u''])
+                            
                     if current_changelog == None:
                         print "Warning: couldn't find the correct changelog entry for %s, faking it" % current_transitional_id
-                        current_changelog = Util.OrderedDict()
-                        current_changelog.append('Övergångsbestämmelser', '')
-                        current_changelog.append('SFS-nummer',current_transitional_id)
+                        current_changelog = [current_transitional_id,
+                                             [[u'Övergångsbestämmelser', u''],
+                                              [u'SFS-nummer',current_transitional_id]]]
                 else:
-                    current_changelog.append_to_value('Övergångsbestämmelser', '<p>%s</p>'% self.xmlescape(p))
-
+                    print "adding to %r" % current_changelog[1][transitional_idx][1]
+                    current_changelog[1][transitional_idx][1] += '<p>%s</p>'% self.xmlescape(p)
+                    print "now %s" % current_changelog[1][transitional_idx][1]
         if self.appendix:
             self.create_headline("Bilagor", "1")
             self.f.write("<appendix>")
@@ -325,30 +379,28 @@ class SFSParser(LegalSource.Parser):
                     self.f.write('<pre>%s</pre>' % self.xmlescape(p))
                 else:
                     self.f.write('<p>%s</p>' % self.fixup(p))
-
             self.f.write("</appendix>")
 
-        if self.bibliography:
+        if registry:
             self.f.write("<changes>")
-            for  c in self.changelog:
+            for c in registry:
                 # print "changelog entry:"
                 # print c.dict.keys()
-                self.f.write('<change id="%s">' % c.item('SFS-nummer'))
-                if Utilpdf_url(c.item('SFS-nummer')):
-                    self.f.write('<link href="%s">Officiell PDF-version</link>' % Utilpdf_url(c.item('SFS-nummer')))
-                for tuple in c.list:
-                    if tuple[0] == "Omfattning":
-                        self.f.write('<prop key="%s">%s</prop>' % (tuple[0],self.find_change_references(self.fixup(tuple[1]))))
-                    elif tuple[0] == "Övergångsbestämmelser":
-                        self.f.write('<prop key="%s">%s</prop>' % (tuple[0],self.find_references(self.normalize_space(tuple[1]))))
-                    elif tuple[0] == "Förarbeten" or tuple[0] == "CELEX-nr":
-                        self.f.write('<prop key="%s">%s</prop>'  % (tuple[0],self.find_prep_references(self.fixup(tuple[1]))))
+                self.f.write('<change id="%s">' % c[0])
+                for tuple in c[1]:
+                    print "tuple: %r" % tuple
+                    if tuple[0] == u'Omfattning':
+                        self.f.write(u'<prop key="%s">%s</prop>' % (tuple[0],self.find_change_references(self.fixup(tuple[1]))))
+                    elif tuple[0] == u"Övergångsbestämmelser":
+                        self.f.write(u'<prop key="%s">%s</prop>' % (tuple[0],self.find_references(Util.normalizeSpace(tuple[1]))))
+                    elif tuple[0] == u"Förarbeten" or tuple[0] == "CELEX-nr":
+                        self.f.write(u'<prop key="%s">%s</prop>'  % (tuple[0],self.find_prep_references(self.fixup(tuple[1]))))
                     else:
-                        self.f.write('<prop key="%s">%s</prop>' % (tuple[0],tuple[1]))
+                        self.f.write(u'<prop key="%s">%s</prop>' % (tuple[0],tuple[1]))
                 self.f.write('</change>')
             self.f.write("</changes>")
         self.f.write("</law>")
-        return self.f.getvalue()
+        return buf.getvalue()
 
     ################################################################
     # CHAPTER HANDLING
@@ -412,7 +464,7 @@ class SFSParser(LegalSource.Parser):
 
             #print "_is_headline: fail 1"
             return False
-        if (p.find("§") != -1): # if it contains a §, it's probably
+        if (p.find(u'§') != -1): # if it contains a §, it's probably
                                  # just a short section
             #print "_is_headline: fail 2"
             return False
@@ -789,100 +841,34 @@ class SFSParser(LegalSource.Parser):
         return self.xmlescape(Util.normalizeSpace(str))
     
     # FIXME: tie in the old LawParser object here somehow
-    def find_references(self,str):
-        return str
-
-    def __parseBiography(self, files = [], forceregen=True,workaround=False):
-        """Extracts all biography (changelog) information for a constitution from
-        it's registry page (the SFSR info, as opposed to SFST, which
-        is the lawtext). The information is stored as XML, similar to
-        the <changes> section that will end up in the complete XML
-        file, but without the transitional rules (since those are in
-        the lawtext itself, not the registry page) and w/o link tags
-        and other advanced stuff."""
-
-        # FIXME: replace most of the stuff below with some lean BeutifulSoup code
-        return []
-
-        filename = "downloaded/lawinfo/%s.html" % self.basefile
-        changelog_html = open(filename).read()
-        cl = SFSChangelogExtractor()
+    def find_references(self,p):
         try:
-            cl.feed(changelog_html)
-        except LawNotFoundError:
-            self.log.error("extract_changelog: Changelog for %s (%s) doesn't contain anything (trying to go on anyway...)" % (self.sfsid, filename))
-
-
-        if (len(cl.changelog) == 0 or
-            len(cl.changelog) == 1 and cl.changelog[0].list == []):
-            # if there is a file, but no changes included in it, it
-            # might be a two-parter (maybe this should be signalled
-            # with an Exception from SFSChangelogExtractor()?)
-            if (os.path.exists("downloaded/lawinfo/%s_A.html" % self.basefile) and
-                os.path.exists("downloaded/lawinfo/%s_B.html" % self.basefile)):
-                cl = SFSChangelogExtractor()
-                cl.feed(open("downloaded/lawinfo/%s_A.html" % self.basefile).read())
-                cl_b = SFSChangelogExtractor()
-                cl_b.feed(open("downloaded/lawinfo/%s_B.html" % self.basefile).read())
-                cl.changelog.extend(cl_b.changelog)
-            
-
-        if not os.path.exists("generated/lawinfo/%s" % self.year):
-            os.mkdir("generated/lawinfo/%s" % self.year)
-        filename = "generated/lawinfo/%s.xml" % self.basefile
-        f = open(filename, "w")
-        f.write('<?xml version="1.0" encoding="iso-8859-1"?>')
-        f.write("<changes>")
-        changecount = 0
-        for  c in cl.changelog:
-            if c.list != []:
-                f.write("<change>")
-                changecount += 1
-                for tuple in c.list:
-                    f.write('<prop key="%s">%s</prop>' % (tuple[0],tuple[1]))
-                f.write('</change>')
-        f.write("</changes>")
-        f.close()
-        Util.indentXmlFile(filename)
-
-        # this can be removed later
-        if changecount == 0 and workaround:
-            print "No changes, re-getting changelog"
-            try:
-                self.get_changelog(force=True)
-            except IOError:
-                pass
-            self.extract_changelog(workaround=False)
-    
+            lp = SFSRefParser(p,namedlaws=self.namedlaws)
+            return lp.parse()
+        except ParseError, e:
+            print "find_references failed on the following:\n"+p
+            raise e
     
 class SFSManager(LegalSource.Manager):
-    def _SFSidToFilename(self,sfsid):
-        """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
-        s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
-        id."""
-        if sfsid.find(":") < 0: return None
-        return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
-
-    def _filenameToSFSid(self,filename):
-        """converts a filename, sans suffix, to a sfsid, eg:
-        '1909/bih._29_s.1' => '1909:bih. 29 s.1'"""
-        (dir,file)=filename.split("/")
-        if file.startswith('RFS'):
-            return re.sub(r'(\d{4})/([A-Z]*)(\d*)',r'\2\1:\3', filename.replace('_',' '))
-        else:
-            return re.sub(r'(\d{4})/(\d*)',r'\1:\2', filename.replace('_',' '))
 
     def Parse(self, id):
-        files = ["%s/sfs/downloaded/%s.html" % (self.baseDir, self._SFSidToFilename(id))]
+        files = {'sfst':self.__listfiles('sfst',id),
+                 'sfsr':self.__listfiles('sfsr',id)}
         print("Files: %r" % files)
         p = SFSParser(self.baseDir)
         p.Parse(id, files, self.baseDir)
 
+    def __listfiles(self,source,sfsid):
+        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,_SFSidToFilename(sfsid))
+        print templ
+        return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
+        
+
     def Generate(self,id):
         indir = "%s/%s/parsed" % (self.baseDir, __moduledir__)
         outdir = "%s/%s/generated" % (self.baseDir, __moduledir__)
-        infile = "%s/%s.xml" % (indir,self._SFSidToFilename(id))
-        outfile = "%s/%s.html" % (outdir,self._SFSidToFilename(id))
+        infile = "%s/%s.xml" % (indir,_SFSidToFilename(id))
+        outfile = "%s/%s.html" % (outdir,_SFSidToFilename(id))
         sanitized_sfsid = id.replace(' ','.')
         print "Transforming %s > %s" % (infile,outfile)
         Util.transform("xsl/sfs.xsl",
