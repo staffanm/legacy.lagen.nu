@@ -1,0 +1,5 @@
+    [...] samt 7 kap. 22, 23 och 26 §§, får tillämpas för
+    skadeförsäkringar [...]
+
+    [...] samt <link chapter="7">7 kap.</link> <link chapter="7" section="22">22</link>, <link chapter="7" section="23">23</link> och <link chapter="7" section="26">26 §§</link>, får tillämpas för
+    skadeförsäkringar [...]

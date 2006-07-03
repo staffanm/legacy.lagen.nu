@@ -1,0 +1,3 @@
+    10 kap. 1 § och 8 § rättegångsbalken (1942:740)
+
+    <link law="1942:740" chapter="10" section="1">10 kap. 1 §</link> och <link law="1942:740" chapter="10" section="8">8 §</link> <link law="1942:740">rättegångsbalken (1942:740)</link>

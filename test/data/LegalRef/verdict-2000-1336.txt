@@ -1,0 +1,3 @@
+    14 § 1 st. 6) och 6 § varumärkeslagen (1960:644)
+
+    <link law="1960:644" section="14" piece="1" item="6">14 § 1 st. 6)</link> och <link law="1960:644" section="6">6 §</link> <link law="1960:644">varumärkeslagen (1960:644)</link>

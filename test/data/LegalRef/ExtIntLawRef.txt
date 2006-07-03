@@ -1,0 +1,11 @@
+    Det är är en referens till en lag som finns: (1982:713). Det här
+    är en referens till en lag som inte finns: (1492:123). Det här är
+    en referens till en lag utan paranteser: 1982:713. 42 §
+    upphovsrättslagen. 12 § körkortsförordningen. 23 § okändalagen.
+
+    Det är är en referens till en lag som finns: (<link law="1982:713">1982:713</link>). Det här
+    är en referens till en lag som inte finns: (<link law="1492:123">1492:123</link>). Det här är
+    en referens till en lag utan paranteser: <link law="1982:713">1982:713</link>. <link law="1960:729" section="42">42 §
+    upphovsrättslagen</link>. <link law="1998:980" section="12">12 § körkortsförordningen</link>. <link section="23">23 § okändalagen</link>.
+
+    

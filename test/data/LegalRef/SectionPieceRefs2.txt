@@ -1,0 +1,4 @@
+    1 § 2 st. och 13 § 1 st. varumärkeslagen (1960:644)
+
+    <link law="1960:644" section="1" piece="2">1 § 2 st.</link> och <link law="1960:644" section="13" piece="1">13 § 1 st.</link> <link law="1960:644">varumärkeslagen (1960:644)</link>
+    

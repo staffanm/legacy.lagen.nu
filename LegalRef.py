@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
+"""This module finds references to legal sources (including individual sections,
+eg "Upphovsrättslag (1960:729) 49 a §") in plaintext"""
 import os,pprint
 
-from sys import stdin, stdout, stderr
 import sys
 import re
+import codecs
 from StringIO import StringIO
 from simpleparse import generator
 from mx.TextTools import TextTools
 
+from DispatchMixin import DispatchMixin
 
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""
@@ -69,7 +72,6 @@ class SFSRefParser:
                 # print "mapping %s to %s" % (abbr,id)
                 global_lawabbr[abbr] = id
                 
-        
     decl = open('law.def').read()
     decl += "LawAbbreviation ::= ('%s')" % "'/'".join(global_lawabbr.keys())
     
@@ -209,10 +211,10 @@ class SFSRefParser:
                 if ((current_part_tag == 'singlesectionrefid') or
                     (current_part_tag == 'lastsectionrefid')):
                     current_part_tag = 'sectionrefid'
-                elif current_part_tag == 'lawrefid':
-                    filename = "generated/text/%s.txt" % self.sfsid_to_filename(self.normalize_sfsid(part.text))
-                    if not os.path.exists(filename):
-                        current_part_tag = 'lawrefrefid' # not my cleanest..
+                #elif current_part_tag == 'lawrefid':
+                #    filename = "generated/text/%s.txt" % self.sfsid_to_filename(self.normalize_sfsid(part.text))
+                #    if not os.path.exists(filename):
+                #        current_part_tag = 'lawrefrefid' # not my cleanest..
                     
                 # strip away ending "refid"
                 if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %s" % (current_part_tag[:-5],part.text.strip())
@@ -436,11 +438,14 @@ class SFSRefParser:
         self.currentchapter = None
         return self.formatter_dispatch(root.nodes[0])
 
+    def format_ChangeRef(self,root):
+        id = self.find_node(root,'LawRefID').data
+        return '<link%s>%s</link>' % (self.format_attributes({'lawref':id}),
+                                      root.text)
+    
     # you know, there's a bunch of refactorings that could be done here...
     def format_ChapterSectionPieceRef(self,root):
-        x = self.find_attributes([root])
-        # print ". "*self.depth+"ATTRIBUTES: %s" % x
-        return '<link%s>%s</link>' % (self.format_attributes(x),
+        return '<link%s>%s</link>' % (self.format_attributes(self.find_attributes([root])),
                                       root.text)
 
     def format_ChapterSectionPieceItemRef(self,root):
@@ -654,80 +659,6 @@ class SFSRefParser:
         fixedoutput = re.sub(r'\|(lagens?|balkens?|förordningens?)',r'\1',output.getvalue())
         return unicode(fixedoutput,'iso-8859-1')
 
-    ################################################################
-    # STATIC METHODS (used for testing
-    def runtest(filename,verbose=False,quiet=False):
-        # print "testing %s" % filename
-        # print open(filename).read().split("\n\n")
-        paragraphs = open(filename).read().split("\n\n", 1)
-        if len(paragraphs) != 2:
-            print "NOT IMPLEMENTED: %s" % filename
-            return False
-        (test,answer) = open(filename).read().split("\n\n", 1)
-        # print "Verbose is %s, test is %s" % (verbose, test)
-
-        testparas   = test.split("\n---\n")
-        resparas = []
-
-        namedlaws = {}
-        for i in range(len(testparas)):
-            # print "Testing %s" % testparas[i]
-            if testparas[i].startswith("RESET:"):
-                namedlaws.clear()
-            if filename.startswith("parsertest/p_"):
-                p = PreparationRefParser(testparas[i],verbose,namedlaws)
-            else:
-                p = LawParser(testparas[i],verbose,namedlaws)
-            resparas.append(p.parse())
-
-        res = "\n---\n".join(resparas)
-        
-        if res.strip() == answer.strip():
-            print "Pass: %s" % filename
-            return True
-        else:
-            print "FAIL: %s" % filename
-            if not quiet:
-                print "----------------------------------------"
-                print "EXPECTED:"
-                print answer
-                print "GOT:"
-                print res
-                print "----------------------------------------"
-                return False
-    runtest = staticmethod(runtest)
-        
-    def teststring(s, verbose=True):
-        p = LawParser(s, verbose)
-        print p.parse()
-    teststring = staticmethod(teststring)
-
-    def prep_teststring(s):
-        p = PreparationRefParser(s, True)
-        print p.parse()
-    prep_teststring = staticmethod(prep_teststring)
-
-#     def shortened_teststring(s):
-#         p = ShortenedRefParser(s, True)
-#         print p.parse()
-#     shortened_teststring = staticmethod(shortened_teststring)
-        
-
-    def runalltests(quiet=False):
-        res = []
-        for f in os.listdir("parsertest/"):
-            if not f.endswith(".txt"): continue
-            # print "trying %s..." % f
-
-            res.append(LawParser.runtest('parsertest/%s'%f, quiet=quiet))
-        succeeded = len([r for r in res if r])
-        all       = len(res)
-                        
-        print "%s/%s" % (succeeded,all)
-        return(succeeded,all)
-    runalltests = staticmethod(runalltests)
-
-
 class PreparatoryRefParser(SFSRefParser):
     """Subclass of SFSRefParser, but handles things like references to
     preparatory works, like propositions etc"""
@@ -756,8 +687,100 @@ class PreparatoryRefParser(SFSRefParser):
 #     pp = pprint.PrettyPrinter(indent=4)
 
 
+
+class TestLegalRef:
+    def Run(self,filename,verbose=False,quiet=False):
+        # print "testing %s" % filename
+        # print open(filename).read().split("\n\n")
+        testdata = codecs.open(filename,encoding='iso-8859-1').read()
+        paragraphs = re.split('\r?\n\r?\n',testdata,1)
+        if len(paragraphs) == 1:
+            (test, answer) = (testdata,None)
+        elif len(paragraphs) == 2:
+            (test,answer) = re.split('\r?\n\r?\n',codecs.open(filename,encoding='iso-8859-1').read(),1)
+        else:
+            print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % filename
+            return false
+        # print "Verbose is %s, test is %s" % (verbose, test)
+
+        testparas   = re.split('\r?\n---\r?\n',test)
+        if answer:
+            answerparas = re.split('\r?\n---\r?\n',answer)
+        resparas = []
+
+        namedlaws = {}
+        for i in range(len(testparas)):
+            # print "Testing %s" % testparas[i]
+            if testparas[i].startswith("RESET:"):
+                namedlaws.clear()
+            if filename.startswith("test/data/LegalRef/p_"):
+                p = PreparatoryRefParser(testparas[i],verbose,namedlaws)
+            else:
+                p = SFSRefParser(testparas[i],verbose,namedlaws)
+            resparas.append(p.parse())
+
+        res = "\n---\n".join(resparas)
+        if answer:
+            answer = "\n---\n".join(answerparas)
+        if not answer:
+            print "NOT IMPLEMENTED: %s" % filename
+            if verbose:
+                print "----------------------------------------"
+                print "GOT:"
+                print res.encode('iso-8859-1')
+                print "----------------------------------------"
+            return False
+        elif res.strip() == answer.strip():
+            print "Pass: %s" % filename
+            return True
+        else:
+            print "FAIL: %s" % filename
+            if not quiet:
+                print "----------------------------------------"
+                print "EXPECTED:"
+                print answer.encode('iso-8859-1')
+                print "GOT:"
+                print res.encode('iso-8859-1')
+                print "----------------------------------------"
+                return False
+    #runtest = staticmethod(runtest)
+        
+    def RunString(self,s, verbose=True):
+        p = SFSRefParser(s, verbose)
+        print p.parse()
+    #teststring = staticmethod(teststring)
+
+    def prep_teststring(self,s):
+        p = PreparatoryRefParser(s, True)
+        print p.parse()
+    #prep_teststring = staticmethod(prep_teststring)
+
+#     def shortened_teststring(s):
+#         p = ShortenedRefParser(s, True)
+#         print p.parse()
+#     shortened_teststring = staticmethod(shortened_teststring)   
+
+    def RunAll(self,quiet=False):
+        res = []
+        for f in os.listdir("test/data/LegalRef"):
+            if not f.endswith(".txt"): continue
+            # print "trying %s..." % f
+
+            res.append(self.Run('test/data/LegalRef/%s'%f, quiet=quiet))
+        succeeded = len([r for r in res if r])
+        all       = len(res)
+                        
+        print "%s/%s" % (succeeded,all)
+        return(succeeded,all)
+    #runalltests = staticmethod(runalltests)
+
+
+
 if __name__ == "__main__":
-    # 47/52 innan jag började ha sönder saker 
+    # 47/55 innan jag började ha sönder saker, alla implementerade tester funkar
+    TestLegalRef.__bases__ += (DispatchMixin,)
+    t = TestLegalRef()
+    t.Dispatch(sys.argv)
     
     # LawParser.runtest("parsertest/verdict-2000-28.txt",verbose=True)
     # LawParser.teststring("20 § förordningen ( 1995:521 ) om behöriga myndigheter")
@@ -766,5 +789,5 @@ if __name__ == "__main__":
     # LawParser.teststring("5 kap. 1 § och 4 § och 6 kap. 2 § 3 st. och 4 st.")
     # LawParser.teststring("51 kap. 23 a § 1 rättegångsbalken (1942:740)")
     # LawParser.teststring("5 kap. 1 § och 3 §, 9 kap. 6 § samt 16 kap. 7 § miljöbalken (1998:808)")
-    #LawParser.teststring("/Träder i kraft I:2006-03-31/")
-    LawParser.runalltests()
+    # LawParser.teststring("/Träder i kraft I:2006-03-31/")
+    # SFSRefParser.runalltests()

@@ -54,8 +54,22 @@
   </xsl:template>
 
 <xsl:template match="/law">
-  <h1 class="legaldoc"><xsl:value-of select="preamble/title"/></h1>
-  <xsl:apply-templates select="preamble" mode="header"/>
+  <table class="outer" id="top">
+    <tr>
+      <td>
+        <h1 class="legaldoc"><xsl:value-of select="preamble/title"/></h1>
+        <dl class="preamble legaldoc">
+        <xsl:apply-templates mode="header" select="preamble"/>
+        </dl>
+      </td>
+      <td>
+        <xsl:comment>start:top</xsl:comment>
+	<p class="commentplaceholder clicktoedit" id ="comment-top"><span class="commentid">top</span>klicka för att kommentera</p>
+	<xsl:comment>end:top</xsl:comment>
+       </td>
+     </tr>
+ </table>
+  <!--<xsl:apply-templates select="preamble" mode="header"/>-->
   <div class="metadata">
     <xsl:apply-templates select="meta" mode="header"/>
     <xsl:variable name="bigtoc" select="chapter[(headline or section)]"/>
@@ -78,9 +92,7 @@
 <!-- =============================== -->
 
 <xsl:template match="preamble" mode="header">
-  <dl class="preamble legaldoc">
     <xsl:apply-templates mode="header"/>
-  </dl>
 </xsl:template>
 
 <xsl:template match="meta" mode="header">

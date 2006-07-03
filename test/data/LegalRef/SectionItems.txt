@@ -1,0 +1,8 @@
+förmånsrätt enligt 6 § 1
+fordran som skall utgå med förmånsrätt enligt 6 § 1 eller 7 § 1 eller
+2 förmånsrättslagen (1970:979) och som förfaller till betalning senast
+den tillträdesdag som anges i 36 §
+
+förmånsrätt enligt <link section="6" item="1">6 § 1</link>
+fordran som skall utgå med förmånsrätt enligt <link law="1970:979" section="6" item="1">6 § 1</link> eller <link law="1970:979" section="7">7 §</link> <link law="1970:979">förmånsrättslagen (1970:979)</link> och som förfaller till betalning senast
+den tillträdesdag som anges i <link section="36">36 §</link>

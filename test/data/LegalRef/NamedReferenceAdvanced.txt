@@ -1,0 +1,17 @@
+Nollte omnämnandet av påhittadelagen. Första omnämnandet av
+påhittadelagen (1960:729). Andra omnämnandet av påhittadelagen.
+---
+Det här är en föreslagen ändring, som görs om anslagen
+beviljas. Tredje omnämnandet av påhittadelagen. Fjärde omnämnandet av
+påhittadelagen (1962:700). Femte omnämnandet av påhittadelagen. 
+---
+RESET: Sjätte omnämnandet av påhittadelagen.
+
+Nollte omnämnandet av påhittadelagen. Första omnämnandet av
+<link law="1960:729">påhittadelagen (1960:729)</link>. Andra omnämnandet av <link law="1960:729">påhittadelagen</link>.
+---
+Det här är en föreslagen ändring, som görs om anslagen
+beviljas. Tredje omnämnandet av <link law="1960:729">påhittadelagen</link>. Fjärde omnämnandet av
+<link law="1962:700">påhittadelagen (1962:700)</link>. Femte omnämnandet av <link law="1962:700">påhittadelagen</link>. 
+---
+RESET: Sjätte omnämnandet av påhittadelagen.

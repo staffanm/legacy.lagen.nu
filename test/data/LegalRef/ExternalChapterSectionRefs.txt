@@ -1,0 +1,6 @@
+6 kap. 3 § och 7 kap. 19 § och 20 § alkohollagen (1994:1738)
+2 kap. 9 § och 10 § samt 10 kap. 8 § kommunallagen (1991:900)
+
+<link law="1994:1738" chapter="6" section="3">6 kap. 3 §</link> och <link law="1994:1738" chapter="7" section="19">7 kap. 19 §</link> och <link law="1994:1738" chapter="7" section="20">20 §</link> <link law="1994:1738">alkohollagen (1994:1738)</link>
+<link law="1991:900" chapter="2" section="9">2 kap. 9 §</link> och <link law="1991:900" chapter="2" section="10">10 §</link> samt <link law="1991:900" chapter="10" section="8">10 kap. 8 §</link> <link law="1991:900">kommunallagen (1991:900)</link>
+    

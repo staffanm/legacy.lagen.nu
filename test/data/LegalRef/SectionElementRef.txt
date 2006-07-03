@@ -1,0 +1,5 @@
+    7 § 5 mom. lagen  (1947:576)  om statlig inkomstskatt
+    3 § 12 mom. lagen  (1947:576)  om statlig inkomstskatt
+
+    <link law="1947:576" section="7" element="5">7 § 5 mom. lagen  (1947:576)</link>  om statlig inkomstskatt
+    <link law="1947:576" section="3" element="12">3 § 12 mom. lagen  (1947:576)</link>  om statlig inkomstskatt

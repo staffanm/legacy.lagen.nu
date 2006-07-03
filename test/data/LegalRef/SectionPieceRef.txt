@@ -1,0 +1,5 @@
+    Om teckningen av aktier innebär att någon som inte har prövats
+    enligt 3 § fjärde stycket 2 kommer [...]
+
+    Om teckningen av aktier innebär att någon som inte har prövats
+    enligt <link section="3" piece="4" item="2">3 § fjärde stycket 2</link> kommer [...]

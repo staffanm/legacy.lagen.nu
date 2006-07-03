@@ -113,9 +113,13 @@ def numsort(alist):
 
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
-    (ret,stdout,stderr) = runcmd("xmllint --format %s > tmp.xml" % filename)
-    os.remove(filename)
-    os.rename("tmp.xml",filename)
+    tmpfile = "tmp.%s.xml" % os.getpid()
+    (ret,stdout,stderr) = runcmd("xmllint --format %s > %s" % (filename,tmpfile))
+    # FIXME: withoud -raw this command will hang (due to excessive stderr messages?) for 1992:1226
+    # -- we should try to get runcmd handle this
+    (ret,stdout,stderr) = runcmd("tidy -xml -raw -i %s > %s" % (tmpfile,filename))
+    # os.remove(filename)
+    # os.rename("tmp.xml",filename)
 
 def tidyHtmlFile(filename):    
     """Neatifies an existing XHTML file in-place by running tidy"""
@@ -176,3 +180,20 @@ def runcmd(cmdline):
 
 def normalizeSpace(string):
     return " ".join(string.split())
+
+def listDirs(dir,suffix=None):
+    """A generator that works much like os.listdir, only recursively (and only returns files, not directories)"""
+    # inspired by http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/161542
+    directories = [dir]
+    while directories:
+        dir = directories.pop()
+        for f in os.listdir(dir):
+            
+            f = "%s/%s" % (dir,f)
+            if os.path.isdir(f):
+                directories.append(f)
+            elif os.path.isfile:
+                if suffix and not f.endswith(suffix):
+                    continue
+                else:
+                    yield f

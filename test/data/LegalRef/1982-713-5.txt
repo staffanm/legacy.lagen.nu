@@ -1,0 +1,9 @@
+Bestämmelserna om livförsäkring, med undantag för 1 kap. 8 a §
+samt 7 kap. 22, 23 och 26 §§, får tillämpas för skadeförsäkringar som
+avses i 2 kap. 3 a § första stycket klasserna 1 och 2 samt för
+avgångsbidragsförsäkringar.
+
+Bestämmelserna om livförsäkring, med undantag för <link chapter="1" section="8a">1 kap. 8 a §</link>
+samt <link chapter="7">7 kap.</link> <link chapter="7" section="22">22</link>, <link chapter="7" section="23">23</link> och <link chapter="7" section="26">26 §§</link>, får tillämpas för skadeförsäkringar som
+avses i <link chapter="2" section="3a" piece="1">2 kap. 3 a § första stycket</link> klasserna 1 och 2 samt för
+avgångsbidragsförsäkringar.

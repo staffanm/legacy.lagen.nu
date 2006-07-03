@@ -70,7 +70,7 @@ class Parser:
     """Abstract base class for a legal source document"""
     re_NormalizeSpace  = re.compile(r'\s+',).sub
 
-    def __init__(self,baseDir):
+    def __init__(self):
         pass
     
     def Parse(self):
@@ -89,7 +89,7 @@ class Parser:
 class Manager:
     def __init__(self,baseDir):
         self.baseDir = baseDir
-        print "LegalSource.py: self.baseDir set to " + self.baseDir
+        # print "LegalSource.py/Manager: self.baseDir set to " + self.baseDir
 
     def PrintUsage(self,argv):
         print "Syntax: %s [action] [id]" % argv[0]
@@ -120,6 +120,10 @@ class Manager:
     def Generate(self):
         """generate does the basic XML-to-HTML-ahead-of-time conversion"""
         raise NotImplementedError
+    
+    def GenerateAll(self):
+        raise NotImplementedError
+    
 
 
 class ParseError(Exception):

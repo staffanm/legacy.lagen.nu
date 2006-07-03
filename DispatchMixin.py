@@ -36,7 +36,7 @@ Note that your class cannot have a method called `dispatch`
         else:
             neededDefaultArgs = len(requiredArgs) - len(providedArgs)
             if neededDefaultArgs == 0:
-                combinedArgs = providedArgs
+                combinedArgs = tuple(providedArgs)
             else:
                 combinedArgs = tuple(providedArgs) + defaultArgs[-(neededDefaultArgs):]
         func(*combinedArgs)

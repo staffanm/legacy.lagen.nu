@@ -22,7 +22,7 @@ import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
 from DocComments import AnnotatedDoc
-from LegalRef import SFSRefParser,ParseError
+from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -42,9 +42,9 @@ def _filenameToSFSid(filename):
     '1909/bih._29_s.1' => '1909:bih. 29 s.1'"""
     (dir,file)=filename.split("/")
     if file.startswith('RFS'):
-        return re.sub(r'(\d{4})/([A-Z]*)(\d*)',r'\2\1:\3', filename.replace('_',' '))
+        return re.sub(r'(\d{4})/([A-Z]*)(\d*)( [AB]|)(-(\d+-\d+|first-version)|)',r'\2\1:\3', filename.replace('_',' '))
     else:
-        return re.sub(r'(\d{4})/(\d*)',r'\1:\2', filename.replace('_',' '))
+        return re.sub(r'(\d{4})/(\d*( s[\. ]\d+|))( [AB]|)(-(\d+-\d+|first-version)|)',r'\1:\2', filename.replace('_',' '))
 
 
 class SFSDownloader(LegalSource.Downloader):
@@ -63,16 +63,16 @@ class SFSDownloader(LegalSource.Downloader):
 
 class SFSParser(LegalSource.Parser):
     attributemapping = {
-        "Rubrik"                           : "title",
-        "SFS nr"                           : "sfsid",
-        "Departement/ myndighet"           : "dept",
-        "Utfärdad"                         : "issued",
-        "Ändring införd"                   : "containedchanges",
-        "Författningen har upphävts genom" : "revokedby",
-        "Upphävd"                          : "revoked",
-        "Övrigt"                           : "other",
-        "Omtryck"                          : "reprint",
-        "Tidsbegränsad"                    : "timelimited"
+        u'Rubrik'                           : 'title',
+        u'SFS nr'                           : 'sfsid',
+        u'Departement/ myndighet'           : 'dept',
+        u'Utfärdad'                         : 'issued',
+        u'Ändring införd'                   : 'containedchanges',
+        u'Författningen har upphävts genom' : 'revokedby',
+        u'Upphävd'                          : 'revoked',
+        u'Övrigt'                           : 'other',
+        u'Omtryck'                          : 'reprint',
+        u'Tidsbegränsad'                    : 'timelimited'
     }    
     re_SimpleSfsId     = re.compile(r'^\d{4}:\d+\s*$').match
     re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
@@ -83,41 +83,48 @@ class SFSParser(LegalSource.Parser):
     re_NumberRightPara = re.compile(r'^(\d+)\) ').match
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
     re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
+    re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
     
-    def Parse(self,id,files,baseDir):
+    
+    
+    def Parse(self,id,files):
         self.id = id
-        self.baseDir = baseDir
+        # self.baseDir = baseDir
         self.verbose = True
 
+        # find out when data was last fetched (use the oldest file)
+        timestamp = sys.maxint
+        for filelist in files.values():
+            for file in filelist:
+                if os.path.getmtime(file) < timestamp:
+                    timestamp = os.path.getmtime(file)
+        
         # extract and parse registry (AKA changelog)
         registry = self.__parseRegistry(files['sfsr'])
         lawtext = self.__extractLawtext(files['sfst'])
-        parsed = self.__parseLawtext(lawtext, registry)
-        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, _SFSidToFilename(id))
-        Util.mkdir(os.path.dirname(filename))
-        print "saving as %s" % filename
-        out = file(filename, "w")
-        out.write(parsed)
-        out.close()
-        Util.indentXmlFile(filename)
+        parsed = self.__parseLawtext(lawtext, registry,timestamp)
+        return parsed
+        
         
     def __parseRegistry(self, files):
         """Parsear SFSR-registret som innehåller alla ändringar i lagtexten"""
-        soup = self.LoadDoc(files[0])
-        tables = soup.body('table')[3:-2]
-        
         all_attribs = []
-        for table in tables:
-            sfsid = None
-            entry_attribs = []
-            for row in table('tr'):
-                key = self.ElementText(row('td')[0])
-                val = self.ElementText(row('td')[1])
-                if val != "":
-                    entry_attribs.append([key,val])
-                    if key==u'SFS-nummer:':
-                        sfsid = val
-            all_attribs.append([sfsid, entry_attribs])
+        for f in files:
+            soup = self.LoadDoc(f)
+            tables = soup.body('table')[3:-2]
+            for table in tables:
+                sfsid = None
+                entry_attribs = []
+                for row in table('tr'):
+                    key = self.ElementText(row('td')[0])
+                    if key.endswith(":"):  key= key[:-1] # trim ending ":"
+                    if key == '': continue
+                    val = self.ElementText(row('td')[1]).replace(u'\xa0',' ') # no nbsp's, please
+                    if val != "":
+                        entry_attribs.append([key,val])
+                        if key==u'SFS-nummer':
+                            sfsid = val
+                all_attribs.append([sfsid, entry_attribs])
         return all_attribs
     
     def __extractLawtext(self, files = [], keepHead=True):
@@ -132,13 +139,18 @@ class SFSParser(LegalSource.Parser):
                     break
                 idx += 1
             print "idx: %s" % idx
-            txt = ''.join([e for e in startElement.nextGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
+            txt = ''.join([e for e in el.nextGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
         else:
-            txt = ''.join([e for e in soup.body('pre')[1].recursiveChildGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
+            if not soup.body('pre'):
+                txt = ''
+            else:
+                txt = ''.join([e for e in soup.body('pre')[1].recursiveChildGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
         
         return txt + self.__extractLawtext(files[1:],keepHead=False)
     
-    def __parseLawtext(self, lawtext, registry):
+    def __parseLawtext(self, lawtext, registry,timestamp):
+        # a little massage is needed for 1873:26 (and maybe others?) -- it has only three \n between preamble and lawtext, not four
+        lawtext = re.sub('\n{3}\n?','\n\n\n\n',lawtext)
         paras = lawtext.split("\n\n")
         print "%s paragraphs" % len(paras)
         index = 0
@@ -151,7 +163,7 @@ class SFSParser(LegalSource.Parser):
         current_part = self.preamble
         for p in paras:
             sp = p.strip()
-            print "p: %r" % sp
+            # print "p: %r" % sp
             if (sp == " -----------" or sp == ""):
                 if (not self.lawtext):
                     self.lawtext = []
@@ -183,7 +195,7 @@ class SFSParser(LegalSource.Parser):
             # this is more complicated than it should have to be, but look at 1998:778 for a good reason
             for l in p.splitlines():
                 if (l.find(":") != -1 and l.index(":") <= 18):
-                    possible_continuation = 0
+                    possible_continuation = False
                 else:
                     pass
                 
@@ -196,12 +208,12 @@ class SFSParser(LegalSource.Parser):
             key = key.strip()
             value = value.strip() # i think I could do this in a oneliner with list comprehensions
 
-            if key == "Rubrik":
-                value = re.sub(r'\(\d{4}:\d+(| \d)\)','',value)
+            #if key == "Rubrik":
+            #    value = re.sub(r'\(\d{4}:\d+(| \d)\)','',value)
             if key == "SFS nr":
                 if self.id != value:
-                    print "VARNING: SFS-numret i lagtexten (%s) skiljer sig från det givna (%s)" % (value,self.id)
-                    value = self.sfsid
+                    print u"VARNING: SFS-numret i lagtexten (%s) skiljer sig från det givna (%s)" % (value,self.id)
+                    # value = self.id
                 
             # normalize spacing
             # key = re.sub(r'\s+', ' ', key)
@@ -210,7 +222,7 @@ class SFSParser(LegalSource.Parser):
             try:
                 self.attributes.append(self.attributemapping[key],value)
             except KeyError:
-                print "Unknown preamble key '%s', skipping" % key
+                print (u"Unknown preamble key '%s', skipping" % key).encode('iso-8859-1')
 
         self.paras = paras[index+1:]
 
@@ -219,19 +231,12 @@ class SFSParser(LegalSource.Parser):
         self.f = codecs.getwriter('iso-8859-1')(buf)
         self.f.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>")
         self.f.write("<law>")
-        # create some metadata
+        # create some metadata (just fetched time for now, the PDF link should be done in XSLT)
         self.f.write("<meta>")
-
         # FIXME: rewrite timestamp handling (not sure who should be responsible
         # for keeping track of last-downloaded, but probably not the parser
         # itself)
-        #timestamp = None
-        #if os.path.exists("downloaded/lawtext/%s.html"%self.basefile):
-        #    timestamp = os.path.getmtime("downloaded/lawtext/%s.html"%self.basefile)
-        #elif os.path.exists("downloaded/lawtext/%s_A.html"%self.basefile):
-        #    timestamp = os.path.getmtime("downloaded/lawtext/%s_A.html"%self.basefile)
-        #if timestamp:
-        #    self.f.write('<fetched>%s</fetched>' % datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M"))
+        self.f.write('<fetched>%s</fetched>' % datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M"))
         self.f.write("</meta>")
         # write the data from the preamble
         self.f.write("<preamble>")
@@ -264,7 +269,7 @@ class SFSParser(LegalSource.Parser):
             # print "Doing '%s'" % p[0:40].replace("\n", " ")
             # self.verbose = True
             if self.is_chapter(p):
-                print "CHA: %s" % p[0:30]
+                print "CHA: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 # self.close_para()
@@ -274,7 +279,7 @@ class SFSParser(LegalSource.Parser):
                 self.open_chapter(p)
             
             elif self.is_ordered_list(p):
-                if self.verbose: print "ORD: %s" % p[0:30]
+                if self.verbose: print "ORD: %s" % p[0:30].encode('iso-8859-1')
                 self.close_headlines(True)
                 self.close_table()
                 
@@ -283,7 +288,7 @@ class SFSParser(LegalSource.Parser):
 
             elif self.is_tablerow(raw_p):
                 if self.verbose:
-                    print "TAB: %s" % p[0:30]
+                    print "TAB: %s" % p[0:30].encode('iso-8859-1')
                 self.close_headlines(True)
                 self.close_ordered_list()
                 
@@ -293,12 +298,19 @@ class SFSParser(LegalSource.Parser):
                 
             elif self.is_preformatted(raw_p):
                 # if self.verbose:
-                print "PRE: %s" % p[0:30]
+                print "PRE: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 
                 self.do_preformatted(raw_p)
 
+            elif self.is_revoked_section(p):
+                print "REV: %s" % p[0:30].encode('iso-8859-1')
+                self.close_ordered_list()
+                self.close_table()
+                self.close_introduction()
+                self.close_section()
+                self.do_revoked_section(p)
                 
             elif self.is_section(p):
                 print "SEC: %s" % p[0:30].encode('iso-8859-1')
@@ -310,7 +322,7 @@ class SFSParser(LegalSource.Parser):
                 self.open_section(p)
 
             elif self.is_headline(p):
-                if self.verbose: print "HEA: %s" % p[0:30]
+                if self.verbose: print "HEA: %s" % p[0:30].encode('iso-8859-1')
                 self.possibleheadlines.append(p)
             else: # ok, not the start of a new section. This means
                 # that if we had some possibleheadlines, we can now
@@ -321,7 +333,7 @@ class SFSParser(LegalSource.Parser):
                 self.close_table()
                 if not self.in_introduction and not self.in_section:
                     self.open_introduction()
-                if self.verbose: print "NOR: %s" % p[0:30]
+                if self.verbose: print "NOR: %s" % p[0:30].encode('iso-8859-1')
                 # self.close_para()
                 # note that the string has already been XML-escaped!
                 self.f.write("<p>%s</p>" % self.find_references(Util.normalizeSpace(p)))
@@ -345,7 +357,8 @@ class SFSParser(LegalSource.Parser):
                 current_changelog = [u'okänt',
                                      [[u'Övergångsbestämmelser',u''],
                                       [u'SFS-nummer',u'okänt']]]
-                self.registry.append(current_changelog)
+                registry.append(current_changelog)
+                transitional_idx = 1 
             for p in self.transitional:
                 # print 'doing transitional para %s' % p
                 #if re.match(r'^\d{4}:\d+\s*$', p):
@@ -364,10 +377,9 @@ class SFSParser(LegalSource.Parser):
                         current_changelog = [current_transitional_id,
                                              [[u'Övergångsbestämmelser', u''],
                                               [u'SFS-nummer',current_transitional_id]]]
+                        transitional_idx = 1
                 else:
-                    print "adding to %r" % current_changelog[1][transitional_idx][1]
                     current_changelog[1][transitional_idx][1] += '<p>%s</p>'% self.xmlescape(p)
-                    print "now %s" % current_changelog[1][transitional_idx][1]
         if self.appendix:
             self.create_headline("Bilagor", "1")
             self.f.write("<appendix>")
@@ -388,7 +400,6 @@ class SFSParser(LegalSource.Parser):
                 # print c.dict.keys()
                 self.f.write('<change id="%s">' % c[0])
                 for tuple in c[1]:
-                    print "tuple: %r" % tuple
                     if tuple[0] == u'Omfattning':
                         self.f.write(u'<prop key="%s">%s</prop>' % (tuple[0],self.find_change_references(self.fixup(tuple[1]))))
                     elif tuple[0] == u"Övergångsbestämmelser":
@@ -460,15 +471,15 @@ class SFSParser(LegalSource.Parser):
         away the easy cases"""
         #print "is_headline: %s" % p
         # the rules for something being a headline:
-        if (p.find("\n") != -1): # it must be a single line (Exception: headline just before 25 § 1960:729)
-
+        if u'\n' in p and len(p) > 80: # it must be a single line (Exception: headline just before 25 § 1960:729)
             #print "_is_headline: fail 1"
             return False
-        if (p.find(u'§') != -1): # if it contains a §, it's probably
+        if u'§' in p: # if it contains a §, it's probably
                                  # just a short section
             #print "_is_headline: fail 2"
             return False
-        if (p.endswith(".") and not (p.endswith("m.m.") or p.endswith("m. m."))):
+        if (p.endswith(".") and
+            not (p.endswith("m.m.") or p.endswith("m. m.") or p.endswith("m.fl.") or p.endswith("m. fl."))):
             #print "_is_headline: fail 3"
             return False # a headline never ends with a period,
                                 # unless it ends with the string
@@ -493,7 +504,7 @@ class SFSParser(LegalSource.Parser):
                                           # compliance!
             for h in self.possibleheadlines:
                 self.f.write("<p>%s</p>" %
-                             self.find_references(h))
+                             self.find_references(Util.normalizeSpace(h)))
         else:
             if len(self.possibleheadlines) == 1:
                 #if re.match(r'^(\d+( \w|)) [Kk]ap.',
@@ -518,6 +529,39 @@ class SFSParser(LegalSource.Parser):
     ################################################################
     # SECTION HANDLING
     ################################################################
+    def is_revoked_section(self,p):
+        match = self.re_SectionRevoked(p)
+        if match:
+            return True
+        else:
+            return False
+    
+    def do_revoked_section(self,p):
+        self.in_section = False
+        section_id = self.section_id(p)
+        self.current_section = section_id
+        if self.re_SectionIdOld.match(p):
+            p = self.re_SectionIdOld.sub('',p)
+        else:
+            p = self.re_SectionId.sub('',p)
+
+        # some old laws have sections split up in "elements" (moment),
+        # eg '1 § 1 mom.', '1 § 2 mom.' etc
+        match = self.re_ElementId.match(p)
+        if self.re_ElementId.match(p):
+            element_id = match.group(1)
+            p = self.re_ElementId.sub('',p)
+        else:
+            element_id = None
+            
+        if element_id:
+            self.f.write('<section id="%s" element="%s" revoked="true">' % (section_id,element_id))
+        else:
+            self.f.write('<section id="%s" revoked="true">' % section_id)
+        self.f.write('<p>%s</p>' % self.find_references(self.fixup(p)))
+        self.f.write('</section>')    
+        
+
     def is_section(self,p):
         section_id = self.section_id(p)
         if section_id == None:
@@ -541,6 +585,7 @@ class SFSParser(LegalSource.Parser):
             #if self.verbose: print "is_section: Even though '%s' looks like the start of the section, the numbering's wrong (%s > %s)" % (
             #    p[:30], self.current_section, section_id)
             return False
+
 
     def close_section(self):
         if self.in_section:
@@ -621,8 +666,8 @@ class SFSParser(LegalSource.Parser):
             self.in_ordered_list = False
         
     def do_ordered_list(self,p):
-        self.f.write('  <li>%s</li>' %
-                     self.find_references(p))
+        self.f.write('<li>%s</li>' %
+                     self.find_references(Util.normalizeSpace(p)))
 
     def is_ordered_list(self,p):
         return self.ordered_list_id(p) != None
@@ -840,7 +885,25 @@ class SFSParser(LegalSource.Parser):
         XML-escaped"""
         return self.xmlescape(Util.normalizeSpace(str))
     
-    # FIXME: tie in the old LawParser object here somehow
+    
+    def find_change_references(self,p):
+        typemap = {u'upph.'    : 'removed',
+                   u'ändr.'    : 'modified',
+                   u'nya'      : 'added',
+                   u'ny'       : 'added',
+                   u'ikrafttr.': 'added',
+                   u'tillägg'  : 'added'}
+        res = ""
+        p = self.re_NormalizeSpace(' ',p)
+        changesets = p.split("; ")
+        for changeset in changesets:
+            typelabel =  changeset.split(" ")[0].strip()
+            if typemap.has_key(typelabel):
+                res += '<sectionchange type="%s">%s</sectionchange>' % (typemap[typelabel], self.find_references(changeset))
+            else:
+                print "Warning: unknown type label '%s'" % typelabel.encode('iso-8859-1')
+        return res
+     
     def find_references(self,p):
         try:
             lp = SFSRefParser(p,namedlaws=self.namedlaws)
@@ -849,14 +912,53 @@ class SFSParser(LegalSource.Parser):
             print "find_references failed on the following:\n"+p
             raise e
     
+    def find_prep_references(self,p):
+        try:
+            lp = PreparatoryRefParser(p,namedlaws=self.namedlaws)
+            return lp.parse()
+        except ParseError, e:
+            print "find_prep_references failed on the following:\n"+p
+            raise e    
 class SFSManager(LegalSource.Manager):
 
     def Parse(self, id):
         files = {'sfst':self.__listfiles('sfst',id),
                  'sfsr':self.__listfiles('sfsr',id)}
         print("Files: %r" % files)
-        p = SFSParser(self.baseDir)
-        p.Parse(id, files, self.baseDir)
+        p = SFSParser()
+        parsed = p.Parse(id, files)
+        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, _SFSidToFilename(id))
+        Util.mkdir(os.path.dirname(filename))
+        print "saving as %s" % filename
+        out = file(filename, "w")
+        out.write(parsed)
+        out.close()
+        Util.indentXmlFile(filename)
+
+    def ParseAll(self):
+        from sets import Set
+        ids = Set()
+        # for now, find all IDs based on downloaded files
+        for f in Util.listDirs("%s/%s/downloaded/sfst" % (self.baseDir,__moduledir__), ".html"):
+            # moahaha!
+            base = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            ids.add(_filenameToSFSid(base))
+        errlog = open("SFS.ParseAll.log","w")
+        for id in sorted(ids):
+            try:
+                self.Parse(id)
+            except Exception, e:
+                import traceback
+                print "\n" * 30
+                print "Exception for SFS '%s': %s\n" % (id,e)
+                traceback.print_exc()
+                print "\n" * 10
+                errlog.write("Exception for SFS '%s': %s\n" % (id,e))
+                traceback.print_exc(file=errlog)
+                errlog.flush()
+                
+        errlog.close()
+        
 
     def __listfiles(self,source,sfsid):
         templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,_SFSidToFilename(sfsid))
@@ -881,10 +983,24 @@ class SFSManager(LegalSource.Manager):
         ad = AnnotatedDoc(outfile)
         ad.Prepare()
         print "done"
-        
-        
+    
+    def Test(self,testname = None):
+        sys.path.append("test")
+        from test_Parser import TestParser
+        if testname:
+            TestParser.Run(testname,SFSParser,"test/data/sfs")
+        else:
+            TestParser.RunAll(SFSParser,"test/data/sfs")
+    
+    def Profile(self, testname):
+        import hotshot, hotshot.stats
+        prof = hotshot.Profile("%s.prof" % testname)
+        prof.runcall(self.Test, testname)
+        s = hotshot.stats.load("%s.prof" % testname)
+        s.strip_dirs().sort_stats("time").print_stats()
+
 if __name__ == "__main__":
     SFSManager.__bases__ += (DispatchMixin,)
     mgr = SFSManager("testdata")
-    print "argv: %r" % sys.argv
+    # print "argv: %r" % sys.argv   
     mgr.Dispatch(sys.argv)
