@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """High-level classes that coordinates various Downloaders, Parsers
-and Renderers to create the static HTML files and other stuff"""
+and Generators (Renderers?) to create the static HTML files and other stuff"""
 
 import os,sys
 import inspect

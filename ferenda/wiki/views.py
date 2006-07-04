@@ -1,6 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # Create your views here.
 from django.shortcuts import render_to_response, get_object_or_404
+from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from ferenda.wiki.models import Article
 from datetime import datetime
@@ -39,10 +40,17 @@ def save(request,art_title, art_section=None):
         ad = AnnotatedDoc()
         art.body = ad.Update(art.body,art_section,request.POST["text"])
     else:
-        art.body = request.POST['body']
+        art.body = request.POST['text']
         
     art.last_changed = datetime.now()
     art.save()
+    print "sending mail"
+    send_mail(subject='[ferenda] %s andrad (save)' % (art_title),
+              message='Ny text:\n\n%s' % unicode(request.POST["text"],'utf-8').encode('iso-8859-1'),
+              from_email='ferenda@lagen.nu',
+              recipient_list=['staffan@tomtebo.org'],
+              fail_silently=False)
+    print "sent mail"
     return HttpResponseRedirect('/%s' % art_title)
 
 def savexhr(request,docid,docsection):
@@ -57,6 +65,13 @@ def savexhr(request,docid,docsection):
         art.body = ad.Update(art.body,docsection,request.POST["text"])
         art.last_changed = datetime.now()
         art.save()
+        send_mail(subject=u'[ferenda] %s/%s ändrad (savexhr)' % (docid,docsection),
+                  message=u'Ny text:\n\n%s' % request.POST["text"],
+                  from_email='ferenda@lagen.nu',
+                  recipient_list=['staffan@tomtebo.org'],
+                  fail_silently=False)
+                  
+                  
         return HttpResponse(request.POST["text"])
     except Exception, e:
         print "General error: %s" % str(e)

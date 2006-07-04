@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
+
+# On what to add here:
+# * only functions that are generally useful in any part of the source code
+# * code only useful for Parsers/Downloaders should go in the LegalSource.* classes
+
 import os
 import subprocess
 
@@ -47,7 +52,7 @@ class OrderedDict:
             self.list.append(item)
 
 
-# FIXME: need to rewrite this
+# FIXME: need to rewrite this (mkdirs can be used)
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
 def mkdir(newdir):
     """works the way a good mkdir should :)

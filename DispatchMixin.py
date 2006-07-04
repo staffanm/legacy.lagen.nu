@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os,sys,re,inspect
 
-
 class DispatchMixin:
     """Makes any class callable from the command line. Use like so:
 
@@ -9,7 +8,7 @@ class DispatchMixin:
     t = Test()
     t.dispatch()
 
-Note that your class cannot have a method called `dispatch`
+Note that your class cannot have a method called `dispatch`.
     """
 
     def Dispatch(self,argv=sys.argv):

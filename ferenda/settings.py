@@ -1,10 +1,10 @@
 # Django settings for ferenda project.
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+     ('Staffan Malmgren', 'staffan@tomtebo.org'),
 )
 
 MANAGERS = ADMINS
@@ -85,4 +85,6 @@ INSTALLED_APPS = (
     'ferenda.wiki',
     'ferenda.docview',
 )
-
+EMAIL_HOST = "smtp.tomtebo.org"
+SERVER_EMAIL = "nobody@lagen.nu"
+EMAIL_SUBJECT_PREFIX = "Auto Generated Message: "
