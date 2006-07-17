@@ -13,13 +13,26 @@ from mx.TextTools import TextTools
 
 from DispatchMixin import DispatchMixin
 
+
+# This should really be imported from SFS.py ("from SFS import
+# SFSidToFilename"), but since that imports LegalRef that doesn't seem to be
+# possible (circular reference problems?)
+
+
+def SFSidToFilename(sfsid):
+    """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
+    s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
+    id."""
+    if sfsid.find(":") < 0: return None
+    return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
+
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""
     def __init__(self,root,data,offset=0,isRoot=True):
         self.data = data
         self.root = root
         self.isRoot = isRoot
-        self.offset = offset
+        self.offset = offset 
 
     def __getattr__(self,name):
         if name == "text":
@@ -103,18 +116,7 @@ class SFSRefParser:
 
     
 
-    # FIXME: move these functions to some sort of a Util class
-    def sfsid_to_filename(self,sfsid):
-        """converts a sfs id to a filename, sans suffix, eg '1909:bih. 29 s.1' => '1909/bih._29_s.1'"""
-        return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
 
-    def filename_to_sfsid(self,filename):
-        """converts a filename, sans suffix, to a sfsid, eg '1909/bih._29_s.1' => '1909:bih. 29 s.1'"""
-        (dir,file)=filename.split("/")
-        if file.startswith('RFS'):
-            return re.sub(r'(\d{4})/([A-Z]*)(\d*)',r'\2\1:\3', filename.replace('_',' '))
-        else:
-            return re.sub(r'(\d{4})/(\d*)',r'\1:\2', filename.replace('_',' '))
 
     def normalize_sfsid(self,sfsid):
         # sometimes '1736:0123 2' is given as '1736:0123 s. 2'. This fixes that.
@@ -212,7 +214,7 @@ class SFSRefParser:
                     (current_part_tag == 'lastsectionrefid')):
                     current_part_tag = 'sectionrefid'
                 #elif current_part_tag == 'lawrefid':
-                #    filename = "generated/text/%s.txt" % self.sfsid_to_filename(self.normalize_sfsid(part.text))
+                #    filename = "generated/text/%s.txt" % self.SFSidToFilename(self.normalize_sfsid(part.text))
                 #    if not os.path.exists(filename):
                 #        current_part_tag = 'lawrefrefid' # not my cleanest..
                     

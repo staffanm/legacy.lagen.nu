@@ -1,5 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 # Create your views here.
+import wingdbstub
 from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
@@ -65,8 +66,10 @@ def savexhr(request,docid,docsection):
         art.body = ad.Update(art.body,docsection,request.POST["text"])
         art.last_changed = datetime.now()
         art.save()
-        send_mail(subject=u'[ferenda] %s/%s ändrad (savexhr)' % (docid,docsection),
-                  message=u'Ny text:\n\n%s' % request.POST["text"],
+        send_mail(subject=u'[ferenda] %s/%s andrad (savexhr)' % (docid,docsection),
+                  # message=u'Ny text:\n\n%s' % unicode(request.POST["text"],'utf-8').encode('iso-8859-1'),
+                  # message=u'Ny text:\n\n%s' % request.POST["text"],
+                  message=u'Ny text: unicodestrul',
                   from_email='ferenda@lagen.nu',
                   recipient_list=['staffan@tomtebo.org'],
                   fail_silently=False)

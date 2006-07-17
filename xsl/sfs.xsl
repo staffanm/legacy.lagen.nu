@@ -27,48 +27,20 @@
   <xsl:variable name="sectionOneCount" select="count(//section[@id='1'])"/>
   <xsl:variable name="hasChapters" select="/law/chapter"/>
   
-  <!-- this "overrides" the base stylesheet rule for formatting the
-       title tag in the html header. If we don't provide this
-       template, the resulting page will just get a generic page title
-       -->
-  <xsl:template name="headtitle">
-    <xsl:value-of select="/law/preamble/sfsid"/> - <xsl:value-of select="/law/preamble/title"/> - lagen.nu
-  </xsl:template>
-
-  <!-- same for the "robots" meta tag -->
-  <xsl:template name="metarobots">
-    <xsl:if test="preamble/revoked">
-      <xsl:if test="number(translate($today,'-','')) > number(translate(/preamble/revoked,'-',''))">
-	<meta name="robots" content="noindex,follow"/>
-      </xsl:if>
-    </xsl:if>
-  </xsl:template>
-
-  <xsl:template name="linkalternate">
-    <link rel="alternate" type="text/plain" title="Plain text">
-      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.txt</xsl:attribute>
-    </link>
-    <link rel="alternate" type="application/xml" title="XML">
-      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.xml</xsl:attribute>
-    </link>
-  </xsl:template>
-
 <xsl:template match="/law">
-  <table class="outer" id="top">
-    <tr>
-      <td>
-        <h1 class="legaldoc"><xsl:value-of select="preamble/title"/></h1>
-        <dl class="preamble legaldoc">
-        <xsl:apply-templates mode="header" select="preamble"/>
-        </dl>
-      </td>
-      <td>
-        <xsl:comment>start:top</xsl:comment>
-	<p class="commentplaceholder clicktoedit" id ="comment-top"><span class="commentid">top</span>klicka för att kommentera</p>
-	<xsl:comment>end:top</xsl:comment>
-       </td>
-     </tr>
- </table>
+  <div class="outer" >
+    <div class="legaldoc" id="top">
+      <h1><xsl:value-of select="preamble/title"/></h1>
+      <dl class="preamble">
+      <xsl:apply-templates mode="header" select="preamble"/>
+      </dl>
+    </div>
+    <xsl:comment>start:top</xsl:comment>
+    <div class="commentplaceholder clicktoedit" id="comment-top">
+      <span class="commentid">top</span>klicka för att kommentera
+    </div>
+    <xsl:comment>end:top</xsl:comment>
+  </div>
   <!--<xsl:apply-templates select="preamble" mode="header"/>-->
   <div class="metadata">
     <xsl:apply-templates select="meta" mode="header"/>
@@ -90,6 +62,11 @@
 <!-- =============================== -->
 <!-- STUFF APPLICABLE TO HEADER MODE -->
 <!-- =============================== -->
+
+<!-- in dv.xsl, a similar problem (how to handle all metadata properties) is
+solved the other way round (the main template does a lot of xsl:value-of
+inserts) - it results in tighter, although maybe a litte less XSLT-ish, code
+-->
 
 <xsl:template match="preamble" mode="header">
     <xsl:apply-templates mode="header"/>
@@ -234,29 +211,21 @@
 </xsl:template>
 
 <xsl:template match="headline">
-  <table class="outer">
-    <tr>
-      <td>
-  <xsl:if test="@level = '1'">
-    <h1 class="legaldoc">
-      <a name="R{@id}"></a>
-      <xsl:value-of select="."/>
-    </h1>
-  </xsl:if>
-  <xsl:if test="@level = '2'">
-    <h2 class="legaldoc">
-      <a name="R{@id}"></a>
-      <xsl:value-of select="."/>
-    </h2>
-  </xsl:if>
-      </td>
-      <td>
-  <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
-  <p class="commentplaceholder clicktoedit" id="comment-R{@id}"><span class="commentid">R<xsl:value-of select="@id"/></span>Klicka för att kommentera</p>
-  <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
-      </td>
-    </tr>
-  </table>
+  <div class="outer">
+    <div class="legaldoc" id="R{@id}">
+      <xsl:if test="@level = '1'">
+        <h1><xsl:value-of select="."/></h1>
+      </xsl:if>
+      <xsl:if test="@level = '2'">
+        <h2><xsl:value-of select="."/></h2>
+      </xsl:if>
+    </div>
+    <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
+    <div class="commentplaceholder clicktoedit" id="comment-R{@id}">
+      <span class="commentid">R<xsl:value-of select="@id"/></span>Klicka för att kommentera
+    </div>
+    <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
+  </div>
 </xsl:template>
 
 
@@ -277,33 +246,22 @@
     <xsl:if test="ancestor::introduction">S<xsl:number/></xsl:if>
     <xsl:if test="ancestor::appendix">B<xsl:number/></xsl:if>
   </xsl:variable>
-  <table class="outer">
-    <tr>
-      <td>
-  <p class="legaldoc">
-    <xsl:if test="(ancestor::section) and (position()=2)"><!-- why 2? I have no idea... -->
-      <a>
-	<xsl:attribute name="name">
-	  <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../@id"/></xsl:if>P<xsl:value-of select="../@id"/>
-	</xsl:attribute>
-      </a>
-      <span class="sectionid"><xsl:value-of select="../@id"/> §</span>
-    </xsl:if>
-    <xsl:if test="$id">
-      <a name="{$id}"/>
-      <xsl:apply-templates/>
-    </xsl:if>
-  </p>
-      </td>
-      <xsl:if test="$id != ''">
-      <td>
-	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="commentplaceholder clicktoedit" id="comment-{$id}"><span class="commentid"><xsl:value-of select="$id"/></span>Klicka för att kommentera</p>
-	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
-      </td>
+  <div class="outer">
+    <div class="legaldoc" id="{$id}">
+      <xsl:if test="(ancestor::section) and (position()=2)">
+      <!-- why 2? I have no idea... -->
+        <span class="sectionid"><xsl:value-of select="../@id"/> §</span>
       </xsl:if>
-    </tr>
-  </table>
+      <xsl:apply-templates/>
+    </div>
+    <xsl:if test="$id != ''"> <!-- why? -->
+      <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+      <div class="commentplaceholder clicktoedit" id="comment-{$id}">
+	<span class="commentid"><xsl:value-of select="$id"/></span>Klicka för att kommentera
+      </div>
+      <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+    </xsl:if>
+  </div>
 </xsl:template>
 
 <xsl:template match="ol">
@@ -314,21 +272,16 @@
   <xsl:variable name="id">
     <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../../@id"/></xsl:if>P<xsl:value-of select="../../@id"/>S<xsl:value-of select="count(../preceding-sibling::p)"/>N<xsl:number/>
   </xsl:variable>
-  <table class="outer">
-    <tr>
-      <td>
-	<p class="legaldoc li">
-	  <a name="{$id}"/>
-	  <xsl:apply-templates/>
-	</p>
-      </td>
-      <td>
-	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="commentplaceholder clicktoedit" id ="comment-{$id}"><span class="commentid"><xsl:value-of select="$id"/></span>klicka för att kommentera</p>
-	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
-      </td>
-    </tr>
-  </table>
+  <div class="outer">
+    <div class="legaldoc li" id="{$id}">
+      <xsl:apply-templates/>
+    </div>
+    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+    <div class="commentplaceholder clicktoedit" id ="comment-{$id}">
+      <span class="commentid"><xsl:value-of select="$id"/></span>klicka för att kommentera
+    </div>
+    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+  </div>
 </xsl:template>
 
 <xsl:template match="br">
@@ -377,7 +330,7 @@
   <xsl:variable name="url">
     <xsl:choose>
       <xsl:when test="@doctype='celex'">
-http://europa.eu.int/smartapi/cgi/sga_doc?smartapi!celexplus!prod!CELEXnumdoc&amp;lg=sv&amp;numdoc=<xsl:value-of select="@docid"/>
+http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="@docid"/>:SV:HTML
       </xsl:when>
       <xsl:when test="@doctype='prop'">
 	<!-- 1993 onwards -->

@@ -13,15 +13,18 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title;
+
+
     
-class References(models.Model):
-    article = models.ForeignKey(Article)
-    source = models.CharField(maxlength=100)
-    label = models.CharField(maxlength=100)
+    
+class AddedRelation(models.Model):
+    """Also see IntrinsicRelation in ferenda.wiki.models"""
+    object = models.CharField(maxlength=100)
+    relation = models.CharField(maxlength=100)
+    subject = models.CharField(maxlength=100)
     class Admin:
         pass
-
+    
     def __str__(self):
-        return "%s > %s" % (self.source, self.article)
-
+        return "%s -> %s (%s)" % (object,subject,relation)
     

@@ -79,7 +79,7 @@ Editable = {
 /* addEvent(window,'load',PrepareEditFields,false); */
 connect(window, 'onload', function(e) {
     var origtext;
-    var elems = getElementsByTagAndClassName("p", "clicktoedit");
+    var elems = getElementsByTagAndClassName("div", "clicktoedit");
     log("connecting", elems.length, "elements");
     for (var i = 0; i < elems.length; i++) { 
       var elem = elems[i];

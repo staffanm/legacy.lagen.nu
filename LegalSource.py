@@ -4,6 +4,8 @@
 import sys, os, re, codecs, types, htmlentitydefs
 sys.path.append("3rdparty")
 import BeautifulSoup
+
+
 class Downloader:
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
     """Abstract base class for downloading legal source documents
@@ -84,46 +86,97 @@ class Parser:
         return self.re_NormalizeSpace(' ',string).strip()
     def ElementText(self,element):
         """finds the plaintext contained in a BeautifulSoup element"""
-        return self.NormalizeSpace(''.join([e for e in element.recursiveChildGenerator() if isinstance(e,unicode)]))
+        return self.NormalizeSpace(
+            ''.join(
+                [e for e in element.recursiveChildGenerator() 
+                 if (isinstance(e,unicode) and 
+                     not isinstance(e,BeautifulSoup.Comment))]))
 
 class Manager:
     def __init__(self,baseDir):
         self.baseDir = baseDir
         # print "LegalSource.py/Manager: self.baseDir set to " + self.baseDir
 
-    def PrintUsage(self,argv):
-        print "Syntax: %s [action] [id]" % argv[0]
-        
-    def Run(self,argv):
-        if len(sys.argv) < 3:
-            self.print_usage(argv)
-        else:
-            action = argv[1]
-            id = argv[2]
-            if id == 'all':
-                action += "All"
-            m = getattr(self,action)
-            if m:
-                m(id)
-            else:
-                print "Unknown action %s" % action
-                
-    def Parse(self,id):
-        raise NotImplementedError
-    
     def Download(self,id):
+        """Download a specific Legal source document. The id is
+        source-dependent and will often be a web service specific id, not the
+        most commonly used ID for that legal source document (ie '4674', not
+        'NJA 1984 s. 673' or 'SÖ478-84')"""
+        raise NotImplementedError
+
+    def DownloadAll(self):
+        """Download all documents for this legal source. This is typically a
+        very expensive operation that takes hours."""
         raise NotImplementedError
     
+    def DownloadNew(self):
+        """Download just new documents for this legal source. This is
+        typically very tightly coupled to the web service where the documents
+        can be found"""
+        raise NotImplementedError
+
+    def Parse(self,id):
+        """Parse a single legal source document, i.e. convert it from whatever
+        downloaded resource(s) we have into a single XML document"""
+        raise NotImplementedError
+     
     def ParseAll(self):
+        """Parse all legal source documents for which we have downloaded
+        resource documents on disk"""
+        raise NotImplementedError
+
+    def Index(self,id):
+        raise NotImplementedError
+    
+    def IndexAll(self):
         raise NotImplementedError
 
     def Generate(self):
-        """generate does the basic XML-to-HTML-ahead-of-time conversion"""
+        """Generate displayable HTML from a legal source document in XML form"""
         raise NotImplementedError
     
     def GenerateAll(self):
+        """Generate HTML for all legal source documents"""
         raise NotImplementedError
     
+    def Test(self,testname = None):
+        """Runs a named test for the Parser of this module. If no testname is
+        given, run all available tests"""
+        sys.path.append("test")
+        from test_Parser import TestParser
+        if testname:
+            TestParser.Run(testname,self.parserClass,"test/data/sfs")
+        else:
+            TestParser.RunAll(self.parserClass,"test/data/sfs")
+    
+    def Profile(self, testname):
+        """Run a named test for the Parser and profile it"""
+        import hotshot, hotshot.stats
+        prof = hotshot.Profile("%s.prof" % testname)
+        prof.runcall(self.Test, testname)
+        s = hotshot.stats.load("%s.prof" % testname)
+        s.strip_dirs().sort_stats("time").print_stats()
+
+    def __findURN(self,refid):
+        """Given a typical Legal document identifier such as "NJA 1994 s. 33", finds
+        out the correct URN ("urn:x-dv:hd:Ö1484-93") -- or raises URNNotFound"""
+        # FIXME: we could speed this up by caching relevant parts of the LegalDocument table
+        documents = LegalDocument.objects.filter(displayid__exact=refid.encode('utf-8'))
+        # d = LegalDocument.objects.get(displayid=refid.encode('utf-8'))
+        if len(documents) == 0:
+            raise LegalSource.URNNotFound("Can't find URN for '%r'" % refid)
+        elif len(documents) == 1:
+            return unicode(documents[0].urn,'utf-8')
+        else:
+            # FIXME: should we return all URNs here?
+            print "WARNING: More than one URNs for '%r' (returning first one)" % refid
+            return unicode(documents[0].urn,'utf-8')
+
+    def __createRelation(self,object,relation,subject):
+        """Creates a single relation"""
+        IntrinsicRelation.objects.create(object=object.encode('utf-8'),
+                                         relation=relation.encode('utf-8'),
+                                         subject=subject.encode('utf-8'))
 
 
 class ParseError(Exception):
@@ -142,22 +195,29 @@ class DownloadedResource:
     def __init__(self,id,url=None,localFile=None,fetched=None):
         self.id, self.url, self.localFile, self.fetched = id,url,localFile,fetched
 
-class HtmlParser(BeautifulSoup.BeautifulSoup):
-    """Subclass of the regular BeautifulSoup parser that removes
-    comments and handles entitys"""
-    # seems both these extensions will be handled by the upcoming
-    # BeautifulSoup 3.0
-    # kill all the comments
-    def handle_comment(self, text):
-        print "handling comment"
-        pass
-    # and resolve entities
-    def handle_entityref(self, text):
-        print "handling entity %s" % text
-        try:
-            if (type(text) == types.UnicodeType):
-                self.handle_data(unichr(htmlentitydefs.name2codepoint[text]))
-            else:
-                self.handle_data(chr(htmlentitydefs.name2codepoint[text]))
-        except KeyError:
-            self.handle_data("&%s;" % text)
+#class HtmlParser(BeautifulSoup.BeautifulSoup):
+    #"""Subclass of the regular BeautifulSoup parser that removes
+    #comments and handles entitys"""
+    ## seems both these extensions will be handled by the upcoming
+    ## BeautifulSoup 3.0
+    ## kill all the comments
+    #def handle_comment(self, text):
+        #print "handling comment"
+        #pass
+    ## and resolve entities
+    #def handle_entityref(self, text):
+        #print "handling entity %s" % text
+        #try:
+            #if (type(text) == types.UnicodeType):
+                #self.handle_data(unichr(htmlentitydefs.name2codepoint[text]))
+            #else:
+                #self.handle_data(chr(htmlentitydefs.name2codepoint[text]))
+        #except KeyError:
+            #self.handle_data("&%s;" % text)
+
+class URNNotFound(Exception):
+    """thrown whenever we try to lookup a URN for a displayid (or similar) but can't find it"""
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)

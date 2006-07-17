@@ -4,23 +4,31 @@
 
 Modulen hanterar omvandlande av domslutsdetaljer och -referat till XML
 """
-import sys
-import os
-import re
-import shutil
-import unittest
+# system libraries
+import sys, os, re
+#import unittest
 import pprint
 import types
-import LegalSource
-import Util
+import codecs
+from cStringIO import StringIO
 
+# 3rdparty libs
 sys.path.append('3rdparty')
 import BeautifulSoup
 import elementtree.ElementTree as ET
 
+# my libs
+import LegalSource
+import Util
+from DispatchMixin import DispatchMixin
+from DocComments import AnnotatedDoc
+os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
+from ferenda.docview.models import IntrinsicRelation, LegalDocument
+
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Domslut (detaljer och referat)"
+__moduledir__ = "dv"
 
 class DVMigrate:
     """Engångsflyttkod"""
@@ -77,19 +85,22 @@ class DVMigrate:
         return (ret,stdout,stderr)
  
 
+
 class DVParser(LegalSource.Parser):
     re_NJAref = re.compile(r'(NJA \d{4} s\. \d+) \(alt. (NJA \d{4}:\d+)\)')
     re_delimSplit = re.compile("[:;,] ?").split
-    def __init__(self,id,files,baseDir):
-        self.id = id
-        self.dir = baseDir + "/dv/parsed"
-        if not os.path.exists(self.dir):
-            Util.mkdir(self.dir)
-        self.files = files
+    #def __init__(self,id,files,baseDir):
+        #self.id = id
+        #self.dir = baseDir + "/dv/parsed"
+        #if not os.path.exists(self.dir):
+            #Util.mkdir(self.dir)
+        #self.files = files
 
-    def Parse(self):
+    def Parse(self,id,files):
         import codecs
-        soup = self.loadDoc(self.files['detalj'])
+        self.id = id
+        self.files = files
+        soup = self.LoadDoc(self.files['detalj'][0])
         data = {}
         for row in soup.first('td', 'sokmenyBkgrMiddle').table:
             key = val = ""
@@ -99,10 +110,13 @@ class DVParser(LegalSource.Parser):
                     key = lastkey
                 if key[-1] == ":":
                     key = key[:-1]
-                val = self.elementText(row('td')[2])
+                key = key.replace(" ", "-")
+                val = self.ElementText(row('td')[2])
 
-                if val[:8] == "&#8226; ":
-                    val = val[8:]
+                #if val[:8] == "&#8226; ":
+                #    val = val[8:]
+                if val[:2] == u'\u2022 ':
+                    val = val[2:]
                 lastkey = key
                 if val != '-':
                     if key in data:
@@ -120,16 +134,16 @@ class DVParser(LegalSource.Parser):
         urn = self.__createUrn(data)
 
         referat = []
-        if 'referat' in self.files:
-            soup = self.loadDoc(self.files['referat'])
+        if 'referat' in self.files and self.files['referat']:
+            soup = self.LoadDoc(self.files['referat'][0])
             if soup.first('span', 'riDomstolsRubrik'):
                 ref_domstol_node = soup.first('span', 'riDomstolsRubrik').findParent('td')
             elif soup.first('td', 'ritop1'):
                 ref_domstol_node = soup.first('td', 'ritop1')
             else:
                 raise LegalSource.ParseError("Kunde inte hitta domstolsnamnet i %s" % self.files['referat'])
-            ref_domstol = self.elementText(ref_domstol_node)
-            ref_refid = self.elementText(ref_domstol_node.findNextSibling('td'))
+            ref_domstol = self.ElementText(ref_domstol_node)
+            ref_refid = self.ElementText(ref_domstol_node.findNextSibling('td'))
             if not ref_refid:
                 raise LegalSource.ParseError("Kunde inte hitta referatnumret i %s" % self.files['referat'])
             m = self.re_NJAref.match(val)
@@ -141,10 +155,10 @@ class DVParser(LegalSource.Parser):
             if ref_refid != data['Referat']:
                 print u"WARNING (Referat): '%s' != '%s'" % (ref_refid, data['Referat'])
             for p in soup.firstText(u'REFERAT').findParent('tr').findNextSibling('tr').fetch('p'):
-                referat.append(self.elementText(p))
+                referat.append(self.ElementText(p))
 
-            ref_sokord = self.elementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
-            ref_sokord_arr = [self.normalizeSpace(x) for x in self.re_delimSplit(ref_sokord)]
+            ref_sokord = self.ElementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
+            ref_sokord_arr = [self.NormalizeSpace(x) for x in self.re_delimSplit(ref_sokord)]
             ref_sokord_arr.sort()
             if not u'Sökord' in data:
                 data_sokord_arr = []
@@ -155,13 +169,13 @@ class DVParser(LegalSource.Parser):
 
             data_sokord_arr.sort()
             if data_sokord_arr != ref_sokord_arr:
-                print u"WARNING (Sokord): '%s' != '%s'" % (";".join(data_sokord_arr), ";".join(ref_sokord_arr))
+                print u"WARNING (Sokord): '%r' != '%r'" % (";".join(data_sokord_arr), ";".join(ref_sokord_arr))
                 data[u'Sökord'] = Util.uniqueList(ref_sokord_arr, data_sokord_arr)
                 
-                print u" --- combining to '%s'" % ";".join(data[u'Sökord'])
+                print u" --- combining to '%r'" % ";".join(data[u'Sökord'])
             if soup.firstText(u'Litteratur:'):
-                ref_litteratur = self.elementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
-                data['Litteratur'] = [self.normalizeSpace(x) for x in ref_litteratur.split(";")]
+                ref_litteratur = self.ElementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
+                data['Litteratur'] = [self.NormalizeSpace(x) for x in ref_litteratur.split(";")]
 
         root = ET.Element("Dom")
         root.attrib['urn'] = urn
@@ -181,10 +195,13 @@ class DVParser(LegalSource.Parser):
                 node.text = p
             
         tree = ET.ElementTree(root)
-        tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
-        Util.indentXmlFile(self.dir+"/"+self.id+".xml")
-
-        return tree
+        buf = StringIO()
+        
+        #f = codecs.getwriter('iso-8859-1')(buf)
+        # tree.write doesn't create initial '<?xml version=1.0 encoding='...'?>' so we add it ourselves to avoid problems with xmllint
+        buf.write('<?xml version="1.0" encoding="utf-8"?>')        
+        tree.write(buf,'utf-8')
+        return buf.getvalue()
 
     def __createUrn(self,data):
         domstolar = {
@@ -230,32 +247,122 @@ class DVParser(LegalSource.Parser):
         return urn
 
 class DVManager(LegalSource.Manager):
-    def __init__(self,baseDir):
-        self.baseDir = baseDir
+    __parserClass = DVParser
+    
+    def Parse(self,id):
+        """'id' here is a single digit representing the filename on disc, not
+        any sort of inherit case id or similarly"""
+        files = {'detalj':self.__listfiles('detalj',id),
+                 'referat':self.__listfiles('referat',id)}
+        print("Files: %r" % files)
+        p = self.__parserClass()
+        parsed = p.Parse(id,files)
+        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, id)
+        Util.mkdir(os.path.dirname(filename))
+        print "saving as %s" % filename
+        out = file(filename, "w")
+        out.write(parsed)
+        out.close()
+        Util.indentXmlFile(filename)
         
-    def parseAll(self):
+    def ParseAll(self):
         downloadDir = self.baseDir + "/dv/downloaded"
-        for f in Util.numsort(os.listdir(downloadDir)):
-            if f.endswith("detalj.html"):
-                id = f[:-12]
-                filePair = {"detalj":downloadDir + "/" + f}
-                if os.path.exists(downloadDir + "/" + id + ".referat.html"):
-                    filePair['referat'] = downloadDir + "/" + id + ".referat.html"
-                p = DVParser(id, filePair, self.baseDir)
-                t = p.parse()
-                print "id:%s\turn: %s" % (p.id, t.getroot().attrib['urn'])
+        for f in Util.listDirs(downloadDir,"detalj.html"):
+            id = os.path.basename(f)[:-12]
+            self.Parse(id)
+    
+    def Index(self,id):
+        xmlFileName = self.__xmlFileName(id)
+        root = ET.ElementTree(file=xmlFileName).getroot()
+        displayid = root.findtext(u'Metadata/Referat')
+        if not displayid:
+            displayid = root.findtext(u'Metadata/Målnummer')
+        urn = root.get('urn')
+        print "indexing %s (displayid: %s, id: %s)" % (urn,displayid,id)
+        try:
+            # this is kind of pointless -- once indexed, the properties of a LegalDocuments should never change
+            d = LegalDocument.objects.get(urn = urn.encode('utf-8'))
+            d.displayid = displayid.encode('utf-8')
+            d.htmlpath = self.__htmlFileName(id)
+            d.xmlpath = xmlFileName
+            d.save()
+                                    
+        except LegalDocument.DoesNotExist:
+            LegalDocument.objects.create(urn = urn.encode('utf-8'),
+                                         displayid = displayid.encode('utf-8'),
+                                         htmlpath = self.__htmlFileName(id),
+                                         xmlpath = xmlFileName
+                                     )
+    def IndexAll(self):
+        self.__doAllParsed(self.Index)
+
+    def __doAllParsed(self,method):
+        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
+            id = os.path.splitext(os.path.basename(f))[0]
+            method(id)
+    
+    def __htmlFileName(self,id):
+        return "%s/%s/generated/%s.html" % (self.baseDir, __moduledir__,id)
+
+    def __xmlFileName(self,id):
+        return "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,id)
         
-class TestDVCollection(unittest.TestCase):
-    baseDir = "testdata"
-    def testParse(self):
-        #dc = DVCollection("testdata")
-        #dc.parseAll()
-        dp = DVParser("282", {'detalj':'testdata/dv/downloaded/282.detalj.html',
-                              'referat':'testdata/dv/downloaded/282.referat.html'},
-        'testdata')
-        dp.parse()
+    
+    def __listfiles(self,suffix,id):
+        filename = "%s/%s/downloaded/%s.%s.html" % (self.baseDir,__moduledir__,id,suffix)
+        return [f for f in (filename,) if os.path.exists(f)]
         
+    def Generate(self,id):
+        infile = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,id)
+        outfile = "%s/%s/generated/%s.html" % (self.baseDir, __moduledir__,id)
+        Util.mkdir(os.path.dirname(outfile))
+        print "Transforming %s > %s" % (infile,outfile)
+        Util.transform("xsl/dv.xsl",
+                       infile,
+                       outfile,
+                       {},
+                       validate=False)
+        print "Generating index for %s" % outfile
+        ad = AnnotatedDoc(outfile)
+        ad.Prepare()
+        print "Creating intrinsic relations for %s" % id
+        self.__createRelations(infile)
+
+    
+    def __createRelations(self,xmlFileName):
+        tree = ET.ElementTree(file=xmlFileName)
+        urn = tree.getroot().get('urn')
+        
+        # delete all previous relations where this document is the object --
+        # maybe that won't be needed if the typical GenerateAll scenario
+        # begins with wiping the IntrinsicRelation table? It still is useful 
+        # in the normal development scenario, though
+        IntrinsicRelation.objects.filter(object__exact=urn.encode('utf-8')).delete()    
+        for e in tree.getiterator():
+            if e.tag == u'Sökord':
+                if e.text:
+                    self.__createRelation(urn,u'behandlar',e.text)
+            if e.tag == u'Rättsfall':
+                try:
+                    self.__createRelation(urn,u'refererar',self.__findURN(e.text))
+                except LegalSource.URNNotFound:
+                    print "WARNING: no URN found for %r" % e.text
+                    pass
+    
+
+    
+
+    def GenerateAll(self):
+        self.__doAllParsed(self.Generate)
+       
 
                 
 if __name__ == "__main__":
-    unittest.main()
+    if not '__file__' in dir():
+        print "probably running from within emacs"
+        sys.argv = ['DV.py','Parse', '42']
+    
+    DVManager.__bases__ += (DispatchMixin,)
+    mgr = DVManager("testdata")
+    # print "argv: %r" % sys.argv   
+    mgr.Dispatch(sys.argv)
