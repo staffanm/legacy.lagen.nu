@@ -27,17 +27,32 @@
   <xsl:variable name="sectionOneCount" select="count(//section[@id='1'])"/>
   <xsl:variable name="hasChapters" select="/law/chapter"/>
   
-<xsl:template match="/law">
-  <div class="outer" >
-    <div class="legaldoc" id="top">
-      <h1><xsl:value-of select="preamble/title"/></h1>
-      <dl class="preamble">
-      <xsl:apply-templates mode="header" select="preamble"/>
-      </dl>
+  <xsl:template match="/law">
+    <div class="outer" >
+      <div class="legaldoc" id="top">
+	<h1><xsl:value-of select="preamble/title"/></h1>
+	<dl class="preamble">
+	  <xsl:apply-templates mode="header" select="preamble"/>
+	</dl>
+      </div>
+      <xsl:comment>start:top</xsl:comment>
+      <div class="commentplaceholder clicktoedit" id="comment-top">
+	<span class="commentid">top</span>klicka för att kommentera
+      </div>
+      <xsl:comment>end:top</xsl:comment>
     </div>
-    <xsl:comment>start:top</xsl:comment>
-    <div class="commentplaceholder clicktoedit" id="comment-top">
-      <span class="commentid">top</span>klicka för att kommentera
+    <!--<xsl:apply-templates select="preamble" mode="header"/>-->
+    <div class="metadata">
+      <xsl:apply-templates select="meta" mode="header"/>
+      <xsl:variable name="bigtoc" select="chapter[(headline or section)]"/>
+      <xsl:if test="$bigtoc">
+	<form>
+	  <input id="toggletoc" type="button" value="Visa innehållsförteckning"/>
+	</form>
+	<div id="toc">
+	  <xsl:apply-templates select="chapter[(headline or section)]" mode="toc"/>
+	</div>
+      </xsl:if>
     </div>
     <xsl:comment>end:top</xsl:comment>
   </div>
