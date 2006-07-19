@@ -1,5 +1,8 @@
 # Create your views here.
-import wingdbstub
+try:
+    import wingdbstub
+except ImportError:
+    pass
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect
 from ferenda.docview.models import LegalDocument

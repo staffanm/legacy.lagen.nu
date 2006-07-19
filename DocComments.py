@@ -121,7 +121,7 @@ class AnnotatedDoc:
             # print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
             
             # write comment instead
-            outdata.write('<p class="comment clicktoedit" id="comment-%s"><span class="commentid">%s</span>%s</p>' % (c[2], c[2], comments[c[2]]))
+            outdata.write('<div class="comment clicktoedit" id="comment-%s"><span class="commentid">%s</span>%s</div>' % (c[2], c[2], comments[c[2]]))
             pos = c[1]
         outdata.write(indata.read())
         if hasattr(buf, "getvalue"):

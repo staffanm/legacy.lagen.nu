@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<h1>{{article.title}}</h1>
-<p>
-{{article.body}}
-</p>
-<p><i>senast ändrad: {{article.last_changed}}</i> -- <a href="/edit/{{article.title}}">ändra den här sidan</a></a></p>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+{% load mymarkdown %}
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>{{article.title}} - lagen.nu</title>
+    <link rel="stylesheet" type="text/css" href="/static/default.css"/>    
+    <script type="text/javascript" src="/static/mk/MochiKit.js"></script>
+    <script type="text/javascript" src="/static/stuff.js"></script>
+  </head>    
+  <body>
+  <h1 class="wikibody">{{article.title}}</h1>
+  <div class="intrinsicrelations">
+  <p>Rättsfall med sökord '{{article.title}}'</p>
+  {% for rel in relations %}
+  <p><a href="/{{rel.object.displayid|underscore}}" title="{{rel.object.urn}}">{{rel.object.displayid}}</a></p>
+  {% endfor %}
+  </div>
+  <div class="wikibody">
+  {{article.body|mymarkdown}}
+  </div>
+  <p><i>senast ändrad: {{article.last_changed}}</i> -- <a href="/edit/{{article.title}}">ändra den här sidan</a></a></p>
+</body>
+</html>

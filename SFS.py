@@ -107,7 +107,7 @@ class SFSParser(LegalSource.Parser):
         return parsed
         
     def __createUrn(self,id):
-        return "urn:x-sfs:%s" % id
+        return "urn:x-sfs:%s" % id.replace(' ','_')
     
     def __parseRegistry(self, files):
         """Parsear SFSR-registret som innehåller alla ändringar i lagtexten"""
@@ -959,20 +959,12 @@ class SFSManager(LegalSource.Manager):
             raise ParseError("Couldn't find URN for %s in %s" % (id,xmlFileName))
 
         print "indexing %s ((display)id: %s)" % (urn,id)
-        try:
-            # this is kind of pointless -- once indexed, the properties of a LegalDocuments should never change
-            d = LegalDocument.objects.get(urn = urn.encode('utf-8'))
-            d.displayid = id.encode('utf-8')
-            d.htmlpath = self.__htmlFileName(id)
-            d.xmlpath = xmlFileName
-            d.save()
-                                    
-        except LegalDocument.DoesNotExist:
-            LegalDocument.objects.create(urn = urn.encode('utf-8'),
-                                         displayid = id.encode('utf-8'),
-                                         htmlpath = self.__htmlFileName(id),
-                                         xmlpath = xmlFileName
-                                     )
+        d, created = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
+        d.displayid = id.encode('utf-8')
+        d.title = root.findtext('preamble/title').encode('utf-8')
+        d.htmlpath = self.__htmlFileName(id)
+        d.xmlpath = xmlFileName
+        d.save()                        
         
     def __htmlFileName(self,id):
         return "%s/%s/generated/%s.html" % (self.baseDir,__moduledir__,SFSidToFilename(id))
@@ -1009,7 +1001,9 @@ class SFSManager(LegalSource.Manager):
         # maybe that won't be needed if the typical GenerateAll scenario
         # begins with wiping the IntrinsicRelation table? It still is useful 
         # in the normal development scenario, though
-        IntrinsicRelation.objects.filter(object__startswith=urn.encode('utf-8')).delete()    
+        rels = IntrinsicRelation.objects.filter(object__startswith=urn.encode('utf-8'))
+        for rel in rels:
+            rel.delete()
         for e in tree.getiterator():
             if e.tag == u'link':
                 # FIXME: magic goes here

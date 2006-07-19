@@ -279,20 +279,14 @@ class DVManager(LegalSource.Manager):
             displayid = root.findtext(u'Metadata/Målnummer')
         urn = root.get('urn')
         print "indexing %s (displayid: %s, id: %s)" % (urn,displayid,id)
-        try:
-            # this is kind of pointless -- once indexed, the properties of a LegalDocuments should never change
-            d = LegalDocument.objects.get(urn = urn.encode('utf-8'))
-            d.displayid = displayid.encode('utf-8')
-            d.htmlpath = self.__htmlFileName(id)
-            d.xmlpath = xmlFileName
-            d.save()
-                                    
-        except LegalDocument.DoesNotExist:
-            LegalDocument.objects.create(urn = urn.encode('utf-8'),
-                                         displayid = displayid.encode('utf-8'),
-                                         htmlpath = self.__htmlFileName(id),
-                                         xmlpath = xmlFileName
-                                     )
+        d = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
+        d = LegalDocument.objects.get(urn = urn.encode('utf-8'))
+        d.displayid = displayid.encode('utf-8')
+        d.title = root.findtext(u'Metadata/Rubrik').encode('utf-8')
+        d.htmlpath = self.__htmlFileName(id)
+        d.xmlpath = xmlFileName
+        d.save()
+            
     def IndexAll(self):
         self.__doAllParsed(self.Index)
 
@@ -341,10 +335,10 @@ class DVManager(LegalSource.Manager):
         for e in tree.getiterator():
             if e.tag == u'Sökord':
                 if e.text:
-                    self.__createRelation(urn,u'behandlar',e.text)
+                    self.createRelation(urn,u'behandlar',e.text)
             if e.tag == u'Rättsfall':
                 try:
-                    self.__createRelation(urn,u'refererar',self.__findURN(e.text))
+                    self.createRelation(urn,u'refererar',self.findURN(e.text))
                 except LegalSource.URNNotFound:
                     print "WARNING: no URN found for %r" % e.text
                     pass

@@ -83,7 +83,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'ferenda.wiki',
-    'ferenda.docview',
+    'ferenda.docview',    
 )
 EMAIL_HOST = "smtp.tomtebo.org"
 SERVER_EMAIL = "nobody@lagen.nu"

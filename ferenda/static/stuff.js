@@ -79,13 +79,24 @@ Editable = {
 /* addEvent(window,'load',PrepareEditFields,false); */
 connect(window, 'onload', function(e) {
     var origtext;
+    log("connecting elements");
     var elems = getElementsByTagAndClassName("div", "clicktoedit");
-    log("connecting", elems.length, "elements");
+    log("connecting", elems.length, "div's");
     for (var i = 0; i < elems.length; i++) { 
       var elem = elems[i];
       connect(elem,'onclick',Editable.edit);
       elem.title = "Click to edit";
       //appendChildNodes(elem, "[foo]");
     }
+    var elems = getElementsByTagAndClassName("p", "clicktoedit");
+    log("connecting", elems.length, "p's");
+    for (var i = 0; i < elems.length; i++) { 
+      var elem = elems[i];
+      connect(elem,'onclick',Editable.edit);
+      elem.title = "Click to edit";
+      //appendChildNodes(elem, "[foo]");
+    }
+
+
   }
 );

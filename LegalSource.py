@@ -5,6 +5,21 @@ import sys, os, re, codecs, types, htmlentitydefs
 sys.path.append("3rdparty")
 import BeautifulSoup
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
+from ferenda.docview.models import IntrinsicRelation, LegalDocument
+
+class ParseError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class URNNotFound(Exception):
+    """thrown whenever we try to lookup a URN for a displayid (or similar) but can't find it"""
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class Downloader:
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
@@ -157,14 +172,14 @@ class Manager:
         s = hotshot.stats.load("%s.prof" % testname)
         s.strip_dirs().sort_stats("time").print_stats()
 
-    def __findURN(self,refid):
+    def findURN(self,refid):
         """Given a typical Legal document identifier such as "NJA 1994 s. 33", finds
         out the correct URN ("urn:x-dv:hd:Ö1484-93") -- or raises URNNotFound"""
         # FIXME: we could speed this up by caching relevant parts of the LegalDocument table
         documents = LegalDocument.objects.filter(displayid__exact=refid.encode('utf-8'))
         # d = LegalDocument.objects.get(displayid=refid.encode('utf-8'))
         if len(documents) == 0:
-            raise LegalSource.URNNotFound("Can't find URN for '%r'" % refid)
+            raise URNNotFound("Can't find URN for '%r'" % refid)
         elif len(documents) == 1:
             return unicode(documents[0].urn,'utf-8')
         else:
@@ -172,18 +187,16 @@ class Manager:
             print "WARNING: More than one URNs for '%r' (returning first one)" % refid
             return unicode(documents[0].urn,'utf-8')
 
-    def __createRelation(self,object,relation,subject):
+    def createRelation(self,urn,relation,subject):
         """Creates a single relation"""
-        IntrinsicRelation.objects.create(object=object.encode('utf-8'),
+        object, created = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
+        if created:
+            print u"WARNING: creating a relation for which the object (%r) doesn't exists in the LegalDocument table" % urn
+            
+        IntrinsicRelation.objects.create(object=object,
                                          relation=relation.encode('utf-8'),
                                          subject=subject.encode('utf-8'))
 
-
-class ParseError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
 
 
 class DownloadedResource:
@@ -215,9 +228,3 @@ class DownloadedResource:
         #except KeyError:
             #self.handle_data("&%s;" % text)
 
-class URNNotFound(Exception):
-    """thrown whenever we try to lookup a URN for a displayid (or similar) but can't find it"""
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
