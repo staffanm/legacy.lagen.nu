@@ -1,0 +1,212 @@
+root              ::= (shortref/refs/ref/plain)+
+
+
+refs              ::= (ExternalRefs/MultipleGenericRefs/ChapterSectionRefs/IndividualChapterSectionRefs/SectionPieceItemRefs/SectionPieceRefs/SectionRefs/SectionPieceExternalRefs/ExternalChapterSectionRefs/PieceAndItemRef/SectionItemRefs)
+# this list overlaps with GenericRef
+ref               ::= (ChangeRef/ExternalRef/ChapterSectionPieceItemRef/ChapterSectionPieceRef/ChapterSectionRef/SectionPieceItemRef/SectionElementRef/SectionPieceRef/SectionSentenceRef/SectionItemRef/ChapterRef/SectionRef/PieceRef/LawRef/LawRefID/NamedExternalLawRef)
+
+# testing SectionItemRefAndSectionItemRefs, a ugly special case for string on the form
+# "6 ß 1 eller 7 ß 1 eller 2 fˆrmÂnsr‰ttslagen (1970:979)"
+SectionItemRefAndSectionItemRefs ::= SectionItemRef, WAndOrW, SectionItemRefs
+
+# MULTIPLE REFERENCES
+
+# Ideally, I'd like to simplify the definition of ExternalRefs to that
+# of SectionPieceExternalRefs, which should suffice for most kinds of
+# multiple external references. Might need some work with the
+# formatter, though.
+
+ExternalRefs                ::= SectionItemRefAndSectionItemRefs/MultipleGenericRefs, Whitespace, ExternalLawRef
+SectionPieceExternalRefs    ::= MultipleGenericRefs, ExternalRef
+
+ExternalChapterSectionRefs ::= MultipleGenericRefs, Whitespace, NamedExternalLawRef
+
+# GenericRefs          ::= (SectionRefs/SectionPieceRefs/SectionPieceItemRefs/IndividualChapterSectionRefs/ChapterSectionRefs/GenericRef)
+GenericRefs          ::= (SectionPieceItemRefs/SectionPieceRefs/IndividualChapterSectionRefs/ChapterSectionPieceRefs/ChapterSectionRefs/SectionRefs/GenericRef)
+
+MultipleGenericRefs  ::= (GenericRefs, (CommaSpace/WAndOrW)?)+
+
+ChapterSectionRefs    ::= ChapterRef, Whitespace, SectionRefs
+
+ChapterSectionPieceRefs ::= ChapterRef, Whitespace, SectionPieceRefs
+
+# Things like '8 kap. 1 ß, 2 ß och 6ß'
+IndividualChapterSectionRefs ::= ChapterSectionRef, (Comma, Whitespace, SectionRef)*, Whitespace, And, Whitespace, SectionRef
+
+# is the PieceRef/PieceRefID alternative really neccesary? Won't it do
+# with just PieceRef? Nope, see testcase 1960-729-49a-4.txt (or just
+# the test string '2 ß andra och tredje styckena')
+SectionPieceRefs      ::= SectionRef, Whitespace, ((PieceItemRef/PieceRef/PieceRefID), Comma, Whitespace)*, (PieceItemRef/PieceRef/PieceRefID), WAndOrW, (PieceItemRef/PieceRef)
+
+# this matches things on the form "3 ß andra stycket 2-4"
+SectionPieceItemRefs  ::= SectionRef, Whitespace, PieceRef, Whitespace, ItemRef, Hyphen, ItemRef
+
+# Things like '2, 4-6 och 8 ßß'
+SectionRefs           ::= (IntervalOrSingle,CommaSpace/WAndOrW)*, LastIntervalOrSingle
+
+# Things like '1 ß, 2 ß och 6ß'
+IndividualSectionRefs::= (SectionRef, Comma, Whitespace)*, SectionRef, Comma, Whitespace, And, Whitespace, SectionRef
+
+# This is a special-case rule for things like "fˆrsta stycket och 3"
+PieceAndItemRef     ::= PieceRef, WAndOrW, ItemRef
+
+# This is a very greedy rule, it could easily match "6 ß 1 eller 7" in
+# "6 ß 1 eller 7 ß 1", which is not what we want. Therefore, it's not
+# included in the list of GenericRefs above. See testcase
+# SectionItems.txt (which we can't handle fully) for example.
+SectionItemRefs     ::= SectionRef, Whitespace, ItemRef, WAndOrW, ItemRef
+
+# SectionItemRefs ::= 'blahonga'
+
+IntervalOrSingle     ::= (IntervalSection/SectionSentenceRef/SectionRefID) # the SectionSentenceRef does not really belong...
+SingleSectionRefID   ::= SectionRefID
+#IntervalSection      ::= SingleSectionRefID, Whitespace?, Hyphen, Hyphen?, Whitespace?, SingleSectionRefID
+IntervalSection      ::= SingleSectionRefID, Whitespace?,Hyphen, Hyphen?, Whitespace?, SingleSectionRefID
+
+LastSectionRef       ::= SectionRefID, Whitespace, DoubleSectionMark
+# LastIntervalOrSingle ::= (SectionRefID, Whitespace?, Hyphen, Hyphen?, Whitespace?)*, LastSectionRef
+LastIntervalOrSingle ::= (SectionRefID, Whitespace?, (Hyphen,Hyphen?)/AndOr, Whitespace?)*, LastSectionRef
+LastSectionRefID     ::= SectionRefID
+
+And                  ::= 'och'
+Also                 ::= 'samt'
+Or		     ::= 'eller'
+In                   ::= 'i'
+AndOr		     ::= (And/Or/Also)
+WAndOrW		     ::= Whitespace, AndOr, Whitespace
+TheLaw		     ::= 'lagen'
+LawSynonyms          ::= ('lagens'/'balkens'/'fˆrordningens'/'lagen'/'balken'/'fˆrordningen')
+Comma		     ::= ','
+CommaSpace	     ::= Comma, Whitespace
+# the ñ (en ndash) is used in 2005:104 at least
+Hyphen               ::= [-ñ]
+SectionMark	     ::= 'ß'
+DoubleSectionMark    ::= SectionMark, SectionMark # making the second optional fucks up ~20 test cases...
+Colon                ::= ':'
+LeftParen            ::= '('
+RightParen           ::= ')'
+Pipe		     ::= '|'
+Slash                ::= '/'
+
+# SINGLE REFERENCES
+# dont forget, when adding a new top-level construct, to add it to the
+# 'ref' construct above
+
+
+ChangeRef ::= ('Lag '/'lag '/'Fˆrordning '/'fˆrordning '),LawRef,'.'?
+
+ExternalRef          ::= GenericRef, Whitespace, ExternalLawRef
+
+ExternalLawRef          ::= (AnonymousExternalLawRef/NamedExternalLawRef/SameLaw)
+AnonymousExternalLawRef ::= (In, Whitespace)?, LawSynonyms, Whitespace, LawRef
+NamedExternalLawRef     ::= NamedLaw, (Whitespace, LawRef)?
+NamedLaw		::= word, Pipe, LawSynonyms
+SameLaw			::= 'samma lag'
+
+GenericRef            ::= (ChapterSectionPieceItemRef/ChapterSectionPieceRef/ChapterSectionItemRef/ChapterSectionRef/SectionPieceItemRef/SectionElementRef/SectionPieceRef/SectionSentenceRef/SectionItemRef/SectionRef/ChapterRef)
+
+ChapterSectionPieceItemRef ::= ChapterSectionRef, Whitespace, PieceRef, Whitespace, ItemRef
+ChapterSectionPieceRef ::= ChapterSectionRef, Whitespace, PieceRef
+ChapterSectionItemRef  ::= ChapterSectionRef, Whitespace, ItemRef
+ChapterSectionRef ::= ChapterRef, Whitespace, SectionRef
+LawRef            ::= LeftParen, Whitespace?, LawRefID, Whitespace?, RightParen
+LawRefID          ::= digit, digit, digit, digit, Colon, digit+, (Whitespace, ('s.', Whitespace)?, digit)?
+SectionRef        ::= SectionRefID, Whitespace, 'ß'
+
+# Note the use of SectionRefChar instead of just char -- it's to avoid
+# matching things like '23 och 25 ßß'. A hack, but it will have to do
+# for now. Actually no, we got to fix it, because it can't handle '23
+# eller 25 ßß'. Oh look, the LookAheadOperator with negative match ('?-char') to the rescue! 
+SectionRefID      ::= number, (Whitespace, SectionRefChar, ?-char)?
+ChapterRef        ::= ChapterRefID, c"kap."/c"kap"
+ChapterRefID      ::= number, Whitespace, (char, Whitespace)?
+
+# PieceRef          ::= (ItemRef, Whitespace, PieceRefID, Whitespace, PieceOrPieces)/(PieceRefID, Whitespace, PieceOrPieces, (Whitespace, ItemRef)?)
+PieceRef          ::= PieceRefID, Whitespace, PieceOrPieces
+PieceRefID        ::= ordinal
+PieceItemRef      ::= (ItemRef, Whitespace, PieceRef)/(PieceRef, Whitespace, ItemRef)
+SentenceRef	  ::= SentenceRefID, Whitespace, SentenceOrSentences
+SentenceRefID	  ::= ordinal
+SectionPieceRef   ::= SectionRef, Whitespace, PieceRef
+SectionPieceItemRef ::= SectionRef, Whitespace, (PieceRef, Whitespace, ItemRef)/(ItemRef, Whitespace, PieceRef)
+SectionSentenceRef::= SectionRef, Whitespace, SentenceRef
+SectionElementRef ::= SectionRef, Whitespace, ElementRef
+SectionItemRef    ::= SectionRef, Whitespace, ItemRef
+ElementRef	  ::= ElementRefID, Whitespace, Element
+ElementRefID	  ::= number
+ItemRef           ::= 'anvisningarna punkt '?, ItemRefID, RightParen?
+ItemRefID         ::= number
+
+
+
+# SHORTENED REFERENCES -- things like "15 ß AvtL", "JB 22:2 st. 2"
+
+shortref               ::= (AbbrevLawNormalRef/AbbrevLawShortRef)
+AbbrevLawNormalRef     ::= GenericRef, Whitespace, LawAbbreviation
+AbbrevLawShortRef      ::= LawAbbreviation, Whitespace, ShortChapterSectionRef
+ShortChapterSectionRef ::= ShortChapterRefID, Colon, ShortSectionRefID, (Whitespace, PieceRef)?
+ShortChapterRefID      ::= number
+ShortSectionRefID      ::= number
+
+
+# The definition of LawAbbreviation will be dynamically constructed
+# from namedlaws.txt
+# LawAbbreviation        ::= ('AvtL'/'BB'/'ƒB')
+
+
+# MISC
+ordinal      ::= "fˆrsta"/"andra"/"tredje"/"fj‰rde"/"femte"/"sj‰tte"/"sjunde"/"Âttonde"/"nionde"/[1-9]
+PieceOrPieces       ::= "st."/"stycket"/"styckena"
+SentenceOrSentences ::= "meningen"/"meningarna"
+SectionRefChar ::= [a-n]
+Element	       ::= 'mom.'
+# THE OTHER STUFF
+plain        ::= (Whitespace/word/number/punctuation)
+Whitespace   ::= [ †\t\n\r\f\v]+
+WhitespaceOrPunctuation ::= (Whitespace/punctuation)+
+# wc	     ::= [ \t\n\r\f\v]
+
+# ú and å are windows-1252-only oe-ligatures (upper- and
+# lowercase), ä is S-with-caron (used in 1994:1720, where they
+# probably mean 'È', though)
+word         ::= [a-zA-ZÂ‰ˆ≈ƒ÷ÈËÍÎ…»À¸˚˘˙Ÿ‹€˝Ê·‡‚¿¬ÿ¯“”‘ÙÛÚåúÌÓ„ÁÒ—ﬂ«Áä]+
+char	     ::= [a-zA-ZÂ‰ˆ≈ƒ÷ÈËÍÎ…»À¸˚˘˙Ÿ‹€˝Ê·‡‚¿¬ÿ¯“”‘ÙÛÚåúÌÓ„ÁÒ—ﬂ«Áä]
+number       ::= [0-9]+
+digit	     ::= [0-9]
+
+
+# the ñ is some wierd windows-1252-hyphen, ì and î are "smart
+# quotes", õ is larger-than-or-equal, ã is less-than-or-equal,
+# ò is a superscript-tilde. á is a double-dagger, ï is
+# typography-bullet, ë and í are single-smartquotes. \177 is DEL,
+# which is present in 1977:1194, è is unmapped, but present in
+# 1993:1199. â is unknown to me. • is (erronosly?) used in
+# 2005:837. 
+punctuation  ::= [][!@#$£§%^&()+=|\{}:;<>,.?ø/ß≠"ìî∞π≤≥∑µ´ª∫¥_~'ëí*`ñõãòáïèâ•-]
+
+
+# LAW-RELATED STUFF -- this could go into its own file someday maybe
+# Preparations ("fˆrarbeten") -- could be Propositions, Considerations
+# ("bet‰nkanden"), "riksdagsskrivelser" and Celex ID's
+extroot	       ::= (preprefs/plain)+
+preprefs          ::= (PropRef/ConsidRef/SkrivelseRef/CelexRef)+
+# Proposition references eg "Prop. 1999/2000:100"
+
+PropRef	       ::= PropPrefix, Whitespace, PropRefID
+PropPrefix     ::= ('prop.'/'Prop.')
+PropRefID      ::= Workyear, Colon, number
+ConsidRef      ::= ConsidPrefix, Whitespace, ConsidRefID
+ConsidPrefix   ::= 'bet.'
+ConsidRefID    ::= Workyear, Colon, ConsidNum
+ConsidNum      ::= char, char, char?, number
+SkrivelseRef   ::= SkrivelsePrefix, Whitespace, SkrivelseRefID
+SkrivelsePrefix::= 'rskr.'
+SkrivelseRefID ::= Workyear, Colon, number
+CelexRef       ::= CelexRefID
+CelexRefID     ::= '3', digit, digit, (digit, digit)?, 'L', digit, digit, digit, digit
+
+# workyear == 'riksmˆte'
+Workyear    ::= digit, digit, digit, digit, (Slash, digit, digit, (digit, digit)?)?
+
+
+
