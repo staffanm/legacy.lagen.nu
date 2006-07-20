@@ -1,0 +1,52 @@
+/* basic magic for fluid 3 columns*/
+body { position: relative; min-width: 600px; margin-left: 5%; margin-right:5%; padding: 0; }
+#banner { position: absolute; top: 0; left: 0; min-width: 600px; width: 100%; height: 40px; }
+
+#left { position: absolute; top:100px; left: 0; width: 24%;  margin: 1% 1% 0 0; }
+#middle { position: absolute; top:100px; left:25%; min-width: 360px; width: 50%; margin-top: 1%; }
+#right { position: absolute; top:100px; left: 75%; width: 24%; margin: 1% 0 0 1%; }
+
+/* HR styles need for IE/Win. */
+hr.holder { width:600px; visibility: hidden; } /* Equal to 'top' */
+hr.left, hr.right { width: 120px; visibility: hidden; }
+hr.middle { width: 360px; visibility: hidden; } 
+
+/* These HR styles replace the above, and are needed for Netscape 4.x. 
+   Left and right margins are half the relevant DIV width */
+hr.holder { width:0; margin: 0 300px; } /* Equal to 'top' */
+hr.left, hr.right { width: 0; margin: 0 60px; }
+hr.middle { width: 0; margin: 0 180px;  } 
+
+/* DIVs must have a border value set in Netscape 4.x */
+div { border: none; }
+
+/* Hide HRs in most browsers supporting min-width */
+html>body hr.left, html>body hr.right, html>body hr.middle, html>body hr.holder { display: none; }
+
+
+/* This is visual formatting for the demo page only.
+   Delete them and the empty paragraph tags in real use */
+body { background: #CCC; }
+div { background: #FFF; }
+#holder { background: transparent; }
+#banner { height: 40px; }
+#left, #middle, #right { top:40px; }
+#middle { margin-bottom: 2%; }
+
+
+
+/* lagen.nu stuff */
+h1 { font-size: 14pt; padding: 0;}
+h2 { font-size: 12pt; padding: 0;}
+textarea { font: 8pt Optima, Arial, sans-serif; width: 95%; }
+//.legaldoc { border: solid 1px gray; margin: 1px; }
+.preamble { font-size: 8pt; }
+.sectionid { font-weight: bold; }
+.faux-li { padding-left: 20px; margin: 1px; }
+.comment, .references { border: solid 1px gray; font: 8pt Optima, Arial, sans-serif; position: relative; margin: 0;}
+.comment {background-color: #FAC; }
+.commentid { display: none;}
+.references {background-color: #CCF;} 
+.expandicon { position:absolute; bottom:0; right: 0;}
+.editor { border: solid 3px red; }
+

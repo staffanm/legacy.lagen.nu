@@ -1,6 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 # Create your views here.
-import wingdbstub
+# import wingdbstub
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
@@ -64,6 +64,7 @@ def save(request,art_title, art_section=None):
         ad = AnnotatedDoc()
         art.body = ad.Update(art.body,art_section,request.POST["text"])
     else:
+        # pass utf-8 data unchanged from browser to db
         art.body = request.POST['text']
         
     art.last_changed = datetime.now()

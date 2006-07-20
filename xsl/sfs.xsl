@@ -10,7 +10,7 @@
        stylesheet so that it can provide the basic template with
        navigation, css etc -->
   <xsl:template match="/">
-    <div class="content">
+    <div id="middle">
       <xsl:apply-templates/>
     </div>
   </xsl:template>
@@ -19,29 +19,17 @@
   <xsl:param name="lawid"/>
   <!-- today's date -->
   <xsl:param name="today"/>
-  
-  <xsl:variable name="relevantVerdicts"
-		select="document('../generated/verdict-xml/cache.xml')//law[@id=$lawid]"/>
-  <xsl:variable name="relevantTags"
-		select="document('../static/tags.xml')//law[@id=$lawid]/tag"/>
   <xsl:variable name="sectionOneCount" select="count(//section[@id='1'])"/>
   <xsl:variable name="hasChapters" select="/law/chapter"/>
   
   <xsl:template match="/law">
-    <div class="outer" >
-      <div class="legaldoc" id="top">
-	<h1><xsl:value-of select="preamble/title"/></h1>
-	<dl class="preamble">
-	  <xsl:apply-templates mode="header" select="preamble"/>
-	</dl>
-      </div>
-      <xsl:comment>start:top</xsl:comment>
-      <div class="commentplaceholder clicktoedit" id="comment-top">
-	<span class="commentid">top</span>klicka för att kommentera
-      </div>
-      <xsl:comment>end:top</xsl:comment>
-    </div>
-    <!--<xsl:apply-templates select="preamble" mode="header"/>-->
+    <h1 class="legaldoc" id="top"><xsl:value-of select="preamble/title"/></h1>
+    <xsl:comment>start:top</xsl:comment>
+    <xsl:comment>end:top</xsl:comment>
+    <dl class="preamble legaldoc">
+      <xsl:apply-templates mode="header" select="preamble"/>
+    </dl>
+    <!--
     <div class="metadata">
       <xsl:apply-templates select="meta" mode="header"/>
       <xsl:variable name="bigtoc" select="chapter[(headline or section)]"/>
@@ -54,6 +42,7 @@
 	</div>
       </xsl:if>
     </div>
+    -->
     <!-- the actual meat of the law -->
     <xsl:apply-templates/>
   </xsl:template>
@@ -137,6 +126,7 @@
   <!-- STUFF APPLICABLE TO TOC MODE    -->
   <!-- =============================== -->
 
+  <!-- fixme: it would be great if we could have a old-school nested   unorderedlist instead of this divmess -->
 
   <xsl:template match="headline" mode="toc">
     <xsl:if test="@level = '1'">
@@ -174,35 +164,19 @@
   <xsl:template match="meta"/>
 
   <xsl:template match="changes">
-    <xsl:variable name="xid" select="@id"/>
-    <table class="changelog" summary="Ändringar och övergångsbestämmelser">
-      <tr><td colspan="2"><h1>Ändringar och övergångsbestämmelser</h1></td></tr>
-      <xsl:for-each select="change">
-	<tr>
-	  <td colspan="2" style="border-top: 1px solid black">
-	    <!-- what is the id attribute used for? it causes validation errors... -->
-	    <a name="L{translate(@id,' ','_')}">
-	    </a>
-	    <b>Ändring:</b>
-	  </td>
-	</tr>
-	<xsl:for-each select="link">
-	  <tr>
-	    <td colspan="2">
-	      <xsl:call-template name="link"/>
-	    </td>
-	  </tr>
-	</xsl:for-each>
-	<xsl:for-each select="prop">
-	  <tr>
-	    <td class="topright"><xsl:value-of select="@key"/></td>
-	    <td>
-	      <xsl:apply-templates/>
-	    </td>
-	  </tr>
-	</xsl:for-each>
+    <h1>Ändringar och övergångsbestämmelser</h1>
+    <dl>
+    <xsl:for-each select="change">
+      <dt id="L{translate(@id,' ','_')}">Ändring:</dt>
+      <xsl:for-each select="link">
+	<dd><xsl:call-template name="link"/></dd>
       </xsl:for-each>
-    </table>
+      <xsl:for-each select="prop">
+	<dt><xsl:value-of select="@key"/></dt>
+	<dd><xsl:apply-templates/></dd>
+      </xsl:for-each>
+    </xsl:for-each>
+    </dl>
   </xsl:template>
 
   <xsl:template match="introduction">
@@ -217,27 +191,22 @@
 
   <xsl:template match="headline">
     <xsl:variable name="id">R<xsl:value-of select="@id"/></xsl:variable>
-    
-    <!-- <a name="{$id}"/> -->
-    <table id="{$id}" class="outer">
-      <tr>
-	<td class="legaldoc">
-	<xsl:if test="@level = '1'">
-	  <h1><xsl:value-of select="."/></h1>
-	</xsl:if>
-	<xsl:if test="@level = '2'">
-	  <h2><xsl:value-of select="."/></h2>
-	</xsl:if>
-	</td>
-	<td>
-	<xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
-	<p class="commentplaceholder clicktoedit" id="comment-{$id}">
-	  <span class="commentid">R<xsl:value-of select="@id"/></span>Klicka för att kommentera
-	</p>
-	<xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
-	</td>
-      </tr>
-    </table>
+    <xsl:if test="@level = '1'">
+      <h1 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h1>
+    </xsl:if>
+    <xsl:if test="@level = '2'">
+      <h2 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h2>
+    </xsl:if>
+    <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
+    <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
+  </xsl:template>
+
+  <xsl:template match="section">
+    <xsl:variable name="id">
+      <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../@id"/></xsl:if>P<xsl:value-of select="../@id"/>
+    </xsl:variable>
+    <a name="{$id}"></a>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="p">
@@ -252,28 +221,17 @@
       <xsl:if test="ancestor::appendix">B<xsl:number/></xsl:if>
     </xsl:variable>
     <!-- <a name="{$id}"/> -->
-    <table class="outer" id="{$id}">
-      <tr>
-	<td class="legaldoc">
-	<xsl:if test="(ancestor::section) and (position()=2)"><!-- why 2? I have no idea... -->
-	  <a>
-	    <xsl:attribute name="name">
-	      <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../@id"/></xsl:if>P<xsl:value-of select="../@id"/>
-	    </xsl:attribute>
-	  </a>
-	  <span class="sectionid"><xsl:value-of select="../@id"/> §</span>
-	</xsl:if>
-	<xsl:apply-templates/>
-	</td>
-	<td>
-	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="commentplaceholder clicktoedit" id="comment-{$id}">
-	  <span class="commentid"><xsl:value-of select="$id"/></span>Klicka för att kommentera
-	</p>
-	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
-	</td>
-      </tr>
-    </table>
+    <p id="{$id}" class="legaldoc">
+    <!-- if this is the first p in a section, bring in the 
+	 section id as a span element -->
+    <xsl:if test="(ancestor::section) and (position()=2)">
+      <!-- why 2? I have no idea... -->
+      <span class="sectionid"><xsl:value-of select="../@id"/> § </span>
+    </xsl:if>
+    <xsl:apply-templates/>
+    </p>
+    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
   </xsl:template>
 
   <xsl:template match="ol">
@@ -284,21 +242,11 @@
     <xsl:variable name="id">
       <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../../@id"/></xsl:if>P<xsl:value-of select="../../@id"/>S<xsl:value-of select="count(../preceding-sibling::p)"/>N<xsl:number/>
     </xsl:variable>
-    <!-- <a name="${id}"/> -->
-    <table class="outer" id="${id}">
-      <tr>
-	<td class="legaldoc li">
-	  <xsl:apply-templates/>
-	</td>
-	<td>
-	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-	<p class="commentplaceholder clicktoedit" id ="comment-{$id}">
-	  <span class="commentid"><xsl:value-of select="$id"/></span>klicka för att kommentera
-	</p>
-	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
-	</td>
-      </tr>
-    </table>
+    <p id="{$id}" class="legaldoc faux-li">
+    <xsl:apply-templates/>
+    </p>
+    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
   </xsl:template>
 
   <xsl:template match="br">

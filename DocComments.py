@@ -51,6 +51,63 @@ class AnnotatedDoc:
         
         return res
 
+    re_ChapterSection = re.compile(r'K(\d+\w?)P(\d+w?)S(\d+)N(\d+)')
+    re_Headline = re.compile(r'R(\d+w?)')
+    re_Paragraph = re.compile(r'S(\d+)')
+    
+    re_SFSCommentID = re.compile(r'(K(?P<chapter>\d+[a-z]?)|)(P(?P<section>\d+[a-z]?)|)(S(?P<paragraph>\d+[a-z]?)|)(N(?P<item>\d+[a-z]?)|)')
+
+    def __formatCommentId(self,commentid):
+        """Formats a given commentid (eg K2P4) to a humanreadable format (2 kap. 4 §)"""
+        # this will always match, but possibly with a emptystring
+        m = self.re_SFSCommentID.match(commentid)
+        if m.group(0) != '':
+            res = ""
+            if m.group('chapter'):
+                res = res + u"%s kap. " % m.group('chapter')
+            if m.group('section'):
+                res = res + u"%s § " % m.group('section')
+            if m.group('paragraph'):
+                res = res + u"%s st. " % m.group('paragraph')
+            if m.group('item'):
+                res = res + u"%s p. " % m.group('item')
+            return res.strip()
+        
+        m = self.re_Headline.match(commentid)
+        if m:
+            return u"Rub. %s" % (m.group(1))
+
+        m = self.re_Paragraph.match(commentid)
+        if m:
+            return u"%s st." % (m.group(1))
+    
+        return commentid
+            
+    
+    def FormatComments(self,comments="",includePlaceholders=False):
+        """Returns a list of <p>'s containing comments -- no actual
+        weaving/merging with the HTML file is done"""
+        # maybe this should just return a ordered list and leave the formatting 
+        # to the view and/or the template?
+        indexfname = self.filename + ".idx"
+        if not os.path.exists(indexfname):
+            self.Prepare()
+        
+        buf = StringIO()
+        outdata = codecs.getwriter('utf-8')(buf)    
+        indexes = self.__loadIndex(indexfname)
+        comments = self.__parseComments(comments)
+        for c in [c for c in indexes]:
+            if c[2] in comments:
+                outdata.write(u'<p id="comment-%s" class="comment editable"><span class="commentid">%s</span>%s</p>' % (c[2], self.__formatCommentId(c[2]), comments[c[2]]))
+            elif includePlaceholders:
+                outdata.write(u'<p id="comment-%s" class="commentplaceholder editable"><span class="commentid">%s</span>Klicka för att kommentera</p>' % (c[2], self.__formatCommentId(c[2])))
+
+        if hasattr(buf, "getvalue"):
+            return unicode(buf.getvalue(), 'utf-8')
+            outdata.close()
+
+
     def Test(self, commentfile):
         print "test(%s) called" % commentfile
         # pprint.pprint(self.__parseComments(file(commentfile).read()))

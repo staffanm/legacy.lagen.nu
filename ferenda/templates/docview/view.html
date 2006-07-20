@@ -1,14 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>[{{displayid}}] ({{doc.urn}})</title>
-    <link rel="stylesheet" type="text/css" href="/static/default.css"/>
-    <script type="text/javascript" src="/static/mk/MochiKit.js"></script>
-    <script type="text/javascript" src="/static/stuff.js"></script>
-  </head>
-  <body id="{{displayid}}">
-    {{generated}}
-  </body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html lang="sv">
+<head>
+<script type="text/javascript" src="/static/mk/MochiKit.js"></script>
+<script type="text/javascript" src="/static/stuff.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/3col.css"/> 
+<!--[if lt IE 6]>
+<style type="text/css" media="screen">
+/* HR styles need for IE 5/Win and under. */
+#middle { position: relative; }
+</style>
+<![endif]-->
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>[{{displayid}}]</title>
+  <!--
+  <noscript>
+  <style type="text/css">
+  .commentid { display: inline;}    
+  </style>
+  </noscript>
+  -->
+</head>
+<body id="{{displayid}}">
+
+<div id="banner">
+  <h1>lagen.nu - om - hjälp - logga in - historik - blah blah</h1>
+  <script type="text/javascript">document.write(holdW('holder'))</script>
+</div>
+
+{{divmiddle}}
+
+<div id="left">
+  {{references}}
+  <p class="references" id="references-P1S1">
+  <b>Ändrad:</b> SFS 1970:488, 1989:396, 1992:1687, 1994:190<br/>
+  <b>Rättsfall: </b>
+  <a href="null" title="Fråga om en melodi, som utgjort ett upprepat och avgränsat inslag i en">NJA 2002 s. 178 (Melodimålet)</a>, 
+  <a href="null" title="Fotograf har framställt en fotografisk bild av ett antal personer">1981 s. 313 (Fotografi)</a>,
+  <a href="null" title="A lät på en landskapskarta illustrera turistattraktioner med teckningar">1990 s. 499</a>, 
+  <a href="null" title="">1994 s. 74</a><br/>
+  </p>
+  
+  <p class="references" id="references-P2S1">
+  <b>Rättsfall: </b>
+  <a href="null">NJA 2002 s. 178 (Melodimålet)</a>, 
+  <a href="null">1981 s. 313</a>, 
+  <a href="null" title="Fråga om ersättning för ideell skada på grund av olovligt utnyttjande av...">1985 s. 807</a>, 
+  <a href="null">1986 s. 702</a>, 
+  <a href="null">1988 s. 715</a>, 
+  <a href="null">1993 s. 390</a>, 
+  <a href="null">1994 s. 74</a>, 
+  
+  <a href="null">1995 s. 631</a>, 
+  <a href="null">1996 s. 712</a>, 
+  <a href="null">1996 s. 79</a>, 
+  <a href="null">1998 s. 838</a>, 
+  <a href="null">2000 s. 292</a>, 
+  <a href="null">2000 s. 580</a>, 
+  <a href="null">RH 2002:69</a>, 
+  <a href="null">2002:69</a>, 
+  <a href="null">1996:158</a>, 
+  
+  <a href="null">1996:32</a>, 
+  <a href="null">RÅ 2002 ref. 9</a>, 
+  <a href="null">2005-06-15</a>
+  <br/>
+  <b>Andra ref:</b>
+  Lawline: <a href="http://www.lawline.se/besvaradfraga.php?id=873" title="Covers och upphovsrätt">Covers och upphovsrätt</a>, 
+  Jureko: <a href="http://www.jureka.net/juridik/jureko/Jur/Juridikview.asp?ID=454">Rättigheter i upphovsrätten</a>
+  </p>  
+  <script type="text/javascript">document.write(holdW('left'))</script>
+</div>
+
+<div id="right">
+  {{comments}}
+  <script type="text/javascript">document.write(holdW('right'))</script>
+</div>
+
+<!--[if IE]>
+<hr class="holder" />
+<![endif]-->
+<!--[if lt IE 6]>
+</div>
+<![endif]-->
+
+</body>
 </html>

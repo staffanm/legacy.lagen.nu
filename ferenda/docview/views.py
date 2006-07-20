@@ -1,8 +1,8 @@
 # Create your views here.
-try:
-    import wingdbstub
-except ImportError:
-    pass
+#try:
+    #import wingdbstub
+#except ImportError:
+    #pass
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect
 from ferenda.docview.models import LegalDocument
@@ -18,8 +18,14 @@ def view(request,displayid):
     try:
         c = Article.objects.get(title=displayid)
         ad = DocComments.AnnotatedDoc(filename)
-        generated = ad.Combine(unicode(c.body, 'utf-8'))
+        comments = ad.FormatComments(unicode(c.body, 'utf-8'))
+        generated = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
     except Article.DoesNotExist:
         generated = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
-    return render_to_response('docview/view.html', {'displayid':displayid,
-                                                    'generated':generated})
+    
+    return render_to_response('docview/view.html', 
+                              {'displayid':displayid,
+                               'divmiddle':generated,
+                               'references':'references here',
+                               'comments':comments}
+                          )
