@@ -291,9 +291,9 @@ class DVManager(LegalSource.Manager):
     def Index(self,id):
         xmlFileName = self.__xmlFileName(id)
         root = ET.ElementTree(file=xmlFileName).getroot()
-        title = root.findtext(u'Metadata/Rubrik')
-        print "%d: %s" % (len(title.encode('utf-8')), id)
-        return
+        # title = root.findtext(u'Metadata/Rubrik')
+        # print "%d: %s" % (len(title.encode('utf-8')), id)
+        # return
         displayid = root.findtext(u'Metadata/Referat')
         if not displayid:
             displayid = root.findtext(u'Metadata/Målnummer')
@@ -349,26 +349,26 @@ class DVManager(LegalSource.Manager):
         
         # delete all previous relations where this document is the object --
         # maybe that won't be needed if the typical GenerateAll scenario
-        # begins with wiping the IntrinsicRelation table? It still is useful 
+        # begins with wiping the Relation table? It still is useful 
         # in the normal development scenario, though
-        IntrinsicRelation.objects.filter(object__exact=urn.encode('utf-8')).delete()    
+        Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()    
         for e in tree.getiterator():
             if e.tag == u'Referat':
                 if e.text.strip():
-                    self.createRelation(urn,u'kallas',e.text)
+                    self.createRelation(urn,u'title',e.text)
             if e.tag == u'Sökord':
                 if e.text:
-                    self.createRelation(urn,u'behandlar',e.text)
+                    self.createRelation(urn,u'subject',e.text)
             if e.tag == u'Rättsfall':
                 try:
-                    self.createRelation(urn,u'refererar',self.findURN(e.text))
+                    self.createRelation(urn,u'references',self.findURN(e.text))
                 except LegalSource.URNNotFound:
                     print "WARNING: no URN found for %r" % e.text
                     pass
             if e.tag == u'Lagrum':
                 for link in e:
-                    if link.tag == 'link' and link.attrib['law']:
-                        self.createRelation(urn,u'åberopar',self.__createSFSUrn(link))
+                    if link.tag == 'link' and 'law' in link.attrib:
+                        self.createRelation(urn,u'requires',self.__createSFSUrn(link))
     
     def __createSFSUrn(self,el):
         res = u'urn:x-sfs:%s#' % el.attrib['law']

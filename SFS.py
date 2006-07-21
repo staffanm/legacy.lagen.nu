@@ -24,7 +24,7 @@ from DispatchMixin import DispatchMixin
 from DocComments import AnnotatedDoc
 from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import IntrinsicRelation, LegalDocument
+from ferenda.docview.models import Relation, LegalDocument
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -998,9 +998,9 @@ class SFSManager(LegalSource.Manager):
         
         # delete all previous relations where this document is the object --
         # maybe that won't be needed if the typical GenerateAll scenario
-        # begins with wiping the IntrinsicRelation table? It still is useful 
+        # begins with wiping the Relation table? It still is useful 
         # in the normal development scenario, though
-        rels = IntrinsicRelation.objects.filter(object__startswith=urn.encode('utf-8'))
+        rels = Relation.objects.filter(object__startswith=urn.encode('utf-8'))
         for rel in rels:
             rel.delete()
         for e in tree.getiterator():

@@ -6,7 +6,7 @@ sys.path.append("3rdparty")
 import BeautifulSoup
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import Relation, LegalDocument
+from ferenda.docview.models import Relation, Predicate, LegalDocument
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -196,9 +196,9 @@ class Manager:
             print u"WARNING: creating a relation for which the object (%r) doesn't exists in the LegalDocument table" % urn
         
         if predicate.startswith('http://'):
-            p = Predicate(pk=predicate)
+            p = Predicate.objects.get(pk=predicate)
         else:
-            p = predicate(label=predicate)
+            p = Predicate.objects.get(label=predicate)
         Relation.objects.create(object=urn.encode('utf-8'),
                                          predicate=p,
                                          subject=subject.encode('utf-8'),
