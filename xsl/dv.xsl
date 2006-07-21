@@ -12,6 +12,10 @@
 	      doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
 	      />
 
+  <!-- we need to declare this variable in order to use the link.xsl
+       template -->
+  <xsl:variable name="hasChapters"/>
+
   <xsl:template match="/Dom">
     <xsl:variable name="id" select="@urn"/>
     <div class="content"> 

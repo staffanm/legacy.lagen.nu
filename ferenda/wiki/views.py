@@ -5,9 +5,11 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.contrib.auth.decorators import login_required
+from django.template import RequestContext
 
 from ferenda.wiki.models import Article
-from ferenda.docview.models import IntrinsicRelation
+from ferenda.docview.models import Relation, Predicate
 
 from datetime import datetime
 import sys
@@ -39,11 +41,14 @@ def article(request,art_title="Huvudsida"):
         art.body = u'(det finns ingen artikeltext här än)'
         # return HttpResponseRedirect('/edit/%s' % art_title.encode('utf-8'))
     # now here we find out all IntrinsicRelations that has this keyword for subject
-    relations = IntrinsicRelation.objects.filter(subject__exact=art.title)
-    return render_to_response('wiki/display.html', {'article':art,
-                                                    'relations':relations})
+
+    relations = Relation.objects.filter(subject__exact=art.title)
+    return render_to_response('wiki/display.html', 
+                              {'article':art,
+                               'relations':relations},
+                              context_instance=RequestContext(request))
         
-    
+@login_required    
 def edit(request,art_title):
     try:
         art = Article.objects.get(pk=art_title)
@@ -51,23 +56,22 @@ def edit(request,art_title):
         art = Article()
         art.title = art_title
         art.body = "Skriv artikeltexten h&auml;r"
-    return render_to_response('wiki/edit.html', {'article':art})
+    return render_to_response('wiki/edit.html', 
+                              {'article':art},
+                              context_instance=RequestContext(request))
 
-def save(request,art_title, art_section=None):
+@login_required
+def save(request,art_title):
     try:
         art = Article.objects.get(pk=art_title)
     except Article.DoesNotExist:
         art = Article()
         art.title = art_title
 
-    if art_section:
-        ad = AnnotatedDoc()
-        art.body = ad.Update(art.body,art_section,request.POST["text"])
-    else:
-        # pass utf-8 data unchanged from browser to db
-        art.body = request.POST['text']
-        
-    art.last_changed = datetime.now()
+    art.body = request.POST['text']
+    art.author = request.user
+    art.comment = "some comment"
+    art.timestamp = datetime.now()
     art.save()
     
     subject = u'[ferenda] %s ändrad (save)' % art_title.decode('utf-8')
@@ -81,6 +85,7 @@ def save(request,art_title, art_section=None):
     
     return HttpResponseRedirect('/%s' % art_title)
 
+@login_required
 def savexhr(request,docid,docsection):
     print "savexhr called: %s, %s" % (docid,docsection)
     try:

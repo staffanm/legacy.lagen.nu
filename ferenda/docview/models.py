@@ -21,16 +21,32 @@ class LegalDocument(models.Model):
     class Admin:
         pass
 
-class IntrinsicRelation(models.Model):
+class Predicate(models.Model):
+    # used in N3/RDF data, eg 'http://purl.org/dc/elements/1.1/title'
+    uri = models.CharField(maxlength=80, primary_key = True)
+    # used in code, eg 'title'
+    label = models.CharField(maxlength=20) 
+    # used in user interface (localized string) eg "Dokumenttitel"
+    displayname = models.CharField(maxlength=80)
+    # if true, accept literal strings, otherwise only URIs
+    subjectIsLiteralString = models.BooleanField()
+    
+    def __str__(self):
+        return label
+
+class Relation(models.Model):
     # I thought about modelling object as a foreign key, like this
     # object = models.ForeignKey(LegalDocument, to_field='urn',db_index=True)
     # but since 'object' should be able to handle fragment adressing (or whatever it's called, ie 'urn:x-sfs:1960:729#P49') it won't work.
     object = models.CharField(maxlength=100)
-    relation = models.CharField(maxlength=100)
-    subject = models.CharField(maxlength=100,db_index=True)
+    predicate = models.ForeignKey(Predicate)
+    # the longest verdict summary is 2096 characters utf-8 encoded...
+    subject = models.CharField(maxlength=3000,db_index=True)
+    intrinsic = models.BooleanField() # if false, this was manually added
+    comment = models.CharField(maxlength=255)
     class Admin:
         pass
     
     def __str__(self):
-        return "%s => %s (%s)" % (self.object,self.subject,self.relation)
+        return "%s => %s (%s)" % (self.object,self.subject,self.predi)
     

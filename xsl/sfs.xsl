@@ -6,13 +6,11 @@
 	      method="xml"
 	      />
 
-  <!-- the following basically transfers control to the base
-       stylesheet so that it can provide the basic template with
-       navigation, css etc -->
+
   <xsl:template match="/">
-    <div id="middle">
+    
       <xsl:apply-templates/>
-    </div>
+    
   </xsl:template>
 
   <!-- we should be able to find this out from /law/preamble/sfsid, but it stopped working... -->
@@ -295,7 +293,7 @@
     <xsl:variable name="url">
       <xsl:choose>
 	<xsl:when test="@doctype='celex'">
-	  http://europa.eu.int/smartapi/cgi/sga_doc?smartapi!celexplus!prod!CELEXnumdoc&amp;lg=sv&amp;numdoc=<xsl:value-of select="@docid"/>
+http://europa.eu.int/smartapi/cgi/sga_doc?smartapi!celexplus!prod!CELEXnumdoc&amp;lg=sv&amp;numdoc=<xsl:value-of select="@docid"/>
 	</xsl:when>
 	<xsl:when test="@doctype='prop'">
 	  <!-- 1993 onwards -->

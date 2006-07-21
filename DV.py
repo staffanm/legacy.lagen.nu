@@ -19,11 +19,14 @@ import elementtree.ElementTree as ET
 
 # my libs
 import LegalSource
+from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 import Util
 from DispatchMixin import DispatchMixin
+
+# Django stuff
 from DocComments import AnnotatedDoc
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import IntrinsicRelation, LegalDocument
+from ferenda.docview.models import Relation, LegalDocument
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -119,16 +122,22 @@ class DVParser(LegalSource.Parser):
                     val = val[2:]
                 lastkey = key
                 if val != '-':
+                    # some keys are processed further
+                    if key == u'Lagrum':
+                        print u'parsing %r with lawparser' % val
+                        parsed = SFSRefParser("<Lagrum>"+val+"</Lagrum>").parse()
+                        val = ET.fromstring(parsed.encode('utf-8'))
+                    elif key == u'Referat' and self.re_NJAref.match(val):
+                        m = self.re_NJAref.match(val)
+                        val = m.group(1)
+                        data["Alt"+key] = m.group(2)
+
                     if key in data:
                         if type(data[key]) == types.ListType:
                             data[key].append(val)
                         else:
                             data[key] = [data[key],val]
                     else:
-                        m = self.re_NJAref.match(val)
-                        if m:
-                            val = m.group(1)
-                            data["Alt"+key] = m.group(2)
                         data[key] = val
 
         urn = self.__createUrn(data)
@@ -184,10 +193,18 @@ class DVParser(LegalSource.Parser):
             if type(data[k]) == types.ListType:
                 for i in data[k]:
                     node = ET.SubElement(meta,k)
-                    node.text = i
+                    if isinstance(i,ET._ElementInterface):
+                        node.text = i.text
+                        node[:] = i[:]
+                    else:
+                        node.text = i
             else:
                 node = ET.SubElement(meta,k)
-                node.text = data[k]
+                if isinstance(data[k],ET._ElementInterface):
+                    node.text = data[k].text
+                    node[:] = data[k][:]
+                else:
+                    node.text = data[k]
         if referat:
             ref = ET.SubElement(root,"Referat")
             for p in referat:
@@ -274,6 +291,9 @@ class DVManager(LegalSource.Manager):
     def Index(self,id):
         xmlFileName = self.__xmlFileName(id)
         root = ET.ElementTree(file=xmlFileName).getroot()
+        title = root.findtext(u'Metadata/Rubrik')
+        print "%d: %s" % (len(title.encode('utf-8')), id)
+        return
         displayid = root.findtext(u'Metadata/Referat')
         if not displayid:
             displayid = root.findtext(u'Metadata/Målnummer')
@@ -333,6 +353,9 @@ class DVManager(LegalSource.Manager):
         # in the normal development scenario, though
         IntrinsicRelation.objects.filter(object__exact=urn.encode('utf-8')).delete()    
         for e in tree.getiterator():
+            if e.tag == u'Referat':
+                if e.text.strip():
+                    self.createRelation(urn,u'kallas',e.text)
             if e.tag == u'Sökord':
                 if e.text:
                     self.createRelation(urn,u'behandlar',e.text)
@@ -342,8 +365,26 @@ class DVManager(LegalSource.Manager):
                 except LegalSource.URNNotFound:
                     print "WARNING: no URN found for %r" % e.text
                     pass
+            if e.tag == u'Lagrum':
+                for link in e:
+                    if link.tag == 'link' and link.attrib['law']:
+                        self.createRelation(urn,u'åberopar',self.__createSFSUrn(link))
     
-
+    def __createSFSUrn(self,el):
+        res = u'urn:x-sfs:%s#' % el.attrib['law']
+        if 'chapter' in el.attrib:
+            res = res + "K" + el.attrib['chapter']
+        if 'section' in el.attrib:
+            res = res + "P" + el.attrib['section']
+        if 'piece' in el.attrib:
+            res = res + "S" + el.attrib['piece']
+        if 'item' in el.attrib:
+            res = res + "N" + el.attrib['item']
+        if res.endswith("#"):
+            res = res[:-1]
+        return res
+        
+        
     
 
     def GenerateAll(self):

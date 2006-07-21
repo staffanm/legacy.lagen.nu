@@ -1,4 +1,3 @@
-log("loading stuff.js");
 /* supporting code for the 3col layout */
 var d = document;
 
@@ -36,7 +35,9 @@ Editable = {
     dim = getElementDimensions(boxElement);
     if (dim.h < 120) {
       dim.h = 120;
+      dim.w = boxElement.parentNode.clientWidth;
       setElementDimensions(boxElement,dim);
+      boxElement.style.zIndex=1;
     }
     //Editable.origtext = scrapeText(e.src());
     textarr = scrapeText(e.src(),true);
@@ -105,18 +106,36 @@ Editable = {
     Editable.resizeToCollapsed(Editable.curEditor);
   },
 
+
   resizeToCollapsed: function(element) {
     dim = getElementDimensions(element);
-    dim.h = element.collapsedHeight;
+    element.style.zIndex=0;
     dim.w = element.origWidth;
+    if (element.origHeight < element.scrollHeight) {
+      log("resizeToCollapsed: content doesn't fit anymore -- we need to move some boxes!");
+      dim.h = element.scrollHeight;
+      setElementDimensions(element,dim);
+      // this will only occur for comments, not references
+      Editable.currentBoxMovingPolicy('comment'); 
+    } else {
+      dim.h = element.collapsedHeight;
+    }    
+
     setElementDimensions(element,dim);
   },
-  
-  resizeToExpanded: function(element) {
+  // practially identical to resizeToCollapsed now  
+  resizeToOriginal: function(element) {
     dim = getElementDimensions(element);
-    dim.h = element.origHeight;
     dim.w = element.origWidth;
-    setElementDimensions(element,dim);
+    if (element.origHeight < element.scrollHeight) {
+      log("resizeToCollapsed: content doesn't fit anymore -- we need to move some boxes!");
+      dim.h = element.scrollHeight;
+      setElementDimensions(element,dim);
+      Editable.currentBoxMovingPolicy('comment'); // this will only occur for comments, not references
+    } else {
+      dim.h = element.origHeight;
+      setElementDimensions(element,dim);
+    }
   },
   
   expandBox: function(e) {
@@ -127,7 +146,7 @@ Editable = {
     //log("box has zindex: " + computedStyle(boxElement,'z-index'));
     boxElement.style.zIndex=1;
     //log("box has zindex: " + computedStyle(boxElement,'z-index'));
-    Editable.resizeToExpanded(boxElement);
+    Editable.resizeToOriginal(boxElement);
     disconnect(imgElement.clickSignal);
     //log("box has zindex: " + computedStyle(boxElement,'z-index'));
     imgElement.clickSignal = connect(e.src(),'onclick',Editable.collapseBox);
@@ -147,7 +166,13 @@ Editable = {
     e.stopPropagation();
   },
   
-  moveClass: function (classname) {
+  /* there is a choice between two methods of placing the boxes: both try to
+  move every box in-line with the legal document section it relates to, but if
+  there's no room, moveAndCollapse collapses the boxes (and adds a maximize
+  button), while moveToAvailableSlot places the box as close to the legal
+  document section as possible without placing it over an existing box. Which
+  one is in use is governed by Editable.currentBoxMovingPolicy */
+  moveAndCollapse: function (classname) {
     var elements = getElementsByTagAndClassName("p", classname);
     prevtop = 0;
     for (var i=elements.length-1; i >= 0; i--) {
@@ -188,19 +213,62 @@ Editable = {
       // log("settting prevtop to " + prevtop);
     }
   },
-  
-  moveBoxes: function () {
-    log("Moving boxes");
-    Editable.moveClass('references');
-    Editable.moveClass('comment');
-  }
-}
+  /* see comment for moveAndCollapse */
+  moveToAvailableSlot: function(classname) {
+    starttime = new Date();
+    intervaltime = new Date();
+    var elements = getElementsByTagAndClassName("p", classname);
+    log("Moving " + elements.length + " boxes");
+    requiredTopPos = 0;
+    for (var i=0; i < elements.length; i++) {
+      element = elements[i];
+      element.style.position = "absolute";
+      element.style.display = "block";
+      pe = document.getElementById(element.id.substr(classname.length + 1));
+      //faster(?) way of moving elements
+      //element.style.top = pe.offsetTop + "px";      
+      pos = getElementPosition(element,element.parentNode);
+      dim = getElementDimensions(element);
+      
+      corrPos = getElementPosition(pe,pe.parentNode);
+      if (corrPos.y > requiredTopPos) {
+	//alert("moving box #" + i + " inline: top: " + pos.y + ", corrTop:" + corrPos.y);
+	pos.y = corrPos.y;
+      } else {
+	//alert("moving box #" + i + " to requiredTopPos: top: " + pos.y + ", corrTop:" + corrPos.y);
+	pos.y = requiredTopPos;
+      }
+      setElementPosition(element, pos);
+      dim.w = element.parentNode.clientWidth;      
+      element.origHeight = dim.h;
+      element.collapsedHeight = dim.h;	
+      element.origWidth = dim.w;	
 
-/* addEvent(window,'load',MoveComments,false); */
-/* addEvent(window,'load',PrepareEditFields,false); */
-connect(window, 'onload', function(e) {
+      setElementDimensions(element,dim);
+      
+      requiredTopPos = pos.y + dim.h + 2; // 3 = margin
+      
+      //if (i % 100 == 0) {
+        //log("moved 100 boxes in " + (new Date() - intervaltime));
+	//intervaltime = new Date()
+      //}
+
+    }
+    endtime = new Date()
+    log("elapsed:" + (endtime - starttime) + " (start " + starttime + ", end " + endtime + ")")
+  },
+
+  moveBoxes: function () {
+    //log("Moving boxes");
+    //Editable.moveToAvailableSlot('references');
+    //Editable.moveToAvailableSlot('comment');
+    Editable.currentBoxMovingPolicy('comment');
+    Editable.currentBoxMovingPolicy('references');
+  },
+  
+  connectBoxes: function() {
     var origtext;
-    log("connecting elements");
+    //log("connecting elements");
     var elems = getElementsByTagAndClassName("p", "editable");
     log("connecting", elems.length, "p's");
     for (var i = 0; i < elems.length; i++) { 
@@ -209,11 +277,17 @@ connect(window, 'onload', function(e) {
       elem.title = "Click to edit";
       //appendChildNodes(elem, "[foo]");
     }
+  },
+  createLoggingPane: function() {
+    createLoggingPane(true);
   }
-)
+}
+Editable.currentBoxMovingPolicy = Editable.moveToAvailableSlot;
+//connect(window,'onload', Editable.createLoggingPane);
+connect(window,'onload',Editable.connectBoxes);
 connect(window,'onload',Editable.moveBoxes);
 // FIXME: on non-gecko browsers this event fires continously
 // while the user resizes - lots of work. We should wait until
 // no more resize events have been fired and then move boxes
 connect(window,'resize',Editable.moveBoxes);
-log("loaded stuff.js");
+

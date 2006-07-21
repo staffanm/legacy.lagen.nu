@@ -99,9 +99,9 @@ class AnnotatedDoc:
         comments = self.__parseComments(comments)
         for c in [c for c in indexes]:
             if c[2] in comments:
-                outdata.write(u'<p id="comment-%s" class="comment editable"><span class="commentid">%s</span>%s</p>' % (c[2], self.__formatCommentId(c[2]), comments[c[2]]))
+                outdata.write(u'<p id="comment-%s" class="comment editable"><span class="commentid">%s</span>%s</p>\n' % (c[2], self.__formatCommentId(c[2]), comments[c[2]]))
             elif includePlaceholders:
-                outdata.write(u'<p id="comment-%s" class="commentplaceholder editable"><span class="commentid">%s</span>Klicka för att kommentera</p>' % (c[2], self.__formatCommentId(c[2])))
+                outdata.write(u'<p id="comment-%s" class="comment placeholder editable"><span class="commentid">%s</span>Klicka för att kommentera</p>\n' % (c[2], self.__formatCommentId(c[2])))
 
         if hasattr(buf, "getvalue"):
             return unicode(buf.getvalue(), 'utf-8')

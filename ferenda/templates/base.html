@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="sv">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>{% block title %}GLÖM INTE ATT SÄTTA 'title' I SUBTEMPLATEN!{% endblock %} - lagen.nu</title>
+    <link rel="stylesheet" type="text/css" href="/static/3col.css"/> 
+    <script type="text/javascript" src="/static/mk/MochiKit.js"></script>
+    <script type="text/javascript" src="/static/stuff.js"></script>
+    <!--[if lt IE 6]>
+    <style type="text/css" media="screen">
+    /* HR styles need for IE 5/Win and under. */
+    #middle { position: relative; }
+    </style>
+    <![endif]-->
+  </head>
+  <body id="{% block pageid %}{% endblock %}">
+  <!-- this is invalid xhtml, disabled for now
+  <noscript>
+  <style type="text/css">
+  .commentid { display: inline;}    
+  </style>
+  </noscript>
+  -->
+<div id="banner">
+  <div style="float:right; width:200px">
+    {% if user.is_authenticated %}
+      Välkommen, {{ user.username }} - 
+      <a href="/accounts/logout/">logga ut</a>
+    {% else %}
+      <a href="/accounts/login/">Logga in</a> eller 
+      <a href="/accounts/create/">skapa användare</a> 
+      för att ändra
+    {% endif %}
+  </div>
+  <h1><a href="/">lagen.nu</a> - din sidflik i rättsinfodjungeln</h1>
+  <script type="text/javascript">document.write(holdW('holder'))</script>
+</div>
+<!--[if lt IE 6]>
+<div id="holder" style="position: relative; height: 1px;">
+<![endif]-->
+<div id="middle">
+  {% block middle %}{% endblock %}
+  <script type="text/javascript">document.write(holdW('middle'))</script>
+</div>
+<div id="left">
+  {% block left %}{% endblock %}
+  <script type="text/javascript">document.write(holdW('left'))</script>
+</div>
+<div id="right">
+  {% block right %}{% endblock %}
+  <script type="text/javascript">document.write(holdW('left'))</script>
+</div>
+<!--[if IE]>
+<hr class="holder" />
+<![endif]-->
+<!--[if lt IE 6]>
+</div>
+<![endif]-->
+</body>
+</html>

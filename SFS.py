@@ -246,8 +246,7 @@ class SFSParser(LegalSource.Parser):
         for tuple in self.attributes.list:
             self.f.write("<%s>%s</%s>" % (tuple[0],self.fixup(tuple[1]),tuple[0]))
         self.f.write("</preamble>")
-
-        self.namedlaws = {}
+        self.namedlaws = {} # FIXME: shouldn't this be, like, INITIALIZED somehow?
         self.in_chapter = False
         self.in_section = False
         self.in_introduction = False

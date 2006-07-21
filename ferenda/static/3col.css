@@ -43,9 +43,10 @@ textarea { font: 8pt Optima, Arial, sans-serif; width: 95%; }
 .preamble { font-size: 8pt; }
 .sectionid { font-weight: bold; }
 .faux-li { padding-left: 20px; margin: 1px; }
-.comment, .references { border: solid 1px gray; font: 8pt Optima, Arial, sans-serif; position: relative; margin: 0;}
-.comment {background-color: #FAC; }
-.commentid { display: none;}
+.comment, .placeholder, .references, .controlpanel { border: solid 1px gray; font: 8pt Optima, Arial, sans-serif; position: relative; margin: 0;}
+.comment { background-color: #FAC; display: none;  }
+.placeholder { background-color: #FFF; }
+/*.commentid { display: none;}*/
 .references {background-color: #CCF;} 
 .expandicon { position:absolute; bottom:0; right: 0;}
 .editor { border: solid 3px red; }

@@ -6,7 +6,7 @@ sys.path.append("3rdparty")
 import BeautifulSoup
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import IntrinsicRelation, LegalDocument
+from ferenda.docview.models import Relation, LegalDocument
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -108,6 +108,7 @@ class Parser:
                      not isinstance(e,BeautifulSoup.Comment))]))
 
 class Manager:
+    
     def __init__(self,baseDir):
         self.baseDir = baseDir
         # print "LegalSource.py/Manager: self.baseDir set to " + self.baseDir
@@ -187,17 +188,23 @@ class Manager:
             print "WARNING: More than one URNs for '%r' (returning first one)" % refid
             return unicode(documents[0].urn,'utf-8')
 
-    def createRelation(self,urn,relation,subject):
+    def createRelation(self,urn,predicate,subject,intrinsic=True, comment=""):
         """Creates a single relation"""
+        
         object, created = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
         if created:
             print u"WARNING: creating a relation for which the object (%r) doesn't exists in the LegalDocument table" % urn
-            
-        IntrinsicRelation.objects.create(object=object,
-                                         relation=relation.encode('utf-8'),
-                                         subject=subject.encode('utf-8'))
-
-
+        
+        if predicate.startswith('http://'):
+            p = Predicate(pk=predicate)
+        else:
+            p = predicate(label=predicate)
+        Relation.objects.create(object=urn.encode('utf-8'),
+                                         predicate=p,
+                                         subject=subject.encode('utf-8'),
+                                         intrinsic=intrinsic,
+                                         comment=comment
+                                     )
 
 class DownloadedResource:
     """Data object for containing information about a downloaded resource.
