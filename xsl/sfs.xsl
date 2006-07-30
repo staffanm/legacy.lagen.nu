@@ -6,19 +6,18 @@
 	      method="xml"
 	      />
 
-
-  <xsl:template match="/">
-    
-      <xsl:apply-templates/>
-    
-  </xsl:template>
-
   <!-- we should be able to find this out from /law/preamble/sfsid, but it stopped working... -->
   <xsl:param name="lawid"/>
   <!-- today's date -->
   <xsl:param name="today"/>
   <xsl:variable name="sectionOneCount" select="count(//section[@id='1'])"/>
   <xsl:variable name="hasChapters" select="/law/chapter"/>
+
+  <xsl:template match="/">
+    <div class="middle">
+      <xsl:apply-templates/>
+    </div>  
+  </xsl:template>  
   
   <xsl:template match="/law">
     <h1 class="legaldoc" id="top"><xsl:value-of select="preamble/title"/></h1>
@@ -184,7 +183,10 @@
 
   <xsl:template match="chapter">
     <a name="K{@id}"/>
+    <xsl:comment>start:K<xsl:value-of select="@id"/></xsl:comment>
+    <xsl:comment>end:K<xsl:value-of select="@id"/></xsl:comment>
     <xsl:apply-templates/>
+    
   </xsl:template>
 
   <xsl:template match="headline">
@@ -201,9 +203,11 @@
 
   <xsl:template match="section">
     <xsl:variable name="id">
-      <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../@id"/></xsl:if>P<xsl:value-of select="../@id"/>
+      <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../@id"/></xsl:if>P<xsl:value-of select="@id"/>
     </xsl:variable>
     <a name="{$id}"></a>
+    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>    
     <xsl:apply-templates/>
   </xsl:template>
 

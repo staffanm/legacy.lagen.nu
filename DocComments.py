@@ -29,6 +29,7 @@ class AnnotatedDoc:
     def __init__(self, filename=None):
         if filename:
             self.filename = os.path.join(os.path.dirname(__file__),filename)
+            self.indexfname = self.filename + ".idx"
         
 
     def Prepare(self):
@@ -42,14 +43,21 @@ class AnnotatedDoc:
         free-form string (look at the testcases for details on how it
         should be formatted). Typically done at runtime (via the web
         interface)"""
-        indexfname = self.filename + ".idx"
-        if not os.path.exists(indexfname):
+        
+        if not os.path.exists(self.indexfname):
             self.Prepare()
         res = self.__weave(self.filename,
                             self.__loadIndex(indexfname),
                             self.__parseComments(comments))
-        
         return res
+
+    def GetCommentIds(self):
+        if not os.path.exists(self.indexfname):
+            self.Prepare()
+        indexes = self.__loadIndex(self.indexfname)
+        return [f[2] for f in indexes]
+            
+    
 
     re_ChapterSection = re.compile(r'K(\d+\w?)P(\d+w?)S(\d+)N(\d+)')
     re_Headline = re.compile(r'R(\d+w?)')

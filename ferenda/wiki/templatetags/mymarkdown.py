@@ -1,6 +1,6 @@
 from django import template
 import markdown
-from ferenda.docview.models import LegalDocument
+from ferenda.docview.models import Document
 
 register = template.Library()
 
@@ -12,9 +12,9 @@ class WikiPattern (markdown.BasePattern):
             wikiword,linktext = wikiword.split('|', 1)
         else:
             try:
-                d = LegalDocument.objects.get(displayid=wikiword.encode('utf-8'))
+                d = Document.objects.get(displayid=wikiword.encode('utf-8'))
                 linktext = d.title.decode('utf-8')
-            except LegalDocument.DoesNotExist:
+            except Document.DoesNotExist:
                 linktext = wikiword
             
         wikiword = wikiword.replace(" ", "_").capitalize()

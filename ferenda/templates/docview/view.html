@@ -6,11 +6,19 @@
 {% endblock %}
 {% block left %}
 <p>references go here</p>
-<ul>
-{% for r in references %}
-<li>{{ r.object }}</li>
+{% for f in references %}
+    <p class="references" id="references-{{ f.fragmentid }}">
+    <b>Fragment '{{f.fragmentid }}'</b><br/>
+    {% for type in f.documenttypes %}
+        <b>{{ type.label }}:<b>
+        {% for d in type.documents %}
+            <a href="{{ d.url}}" title="{{ d.longdesc }}">{{ d.title }}{% if d.alternative %}({{ d.alternative }}){% endif %}</a>
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+        <br/>        
+    {% endfor %}        
+    </p>
 {% endfor %}
-</ul>
 {% endblock %}
 {% block right %}
 {{comments}}

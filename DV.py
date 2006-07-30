@@ -11,11 +11,15 @@ import pprint
 import types
 import codecs
 from cStringIO import StringIO
+from time import time
 
 # 3rdparty libs
 sys.path.append('3rdparty')
 import BeautifulSoup
-import elementtree.ElementTree as ET
+try:
+    import cElementTree as ET
+except ImportError:
+    import elementtree.ElementTree as ET
 
 # my libs
 import LegalSource
@@ -26,7 +30,7 @@ from DispatchMixin import DispatchMixin
 # Django stuff
 from DocComments import AnnotatedDoc
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import Relation, LegalDocument
+from ferenda.docview.models import *
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -124,7 +128,7 @@ class DVParser(LegalSource.Parser):
                 if val != '-':
                     # some keys are processed further
                     if key == u'Lagrum':
-                        print u'parsing %r with lawparser' % val
+                        # print u'parsing %r with lawparser' % val
                         parsed = SFSRefParser("<Lagrum>"+val+"</Lagrum>").parse()
                         val = ET.fromstring(parsed.encode('utf-8'))
                     elif key == u'Referat' and self.re_NJAref.match(val):
@@ -193,18 +197,18 @@ class DVParser(LegalSource.Parser):
             if type(data[k]) == types.ListType:
                 for i in data[k]:
                     node = ET.SubElement(meta,k)
-                    if isinstance(i,ET._ElementInterface):
+                    if isinstance(i,unicode) or isinstance(i,str):
+                        node.text = i
+                    else:
                         node.text = i.text
                         node[:] = i[:]
-                    else:
-                        node.text = i
             else:
                 node = ET.SubElement(meta,k)
-                if isinstance(data[k],ET._ElementInterface):
+                if isinstance(data[k],unicode) or isinstance(data[k],str):
+                    node.text = data[k]
+                else:
                     node.text = data[k].text
                     node[:] = data[k][:]
-                else:
-                    node.text = data[k]
         if referat:
             ref = ET.SubElement(root,"Referat")
             for p in referat:
@@ -260,21 +264,97 @@ class DVParser(LegalSource.Parser):
             u'Miljööverdomstolen':                u'Målnummer',
             }
         domstol = data['Domstol']
-        urn = "urn:x-dom:%s:%s" % (domstolar[domstol], data[idfield[domstol]])
+        urn = "urn:x-dv:%s:%s" % (domstolar[domstol], data[idfield[domstol]])
         return urn
+
 
 class DVManager(LegalSource.Manager):
     __parserClass = DVParser
     
-    def Parse(self,id):
-        """'id' here is a single digit representing the filename on disc, not
+
+    ####################################################################
+    # CLASS-SPECIFIC HELPER FUNCTIONS
+    ####################################################################
+    
+    
+    def __doAllParsed(self,method,max=None):
+        cnt = 0
+        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
+            if max and (max >= cnt):
+                return cnt
+            cnt += 1
+            basefile = os.path.splitext(os.path.basename(f))[0]
+            method(basefile)
+        return cnt
+    
+    def __listfiles(self,suffix,basefile):
+        filename = "%s/%s/downloaded/%s.%s.html" % (self.baseDir,__moduledir__,basefile,suffix)
+        return [f for f in (filename,) if os.path.exists(f)]
+
+    def __createSFSUrn(self,el):
+        """Given a ElementTree element representing a Swedish law reference
+        (eg <link law="1960:729" section="49" piece="2">49 § 2 st.
+        Upphovsrättslagen</link>), returns a URN representing that location
+        (eg urn:x-sfs:1960:729#P49S2)"""
+        
+        # FIXME: This functionality really resides in SFS.py -- or maybe
+        # <link> elements should have a urn attribute?
+        
+        # this is slower than just deducing the urn from the sfsid attribute, but 
+        # this way we catch invalid references (pointing to SFS ids which doesn't exists) 
+        urn  = self._displayIdToURN(el.attrib['law'],u'urn:x-sfs')
+        frag = u'#'
+        
+        if 'chapter' in el.attrib:
+            frag += u'K' + el.attrib['chapter']
+        if 'section' in el.attrib:
+            frag += u'P' + el.attrib['section']
+        if 'piece' in el.attrib:
+            frag += u'S' + el.attrib['piece']
+        if 'item' in el.attrib:
+            frag += u'N' + el.attrib['item']
+        if frag == u'#':
+            return urn
+        else:
+            return urn + frag
+    ####################################################################
+    # OVERRIDES OF Manager METHODS
+    ####################################################################
+    
+    def _findDisplayId(self,root,basefile):
+        displayid = root.findtext(u'Metadata/Referat')
+        # trim or discard displayid if neccesary -- maybe code like this should live in DVParser?
+        if displayid.endswith(u', Referat ännu ej publicerat'): # 29 chars of trailing data, chop them off
+           displayid = displayid[:-29]
+        if (displayid == u'Referat ännu ej publicerat' or 
+            displayid == u'Referat finns ej'):
+            displayid = None
+        
+        if not displayid:
+            displayid = root.findtext(u'Metadata/Målnummer')
+        if not displayid:
+            displayid = root.findtext(u'Metadata/Diarienummer')
+        if not displayid:
+            displayid = root.findtext(u'Metadata/Domsnummer') # this seems to occur only for MD verdicts - maybe we should transform "2002-14" into "MD 2002:14"
+        if not displayid:
+            raise LegalSource.ParseError("Couldn't find suitable displayid") # a filename or URN would be useful here...
+
+        return displayid
+    
+    
+    ####################################################################
+    # IMPLEMENTATION OF Manager INTERFACE  
+    ####################################################################
+    
+    def Parse(self,basefile):
+        """'basefile' here is a single digit representing the filename on disc, not
         any sort of inherit case id or similarly"""
-        files = {'detalj':self.__listfiles('detalj',id),
-                 'referat':self.__listfiles('referat',id)}
+        files = {'detalj':self.__listfiles('detalj',basefile),
+                 'referat':self.__listfiles('referat',basefile)}
         print("Files: %r" % files)
         p = self.__parserClass()
-        parsed = p.Parse(id,files)
-        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, id)
+        parsed = p.Parse(basefile,files)
+        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, basefile)
         Util.mkdir(os.path.dirname(filename))
         print "saving as %s" % filename
         out = file(filename, "w")
@@ -285,119 +365,92 @@ class DVManager(LegalSource.Manager):
     def ParseAll(self):
         downloadDir = self.baseDir + "/dv/downloaded"
         for f in Util.listDirs(downloadDir,"detalj.html"):
-            id = os.path.basename(f)[:-12]
-            self.Parse(id)
-    
-    def Index(self,id):
-        xmlFileName = self.__xmlFileName(id)
-        root = ET.ElementTree(file=xmlFileName).getroot()
-        # title = root.findtext(u'Metadata/Rubrik')
-        # print "%d: %s" % (len(title.encode('utf-8')), id)
-        # return
-        displayid = root.findtext(u'Metadata/Referat')
-        if not displayid:
-            displayid = root.findtext(u'Metadata/Målnummer')
-        urn = root.get('urn')
-        print "indexing %s (displayid: %s, id: %s)" % (urn,displayid,id)
-        d = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
-        d = LegalDocument.objects.get(urn = urn.encode('utf-8'))
-        d.displayid = displayid.encode('utf-8')
-        d.title = root.findtext(u'Metadata/Rubrik').encode('utf-8')
-        d.htmlpath = self.__htmlFileName(id)
-        d.xmlpath = xmlFileName
-        d.save()
-            
-    def IndexAll(self):
-        self.__doAllParsed(self.Index)
+            basefile = os.path.basename(f)[:-12]
+            self.Parse(basefile)
 
-    def __doAllParsed(self,method):
-        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
-            id = os.path.splitext(os.path.basename(f))[0]
-            method(id)
-    
-    def __htmlFileName(self,id):
-        return "%s/%s/generated/%s.html" % (self.baseDir, __moduledir__,id)
-
-    def __xmlFileName(self,id):
-        return "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,id)
-        
-    
-    def __listfiles(self,suffix,id):
-        filename = "%s/%s/downloaded/%s.%s.html" % (self.baseDir,__moduledir__,id,suffix)
-        return [f for f in (filename,) if os.path.exists(f)]
-        
-    def Generate(self,id):
-        infile = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,id)
-        outfile = "%s/%s/generated/%s.html" % (self.baseDir, __moduledir__,id)
+    def Generate(self,basefile):
+        infile = self._xmlFileName(basefile)
+        outfile = self._htmlFileName(basefile)
         Util.mkdir(os.path.dirname(outfile))
-        print "Transforming %s > %s" % (infile,outfile)
+        print "Generating %s" % outfile
         Util.transform("xsl/dv.xsl",
                        infile,
                        outfile,
                        {},
                        validate=False)
-        print "Generating index for %s" % outfile
-        ad = AnnotatedDoc(outfile)
-        ad.Prepare()
-        print "Creating intrinsic relations for %s" % id
-        self.__createRelations(infile)
+        # print "Generating index for %s" % outfile
+        # ad = AnnotatedDoc(outfile)
+        # ad.Prepare()
 
-    
-    def __createRelations(self,xmlFileName):
-        tree = ET.ElementTree(file=xmlFileName)
-        urn = tree.getroot().get('urn')
+    def GenerateAll(self):
+        self.__doAllParsed(self.Generate)
         
+
+    def IndexAll(self):
+        self.__doAllParsed(self.Index)
+
+    def Relate(self,basefile):
+        start = time()
+        sys.stdout.write("Relate: %s" % basefile)
+        xmlFileName = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,basefile)
+        root = ET.ElementTree(file=xmlFileName).getroot()
+        urn = root.get('urn') # or root.attribs['urn'] ?
+        displayid = self._findDisplayId(root,basefile)
+        targetUrns = []  # keeps track of other legal sources that this verdict references, so we can create Reference objects for them
+
         # delete all previous relations where this document is the object --
         # maybe that won't be needed if the typical GenerateAll scenario
         # begins with wiping the Relation table? It still is useful 
         # in the normal development scenario, though
-        Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()    
-        for e in tree.getiterator():
-            if e.tag == u'Referat':
-                if e.text.strip():
-                    self.createRelation(urn,u'title',e.text)
-            if e.tag == u'Sökord':
-                if e.text:
-                    self.createRelation(urn,u'subject',e.text)
-            if e.tag == u'Rättsfall':
+        Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()
+
+        self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
+        
+        desc = root.findtext('Metadata/Rubrik')
+        self._createRelation(urn,Predicate.DESCRIPTION, desc,allowDuplicates=False)
+        
+        for e in root.findall(u'Metadata/Sökord'):
+            if e.text:
+                self._createRelation(urn,Predicate.SUBJECT,e.text)
+        for e in root.findall(u'Metadata/Rättsfall'):
+            try:
+                targetUrn = self._displayIdToURN(e.text,u'urn:x-dv')
+                self._createRelation(urn,Predicate.REFERENCES,targetUrn)
+                targetUrns.append(targetUrn)
+            except LegalSource.IdNotFound:
+                pass
+        for e in root.findall(u'Metadata/Lagrum/link'):
+            if 'law' in e.attrib:
                 try:
-                    self.createRelation(urn,u'references',self.findURN(e.text))
-                except LegalSource.URNNotFound:
-                    print "WARNING: no URN found for %r" % e.text
+                    targetUrn = self.__createSFSUrn(e)
+                    self._createRelation(urn,Predicate.REQUIRES,targetUrn)
+                    targetUrns.append(targetUrn)
+                except LegalSource.IdNotFound:
                     pass
-            if e.tag == u'Lagrum':
-                for link in e:
-                    if link.tag == 'link' and 'law' in link.attrib:
-                        self.createRelation(urn,u'requires',self.__createSFSUrn(link))
-    
-    def __createSFSUrn(self,el):
-        res = u'urn:x-sfs:%s#' % el.attrib['law']
-        if 'chapter' in el.attrib:
-            res = res + "K" + el.attrib['chapter']
-        if 'section' in el.attrib:
-            res = res + "P" + el.attrib['section']
-        if 'piece' in el.attrib:
-            res = res + "S" + el.attrib['piece']
-        if 'item' in el.attrib:
-            res = res + "N" + el.attrib['item']
-        if res.endswith("#"):
-            res = res[:-1]
-        return res
         
+        sys.stdout.write("\tcreating %s references\t" % len(targetUrns))
+        for targetUrn in targetUrns:
+            self._createReference(basefile = self._UrnToBasefile(targetUrn),
+                                  targetUrn = targetUrn, 
+                                  sourceUrn = urn,
+                                  refLabel = u'Rättsfall',
+                                  displayid = displayid,
+                                  alternative = None, # this will be filled in later through some other means
+                                  desc = desc)
+        sys.stdout.write(" %s sec\n" % (time() - start))
         
-    
+    def RelateAll(self):
+        start = time()
+        cnt = self.__doAllParsed(self.Relate,20)
+        sys.stdout-write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
 
-    def GenerateAll(self):
-        self.__doAllParsed(self.Generate)
-       
-
-                
+        
 if __name__ == "__main__":
     if not '__file__' in dir():
         print "probably running from within emacs"
         sys.argv = ['DV.py','Parse', '42']
     
     DVManager.__bases__ += (DispatchMixin,)
-    mgr = DVManager("testdata")
+    mgr = DVManager("testdata", __moduledir__)
     # print "argv: %r" % sys.argv   
     mgr.Dispatch(sys.argv)

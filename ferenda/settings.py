@@ -14,6 +14,7 @@ DATABASE_NAME = 'ferenda'      # Or path to database file if using sqlite3.
 DATABASE_USER = 'ferenda'      # Not used with sqlite3.
 DATABASE_PASSWORD = 'f'        # Not used with sqlite3.
 DATABASE_HOST = '192.168.0.7'  # Set to empty string for localhost. Not used with sqlite3.
+# DATABASE_HOST = ''
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 # Local time zone for this installation. All choices can be found here:

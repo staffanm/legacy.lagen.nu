@@ -15,8 +15,11 @@ from cStringIO import StringIO
 # 3rdparty libs
 sys.path.append('3rdparty')
 import BeautifulSoup
-import elementtree.ElementTree as ET
-
+try:
+    import cElementTree as ET
+except ImportError:
+    import elementtree.ElementTree as ET
+    
 # my own libraries
 import LegalSource
 import Util
@@ -24,7 +27,7 @@ from DispatchMixin import DispatchMixin
 from DocComments import AnnotatedDoc
 from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import Relation, LegalDocument
+from ferenda.docview.models import *
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -921,17 +924,55 @@ class SFSParser(LegalSource.Parser):
         except ParseError, e:
             print "find_prep_references failed on the following:\n"+p
             raise e    
+        
+        
+        
 class SFSManager(LegalSource.Manager):
     __parserClass = SFSParser
-    
 
-    def Parse(self, id):
-        files = {'sfst':self.__listfiles('sfst',id),
-                 'sfsr':self.__listfiles('sfsr',id)}
+    ####################################################################
+    # CLASS-SPECIFIC HELPER FUNCTIONS
+    ####################################################################
+
+    def __listfiles(self,source,sfsid):
+        """Given a SFS id, returns the filenames within source dir that
+        corresponds to that id. For laws that are broken up in _A and _B
+        parts, returns both files"""
+        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,SFSidToFilename(sfsid))
+        print "__listfiles template: %s" % templ
+        return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
+        
+    def __doAll(self,dir,suffix,method):
+        from sets import Set
+        basefiles = Set()
+        # for now, find all IDs based on existing files
+        for f in Util.listDirs("%s/%s/%s" % (self.baseDir,__moduledir__,dir), ".%s" % suffix):
+            # moahaha!
+            # this transforms 'foo/bar/baz/1960/729.html' to '1960/729'
+            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            basefiles.add(basefile)
+        for basefile in sorted(basefiles):
+            method(basefile)
+        
+    ####################################################################
+    # OVERRIDES OF Manager METHODS
+    ####################################################################    
+    
+    def _findDisplayId(self,root,basefile):
+        # we don't need the (ElementTree) root -- basename is enough
+        return FilenameToSFSid(basefile)
+
+    ####################################################################
+    # IMPLEMENTATION OF Manager INTERFACE
+    ####################################################################    
+
+    def Parse(self, basefile):
+        files = {'sfst':self.__listfiles('sfst',basefile),
+                 'sfsr':self.__listfiles('sfsr',basefile)}
         print("Files: %r" % files)
         p = SFSParser()
-        parsed = p.Parse(id, files)
-        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, SFSidToFilename(id))
+        parsed = p.Parse(basefile, files)
+        filename = self._xmlFileName(basefile)
         Util.mkdir(os.path.dirname(filename))
         print "saving as %s" % filename
         out = file(filename, "w")
@@ -942,42 +983,13 @@ class SFSManager(LegalSource.Manager):
     def ParseAll(self):
         self.__doAll('downloaded/sfst','html',self.Parse)
 
-    def __listfiles(self,source,sfsid):
-        """Given a SFS id, returns the filenames within source dir that
-        corresponds to that id. For laws that are broken up in _A and _B
-        parts, returns both files"""
-        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,SFSidToFilename(sfsid))
-        print "__listfiles template: %s" % templ
-        return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
-        
-    def Index(self,id):
-        xmlFileName = self.__xmlFileName(id)
-        root = ET.ElementTree(file=xmlFileName).getroot()
-        urn = root.get('urn')
-        if urn == None:
-            raise ParseError("Couldn't find URN for %s in %s" % (id,xmlFileName))
-
-        print "indexing %s ((display)id: %s)" % (urn,id)
-        d, created = LegalDocument.objects.get_or_create(urn = urn.encode('utf-8'))
-        d.displayid = id.encode('utf-8')
-        d.title = root.findtext('preamble/title').encode('utf-8')
-        d.htmlpath = self.__htmlFileName(id)
-        d.xmlpath = xmlFileName
-        d.save()                        
-        
-    def __htmlFileName(self,id):
-        return "%s/%s/generated/%s.html" % (self.baseDir,__moduledir__,SFSidToFilename(id))
-
-    def __xmlFileName(self,id):
-        return "%s/%s/parsed/%s.xml" % (self.baseDir,__moduledir__,SFSidToFilename(id))
-    
     def IndexAll(self):
         self.__doAll('parsed', 'xml',self.Index)
 
-    def Generate(self,id):
-        infile = self.__xmlFileName(id)
-        outfile = self.__htmlFileName(id)
-        sanitized_sfsid = id.replace(' ','.')
+    def Generate(self,basefile):
+        infile = self._xmlFileName(basefile)
+        outfile = self._htmlFileName(basefile)
+        sanitized_sfsid = basefile.replace(' ','.')
         print "Transforming %s > %s" % (infile,outfile)
         Util.mkdir(os.path.dirname(outfile))
         Util.transform("xsl/sfs.xsl",
@@ -986,13 +998,13 @@ class SFSManager(LegalSource.Manager):
                        {'lawid': sanitized_sfsid,
                         'today':datetime.date.today().strftime("%Y-%m-%d")},
                        validate=False)
-        print "Generating index for %s" % outfile
-        ad = AnnotatedDoc(outfile)
-        ad.Prepare()
-        print "Creating intrinsic relations for %s" % id
-        self.__createRelations(infile)
+        #  print "Generating index for %s" % outfile
 
-    def __createRelations(self,xmlFileName):
+        
+
+    def Relate(self,basefile):
+        xmlFileName = self._xmlFileName(basefile)
+        print "Creating intrinsic relations for %s" % basefile
         tree = ET.ElementTree(file=xmlFileName)
         urn = tree.getroot().get('urn')
         
@@ -1001,39 +1013,25 @@ class SFSManager(LegalSource.Manager):
         # begins with wiping the Relation table? It still is useful 
         # in the normal development scenario, though
         rels = Relation.objects.filter(object__startswith=urn.encode('utf-8'))
+        
+        
         for rel in rels:
             rel.delete()
+            
+        self.createRelation(urn,Predicate.IDENTIFIER,basefile,allowDuplicates=False)
+            
         for e in tree.getiterator():
             if e.tag == u'link':
                 # FIXME: magic goes here
                 pass
-                
-                
+    
+    def RelateAll(self):            
+        self.__doAll('parsed','xml',self.Relate)
+        
     def GenerateAll(self):
         self.__doAll('parsed','xml',self.Generate)
     
-    def __doAll(self,dir,suffix,method):
-        from sets import Set
-        ids = Set()
-        # for now, find all IDs based on existing files
-        for f in Util.listDirs("%s/%s/%s" % (self.baseDir,__moduledir__,dir), ".%s" % suffix):
-            # moahaha!
-            # this transforms 'foo/bar/baz/1960/729.html' to '1960/729'
-            base = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
-            ids.add(FilenameToSFSid(base))
-        errlog = open("SFS.%sAll.log"%method.__name__,"w")
-        for id in sorted(ids):
-            try:
-                method(id)
-            except KeyboardInterrupt, e:
-                print "KeyboardInterrupt recieved, exiting"
-                raise e
-            except Exception, e:
-                import traceback
-                errlog.write("Exception for SFS '%s': %s\n" % (id,e))
-                traceback.print_exc(file=errlog)
-                errlog.flush()
-        errlog.close()    
+
     
 
 
@@ -1043,7 +1041,7 @@ if __name__ == "__main__":
         sys.argv = ['SFS.py','Parse', '1960:729']
     
     SFSManager.__bases__ += (DispatchMixin,)
-    mgr = SFSManager("testdata")
+    mgr = SFSManager("testdata",__moduledir__)
     # print "argv: %r" % sys.argv   
     mgr.Dispatch(sys.argv)
 

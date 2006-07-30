@@ -48,7 +48,8 @@ def FindManager(module):
 ACTIONS = {'download': 'download everything',
            'update'  : 'download updates',
            'parse'   : 'parse all downloaded (generate XML)',
-           'generate': 'generate HTML',
+           'index'   : 'create initial data about documents',
+           'generate': 'generate HTML and create data about relations',
            'loaddb'  : 'refresh DB content',
            'test'    : 'do internal regression tests',
            'all'     : 'do everything in a sensible order'}

@@ -9,51 +9,11 @@
 import os
 import subprocess
 
-class ValidationError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+# other peoples code
 
-class TransformError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
-# FIXME: rewrite this to inherit the built-in dict object
-class OrderedDict:
-    """A combination of a list and a dictionary. There probably exists
-    a much-better built-in version somewhere"""
-    
-    def __init__(self):
-        self.list = []
-        self.dict = {}
-
-    def append(self,key,value):
-        self.list.append([key,value])
-        self.dict[key] = self.list[-1]
-
-    def append_to_value(self,key,value):
-        #print "append_to_value: initial value: '%s'" % self.dict[key][1]
-        #print "append_to_value: value to append: '%s'" % value
-        l = self.dict[key]
-        l[1] += value
-        #print "append_to_value: final value: '%s'" % self.dict[key][1]
-        
-    def item(self,key):
-        return self.dict[key][1]
-
-    def has_key(self,key):
-        return self.dict.has_key(key)
-
-    def extend(self,dict2):
-        for item in dict2.list:
-            self.list.append(item)
-
-
-# FIXME: need to rewrite this (mkdirs can be used)
-# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
+# From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
+# author: Trent Mick
+# license: PSL
 def mkdir(newdir):
     """works the way a good mkdir should :)
     - already exists, silently complete
@@ -73,8 +33,9 @@ def mkdir(newdir):
         if tail:
             os.mkdir(newdir)
 
-# FIXME: need to rewrite this
 # from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135435
+# author: Chui Tey
+# license: PSL
 def numsort(alist):
     """
     Sorts a list in numeric order. For example:
@@ -115,6 +76,94 @@ def numsort(alist):
     decorated = zip(indices, alist)
     decorated.sort()
     return [ item for index, item in decorated ]
+
+
+# From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/466320
+# author: bearophile
+# license: PSL
+
+from cPickle import dumps, PicklingError # for memoize
+class memoize(object):
+    """Decorator that caches a function's return value each time it is called.
+    If called later with the same arguments, the cached value is returned, and
+    not re-evaluated. Slow for mutable types."""
+    # Ideas from MemoizeMutable class of Recipe 52201 by Paul Moore and
+    # from memoized decorator of http://wiki.python.org/moin/PythonDecoratorLibrary
+    # For a version with timeout see Recipe 325905
+    # For a self cleaning version see Recipe 440678
+    # Weak references (a dict with weak values) can be used, like this:
+    #   self._cache = weakref.WeakValueDictionary()
+    #   but the keys of such dict can't be int
+    def __init__(self, func):
+        self.func = func
+        self._cache = {}
+    def __call__(self, *args, **kwds):
+        key = args
+        if kwds:
+            items = kwds.items()
+            items.sort()
+            key = key + tuple(items)
+        try:
+            if key in self._cache:
+                return self._cache[key]
+            self._cache[key] = result = self.func(*args, **kwds)
+            return result
+        except TypeError:
+            try:
+                dump = dumps(key)
+            except PicklingError:
+                return self.func(*args, **kwds)
+            else:
+                if dump in self._cache:
+                    return self._cache[dump]
+                self._cache[dump] = result = self.func(*args, **kwds)
+                return result
+
+# the rest of the code is my fault
+
+class ValidationError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class TransformError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+# FIXME: phase code out to use odict instead
+class OrderedDict:
+    """A combination of a list and a dictionary. There probably exists
+    a much-better built-in version somewhere"""
+    
+    def __init__(self):
+        self.list = []
+        self.dict = {}
+
+    def append(self,key,value):
+        self.list.append([key,value])
+        self.dict[key] = self.list[-1]
+
+    def append_to_value(self,key,value):
+        #print "append_to_value: initial value: '%s'" % self.dict[key][1]
+        #print "append_to_value: value to append: '%s'" % value
+        l = self.dict[key]
+        l[1] += value
+        #print "append_to_value: final value: '%s'" % self.dict[key][1]
+        
+    def item(self,key):
+        return self.dict[key][1]
+
+    def has_key(self,key):
+        return self.dict.has_key(key)
+
+    def extend(self,dict2):
+        for item in dict2.list:
+            self.list.append(item)
+
+
 
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
@@ -187,7 +236,7 @@ def uniqueList(*lists):
     return slots.keys();
 
 def runcmd(cmdline):
-    print "runcmd: %s" % cmdline
+    # print "runcmd: %s" % cmdline
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     stdout = p.stdout.read()
     stderr = p.stderr.read()
