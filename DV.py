@@ -164,9 +164,11 @@ class DVParser(LegalSource.Parser):
                 ref_refid = m.group(1)
 
             if ref_domstol.lower() != data['Domstol'].lower():
-                print u"WARNING (Domstol): '%s' != '%s'" % (ref_domstol, data['Domstol'])
+                pass
+                # print u"WARNING (Domstol): '%s' != '%s'" % (ref_domstol, data['Domstol'])
             if ref_refid != data['Referat']:
-                print u"WARNING (Referat): '%s' != '%s'" % (ref_refid, data['Referat'])
+                pass
+                # print u"WARNING (Referat): '%s' != '%s'" % (ref_refid, data['Referat'])
             for p in soup.firstText(u'REFERAT').findParent('tr').findNextSibling('tr').fetch('p'):
                 referat.append(self.ElementText(p))
 
@@ -182,10 +184,10 @@ class DVParser(LegalSource.Parser):
 
             data_sokord_arr.sort()
             if data_sokord_arr != ref_sokord_arr:
-                print u"WARNING (Sokord): '%r' != '%r'" % (";".join(data_sokord_arr), ";".join(ref_sokord_arr))
+                # print u"WARNING (Sokord): '%r' != '%r'" % (";".join(data_sokord_arr), ";".join(ref_sokord_arr))
                 data[u'Sökord'] = Util.uniqueList(ref_sokord_arr, data_sokord_arr)
                 
-                print u" --- combining to '%r'" % ";".join(data[u'Sökord'])
+                # print u" --- combining to '%r'" % ";".join(data[u'Sökord'])
             if soup.firstText(u'Litteratur:'):
                 ref_litteratur = self.ElementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
                 data['Litteratur'] = [self.NormalizeSpace(x) for x in ref_litteratur.split(";")]
@@ -280,7 +282,7 @@ class DVManager(LegalSource.Manager):
     def __doAllParsed(self,method,max=None):
         cnt = 0
         for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
-            if max and (max >= cnt):
+            if max and (max <= cnt):
                 return cnt
             cnt += 1
             basefile = os.path.splitext(os.path.basename(f))[0]
@@ -291,32 +293,7 @@ class DVManager(LegalSource.Manager):
         filename = "%s/%s/downloaded/%s.%s.html" % (self.baseDir,__moduledir__,basefile,suffix)
         return [f for f in (filename,) if os.path.exists(f)]
 
-    def __createSFSUrn(self,el):
-        """Given a ElementTree element representing a Swedish law reference
-        (eg <link law="1960:729" section="49" piece="2">49 § 2 st.
-        Upphovsrättslagen</link>), returns a URN representing that location
-        (eg urn:x-sfs:1960:729#P49S2)"""
-        
-        # FIXME: This functionality really resides in SFS.py -- or maybe
-        # <link> elements should have a urn attribute?
-        
-        # this is slower than just deducing the urn from the sfsid attribute, but 
-        # this way we catch invalid references (pointing to SFS ids which doesn't exists) 
-        urn  = self._displayIdToURN(el.attrib['law'],u'urn:x-sfs')
-        frag = u'#'
-        
-        if 'chapter' in el.attrib:
-            frag += u'K' + el.attrib['chapter']
-        if 'section' in el.attrib:
-            frag += u'P' + el.attrib['section']
-        if 'piece' in el.attrib:
-            frag += u'S' + el.attrib['piece']
-        if 'item' in el.attrib:
-            frag += u'N' + el.attrib['item']
-        if frag == u'#':
-            return urn
-        else:
-            return urn + frag
+
     ####################################################################
     # OVERRIDES OF Manager METHODS
     ####################################################################
@@ -349,20 +326,25 @@ class DVManager(LegalSource.Manager):
     def Parse(self,basefile):
         """'basefile' here is a single digit representing the filename on disc, not
         any sort of inherit case id or similarly"""
+        start = time()
+        sys.stdout.write("\tParse %s" % basefile)
         files = {'detalj':self.__listfiles('detalj',basefile),
                  'referat':self.__listfiles('referat',basefile)}
-        print("Files: %r" % files)
+        # print("Files: %r" % files)
         p = self.__parserClass()
         parsed = p.Parse(basefile,files)
         filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, basefile)
         Util.mkdir(os.path.dirname(filename))
-        print "saving as %s" % filename
+        # print "saving as %s" % filename
         out = file(filename, "w")
         out.write(parsed)
         out.close()
         Util.indentXmlFile(filename)
-        
+        sys.stdout.write("\t%s seconds\n" % (time()-start))
+
     def ParseAll(self):
+        # print "DV: ParseAll temporarily disabled"
+        # return
         downloadDir = self.baseDir + "/dv/downloaded"
         for f in Util.listDirs(downloadDir,"detalj.html"):
             basefile = os.path.basename(f)[:-12]
@@ -383,12 +365,20 @@ class DVManager(LegalSource.Manager):
         # ad.Prepare()
 
     def GenerateAll(self):
+        # print "DV: GenerateAll temporarily disabled"
+        # return
         self.__doAllParsed(self.Generate)
         
 
     def IndexAll(self):
+        # print "DV: IndexAll temporarily disabled"
+        # return
+        self.indexroot = ET.Element("documents")
         self.__doAllParsed(self.Index)
-
+        tree = ET.ElementTree(self.indexroot)
+        tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+        
+        
     def Relate(self,basefile):
         start = time()
         sys.stdout.write("Relate: %s" % basefile)
@@ -422,7 +412,7 @@ class DVManager(LegalSource.Manager):
         for e in root.findall(u'Metadata/Lagrum/link'):
             if 'law' in e.attrib:
                 try:
-                    targetUrn = self.__createSFSUrn(e)
+                    targetUrn = self._createSFSUrn(e)
                     self._createRelation(urn,Predicate.REQUIRES,targetUrn)
                     targetUrns.append(targetUrn)
                 except LegalSource.IdNotFound:
@@ -438,13 +428,15 @@ class DVManager(LegalSource.Manager):
                                   alternative = None, # this will be filled in later through some other means
                                   desc = desc)
         sys.stdout.write(" %s sec\n" % (time() - start))
+        self._flushReferenceCache()
         
     def RelateAll(self):
+        # print "DV: RelateAll temporarily disabled"
+        # return
         start = time()
-        cnt = self.__doAllParsed(self.Relate,20)
-        sys.stdout-write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
+        cnt = self.__doAllParsed(self.Relate)
+        sys.stdout.write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
 
-        
 if __name__ == "__main__":
     if not '__file__' in dir():
         print "probably running from within emacs"

@@ -4,9 +4,27 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>{% block title %}GLÖM INTE ATT SÄTTA 'title' I SUBTEMPLATEN!{% endblock %} - lagen.nu</title>
-    <link rel="stylesheet" type="text/css" href="/static/3col.css"/> 
-    <script type="text/javascript" src="/static/mk/MochiKit.js"></script>
-    <script type="text/javascript" src="/static/stuff.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/3col.css"/>
+    <script type="text/javascript">
+      <!--
+      function holdW(where){
+        var mW = "";
+        if((document.layers) || (document.getElementById('banner').style.minWidth == undefined)) { 
+          var mW = ("<hr size=\"0\" color=\"white\" class=\"" + where + "\">");
+        }
+        return mW  
+      }
+      // -->
+    </script>
+    <script type="text/javascript" src="/static/mochikit/MochiKit.js"></script>
+    {% if user.is_authenticated %}
+    <script type="text/javascript" src="/static/editable.js"></script>
+    <style type="text/css">
+      .editicon { display: block; }
+    </style>
+    {% endif %}    
+    <script type="text/javascript" src="/static/base.js"></script>
+
     <!--[if lt IE 6]>
     <style type="text/css" media="screen">
     /* HR styles need for IE 5/Win and under. */
@@ -22,20 +40,40 @@
   </style>
   </noscript>
   -->
-<div id="banner">
-  <div style="float:right; width:200px">
-    {% if user.is_authenticated %}
-      Välkommen, {{ user.username }} - 
-      <a href="/accounts/logout/">logga ut</a>
-    {% else %}
-      <a href="/accounts/login/">Logga in</a> eller 
-      <a href="/accounts/create/">skapa användare</a> 
-      för att ändra
-    {% endif %}
+  <div id="banner">
+    <h1><a href="/" title="Startsida" accesskey="1">Lagen.nu</a> - din sidflik i rättsinfodjungeln</h1>
+    <ul>
+      <li>
+	{% if user.is_authenticated %}
+	Välkommen, {{ user.username }}
+	<a href="/accounts/logout/">(logga ut)</a>
+	{% else %}
+	<a href="/accounts/login/">Logga in</a> eller 
+	<a href="/accounts/create/">skapa användare</a> 
+	för att ändra
+	{% endif %}
+      </li>
+      <li><a href="/wiki/Om" title="Information om tjänsten och vem som står bakom">Om</a></li>
+      <li><a href="/wiki/Hj%C3%A4lp" title="Hur man använder tjänsten">Hjälp</a></li>
+      <li><a href="/dv/" title="Rättsfallsregister och referat från Domstolsverket">Rättsfall</a></li>
+      <li><a href="/sfs/" title="Lagar och andra författningar från SFS">Författningar</a></li>
+    </ul>
+    <form id="search" method="get" action="http://www.google.com/custom" title="Sök på lagen.nu">
+      <div>
+	<label for="q" title="Sök på lagen.nu">Sök:</label>
+
+	<input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
+	<input type="hidden" name="domains" value="lagen.nu"/>
+	<input type="hidden" name="sitesearch" value="lagen.nu"/>
+	<input type="text" id="q" name="q" accesskey="s" size="30"/>
+      </div>
+    </form>
+    <!--
+	</div>
+	<h1><a href="/">lagen.nu</a> - din sidflik i rättsinfodjungeln</h1>
+    -->
+    <script type="text/javascript">document.write(holdW('holder'))</script>
   </div>
-  <h1><a href="/">lagen.nu</a> - din sidflik i rättsinfodjungeln</h1>
-  <script type="text/javascript">document.write(holdW('holder'))</script>
-</div>
 <!--[if lt IE 6]>
 <div id="holder" style="position: relative; height: 1px;">
 <![endif]-->

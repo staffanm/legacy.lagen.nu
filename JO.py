@@ -25,6 +25,7 @@ import elementtree.ElementTree as ET
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Beslut från JO"
+__moduledir__ = "jo"
 
 class JODownloader(LegalSource.Downloader):
     
@@ -115,8 +116,23 @@ class JOParser(LegalSource.Parser):
 
 
 class JOManager(LegalSource.Manager):
-    def __init__(self,baseDir):
-        self.baseDir = baseDir
+    def ParseAll(self):
+        print "JO: ParseAll not implemented"
+        return
+
+    def IndexAll(self):
+        print "JO: IndexAll not implemented"
+        return
+    
+    def GenerateAll(self):
+        print "JO: GenerateAll not implemented"
+        return
+
+    def RelateAll(self):
+        print "JO: ParseAll not implemented"
+        return
+
+    
     
 
 class TestJOCollection(unittest.TestCase):

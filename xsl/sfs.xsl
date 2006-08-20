@@ -182,7 +182,7 @@
   </xsl:template>
 
   <xsl:template match="chapter">
-    <a name="K{@id}"/>
+    <a name="K{@id}" id="K{@id}"></a>
     <xsl:comment>start:K<xsl:value-of select="@id"/></xsl:comment>
     <xsl:comment>end:K<xsl:value-of select="@id"/></xsl:comment>
     <xsl:apply-templates/>
@@ -191,6 +191,12 @@
 
   <xsl:template match="headline">
     <xsl:variable name="id">R<xsl:value-of select="@id"/></xsl:variable>
+    <img src="/static/comment_edit.png" 
+         id="edit-{$id}"
+         width="16" height="16" 
+	 alt="Kommentera detta stycke" 
+	 title="Kommentera detta stycke" 
+	 class="editicon"/>    
     <xsl:if test="@level = '1'">
       <h1 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h1>
     </xsl:if>
@@ -205,7 +211,7 @@
     <xsl:variable name="id">
       <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../@id"/></xsl:if>P<xsl:value-of select="@id"/>
     </xsl:variable>
-    <a name="{$id}"></a>
+    <a name="{$id}" id="{$id}"></a>
     <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
     <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>    
     <xsl:apply-templates/>
@@ -221,7 +227,14 @@
       </xsl:if>
       <xsl:if test="ancestor::introduction">S<xsl:number/></xsl:if>
       <xsl:if test="ancestor::appendix">B<xsl:number/></xsl:if>
+      <xsl:if test="ancestor::prop">L<xsl:value-of select="../../@id"/>-<xsl:number/></xsl:if>
     </xsl:variable>
+    <img src="/static/comment_edit.png" 
+         id="edit-{$id}"
+         width="16" height="16" 
+	 alt="Kommentera detta stycke" 
+	 title="Kommentera detta stycke" 
+	 class="editicon"/>   
     <!-- <a name="{$id}"/> -->
     <p id="{$id}" class="legaldoc">
     <!-- if this is the first p in a section, bring in the 
@@ -244,6 +257,12 @@
     <xsl:variable name="id">
       <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../../@id"/></xsl:if>P<xsl:value-of select="../../@id"/>S<xsl:value-of select="count(../preceding-sibling::p)"/>N<xsl:number/>
     </xsl:variable>
+    <img src="/static/comment_edit.png" 
+         id="edit-{$id}"
+         width="16" height="16" 
+	 alt="Kommentera detta stycke" 
+	 title="Kommentera detta stycke" 
+	 class="editicon"/>   
     <p id="{$id}" class="legaldoc faux-li">
     <xsl:apply-templates/>
     </p>

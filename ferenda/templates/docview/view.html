@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load mymarkdown %}
 {% block title %}{{ displayid }}{% endblock %}
-{% block pageid %}{{ displayid }}{% endblock %}
+{% block pageid %}L{{ displayid|underscore }}{% endblock %}
 {% block middle %}
 {{document}}
 {% endblock %}
@@ -8,11 +9,11 @@
 <p>references go here</p>
 {% for f in references %}
     <p class="references" id="references-{{ f.fragmentid }}">
-    <b>Fragment '{{f.fragmentid }}'</b><br/>
+    <b>{{f.label }}</b>
     {% for type in f.documenttypes %}
-        <b>{{ type.label }}:<b>
+        <b>{{ type.label }}:</b>
         {% for d in type.documents %}
-            <a href="{{ d.url}}" title="{{ d.longdesc }}">{{ d.title }}{% if d.alternative %}({{ d.alternative }}){% endif %}</a>
+            <a href="/{{ d.displayid|underscore}}" title="{{ d.desc|escape }}">{{ d.displayid }}{% if d.alternative %}({{ d.alternative }}){% endif %}</a>
             {% if not forloop.last %}, {% endif %}
         {% endfor %}
         <br/>        
@@ -21,5 +22,11 @@
 {% endfor %}
 {% endblock %}
 {% block right %}
-{{comments}}
+comments go here
+{% for c in comments %}
+    <p class="comment editable" id="comment-{{c.fragmentid}}">
+    <b>{{c.label}}</b> {{c.body}}
+    </p>
+{% endfor %}
+
 {% endblock %}

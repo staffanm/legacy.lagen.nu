@@ -98,7 +98,8 @@ def savexhr(request,docid,docsection):
     try:
         ad = AnnotatedDoc()
         art.body = ad.Update(art.body,docsection,request.POST["text"])
-        art.last_changed = datetime.now()
+        art.author = request.user
+        art.timestamp = datetime.now()
         art.save()
         
         subject = u'[ferenda] %s/%s ändrad (savexhr)' % (docid,docsection)

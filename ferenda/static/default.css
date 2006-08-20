@@ -1,9 +1,12 @@
 /* styles are listed roughly in the same order they first appear in
    the document */
+
 body {
     background-color: #ffffff;
     font-family: Andale Mono, Courier, monospace;
 }
+
+ 
 #toc {
      display:none;
 }

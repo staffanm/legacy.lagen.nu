@@ -11,11 +11,7 @@ class WikiPattern (markdown.BasePattern):
         if '|' in wikiword:
             wikiword,linktext = wikiword.split('|', 1)
         else:
-            try:
-                d = Document.objects.get(displayid=wikiword.encode('utf-8'))
-                linktext = d.title.decode('utf-8')
-            except Document.DoesNotExist:
-                linktext = wikiword
+            linktext = wikiword
             
         wikiword = wikiword.replace(" ", "_").capitalize()
         a = doc.createElement('a')

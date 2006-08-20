@@ -17,6 +17,9 @@ urlpatterns = patterns(
     (r'^(?P<displayid>\d{4}:\d+)$', 'ferenda.docview.views.view'),
     (r'^(?P<displayid>NJA_\d{4}_s\.?_\d+)$', 'ferenda.docview.views.view'),
     
+    # index pages that list all legal documents of a certain kind
+    (r'^(?P<source>sfs)$', 'ferenda.docview.views.list'),
+    
     # wiki actions
     (r'^edit/(?P<art_title>.*)$', 'ferenda.wiki.views.edit'),
     (r'^save/(?P<art_title>[^/]*)$', 'ferenda.wiki.views.save'),

@@ -23,7 +23,7 @@ import elementtree.ElementTree as ET
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Förarbeten (SOU/Ds/Prop)"
-
+__moduledir__ = "regpubl"
 
 class RegPublDownloader(LegalSource.Downloader):
     
@@ -86,14 +86,26 @@ class RegPublParser(LegalSource.Parser):
 
 class RegPublManager(LegalSource.Manager):
 
-    def download(self,id):
+    def DownloadAll(self,id):
         rd = RegPublDownloader(self.baseDir)
         rd._downloadSingle("http://www.regeringen.se/sb/d/108/a/%s" % id)
         
-    def parseAll(self):
-        downloadDir = self.baseDir + "/regpubl/downloaded"
-        for f in Util.numsort(os.listdir(downloadDir)):
-            pass
+    def ParseAll(self):
+        print "RegPubl: ParseAll not implemented"
+        return
+
+    def IndexAll(self):
+        print "RegPubl: IndexAll not implemented"
+        return
+    
+    def GenerateAll(self):
+        print "RegPubl: GenerateAll not implemented"
+        return
+
+    def RelateAll(self):
+        print "RegPubl: ParseAll not implemented"
+        return
+        
 
 class TestRegPublCollection(unittest.TestCase):
     baseDir = "testdata"

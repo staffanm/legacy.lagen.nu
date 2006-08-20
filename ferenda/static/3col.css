@@ -1,6 +1,6 @@
 /* basic magic for fluid 3 columns*/
 body { position: relative; min-width: 600px; margin-left: 5%; margin-right:5%; padding: 0; }
-#banner { position: absolute; top: 0; left: 0; min-width: 600px; width: 100%; height: 40px; }
+#banner { position: absolute; top: 0; left: 0; min-width: 600px; width: 100%; }
 
 #left { position: absolute; top:100px; left: 0; width: 24%;  margin: 1% 1% 0 0; }
 #middle { position: absolute; top:100px; left:25%; min-width: 360px; width: 50%; margin-top: 1%; }
@@ -29,25 +29,78 @@ html>body hr.left, html>body hr.right, html>body hr.middle, html>body hr.holder 
 body { background: #CCC; }
 div { background: #FFF; }
 #holder { background: transparent; }
-#banner { height: 40px; }
-#left, #middle, #right { top:40px; }
+#banner { height: 50px; }
+#left, #middle, #right { top:80px; }
 #middle { margin-bottom: 2%; }
 
 
 
 /* lagen.nu stuff */
-h1 { font-size: 14pt; padding: 0;}
-h2 { font-size: 12pt; padding: 0;}
+h1 { font-size: 14pt; padding: 0; margin-top: 0;}
+h2 { font-size: 12pt; padding: 0; margin-top: 0;}
 textarea { font: 8pt Optima, Arial, sans-serif; width: 95%; }
-//.legaldoc { border: solid 1px gray; margin: 1px; }
+p { margin-top: 0;}
+/* .legaldoc { border: solid 1px gray; margin: 1px; } */
 .preamble { font-size: 8pt; }
 .sectionid { font-weight: bold; }
 .faux-li { padding-left: 20px; margin: 1px; }
 .comment, .placeholder, .references, .controlpanel { border: solid 1px gray; font: 8pt Optima, Arial, sans-serif; position: relative; margin: 0;}
-.comment { background-color: #FAC; display: none;  }
+.comment { background-color: #FAC; display: none;}
 .placeholder { background-color: #FFF; }
 /*.commentid { display: none;}*/
-.references {background-color: #CCF;} 
+.references {background-color: #CCF; display: none;} 
 .expandicon { position:absolute; bottom:0; right: 0;}
+.editicon { float:right; top:0; right: 0; display: none; } 
+
 .editor { border: solid 3px red; }
+
+
+
+/* banner formatting -- derived from mozilla.org */
+
+	#banner h1 {
+     margin:0;
+     padding:0;
+     }
+	#banner ul {
+     position: absolute;
+     bottom:0;
+     right: 0;
+		width: auto;
+		list-style: none;
+		float: left;
+		display: block;
+                padding: 0;
+		margin: 0;
+		color: #fff;
+		text-decoration: none;
+	}
+	#banner li {
+		display: inline;
+  padding:0;
+		margin: 0;
+		white-space: nowrap;
+		float: right;
+		padding: 0 6px 0 0;
+		margin: 0 1px 0 0;
+		border-bottom: 1px solid #515358;
+                border: solid 1px black;
+		background: #aaa;
+	}
+ 
+	#banner ul li:hover a { background: #ddd; }
+	#banner ul li:hover {background: #ddd; }
+
+
+	#banner form {
+		position: absolute;
+		top: 0;
+		right: 0;
+
+		margin: 0; /* need for IE Mac */
+		text-align: right; /* need for IE Mac */
+		white-space: nowrap; /* for Opera */
+	}
+
+	
 

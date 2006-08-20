@@ -24,27 +24,26 @@ def view(request,displayid):
     ld = get_object_or_404(Document, displayid=displayid)
     mgr = SFSManager('testdata','sfs')
     filename = mgr._htmlFileName(ld.basefile)
-    ad = DocComments.AnnotatedDoc(filename)
-    try:
-        c = Article.objects.get(title=displayid)
-        comments = ad.FormatComments(unicode(c.body, 'utf-8'))
-    except Article.DoesNotExist:
-        comments = ad.FormatComments(u'')
-        
-        
     document = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
     
-    # references = __buildReferences(ld.urn)
-    
     references = mgr._referencesAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
-        
+    comments = mgr._commentsAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
+    
     return render_to_response('docview/view.html', 
                               {'displayid':displayid,
-                               'document':document[62:-8],
+                               'document':document,
                                'references':references,
                                'comments':comments},
                               context_instance=RequestContext(request))
 
+def list(request,source):
+    docs = Document.objects.filter(urn__startswith='urn:x-%s' % source)[:500]
+    return render_to_response('docview/list.html',
+                              {'docs':docs},
+                              context_instance=RequestContext(request))
+                              
+
+# not used anymore
 def __buildReferences(urn):
     """build a big-ass five level deep datastructure to 
     represent all references to this document. a typical path is:

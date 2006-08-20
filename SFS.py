@@ -11,6 +11,7 @@ import types
 import datetime
 import codecs
 from cStringIO import StringIO
+from time import time
 
 # 3rdparty libs
 sys.path.append('3rdparty')
@@ -26,6 +27,8 @@ import Util
 from DispatchMixin import DispatchMixin
 from DocComments import AnnotatedDoc
 from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
+
+# Django stuff
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
 from ferenda.docview.models import *
 
@@ -91,11 +94,11 @@ class SFSParser(LegalSource.Parser):
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
     
     
-    def Parse(self,id,files):
-        self.id = id
-        # self.baseDir = baseDir
-        self.verbose = True
-
+    def Parse(self,basefile,files, verbose=False):
+        self.verbose = verbose
+        if self.verbose:
+            print "I'm verbose!"
+        self.id = FilenameToSFSid(basefile)
         # find out when data was last fetched (use the oldest file)
         timestamp = sys.maxint
         for filelist in files.values():
@@ -134,7 +137,7 @@ class SFSParser(LegalSource.Parser):
         return all_attribs
     
     def __extractLawtext(self, files = [], keepHead=True):
-        print "extractLawtext: %r %r" % (files,keepHead)
+        # print "extractLawtext: %r %r" % (files,keepHead)
         if not files:
             return ""
         soup = self.LoadDoc(files[0])
@@ -144,7 +147,7 @@ class SFSParser(LegalSource.Parser):
                 if (hasattr(el,'name') and el.name == 'hr'):
                     break
                 idx += 1
-            print "idx: %s" % idx
+            # print "idx: %s" % idx
             txt = ''.join([e for e in el.nextGenerator() if isinstance(e,unicode)]).replace('\r\n','\n')
         else:
             if not soup.body('pre'):
@@ -158,7 +161,7 @@ class SFSParser(LegalSource.Parser):
         # a little massage is needed for 1873:26 (and maybe others?) -- it has only three \n between preamble and lawtext, not four
         lawtext = re.sub('\n{3}\n?','\n\n\n\n',lawtext)
         paras = lawtext.split("\n\n")
-        print "%s paragraphs" % len(paras)
+        if self.verbose: print "%s paragraphs" % len(paras)
         index = 0
         self.preamble = []
         self.lawtext = []
@@ -184,13 +187,13 @@ class SFSParser(LegalSource.Parser):
             else:
                 current_part.append(p)
             
-
-        print("_init (%s): preamble: %d, lawtext: %d, transitional: %d, appendix: %d" % (
-            self.id,
-            len(self.preamble),
-            len(self.lawtext),
-            len(self.transitional),
-            len(self.appendix)))
+        if self.verbose:
+            print("_init (%s): preamble: %d, lawtext: %d, transitional: %d, appendix: %d" % (
+                self.id,
+                len(self.preamble),
+                len(self.lawtext),
+                len(self.transitional),
+                len(self.appendix)))
         
 
         # first do the preamble
@@ -232,7 +235,6 @@ class SFSParser(LegalSource.Parser):
 
         self.paras = paras[index+1:]
 
-        # Now parse. adapted from _txt_to_xml() in extract.py
         buf = StringIO()
         self.f = codecs.getwriter('iso-8859-1')(buf)
         self.f.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>")
@@ -274,7 +276,7 @@ class SFSParser(LegalSource.Parser):
             # print "Doing '%s'" % p[0:40].replace("\n", " ")
             # self.verbose = True
             if self.is_chapter(p):
-                print "CHA: %s" % p[0:30].encode('iso-8859-1')
+                if self.verbose: print "CHA: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 # self.close_para()
@@ -292,8 +294,7 @@ class SFSParser(LegalSource.Parser):
                 self.do_ordered_list(p)
 
             elif self.is_tablerow(raw_p):
-                if self.verbose:
-                    print "TAB: %s" % p[0:30].encode('iso-8859-1')
+                if self.verbose: print "TAB: %s" % p[0:30].encode('iso-8859-1')
                 self.close_headlines(True)
                 self.close_ordered_list()
                 
@@ -302,15 +303,14 @@ class SFSParser(LegalSource.Parser):
                 self.do_preformatted(raw_p)
                 
             elif self.is_preformatted(raw_p):
-                # if self.verbose:
-                print "PRE: %s" % p[0:30].encode('iso-8859-1')
+                if self.verbose: print "PRE: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 
                 self.do_preformatted(raw_p)
 
             elif self.is_revoked_section(p):
-                print "REV: %s" % p[0:30].encode('iso-8859-1')
+                if self.verbose: print "REV: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 self.close_introduction()
@@ -318,7 +318,7 @@ class SFSParser(LegalSource.Parser):
                 self.do_revoked_section(p)
                 
             elif self.is_section(p):
-                print "SEC: %s" % p[0:30].encode('iso-8859-1')
+                if self.verbose: print "SEC: %s" % p[0:30].encode('iso-8859-1')
                 self.close_ordered_list()
                 self.close_table()
                 # self.close_para()
@@ -572,7 +572,7 @@ class SFSParser(LegalSource.Parser):
         if section_id == None:
             return False
         if section_id == '1':
-            if self.verbose: print "is_section: The section numbering's restarting"
+            # if self.verbose: print "is_section: The section numbering's restarting"
             return True
         # now, if this sectionid is less than last section id, the
         # section is probably just a reference and not really the
@@ -934,12 +934,12 @@ class SFSManager(LegalSource.Manager):
     # CLASS-SPECIFIC HELPER FUNCTIONS
     ####################################################################
 
-    def __listfiles(self,source,sfsid):
+    def __listfiles(self,source,basename):
         """Given a SFS id, returns the filenames within source dir that
         corresponds to that id. For laws that are broken up in _A and _B
         parts, returns both files"""
-        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,SFSidToFilename(sfsid))
-        print "__listfiles template: %s" % templ
+        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,basename)
+        # print "__listfiles template: %s" % templ
         return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
         
     def __doAll(self,dir,suffix,method):
@@ -953,6 +953,41 @@ class SFSManager(LegalSource.Manager):
             basefiles.add(basefile)
         for basefile in sorted(basefiles):
             method(basefile)
+  
+    def __resolveFragment(self,
+                          element,
+                          context,
+                          restartingSectionNumbering):
+        """Given a link element and the context in which it was found, resolve
+        to a full uri including fragment (eg 'urn:x-sfs:1960:729#K1P2S3N4')"""
+        
+        # fill a copy of the element structure with required context, then 
+        # reuse _createSFSUrn
+        if element is None:
+            e = ET.Element("link")
+        else:
+            import copy
+            e = copy.deepcopy(element)
+
+        if 'law' in e.attrib: # this is an 'absolute' reference, no context needed
+            return self._createSFSUrn(e)
+        e.attrib['law'] = context['sfsid']
+        if restartingSectionNumbering:
+            if 'chapter' not in e.attrib:
+                if context['chapter']:
+                    e.attrib['chapter'] = context['chapter']
+                else:
+                    # due to incorrect parsing, some link elements have no
+                    # chapter data even though they should
+                    raise LegalSource.IdNotFound("No chapter found")
+        if context['section'] and 'section' not in e.attrib:
+            e.attrib['section'] = context['section']
+        if context['piece'] and 'piece' not in e.attrib:
+            e.attrib['piece'] = str(context['piece'])
+        if context['item'] and 'item' not in e.attrib:
+            e.attrib['item'] = str(context['item'])
+        
+        return self._createSFSUrn(e)
         
     ####################################################################
     # OVERRIDES OF Manager METHODS
@@ -962,30 +997,61 @@ class SFSManager(LegalSource.Manager):
         # we don't need the (ElementTree) root -- basename is enough
         return FilenameToSFSid(basefile)
 
-    ####################################################################
+    def _basefileToDisplayId(self,basefile, urnprefix):    
+        assert(urnprefix == u'urn:x-sfs')
+        return FilenameToSFSid(basefile)
+        
+    def _basefileToUrn(self, basefile, urnprefix):        
+        assert(urnprefix == u'urn:x-sfs')
+        return u'urn:x-sfs:%s' % FilenameToSFSid(basefile).replace(' ','_')
+        
+    def _displayIdToBasefile(self,displayid, urnprefix):        
+        assert(urnprefix == u'urn:x-sfs')
+        return SFSidToFilename(displayid)
+        
+    def _displayIdToURN(self,displayid, urnprefix):        
+        assert(urnprefix == u'urn:x-sfs')
+        return u'urn:x-sfs:%s' % displayid.replace(' ','_')
+    
+    def _UrnToBasefile(self,urn):
+        return SFSidToFilename(self._UrnToDisplayId(urn))
+        
+    def _UrnToDisplayId(self,urn):
+        return urn.split(':',2)[-1].replace('_',' ')
+        ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE
     ####################################################################    
 
-    def Parse(self, basefile):
+    def Parse(self, basefile, verbose=False):
+        start = time()
+        if not verbose: sys.stdout.write("\tParse %s" % basefile)
         files = {'sfst':self.__listfiles('sfst',basefile),
                  'sfsr':self.__listfiles('sfsr',basefile)}
-        print("Files: %r" % files)
+        # print("Files: %r" % files)
         p = SFSParser()
-        parsed = p.Parse(basefile, files)
+        parsed = p.Parse(basefile, files, verbose)
         filename = self._xmlFileName(basefile)
         Util.mkdir(os.path.dirname(filename))
-        print "saving as %s" % filename
+        # print "saving as %s" % filename
         out = file(filename, "w")
         out.write(parsed)
         out.close()
         Util.indentXmlFile(filename)
+        if not verbose: sys.stdout.write("\t%s seconds\n" % (time()-start))
 
     def ParseAll(self):
+        # print "SFS: ParseAll temporarily disabled"
+        # return
         self.__doAll('downloaded/sfst','html',self.Parse)
 
     def IndexAll(self):
+        # print "SFS: IndexAll temporarily disabled"
+        # return
+        self.indexroot = ET.Element("documents")
         self.__doAll('parsed', 'xml',self.Index)
-
+        tree = ET.ElementTree(self.indexroot)
+        tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+        
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
@@ -1000,40 +1066,129 @@ class SFSManager(LegalSource.Manager):
                        validate=False)
         #  print "Generating index for %s" % outfile
 
-        
+    def GenerateAll(self):
+        # print "SFS: GenerateAll temporarily disabled"
+        # return
+        self.__doAll('parsed','xml',self.Generate)
 
     def Relate(self,basefile):
+        start = time()
+        sys.stdout.write("Relate %s" % basefile)
         xmlFileName = self._xmlFileName(basefile)
-        print "Creating intrinsic relations for %s" % basefile
-        tree = ET.ElementTree(file=xmlFileName)
-        urn = tree.getroot().get('urn')
-        
+        root = ET.ElementTree(file=xmlFileName).getroot()
+        urn = root.get('urn')
+        displayid = self._findDisplayId(root,basefile)
         # delete all previous relations where this document is the object --
         # maybe that won't be needed if the typical GenerateAll scenario
         # begins with wiping the Relation table? It still is useful 
         # in the normal development scenario, though
-        rels = Relation.objects.filter(object__startswith=urn.encode('utf-8'))
-        
-        
-        for rel in rels:
-            rel.delete()
-            
-        self.createRelation(urn,Predicate.IDENTIFIER,basefile,allowDuplicates=False)
-            
-        for e in tree.getiterator():
-            if e.tag == u'link':
-                # FIXME: magic goes here
-                pass
+        Relation.objects.filter(object__startswith=urn.encode('utf-8')).delete()
+
+        self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
+        title = root.findtext(u'preamble/title') or ''
+        self._createRelation(urn,Predicate.TITLE,title)
+
+        # Find out wheter § numbering is continous for the whole law text
+        # (like URL) or restarts for each chapter:
+        seenSectionOne = False
+        restartingSectionNumbering = False 
+        for e in root.getiterator():
+            if e.tag == u'section' and e.get('id') == '1':
+                if seenSectionOne:
+                    restartingSectionNumbering = True
+                    break
+                else:
+                    seenSectionOne = True
+        # this second call to root.getiterator() could possibly be merged 
+        # with the first one, if I understood how it worked...
+        parent_map = dict((c, p) for p in root.getiterator() for c in p)
+        context = {'sfsid':     displayid,
+                   'changeid':  None, # not really sure it belongs
+                   'chapter':   None,
+                   'section':   None,
+                   'piece':     None,
+                   'item':      None}
+        referenceCount = 0
+        inChangesSection = False
+        for e in root.getiterator():
+            if e.tag == u'chapter':
+                # sys.stdout.write("c")
+                context['chapter'] = e.get('id')
+                context['section'] = None
+                context['piece'] = None
+                context['item'] = None
+            elif e.tag == u'section':
+                # sys.stdout.write("s")
+                context['section'] = e.get('id')
+                context['piece'] = None
+                context['item'] = None
+            elif e.tag == u'p':
+                # sys.stdout.write("p")
+                if context['piece']:
+                    context['piece'] += 1
+                else:
+                    context['piece'] = 1
+                context['item'] = None
+            elif e.tag == u'li':
+                # sys.stdout.write("l")
+                if context['item']:
+                    context['item'] += 1
+                else:
+                    context['item'] = 1
+            elif e.tag == u'changes':
+                # sys.stdout.write("|")
+                inChangesSection = True
+            elif e.tag == u'change':
+                # sys.stdout.write("C")
+                context['changeid'] = e.get('id')
+                context['chapter'] = None                
+                context['section'] = None                
+                context['piece'] = None                
+                context['item'] = None                
+            elif e.tag == u'link':
+                # sys.stdout.write("L")
+                if 'type' in e.attrib and e.get('type') == 'docref':
+                    # sys.stdout.write("-")
+                    pass
+                elif inChangesSection:
+                    # sys.stdout.write("!")
+                    try:
+                        # urn will be on the form "urn:x-sfs:2005:360" -- should
+                        # it be "urn:x-sfs:1960:729#2005:360" instead?
+                        sourceUrn = "urn:x-sfs:%s" % context['changeid']
+                        # the urn to the changed paragraph (or similar)
+                        targetUrn = self.__resolveFragment(e, context,restartingSectionNumbering)
+                                               
+                        # i'd really like a MODIFIES predicate, but no such thing in DCMI
+                        self._createRelation(sourceUrn,Predicate.REFERENCES,targetUrn)
+                        self._createReference(basefile,targetUrn,sourceUrn,u'Ändringar', context['changeid'])
+                        referenceCount += 1
+                    except LegalSource.IdNotFound:
+                        # sys.stdout.write("?")
+                        pass
+                else:
+                    # this code, which creates reference entries for every
+                    # reference in the lawtext, is disabled for now (there are
+                    # 100's or 1000's of such references in a typical law)
+                    #try:
+                    #    sourceUrn = self.__resolveFragment(None,context,restartingSectionNumbering)
+                    #    targetUrn = self.__resolveFragment(e,context,restartingSectionNumbering)
+                    #    self._createRelation(sourceUrn,Predicate.REFERENCES,targetUrn)
+                    #    # we need to use LegalSource.__formatFragmentId to get a good displayid here
+                    #    self._createReference(basefile,targetUrn,sourceUrn,u'Hänvisningar', 'source')
+                    #    referenceCount += 1
+                    #except LegalSource.IdNotFound:
+                    #    pass
+                    # sys.stdout.write(".")
+                    pass
+        sys.stdout.write("\tcreated %s references\tin %s seconds\n" % (referenceCount,(time()-start)))
+        self._flushReferenceCache()
     
-    def RelateAll(self):            
+    def RelateAll(self):
+        # print "SFS: RelateAll temporarily disabled"
+        # return
         self.__doAll('parsed','xml',self.Relate)
         
-    def GenerateAll(self):
-        self.__doAll('parsed','xml',self.Generate)
-    
-
-    
-
 
 if __name__ == "__main__":
     if not '__file__' in dir():

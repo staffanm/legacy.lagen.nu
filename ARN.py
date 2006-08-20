@@ -26,6 +26,7 @@ import elementtree.ElementTree as ET
 __version__ = (0,1)
 __author__ = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Referat från ARN"
+__moduledir__ = "arn"
 
 class ARNDownloader(LegalSource.Downloader):
     
@@ -120,8 +121,25 @@ class ARNParser(LegalSource.Parser):
         tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
 
 class ARNManager(LegalSource.Manager):
-    def __init__(self,baseDir):
-        self.baseDir = baseDir
+    def DownloadAll(self,id):
+        print "ARN: DownloadAll not implemented"
+        
+    def ParseAll(self):
+        print "ARN: ParseAll not implemented"
+        return
+
+    def IndexAll(self):
+        print "ARN: IndexAll not implemented"
+        return
+    
+    def GenerateAll(self):
+        print "ARN: GenerateAll not implemented"
+        return
+
+    def RelateAll(self):
+        print "ARN: ParseAll not implemented"
+        return
+        
 
 class TestARNCollection(unittest.TestCase):
     baseDir = "testdata"

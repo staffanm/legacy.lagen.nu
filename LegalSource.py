@@ -15,10 +15,11 @@ sys.path.append("3rdparty")
 import BeautifulSoup
 
 import Util
-from Util import memoize
+
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
 from ferenda.docview.models import *
+from ferenda.wiki.models import Article
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -137,14 +138,24 @@ class Manager:
         # print "LegalSource.py/Manager: self.baseDir set to " + self.baseDir
 
     def __del__(self):
-        print "Flushing reference cache: %s items" % len(self.referenceCache)
-        for (file,data) in self.referenceCache.items():
-            self.__serializeReferences(file,data)
-            
-        self.referenceCache = {}
+        if hasattr(self,'referenceCache') and self.referenceCache:
+            print "__del__: flushing cache(s)"
+            self._flushReferenceCache()
+        
     ####################################################################
     # MISC HELPER FUNCTIONS (overridable by subclasses)
+    # 
+    # some of these will never be overridden by subclasses, but
+    # needs to be calleable from outside, hence the single _ in the name.
     ####################################################################
+
+    def _flushReferenceCache(self):
+        # print "Flushing reference cache: %s items" % len(self.referenceCache)
+        if hasattr(self,'referenceCache'):
+            for (file,data) in self.referenceCache.items():
+                self.__serializeReferences(file,data)
+            self.referenceCache = {}
+
     
     def _htmlFileName(self,basefile):
         # will typically never be overridden
@@ -175,8 +186,68 @@ class Manager:
             fragment = u''
         return (base,fragment)
 
+    def _createSFSUrn(self,el):
+        """Given a ElementTree element representing a Swedish law reference
+        (eg <link law="1960:729" section="49" piece="2">49 § 2 st.
+        Upphovsrättslagen</link>), returns a URN representing that location
+        (eg urn:x-sfs:1960:729#P49S2)"""
+        # This needs to be called from both DV.py and SFS.py (and maybe more?)
+        
+        # this is slower than just deducing the urn from the sfsid attribute, but 
+        # this way we catch invalid references (pointing to SFS ids which doesn't exists) 
+        urn  = self._displayIdToURN(el.attrib['law'],u'urn:x-sfs')
+
+        # special case for those links that only inform when a 
+        # paragraph was last changed
+        if 'lawref' in el.attrib:
+            return u'urn:x-sfs:%s' % (el.attrib['lawref'])
+        
+        frag = u'#'
+        if 'chapter' in el.attrib:
+            frag += u'K' + el.attrib['chapter']
+        if 'section' in el.attrib:
+            frag += u'P' + el.attrib['section']
+        if 'piece' in el.attrib:
+            frag += u'S' + el.attrib['piece']
+        if 'item' in el.attrib:
+            frag += u'N' + el.attrib['item']
+        if frag == u'#':
+            return urn
+        else:
+            return urn + frag
+
+    def _commentsAsArray(self,basefile):
+        displayid = self._basefileToDisplayId(basefile,u'urn:x-'+self.moduleDir)
+        htmlFileName = self._htmlFileName(basefile)
+        order = self._buildIndex(htmlFileName)
+        
+        try:
+            article = Article.objects.get(pk=displayid)
+        except Article.DoesNotExist:
+            return []
+        comments = self.__parseComments(article.body)
+        res = []
+        for frag in order:
+            if frag in comments:
+                res.append({'fragmentid':frag,
+                            'label':self.__formatFragmentId(frag),
+                            'body':comments[frag]})
+                del comments[frag]
+                
+        # leftovers (like when the comment points to a paragraph which has
+        # been removed -- hopefully rare
+        for frag in comments.keys():
+            if frag in comments:
+                print "_referencesAsArray: leftover fragment %s" % frag                
+                # res.append({'fragmentid':frag,
+                #            'label':self.__formatFragmentId(i),
+                #            'body':b})
+        return res
+        
+
     def _createRelation(self,urn,predicate,subject,intrinsic=True, comment="",allowDuplicates=True):
         """Creates a single relation"""
+        return # disable until we can get it running at a descent speed
         (objectUri, objectFragment) = self._splitUrn(urn)
         # maybe we should just pregenerate the whole of self.predicateCache just like 
         # we do for sell.predicateCache[Predicate.IDENTIFIER]
@@ -228,15 +299,24 @@ class Manager:
 
 
     def _referencesAsArray(self,basefile):
-        # FIXME: it's all fun and well with dicts of dicts of lists, but
+        # FIXME: it's all fun and well with lists of dicts of lists of dicts, but
         # somewhere around the third nesting level we really should consider a
         # more robust API
+        def __documents(docs):
+            res = []
+            # print type(docs)
+            for d in docs:
+                res.append({'displayid':d['displayid'],
+                            'desc':d['desc'],
+                            'alternative':d['alternative']})
+            return res
         
         def __documenttypes(doctypes):
             res = []
             for t in doctypes.keys():
+                # print "frag: %s" % t
                 res.append({'label':t,
-                            'documents':doctypes[t]})
+                            'documents':__documents(doctypes[t])})
             return res
                 
         refFileName = self._refFileName(basefile)
@@ -246,24 +326,24 @@ class Manager:
         refs = self.__deserializeReferences(refFileName)
         res = []
         for frag in order:
-            del refs[frag]['index']
-            if refs[frag]:
+            if frag in refs:
                 res.append({'fragmentid': frag,
+                            'label':self.__formatFragmentId(frag),
                             'documenttypes': __documenttypes(refs[frag])})
-            del refs[frag]
+                del refs[frag]
         
         # leftovers (like when the reference points to K5P49 when the 'real'
         # fragment is P49) -- hopefully rare
         for frag in refs.keys():
-            res.append({'fragmentid':frag,
-                        'documenttypes':__documenttypes(refs[frag])})
+            print "_referencesAsArray: leftover fragment %s" % frag
+            # res.append({'fragmentid':frag,
+            #            'documenttypes':__documenttypes(refs[frag])})
         return res     
                        
                        
             
 
-    def _createReference(self,basefile,targetUrn, sourceUrn, refLabel, displayid, alternative, desc):
-        # FIXME: rewrite this to use ElementTree and see if it's faster
+    def _createReference(self,basefile,targetUrn, sourceUrn, refLabel, displayid, alternative=None, desc=None):
         """Creates a reference to a (part of a) document in this legal source
         from a (part of a) document in this, or any other, legal source.
         
@@ -275,13 +355,14 @@ class Manager:
         alternative: an alternative label for the reference source
         desc: a description of the reference source
         """
+        # print "Creating reference from %s to %s" % (sourceUrn, targetUrn)
         # extract 'sfs' from 'urn:x-sfs:1960:729'
         targetModuleDir = targetUrn.split(":")[1]
         if targetModuleDir.startswith("x-"):
             targetModuleDir = targetModuleDir[2:]
         
         refFile = self._refFileName(basefile,targetModuleDir)
-        assert(os.path.exists(refFile))
+        # assert(os.path.exists(refFile))
         (sourceUrn, sourceFragment) = self._splitUrn(sourceUrn)
         (targetUrn, targetFragment) = self._splitUrn(targetUrn)
         if not targetFragment: targetFragment =  "top"
@@ -290,41 +371,33 @@ class Manager:
                'displayid':displayid,
                'alternative':alternative,
                'desc':desc}
+
+        if refFile not in self.referenceCache:
+            if os.path.exists(refFile):
+                refs = self.__deserializeReferences(refFile)
+            else:
+                refs = {}
+        else:
+            refs = self.referenceCache[refFile]
+            
+        if targetFragment not in refs:
+            refs[targetFragment] = {}
+        if refLabel not in refs[targetFragment]:
+            refs[targetFragment][refLabel] = []
         # FIXME: it would be good if we find any other ref, with the same
         # sourceUrn/sourceFragment, to replace that ref with this new one
         # (theoretically there can be two references from the same two
         # {target,source}{Urn,Fragment} pairs, but hardly meaningful in
         # practice)
-        if refFile not in self.referenceCache:
-            print "_createReference: %s: Cache miss" % refFile
-            refs = self.__deserializeReferences(refFile)
-        else:
-            print "_createReference: %s: Cache hit" % refFile
-            refs = self.referenceCache[refFile]
-            
-        if targetFragment not in refs:
-            print "WARNING: %s not in list of fragments in %s" % (targetFragment,refFile)
-            refs[targetFragment] = {'index':-1}
-        assert(targetFragment in refs) # this will probably backfire quick
-        if refLabel not in refs[targetFragment]:
-            refs[targetFragment][refLabel] = []
-        refs[targetFragment][refLabel].append(ref)
+        if ref not in refs[targetFragment][refLabel]: # avoid pure duplicates
+            refs[targetFragment][refLabel].append(ref)
         
         self.referenceCache[refFile] = refs
 
-    def _initReferences(self, basefile):
-        # FIXME: implement this using cElementTree and see if it's faster
-        # FIXME: try to not wipe out existing data
-        refFile = self._refFileName(basefile)
-        indexes  = self._buildIndex(basefile)
-        
-        idx = 0 # we're using 'index' and 'idx' for two completely different
-                # things -- not that smart
-        refs = {}
-        for i in indexes:
-            refs[i] = {'index':idx}
-            idx += 1
-        self.referenceCache[refFile] = refs
+    #def _initReferences(self, basefile):
+        #refFile = self._refFileName(basefile)
+        #refs = {}
+        #self.referenceCache[refFile] = refs
 
     def _buildIndex(self, htmlFileName):
         """returns an array of adressable positions in this legal document.
@@ -355,32 +428,28 @@ class Manager:
     # the following six lookup methods can be overridden (and should, if the
     # inheriting class has a predictable relations between
     # basefile/displayid/urn, like SFSManager has)
-    # @memoize
     def _basefileToDisplayId(self,basefile, urnprefix):
-        return self.__fetchDocumentID(basefile=basefile.encode('utf-8'),
+        return self.__fetchDocumentIDs(basefile=basefile.encode('utf-8'),
                                 urnprefix=urnprefix.encode('utf-8')).displayid.decode('utf-8')
     
-    # @memoize
+    
     def _basefileToUrn(self, basefile, urnprefix):
-        return self.__fetchDocumentID(basefile=basefile.encode('utf-8'),
+        return self.__fetchDocumentIDs(basefile=basefile.encode('utf-8'),
                                urnprefix=urnprefix.encode('utf-8')).urn.decode('utf-8')
        
-    # @memoize
+    
     def _displayIdToBasefile(self,displayid, urnprefix):
         return self.__fetchDocumentIDs(displayid=displayid.encode('utf-8'),
                                 urnprefix=urnprefix.encode('utf-8')).basefile.decode('utf-8')
-        
-    # @memoize
+    
     def _displayIdToURN(self,displayid, urnprefix):
         return self.__fetchDocumentIDs(displayid=displayid.encode('utf-8'),
                                 urnprefix=urnprefix.encode('utf-8')).urn.decode('utf-8')
     
-    # @memoize
     def _UrnToBasefile(self,urn):
         (urn,fragment) = self._splitUrn(urn)
         return self.__fetchDocumentIDs(urn=urn.encode('utf-8')).basefile.decode('utf-8')
         
-    # @memoize
     def _UrnToDisplayId(self,urn):
         (urn,fragment) = self._splitUrn(urn)
         return self.__fetchDocumentIDs(urn=urn.encode('utf-8')).displayid.decode('utf-8')
@@ -428,7 +497,67 @@ class Manager:
         fp.close()            
 
     def __deserializeReferences(self,filename):
-        return cPickle.load(file(filename))
+        if os.path.exists(filename):
+            return cPickle.load(file(filename))
+        else:
+            return {}
+
+
+    re_ChapterSection = re.compile(r'K(\d+\w?)P(\d+w?)S(\d+)N(\d+)')
+    re_Headline = re.compile(r'R(\d+w?)')
+    re_Paragraph = re.compile(r'S(\d+)')
+    
+    re_SFSCommentID = re.compile(r'(K(?P<chapter>\d+[a-z]?)|)(P(?P<section>\d+[a-z]?)|)(S(?P<paragraph>\d+[a-z]?)|)(N(?P<item>\d+[a-z]?)|)')
+
+    def __formatFragmentId(self,fragmentid):
+        """Formats a given fragment ID (eg K2P4) to a humanreadable format (2 kap. 4 §)"""
+        # this will always match, but possibly with a emptystring
+        m = self.re_SFSCommentID.match(fragmentid)
+        if m.group(0) != '':
+            res = ""
+            if m.group('chapter'):
+                res = res + u"%s kap. " % m.group('chapter')
+            if m.group('section'):
+                res = res + u"%s § " % m.group('section')
+            if m.group('paragraph'):
+                res = res + u"%s st. " % m.group('paragraph')
+            if m.group('item'):
+                res = res + u"%s p. " % m.group('item')
+            return res.strip()
+        
+        m = self.re_Headline.match(fragmentid)
+        if m:
+            return u"Rub. %s" % (m.group(1))
+
+        m = self.re_Paragraph.match(fragmentid)
+        if m:
+            return u"%s st." % (m.group(1))
+    
+        return fragmentid
+
+    def __parseComments(self, comments):
+        # FIXME: the use of Util.normalizeSpace might not be a good idea if
+        # we want to do real wiki formatting of text
+        inSection = False
+        sectionid = None
+        sectioncomment = None
+        sections = {}
+        for line in comments.splitlines():
+            if inSection == False and ":" in line:
+                if sectionid: # add the previous section
+                    sections[sectionid] = sectioncomment
+                sectionid, sectioncomment = line.split(":",1)
+                # print "%r->%r" % (sectionid,sectioncomment)
+            elif line.strip() == "":
+                inSection = False
+            else:
+                inSection = True
+                sectioncomment = sectioncomment + "\n"
+        if sectioncomment:
+            sections[sectionid] = Util.normalizeSpace(sectioncomment)
+
+        # pprint.pprint(sections)    
+        return sections
 
     ####################################################################
     # Manager INTERFACE DEFINITION
@@ -500,7 +629,17 @@ class Manager:
                                                      displayid = displayid.encode('utf-8'),
                                                      basefile = basefile.encode('utf-8'))
 
-        self._initReferences(basefile)
+
+        try:
+            # build paralell index structure in the form of an xml file
+            docElement = ET.SubElement(self.indexroot, "document")
+            docElement.set('id', str(d.id))
+            docElement.set('urn',urn)
+            docElement.set('displayid',displayid)
+            docElement.set('basefile',basefile)
+        except AttributeError:
+            pass # probably b/c self.indexroot doesn't exist
+            
         sys.stdout.write(" %s sec\n" % (time() - start))
     
     def Test(self,testname = None):
@@ -521,6 +660,13 @@ class Manager:
         s = hotshot.stats.load("%s.prof" % testname)
         s.strip_dirs().sort_stats("time").print_stats()
 
+    def ProfileRelate(self,basefile):
+        """Run Relate for a given basefile and profile it"""
+        import hotshot, hotshot.stats
+        prof = hotshot.Profile("%s.prof" % basefile.replace('/','_'))
+        prof.runcall(self.Relate, basefile)
+        s = hotshot.stats.load("%s.prof" % basefile.replace('/','_'))
+        s.strip_dirs().sort_stats("time").print_stats()
 
 
 class DownloadedResource:
