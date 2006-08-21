@@ -109,6 +109,8 @@ class Manager:
     def RelateAll(self,module):
         self._doAction('RelateAll',module)
 
+    def Publish(self, module):
+        self._doAction('Publish',module)
     
     def DoAll(self,module):
         start = time()

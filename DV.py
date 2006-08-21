@@ -318,7 +318,8 @@ class DVManager(LegalSource.Manager):
 
         return displayid
     
-    
+    def _getModuleDir(self):
+        return __moduledir__
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE  
     ####################################################################

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load mymarkdown %}
+{% block title %}{{ displayid }}{% endblock %}
+{% block pageid %}{{ displayid }}{% endblock %}
+
+{% block middle %}
+<ul>
+{% for doc in docs %}
+<li>doc: <a href="/{{doc.displayid|underscore}}">{{doc.displayid}}</a></li>
+{% endfor %}
+</ul>
+{% endblock %}
+
+{% block left %}
+<p>something here</p>
+{% endblock %}
+
+{% block right %}
+<p>something else here</p>
+{% endblock %}

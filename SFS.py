@@ -1018,6 +1018,9 @@ class SFSManager(LegalSource.Manager):
         
     def _UrnToDisplayId(self,urn):
         return urn.split(':',2)[-1].replace('_',' ')
+        
+    def _getModuleDir(self):
+        return __moduledir__
         ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE
     ####################################################################    
