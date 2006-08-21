@@ -23,10 +23,10 @@ except ImportError:
     
 # my own libraries
 import LegalSource
-import Util
-from DispatchMixin import DispatchMixin
-from DocComments import AnnotatedDoc
-from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
+# import Util
+# from DispatchMixin import DispatchMixin
+# from DocComments import AnnotatedDoc
+# from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
 # Django stuff
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
@@ -1193,14 +1193,13 @@ class SFSManager(LegalSource.Manager):
         self.__doAll('parsed','xml',self.Relate)
         
 
-if __name__ == "__main__":
-    if not '__file__' in dir():
-        print "probably running from within emacs"
-        sys.argv = ['SFS.py','Parse', '1960:729']
+#if __name__ == "__main__":
+    #if not '__file__' in dir():
+    #    print "probably running from within emacs"
+    #    sys.argv = ['SFS.py','Parse', '1960:729']
     
-    SFSManager.__bases__ += (DispatchMixin,)
-    mgr = SFSManager("testdata",__moduledir__)
-    # print "argv: %r" % sys.argv   
-    mgr.Dispatch(sys.argv)
+    #SFSManager.__bases__ += (DispatchMixin,)
+    #mgr = SFSManager("testdata",__moduledir__)
+    # mgr.Dispatch(sys.argv)
 
 

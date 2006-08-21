@@ -89,3 +89,5 @@ INSTALLED_APPS = (
 EMAIL_HOST = "smtp.tomtebo.org"
 SERVER_EMAIL = "nobody@lagen.nu"
 EMAIL_SUBJECT_PREFIX = "Auto Generated Message: "
+
+BASE_DIR = "/Library/WebServer/Documents/ferenda.lagen.nu/testdata"

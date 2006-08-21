@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
+from django.conf import settings
 
 from ferenda.docview.models import Document, Relation, Predicate
 from ferenda.wiki.models import Article
@@ -22,7 +23,7 @@ identifierPredicate = Predicate.objects.get(uri=Predicate.IDENTIFIER)
 def view(request,displayid):
     displayid = unicode(displayid,'utf-8').replace('_',' ')
     ld = get_object_or_404(Document, displayid=displayid)
-    mgr = SFSManager('testdata','sfs')
+    mgr = SFSManager(settings.BASE_DIR,'sfs')
     filename = mgr._htmlFileName(ld.basefile)
     document = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
     

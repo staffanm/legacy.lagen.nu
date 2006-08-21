@@ -1,10 +1,16 @@
 from django.conf.urls.defaults import *
-
+import os
+STATIC_ROOT = '/Library/WebServer/Documents/ferenda.lagen.nu/ferenda/static'
+if os.path.exists(STATIC_ROOT):
+    document_root = STATIC_ROOT
+else:
+    document_root = 'ferenda/static'
+    
 urlpatterns = patterns(
     '',
     
     # (r'^static/(.*)$', 'django.views.static.serve', {'document_root': '/Library/WebServer/Documents/ferenda.lagen.nu/ferenda/static'}),
-    (r'^static/(.*)$', 'django.views.static.serve', {'document_root': 'ferenda/static'}),
+    (r'^static/(.*)$', 'django.views.static.serve', {'document_root': document_root}),
     
     (r'^admin/', include('django.contrib.admin.urls')),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', 

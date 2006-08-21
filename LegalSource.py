@@ -238,7 +238,7 @@ class Manager:
         # been removed -- hopefully rare
         for frag in comments.keys():
             if frag in comments:
-                print "_referencesAsArray: leftover fragment %s" % frag                
+                print "_commentsAsArray: leftover fragment %s" % frag                
                 # res.append({'fragmentid':frag,
                 #            'label':self.__formatFragmentId(i),
                 #            'body':b})
@@ -325,7 +325,15 @@ class Manager:
         order = self._buildIndex(htmlFileName)
         refs = self.__deserializeReferences(refFileName)
         res = []
+        #for frag in refs.keys():
+        #    res.append({'fragmentid':frag,
+        #                'label':self.__formatFragmentId(frag),
+        #                'documenttypes':[]})
+
         for frag in order:
+        #    res.append({'fragmentid':frag,
+        #                'label':self.__formatFragmentId(frag),
+        #                'documenttypes':[]})
             if frag in refs:
                 res.append({'fragmentid': frag,
                             'label':self.__formatFragmentId(frag),
