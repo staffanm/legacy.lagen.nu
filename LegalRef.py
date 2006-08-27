@@ -65,13 +65,13 @@ class SFSRefParser:
     # the first file contains all numbered laws that
     # find-named-laws.sh can find. It contains several ID's for the
     # same law and is generally messy.
-    for line in open('named-law-references.txt').read().splitlines():
+    for line in open(os.path.dirname(__file__)+'/named-law-references.txt').read().splitlines():
         m = re.match(r'([^ ]+) \((\d+:\d+)\)',line)
         global_namedlaws[m.group(1)] = m.group(2)
     # the second file contains laws that are never numbered --
     # "balkarna" -- and other hand-fixed laws. It takes predecense
     # over the first file.
-    for line in open('namedlaws.txt').read().splitlines():
+    for line in open(os.path.dirname(__file__)+'/namedlaws.txt').read().splitlines():
         fields = re.split("\t+", line)
         assert(2 <= len(fields) <= 3)
         name = fields[0]
@@ -85,7 +85,7 @@ class SFSRefParser:
                 # print "mapping %s to %s" % (abbr,id)
                 global_lawabbr[abbr] = id
                 
-    decl = open('law.def').read()
+    decl = open(os.path.dirname(__file__)+'/law.def').read()
     decl += "LawAbbreviation ::= ('%s')" % "'/'".join(global_lawabbr.keys())
     
     parser = generator.buildParser(decl).parserbyname('root')
@@ -665,7 +665,7 @@ class PreparatoryRefParser(SFSRefParser):
     """Subclass of SFSRefParser, but handles things like references to
     preparatory works, like propositions etc"""
     attributeorder = ['type','doctype','docid']
-    decl = open('law.def').read()
+    decl = open(os.path.dirname(__file__)+'/law.def').read()
     decl += "LawAbbreviation ::= 'blahonga'" # How to define a production that matches nothing?
     parser = generator.buildParser(decl).parserbyname('extroot')
     pp = pprint.PrettyPrinter(indent=4)

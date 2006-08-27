@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Inloggning{% endblock %}
+{% block content %}
+<div class="main">
+    <div class="centercol">
+    {% if form.has_errors %}
+    <p>Något gick fel.</p>
+    {% endif %}
+    <p>Skapa användare</p>
+    <p>
+      OBS: Genom att skapa en användare förbinder du dig att licensiera dina bidrag under <i>både</i> <a href="http://www.gnu.org/copyleft/fdl.html">GNU Free Documentation License</a> och Creative Commons-licensen <a href="http://creativecommons.org/licenses/by-sa/2.5/se/">Erkännande-DelaLika 2.5 Sverige</a>.
+    </p>
+    <form method="post" action=".">
+    <table>
+    <tr><td>Användarnamn</td><td><input type="text" name="username"/></td></tr>
+    <tr><td>Email</td><td><input type="text" name="email"/></td></tr>
+    <tr><td>Lösenord</td><td><input type="password" name="password"/></td></tr>
+    </table>
+
+    <input type="submit" value="Skapa användare" />
+    </form>
+    </div>
+</div>
+{% endblock %}

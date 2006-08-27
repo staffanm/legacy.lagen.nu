@@ -166,7 +166,10 @@ class AnnotatedDoc:
         f.close()
         
     def __loadIndex(self, indexfname):
-        return pickle.load(file(indexfname))
+        res = []
+        for i in pickle.load(file(indexfname)):
+            res.append([i[0],i[1],i[2].strip()])
+        return res
 
     def __weave(self, htmlfname,indexes=(),comments={},references={}):
         """'Weave' together the HTML document with the comments"""
@@ -321,4 +324,5 @@ class AnnotatedDoc:
 #         # prep(sys.argv[1])
 #         # generate(sys.argv[1])
 #         # weaveXML(sys.argv[1], None)
+
 

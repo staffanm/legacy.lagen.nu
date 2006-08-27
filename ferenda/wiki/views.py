@@ -6,8 +6,10 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
-from django.template import RequestContext
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate,login
+
+from django.template import RequestContext
 
 from ferenda.wiki.models import Article
 from ferenda.docview.models import Relation, Predicate
@@ -56,9 +58,20 @@ def article(request,art_title="Huvudsida"):
 def createuser(request):
     if request.method == "POST":
         u = User.objects.create_user(request.POST['username'],request.POST['email'],request.POST['password'])
-        return HttpResponseRedirect('/accounts/login/')
+        subject = u'[ferenda] Ny användare %s' % u.username
+        message = u'Användare %s (%s) har skapats' % (u.username,u.email)
+        send_mail(subject=subject.encode('utf-8'),
+                  message=message.encode('utf-8'),
+                  from_email='ferenda@lagen.nu',
+                  recipient_list=['staffan@tomtebo.org'],
+                  fail_silently=False)
+        user = authenticate(username=request.POST['username'],
+                            password=request.POST['password'])
+        login(request,user)
+        return HttpResponseRedirect('/')
     else:
         return render_to_response('registration/create.html')
+    
     
 def showprofile(request):
     return HttpResponseRedirect('/')
@@ -90,7 +103,8 @@ def save(request,art_title):
     art.save()
     
     subject = u'[ferenda] %s ändrad (save)' % art_title.decode('utf-8')
-    message = u'Ny text:\n\n%s' % request.POST["text"].decode('utf-8')
+    
+    message = u'Ändrat av: %s\nNy text:\n\n%s' % (request.user.username,request.POST["text"].decode('utf-8'))
     
     send_mail(subject=subject.encode('utf-8'),
               message=message.encode('utf-8'),
@@ -118,7 +132,7 @@ def savexhr(request,docid,docsection):
         art.save()
         
         subject = u'[ferenda] %s/%s ändrad (savexhr)' % (docid,docsection)
-        message = u'Ny text:\n\n%s' % unicode(request.POST["text"],'utf-8')
+        message = u'Ändrat av: %s\nNy text:\n\n%s' % (request.user.username,unicode(request.POST["text"],'utf-8'))
 
         send_mail(subject=subject.encode('utf-8'),
                   message=message.encode('utf-8'),

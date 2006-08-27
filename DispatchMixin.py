@@ -11,7 +11,7 @@ class DispatchMixin:
 Note that your class cannot have a method called `dispatch`.
     """
 
-    def Dispatch(self,argv=sys.argv):
+    def Dispatch(self):
         if len(argv) < 2:
             print "No command argument given"
             self.__printValidCommands()

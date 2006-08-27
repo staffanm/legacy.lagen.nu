@@ -43,9 +43,18 @@ EditableBox = {
     log("edit: commentid is", commentid);
     
     dim = getElementDimensions(boxElement);
+    //boxElement.origWidth = dim.w;
+    //boxElement.origHeight = dim.h;
+    if (!boxElement.collapsedHeight) {
+        boxElement.collapsedHeight = dim.h;
+    }
     if (dim.h < 120) {
       dim.h = 120;
-      dim.w = boxElement.parentNode.clientWidth;
+      if (boxElement.parentNode.clientWidth > 0) {
+      	 dim.w = boxElement.parentNode.clientWidth;
+      } else {
+      	dim.w = 185; // IE workaround
+      }
       setElementDimensions(boxElement,dim);
       boxElement.style.zIndex=1;
     }

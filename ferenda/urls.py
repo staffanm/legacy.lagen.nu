@@ -9,7 +9,7 @@ else:
 urlpatterns = patterns(
     '',
     (r'^static/(.*)$', 'django.views.static.serve', {'document_root': document_root}),
-    (r'^robots.txt$', 'django.views.static.serve', {'document_root': document_root}),    
+    (r'^(robots.txt)$', 'django.views.static.serve', {'document_root': document_root}),    
     (r'^admin/', include('django.contrib.admin.urls')),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', 
      {'template_name':'registration/login.html'}),

@@ -14,11 +14,7 @@ from ferenda.docview.models import Document, Relation, Predicate
 from ferenda.wiki.models import Article
 import sys, codecs, re
 sys.path.append("..")
-<<<<<<< .mine
-sys.path.append(".")
-=======
 
->>>>>>> .r52
 import DocComments
 from SFS import SFSManager
 from DV import DVManager
