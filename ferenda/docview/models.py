@@ -30,10 +30,10 @@ class Relation(models.Model):
     # we won't need Document for much longer...
     object = models.CharField(maxlength=100, db_index=True)
     objectFragment = models.CharField(maxlength=100)
-    predicate = models.ForeignKey(Predicate)
+    predicate = models.ForeignKey(Predicate, db_index=True)
     subject = models.ForeignKey('self', null=True, related_name='relations_set',db_index=True)
     subjectFragment = models.CharField(maxlength=100)
-    subjectLiteral = models.CharField(maxlength=3000) # the longest verdict summary is 2096 characters utf-8 encoded...
+    subjectLiteral = models.CharField(maxlength=3000, db_index=True) # the longest verdict summary is 2096 characters utf-8 encoded...
     intrinsic = models.BooleanField() # if false, this was manually added
     comment = models.CharField(maxlength=255)
     class Admin:
@@ -44,8 +44,7 @@ class Relation(models.Model):
             return "<%s#%s> <%s> <%s#%s>." % (self.object,self.objectFragment,self.predicate,self.subject.object,self.subject.objectFragment)
         else:
             return "<%s#%s> <%s> \"%s\"." % (self.object,self.objectFragment,self.predicate,self.subjectLiteral)
-        
-
+    
 # Only the Relation table is strictly neccesary -- the following tables are support tables to make certain lookups faster
 
 class Document(models.Model):

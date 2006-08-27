@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
+from django.contrib.auth.models import User
 
 from ferenda.wiki.models import Article
 from ferenda.docview.models import Relation, Predicate
@@ -41,13 +42,27 @@ def article(request,art_title="Huvudsida"):
         art.body = u'(det finns ingen artikeltext här än)'
         # return HttpResponseRedirect('/edit/%s' % art_title.encode('utf-8'))
     # now here we find out all IntrinsicRelations that has this keyword for subject
+    # this query gives a better resultset
+    # select d.urn, d.displayid, left(r2.subjectLiteral,40) from docview_relation r, docview_relation r2, docview_document d where r.object = d.urn and r.object = r2.object and r2.predicate_id = 1 and r.subjectLiteral = 'Skadestånd';
 
-    relations = Relation.objects.filter(subject__exact=art.title)
+    relations = Relation.objects.filter(subjectLiteral__exact=art.title)
+    
+    
     return render_to_response('wiki/display.html', 
                               {'article':art,
                                'relations':relations},
                               context_instance=RequestContext(request))
-        
+
+def createuser(request):
+    if request.method == "POST":
+        u = User.objects.create_user(request.POST['username'],request.POST['email'],request.POST['password'])
+        return HttpResponseRedirect('/accounts/login/')
+    else:
+        return render_to_response('registration/create.html')
+    
+def showprofile(request):
+    return HttpResponseRedirect('/')
+
 @login_required    
 def edit(request,art_title):
     try:

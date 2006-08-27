@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 """Base classes for Downloaders and Parsers. Also utility classes (should be moved?)"""
 import sys, os, re, codecs, types
-import cPickle
+import pickle
 from time import time
 try:
     import cElementTree as ET
@@ -176,14 +176,14 @@ class Manager:
         """Returns the full path to the file containing references to this legal document"""
         if not moduleDir:
             moduleDir = self.moduleDir
-        return "%s/%s/references/%s.dat" % (self.baseDir, moduleDir,basefile)
+        return "%s/%s/references/%s.xml" % (self.baseDir, moduleDir,basefile)
 
     def _splitUrn(self,urn):
         if "#" in urn:
             base, fragment = urn.split("#",1)
         else:
             base = urn
-            fragment = u''
+            fragment = u'' # or should we return None?
         return (base,fragment)
 
     def _createSFSUrn(self,el):
@@ -247,7 +247,6 @@ class Manager:
 
     def _createRelation(self,urn,predicate,subject,intrinsic=True, comment="",allowDuplicates=True):
         """Creates a single relation"""
-        return # disable until we can get it running at a descent speed
         (objectUri, objectFragment) = self._splitUrn(urn)
         # maybe we should just pregenerate the whole of self.predicateCache just like 
         # we do for sell.predicateCache[Predicate.IDENTIFIER]
@@ -323,7 +322,7 @@ class Manager:
         htmlFileName = self._htmlFileName(basefile)
         # FIXME: consider caching
         order = self._buildIndex(htmlFileName)
-        refs = self.__deserializeReferences(refFileName)
+        refs = self._deserializeReferences(refFileName)
         res = []
         #for frag in refs.keys():
         #    res.append({'fragmentid':frag,
@@ -351,7 +350,7 @@ class Manager:
                        
             
 
-    def _createReference(self,basefile,targetUrn, sourceUrn, refLabel, displayid, alternative=None, desc=None):
+    def _createReference(self,basefile,targetUrn, sourceUrn, refLabel, displayid, alternative=None, desc='Beskrivning saknas'):
         """Creates a reference to a (part of a) document in this legal source
         from a (part of a) document in this, or any other, legal source.
         
@@ -364,6 +363,10 @@ class Manager:
         desc: a description of the reference source
         """
         # print "Creating reference from %s to %s" % (sourceUrn, targetUrn)
+        assert(refLabel)
+        assert(displayid)
+        assert(sourceUrn)
+        assert(targetUrn)
         # extract 'sfs' from 'urn:x-sfs:1960:729'
         targetModuleDir = targetUrn.split(":")[1]
         if targetModuleDir.startswith("x-"):
@@ -374,15 +377,15 @@ class Manager:
         (sourceUrn, sourceFragment) = self._splitUrn(sourceUrn)
         (targetUrn, targetFragment) = self._splitUrn(targetUrn)
         if not targetFragment: targetFragment =  "top"
+        if sourceFragment == '': sourceFragment = None
         ref = {'sourceUrn':sourceUrn,
                'sourceFragment':sourceFragment,
                'displayid':displayid,
-               'alternative':alternative,
                'desc':desc}
 
         if refFile not in self.referenceCache:
             if os.path.exists(refFile):
-                refs = self.__deserializeReferences(refFile)
+                refs = self._deserializeReferences(refFile)
             else:
                 refs = {}
         else:
@@ -397,8 +400,19 @@ class Manager:
         # (theoretically there can be two references from the same two
         # {target,source}{Urn,Fragment} pairs, but hardly meaningful in
         # practice)
-        if ref not in refs[targetFragment][refLabel]: # avoid pure duplicates
-            refs[targetFragment][refLabel].append(ref)
+        # if ref not in refs[targetFragment][refLabel]: # avoid pure duplicates
+
+        dupe = False
+        for existingRef in refs[targetFragment][refLabel]:
+            if (ref['sourceUrn'] == existingRef['sourceUrn'] and
+                ref['sourceFragment'] == existingRef['sourceFragment']):
+                dupe = True
+                break
+        if not dupe:
+            #print "No dupe, rally creating"
+            refs[targetFragment][refLabel].append(ref)    
+        #else:
+            #print "Dupe, no createing"
         
         self.referenceCache[refFile] = refs
 
@@ -462,6 +476,15 @@ class Manager:
         (urn,fragment) = self._splitUrn(urn)
         return self.__fetchDocumentIDs(urn=urn.encode('utf-8')).displayid.decode('utf-8')
     
+    def _outfileIsNewer(infiles,outfile):
+        """check to see if the outfile is newer than all ingoing files"""
+        outfileMTime = os.stat(filename).st_mtime
+        newer = False
+        for type in files.keys():
+            for f in files[type]:
+                if os.stat(f).st_mtime > outfileMTime: newer = True
+        return newer
+    
     ####################################################################
     # INTERNAL NON-OVERRIDABLE FUNCTIONS
     ####################################################################
@@ -500,13 +523,45 @@ class Manager:
     def __serializeReferences(self,filename,data):
         # print "flushing %s" % file
         Util.mkdir(os.path.dirname(filename))            
-        fp = open(filename, mode='w')
-        cPickle.dump(data,fp)
-        fp.close()            
+        # fp = open(filename, mode='w')
+        # pickle.dump(data,fp,1)
+        # fp.close()            
+        rootElem = ET.Element("references")
+        for frag in data.keys():
+            fragElem = ET.SubElement(rootElem,"fragment")
+            fragElem.set("id", frag)
+            for reftype in data[frag].keys():
+                reftypeElem = ET.SubElement(fragElem,"reftype")
+                reftypeElem.set("label", reftype)
+                for ref in data[frag][reftype]:
+                    refElem = ET.SubElement(reftypeElem,"reference")
+                    for k in ref.keys():
+                        elem = ET.SubElement(refElem,k)
+                        elem.text = ref[k]
+        tree = ET.ElementTree(rootElem)
+        tree.write(filename)
 
-    def __deserializeReferences(self,filename):
+    def _deserializeReferences(self,filename):
         if os.path.exists(filename):
-            return cPickle.load(file(filename))
+            data = {}
+            # return pickle.load(file(filename))
+            tree = ET.parse(filename)
+            root = tree.getroot()
+            for fragElem in list(root):
+                fragId = fragElem.get("id")
+                reftypes = {}
+                for reftypeElem in list(fragElem):
+                    reftypeLabel = reftypeElem.get("label")
+                    refs = []
+                    for refElem in list(reftypeElem):
+                        ref = {}
+                        for propElem in list(refElem):
+                            ref[propElem.tag] = propElem.text
+                        refs.append(ref)
+                    reftypes[reftypeLabel] = refs
+                data[fragId] = reftypes
+            return data
+        
         else:
             return {}
 

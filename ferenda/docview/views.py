@@ -17,25 +17,46 @@ sys.path.append("..")
 
 import DocComments
 from SFS import SFSManager
-
+from DV import DVManager
+from DocComments import AnnotatedDoc
+import pickle 
 identifierPredicate = Predicate.objects.get(uri=Predicate.IDENTIFIER)
 
-def view(request,displayid):
+def view(request,displayid,module):
     displayid = unicode(displayid,'utf-8').replace('_',' ')
     ld = get_object_or_404(Document, displayid=displayid)
-    mgr = SFSManager(settings.BASE_DIR,'sfs')
-    filename = mgr._htmlFileName(ld.basefile)
-    document = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
+    if module == 'sfs':
+        mgr = SFSManager(settings.BASE_DIR,'sfs')
+    elif module == 'dv':
+        mgr = DVManager(settings.BASE_DIR,'dv')
+        
     
-    references = mgr._referencesAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
-    comments = mgr._commentsAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
+    htmlFile = mgr._htmlFileName(ld.basefile)
+    referenceFile = mgr._refFileName(ld.basefile)
+    references = mgr._deserializeReferences(referenceFile)
     
+    ad = AnnotatedDoc(htmlFile)
+    try:
+        comments = Article.objects.get(pk=displayid).body.decode('utf-8')
+    except Article.DoesNotExist:
+        comments = u''
+
+    content = ad.Combine(comments,references)
     return render_to_response('docview/view.html', 
                               {'displayid':displayid,
-                               'document':document,
-                               'references':references,
-                               'comments':comments},
+                               'content':content},
                               context_instance=RequestContext(request))
+    
+    # document = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
+    # references = mgr._referencesAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
+    comments = mgr._commentsAsArray(mgr._displayIdToBasefile(displayid,'urn:x-sfs'))
+    #return render_to_response('docview/view.html', 
+                              #{'displayid':displayid,
+                               #'document':document,
+                               #'references':references,
+                               #'comments':comments},
+                              #context_instance=RequestContext(request))
+
 
 def list(request,source):
     docs = Document.objects.filter(urn__startswith='urn:x-%s' % source)[:500]

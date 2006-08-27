@@ -3,18 +3,46 @@
 {% block title %}{{ displayid }}{% endblock %}
 {% block pageid %}{{ displayid }}{% endblock %}
 
-{% block middle %}
-<ul>
-{% for doc in docs %}
-<li>doc: <a href="/{{doc.displayid|underscore}}">{{doc.displayid}}</a></li>
-{% endfor %}
-</ul>
-{% endblock %}
+{% block content %}
+  <div id="main">
+    <div class="leftcol">
+        <div class="controlpanel">
+        1686-1920<br/>
+        1921-1940<br/>
+        1941-1960<br/> 
+        1961-1970 <br/>
+        1971-1974<br/> 
+        1974-1977<br/> 
+        1978-1980<br/> 
+        1981-1984 <br/>
+        1985-1987 <br/>
+        1988-1990 <br/>
+        1991 <br/>
+        1992 <br/>
+        1993 <br/>
+        1994 <br/>
+        1995 <br/>
+        1996 <br/>
+        1997 <br/>
+        1998 <br/>
+        1999 <br/>
+        2000 <br/>
+        2001<br/>
+        2002<br/>
+        2003<br/>
+        2004<br/>
+        2005<br/> 
+        2006<br/>
+        </div>    
+    </div>
+    <div class="rightcol"></div>
+    <div class="centercol">
+        <ul>
+        {% for doc in docs %}
+        <li><a href="/{{doc.displayid|underscore}}">{{doc.displayid}}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
 
-{% block left %}
-<p>something here</p>
-{% endblock %}
-
-{% block right %}
-<p>something else here</p>
 {% endblock %}

@@ -324,17 +324,24 @@ class DVManager(LegalSource.Manager):
     # IMPLEMENTATION OF Manager INTERFACE  
     ####################################################################
     
-    def Parse(self,basefile):
+    def Parse(self,basefile,force=False):
         """'basefile' here is a single digit representing the filename on disc, not
         any sort of inherit case id or similarly"""
         start = time()
-        sys.stdout.write("\tParse %s" % basefile)
+        
         files = {'detalj':self.__listfiles('detalj',basefile),
                  'referat':self.__listfiles('referat',basefile)}
+        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, basefile)
+        # check to see if the outfile is newer than all ingoing files. If it
+        # is (and force is False), don't parse
+        if not force and self._outfileIsNewer(files,filename):
+            return
+
+        
         # print("Files: %r" % files)
+        sys.stdout.write("\tParse %s" % basefile)
         p = self.__parserClass()
         parsed = p.Parse(basefile,files)
-        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, basefile)
         Util.mkdir(os.path.dirname(filename))
         # print "saving as %s" % filename
         out = file(filename, "w")

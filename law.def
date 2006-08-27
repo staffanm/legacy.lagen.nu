@@ -75,7 +75,7 @@ In                   ::= 'i'
 AndOr		     ::= (And/Or/Also)
 WAndOrW		     ::= Whitespace, AndOr, Whitespace
 TheLaw		     ::= 'lagen'
-LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'lagen'/'balken'/'förordningen')
+LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordningens'/'lagen'/'balken'/'förordningen'/'formen'/'ordningen')
 Comma		     ::= ','
 CommaSpace	     ::= Comma, Whitespace
 # the – (en ndash) is used in 2005:104 at least
@@ -168,9 +168,10 @@ WhitespaceOrPunctuation ::= (Whitespace/punctuation)+
 
 # œ and Œ are windows-1252-only oe-ligatures (upper- and
 # lowercase), Š is S-with-caron (used in 1994:1720, where they
-# probably mean 'é', though)
-word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠ]+
-char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠ]
+# probably mean 'é', though). ş occurs in 1982:790 (where they
+# probably want a space, though
+word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]+
+char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]
 number       ::= [0-9]+
 digit	     ::= [0-9]
 

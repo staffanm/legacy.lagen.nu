@@ -23,10 +23,10 @@ except ImportError:
     
 # my own libraries
 import LegalSource
-# import Util
-# from DispatchMixin import DispatchMixin
-# from DocComments import AnnotatedDoc
-# from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
+import Util
+from DispatchMixin import DispatchMixin
+from DocComments import AnnotatedDoc
+from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
 # Django stuff
 os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
@@ -950,8 +950,11 @@ class SFSManager(LegalSource.Manager):
             # moahaha!
             # this transforms 'foo/bar/baz/1960/729.html' to '1960/729'
             basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            if basefile.endswith('_A') or basefile.endswith('_B'):
+                basefile = basefile[:-2]
             basefiles.add(basefile)
         for basefile in sorted(basefiles):
+            # print basefile
             method(basefile)
   
     def __resolveFragment(self,
@@ -1025,15 +1028,23 @@ class SFSManager(LegalSource.Manager):
     # IMPLEMENTATION OF Manager INTERFACE
     ####################################################################    
 
-    def Parse(self, basefile, verbose=False):
+    def Parse(self, basefile, verbose=False, force=False):
         start = time()
-        if not verbose: sys.stdout.write("\tParse %s" % basefile)
+
         files = {'sfst':self.__listfiles('sfst',basefile),
                  'sfsr':self.__listfiles('sfsr',basefile)}
+        filename = self._xmlFileName(basefile)
+        # check to see if the outfile is newer than all ingoing files. If it
+        # is (and force is False), don't parse
+        if not force and self._outfileIsNewer(files,filename):
+            return
+                    
+        
+        if not verbose: sys.stdout.write("\tParse %s" % basefile)        
         # print("Files: %r" % files)
         p = SFSParser()
         parsed = p.Parse(basefile, files, verbose)
-        filename = self._xmlFileName(basefile)
+        
         Util.mkdir(os.path.dirname(filename))
         # print "saving as %s" % filename
         out = file(filename, "w")
@@ -1068,6 +1079,9 @@ class SFSManager(LegalSource.Manager):
                         'today':datetime.date.today().strftime("%Y-%m-%d")},
                        validate=False)
         #  print "Generating index for %s" % outfile
+        ad = AnnotatedDoc(outfile)
+        ad.Prepare()
+        
 
     def GenerateAll(self):
         # print "SFS: GenerateAll temporarily disabled"
@@ -1193,13 +1207,13 @@ class SFSManager(LegalSource.Manager):
         self.__doAll('parsed','xml',self.Relate)
         
 
-#if __name__ == "__main__":
-    #if not '__file__' in dir():
-    #    print "probably running from within emacs"
-    #    sys.argv = ['SFS.py','Parse', '1960:729']
+if __name__ == "__main__":
+    if not '__file__' in dir():
+        print "probably running from within emacs"
+        sys.argv = ['SFS.py','Parse', '1960:729']
     
-    #SFSManager.__bases__ += (DispatchMixin,)
-    #mgr = SFSManager("testdata",__moduledir__)
-    # mgr.Dispatch(sys.argv)
+    SFSManager.__bases__ += (DispatchMixin,)
+    mgr = SFSManager("testdata",__moduledir__)
+    mgr.Dispatch(sys.argv)
 
 

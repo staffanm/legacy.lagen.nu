@@ -10,7 +10,8 @@ import sys,os,re
 import os.path
 import codecs
 import pprint
-import cPickle
+import cgi
+import pickle
 from cStringIO import StringIO
 # from DispatchMixin import DispatchMixin
 import Util
@@ -38,20 +39,22 @@ class AnnotatedDoc:
         indexfname = self.filename +".idx"
         self.__saveIndex(indexfname,self.__buildIndex(self.filename))
 
-    def Combine(self,comments=""):
+    def Combine(self,comments="", references={}):
         """Combines the HTML document with comments. Comments should be a
-        free-form string (look at the testcases for details on how it
-        should be formatted). Typically done at runtime (via the web
+        free-form string (look at the testcases for details on how it should
+        be formatted). References shouls be the result of pickle.load() for
+        the appropriate .dat file. Typically done at runtime (via the web
         interface)"""
         
         if not os.path.exists(self.indexfname):
             self.Prepare()
         res = self.__weave(self.filename,
-                            self.__loadIndex(indexfname),
-                            self.__parseComments(comments))
+                            self.__loadIndex(self.indexfname),
+                            self.__parseComments(comments),
+                            references)
         return res
 
-    def GetCommentIds(self):
+    def GetfragmentIds(self):
         if not os.path.exists(self.indexfname):
             self.Prepare()
         indexes = self.__loadIndex(self.indexfname)
@@ -63,12 +66,12 @@ class AnnotatedDoc:
     re_Headline = re.compile(r'R(\d+w?)')
     re_Paragraph = re.compile(r'S(\d+)')
     
-    re_SFSCommentID = re.compile(r'(K(?P<chapter>\d+[a-z]?)|)(P(?P<section>\d+[a-z]?)|)(S(?P<paragraph>\d+[a-z]?)|)(N(?P<item>\d+[a-z]?)|)')
+    re_SFSfragmentId = re.compile(r'(K(?P<chapter>\d+[a-z]?)|)(P(?P<section>\d+[a-z]?)|)(S(?P<paragraph>\d+[a-z]?)|)(N(?P<item>\d+[a-z]?)|)')
 
-    def __formatCommentId(self,commentid):
-        """Formats a given commentid (eg K2P4) to a humanreadable format (2 kap. 4 §)"""
+    def __formatFragmentId(self,fragmentId):
+        """Formats a given fragmentId (eg K2P4) to a humanreadable format (2 kap. 4 §)"""
         # this will always match, but possibly with a emptystring
-        m = self.re_SFSCommentID.match(commentid)
+        m = self.re_SFSfragmentId.match(fragmentId)
         if m.group(0) != '':
             res = ""
             if m.group('chapter'):
@@ -81,15 +84,15 @@ class AnnotatedDoc:
                 res = res + u"%s p. " % m.group('item')
             return res.strip()
         
-        m = self.re_Headline.match(commentid)
+        m = self.re_Headline.match(fragmentId)
         if m:
             return u"Rub. %s" % (m.group(1))
 
-        m = self.re_Paragraph.match(commentid)
+        m = self.re_Paragraph.match(fragmentId)
         if m:
             return u"%s st." % (m.group(1))
     
-        return commentid
+        return fragmentId
             
     
     def FormatComments(self,comments="",includePlaceholders=False):
@@ -107,9 +110,9 @@ class AnnotatedDoc:
         comments = self.__parseComments(comments)
         for c in [c for c in indexes]:
             if c[2] in comments:
-                outdata.write(u'<p id="comment-%s" class="comment editable"><span class="commentid">%s</span>%s</p>\n' % (c[2], self.__formatCommentId(c[2]), comments[c[2]]))
+                outdata.write(u'<p id="comment-%s" class="comment editable"><span class="fragmentid">%s</span>%s</p>\n' % (c[2], self.__formatFragmentId(c[2]), comments[c[2]]))
             elif includePlaceholders:
-                outdata.write(u'<p id="comment-%s" class="comment placeholder editable"><span class="commentid">%s</span>Klicka för att kommentera</p>\n' % (c[2], self.__formatCommentId(c[2])))
+                outdata.write(u'<p id="comment-%s" class="comment placeholder editable"><span class="fragmentid">%s</span>Klicka för att kommentera</p>\n' % (c[2], self.__formatFragmentId(c[2])))
 
         if hasattr(buf, "getvalue"):
             return unicode(buf.getvalue(), 'utf-8')
@@ -138,7 +141,7 @@ class AnnotatedDoc:
         comments should go.
 
         The index is a list of tuples, where each tuple is (startpos,
-        endpos, commentid)
+        endpos, fragmentId)
         """
         start_or_end_iter = re.compile(r'<!--(start|end):(\w+)-->').finditer
         index = []
@@ -159,13 +162,13 @@ class AnnotatedDoc:
 
     def __saveIndex(self, indexfname,indexes):
         f = open(indexfname,"w")
-        cPickle.dump(indexes, f)
+        pickle.dump(indexes, f)
         f.close()
         
     def __loadIndex(self, indexfname):
-        return cPickle.load(file(indexfname))
+        return pickle.load(file(indexfname))
 
-    def __weave(self, htmlfname,indexes=(),comments={}):
+    def __weave(self, htmlfname,indexes=(),comments={},references={}):
         """'Weave' together the HTML document with the comments"""
         indata = codecs.open(htmlfname, encoding="iso-8859-1")
         # fsock = open(htmlfname)
@@ -176,17 +179,26 @@ class AnnotatedDoc:
 
         pos = 0
         # get first start idx
-        for c in [c for c in indexes if c[2] in comments]:
+        for c in [c for c in indexes]:
+            fragmentId = c[2]
             numbytes = c[0] - pos
-            # print "%s writing %d bytes" % (c[2], numbytes)
+            # print "%s writing %d bytes" % (fragmentId, numbytes)
             outdata.write(indata.read(numbytes))
             numbytes = c[1] - c[0]
             # read and throw away
             throw = indata.read(numbytes)
-            # print "%s throwing %d bytes (%r)" % (c[2],numbytes,throw)
-            
-            # write comment instead
-            outdata.write('<div class="comment clicktoedit" id="comment-%s"><span class="commentid">%s</span>%s</div>' % (c[2], c[2], comments[c[2]]))
+            # print "%s throwing %d bytes (%r)" % (fragmentId,numbytes,throw)
+            outdata.write(u'<div class="leftcol" id="left-%s">' % fragmentId)
+            if fragmentId in references:
+                outdata.write(u'<div class="references"><span class="fragmentid">%s</span> %s</div>' % (self.__formatFragmentId(fragmentId), self.__formatReferences(references[fragmentId])))
+            #else: 
+            #    outdata.write(u'<div class="placeholder">%s</div>' % fragmentId)
+            outdata.write(u'</div>\n<div class="rightcol" id="right-%s">' % fragmentId)
+            if fragmentId in comments:
+                outdata.write(u'<div class="comment" id="comment-%s"><span class="fragmentid">%s</span>%s</div>' % (fragmentId, self.__formatFragmentId(fragmentId), self.__formatComment(comments[fragmentId])))
+            #else:
+            #    outdata.write(u'<div class="placeholder">%s</div>' % fragmentId)
+            outdata.write(u'</div>')
             pos = c[1]
         outdata.write(indata.read())
         if hasattr(buf, "getvalue"):
@@ -196,6 +208,23 @@ class AnnotatedDoc:
             outdata.close()
             return codecs.open(htmlfname.replace(".html",".out.html"), encoding="iso-8859-1").read()
 
+    def __formatComment(self, comment):
+        # add markdown parsing here
+        return u'<i>%s</i>' % comment
+
+    def __formatReferences(self,references):
+        res = u''
+        for reftype in references.keys():
+            res += u'<b>%s</b>' % reftype
+            for document in references[reftype]:
+                if not document['desc']: document['desc'] = ''
+                res += u'<a href="/%s" title="%s">%s</a> ' % (
+                    document['displayid'].replace(' ','_'),
+                    cgi.escape(document['desc'], True),
+                    document['displayid'])
+            res += '<br/>'
+        return res
+    
     def __parseComments(self, comments=""):
         # FIXME: the use of Util.normalizeSpace might not be a good idea if
         # we want to do real wiki formatting of text

@@ -14,35 +14,39 @@
   <xsl:variable name="hasChapters" select="/law/chapter"/>
 
   <xsl:template match="/">
-    <div class="middle">
+    <div id="main">
       <xsl:apply-templates/>
     </div>  
   </xsl:template>  
   
   <xsl:template match="/law">
-    <h1 class="legaldoc" id="top"><xsl:value-of select="preamble/title"/></h1>
-    <xsl:comment>start:top</xsl:comment>
-    <xsl:comment>end:top</xsl:comment>
-    <dl class="preamble legaldoc">
-      <xsl:apply-templates mode="header" select="preamble"/>
-    </dl>
-    <!--
-    <div class="metadata">
-      <xsl:apply-templates select="meta" mode="header"/>
-      <xsl:variable name="bigtoc" select="chapter[(headline or section)]"/>
-      <xsl:if test="$bigtoc">
-	<form>
-	  <input id="toggletoc" type="button" value="Visa innehållsförteckning"/>
-	</form>
-	<div id="toc">
-	  <xsl:apply-templates select="chapter[(headline or section)]" mode="toc"/>
+    <div class="section" id="top">
+      <xsl:comment>start:top</xsl:comment>
+      <xsl:comment>end:top</xsl:comment>
+      <div class="centercol">
+	<h1><xsl:value-of select="preamble/title"/></h1>
+	<dl class="preamble">
+	  <xsl:apply-templates mode="header" select="preamble"/>
+	</dl>
+	<!--
+	<div class="metadata">
+	  <xsl:apply-templates select="meta" mode="header"/>
+	  <xsl:variable name="bigtoc" select="chapter[(headline or section)]"/>
+	  <xsl:if test="$bigtoc">
+	    <form>
+	      <input id="toggletoc" type="button" value="Visa innehållsförteckning"/>
+	    </form>
+	    <div id="toc">
+	      <xsl:apply-templates select="chapter[(headline or section)]" mode="toc"/>
+	    </div>
+	  </xsl:if>
 	</div>
-      </xsl:if>
-    </div>
-    -->
-    <!-- the actual meat of the law -->
-    <xsl:apply-templates/>
-  </xsl:template>
+	-->
+	<!-- the actual meat of the law -->
+        </div>
+      </div>
+      <xsl:apply-templates/>
+    </xsl:template>
 
 
   <!-- =============================== -->
@@ -161,19 +165,32 @@
   <xsl:template match="meta"/>
 
   <xsl:template match="changes">
-    <h1>Ändringar och övergångsbestämmelser</h1>
-    <dl>
+    <div class="section" id="changes">
+      <xsl:comment>start:changes</xsl:comment>
+      <xsl:comment>end:changes</xsl:comment>
+      <div class="centercol">
+        <h1>Ändringar och övergångsbestämmelser</h1>
+      </div>
+    </div>
     <xsl:for-each select="change">
-      <dt id="L{translate(@id,' ','_')}">Ändring:</dt>
-      <xsl:for-each select="link">
-	<dd><xsl:call-template name="link"/></dd>
-      </xsl:for-each>
-      <xsl:for-each select="prop">
-	<dt><xsl:value-of select="@key"/></dt>
-	<dd><xsl:apply-templates/></dd>
-      </xsl:for-each>
+      <xsl:variable name="id">L<xsl:value-of select="translate(@id,' ','_')"/></xsl:variable>
+      <div class="section" id="{$id}">
+	<xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+	<xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+	<div class="centercol">
+	  <dl>
+	    <dt>Ändring:</dt>
+	    <xsl:for-each select="link">
+	      <dd><xsl:call-template name="link"/></dd>
+	    </xsl:for-each>
+	    <xsl:for-each select="prop">
+	      <dt><xsl:value-of select="@key"/></dt>
+	      <dd><xsl:apply-templates/></dd>
+	    </xsl:for-each>
+	  </dl>
+	</div>
+      </div>
     </xsl:for-each>
-    </dl>
   </xsl:template>
 
   <xsl:template match="introduction">
@@ -183,28 +200,30 @@
 
   <xsl:template match="chapter">
     <a name="K{@id}" id="K{@id}"></a>
-    <xsl:comment>start:K<xsl:value-of select="@id"/></xsl:comment>
-    <xsl:comment>end:K<xsl:value-of select="@id"/></xsl:comment>
     <xsl:apply-templates/>
     
   </xsl:template>
 
   <xsl:template match="headline">
     <xsl:variable name="id">R<xsl:value-of select="@id"/></xsl:variable>
-    <img src="/static/comment_edit.png" 
-         id="edit-{$id}"
-         width="16" height="16" 
-	 alt="Kommentera detta stycke" 
-	 title="Kommentera detta stycke" 
-	 class="editicon"/>    
-    <xsl:if test="@level = '1'">
-      <h1 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h1>
-    </xsl:if>
-    <xsl:if test="@level = '2'">
-      <h2 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h2>
-    </xsl:if>
-    <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
-    <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
+    <div class="section" id="{$id}">
+      <xsl:comment>start:R<xsl:value-of select="@id"/></xsl:comment>
+      <xsl:comment>end:R<xsl:value-of select="@id"/></xsl:comment>
+      <div class="centercol">
+	<img src="/static/comment_edit.png" 
+	     id="edit-{$id}"
+	     width="16" height="16" 
+	     alt="Kommentera detta stycke" 
+	     title="Kommentera detta stycke" 
+	     class="editicon"/>    
+	<xsl:if test="@level = '1'">
+	  <h1 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h1>
+	</xsl:if>
+	<xsl:if test="@level = '2'">
+	  <h2 id="{$id}" class="legaldoc"><xsl:value-of select="."/></h2>
+	</xsl:if>
+      </div>
+    </div>
   </xsl:template>
 
   <xsl:template match="section">
@@ -212,8 +231,6 @@
       <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../@id"/></xsl:if>P<xsl:value-of select="@id"/>
     </xsl:variable>
     <a name="{$id}" id="{$id}"></a>
-    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>    
     <xsl:apply-templates/>
   </xsl:template>
 
@@ -229,24 +246,37 @@
       <xsl:if test="ancestor::appendix">B<xsl:number/></xsl:if>
       <xsl:if test="ancestor::prop">L<xsl:value-of select="../../@id"/>-<xsl:number/></xsl:if>
     </xsl:variable>
-    <img src="/static/comment_edit.png" 
-         id="edit-{$id}"
-         width="16" height="16" 
-	 alt="Kommentera detta stycke" 
-	 title="Kommentera detta stycke" 
-	 class="editicon"/>   
-    <!-- <a name="{$id}"/> -->
-    <p id="{$id}" class="legaldoc">
-    <!-- if this is the first p in a section, bring in the 
-	 section id as a span element -->
-    <xsl:if test="(ancestor::section) and (position()=2)">
-      <!-- why 2? I have no idea... -->
-      <span class="sectionid"><xsl:value-of select="../@id"/> § </span>
-    </xsl:if>
-    <xsl:apply-templates/>
-    </p>
-    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+    
+    <div class="section" id="{$id}">
+      <xsl:if test="(ancestor::section) and (position()=2)">
+	<xsl:variable name="sectionid">
+	  <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../@id"/></xsl:if>P<xsl:value-of select="../@id"/>
+	</xsl:variable>
+	<xsl:comment>start:<xsl:value-of select="$sectionid"/></xsl:comment>
+	<xsl:comment>end:<xsl:value-of select="$sectionid"/></xsl:comment>	  
+      </xsl:if>
+      <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+      <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+
+      <div class="centercol">    
+	<img src="/static/comment_edit.png" 
+	     id="edit-{$id}"
+	     width="16" height="16" 
+	     alt="Kommentera detta stycke" 
+	     title="Kommentera detta stycke" 
+	     class="editicon"/>   
+	<!-- <a name="{$id}"/> -->
+	<p id="{$id}" class="legaldoc">
+	<!-- if this is the first p in a section, bring in the 
+	     section id as a span element -->
+	<xsl:if test="(ancestor::section) and (position()=2)">
+	  <!-- why 2? I have no idea... -->
+	  <span class="sectionid"><xsl:value-of select="../@id"/> § </span>
+	</xsl:if>
+	<xsl:apply-templates/>
+	</p>
+      </div>
+    </div>
   </xsl:template>
 
   <xsl:template match="ol">
@@ -257,17 +287,21 @@
     <xsl:variable name="id">
       <xsl:if test="$hasChapters and $sectionOneCount > 1">K<xsl:value-of select="../../../@id"/></xsl:if>P<xsl:value-of select="../../@id"/>S<xsl:value-of select="count(../preceding-sibling::p)"/>N<xsl:number/>
     </xsl:variable>
-    <img src="/static/comment_edit.png" 
-         id="edit-{$id}"
-         width="16" height="16" 
-	 alt="Kommentera detta stycke" 
-	 title="Kommentera detta stycke" 
-	 class="editicon"/>   
-    <p id="{$id}" class="legaldoc faux-li">
-    <xsl:apply-templates/>
-    </p>
-    <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
-    <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+    <div class="section" id="{$id}">
+      <xsl:comment>start:<xsl:value-of select="$id"/></xsl:comment>
+      <xsl:comment>end:<xsl:value-of select="$id"/></xsl:comment>
+      <div class="centercol">    
+	<img src="/static/comment_edit.png" 
+	     id="edit-{$id}"
+	     width="16" height="16" 
+	     alt="Kommentera detta stycke" 
+	     title="Kommentera detta stycke" 
+	     class="editicon"/>   
+	<p id="{$id}" class="legaldoc faux-li">
+	<xsl:apply-templates/>
+	</p>
+      </div>
+    </div>
   </xsl:template>
 
   <xsl:template match="br">

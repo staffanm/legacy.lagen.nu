@@ -116,6 +116,9 @@ class JOParser(LegalSource.Parser):
 
 
 class JOManager(LegalSource.Manager):
+    def _getModuleDir(self):
+        return __moduledir__
+    
     def ParseAll(self):
         print "JO: ParseAll not implemented"
         return

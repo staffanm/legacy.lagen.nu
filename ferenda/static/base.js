@@ -27,7 +27,6 @@ MovableBox = {
     } else {
       dim.h = element.collapsedHeight;
     }    
-
     setElementDimensions(element,dim);
   },
   // practially identical to resizeToCollapsed now  

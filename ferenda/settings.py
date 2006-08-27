@@ -66,6 +66,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.doc.XViewMiddleware',
     'django.middleware.gzip.GZipMiddleware',
 #    'django.middleware.cache.CacheMiddleware',
+    'ferenda.pagestats.StatsMiddleware',
 )
 
 ROOT_URLCONF = 'ferenda.urls'
@@ -90,4 +91,8 @@ EMAIL_HOST = "smtp.tomtebo.org"
 SERVER_EMAIL = "nobody@lagen.nu"
 EMAIL_SUBJECT_PREFIX = "Auto Generated Message: "
 
-BASE_DIR = "/Library/WebServer/Documents/ferenda.lagen.nu/testdata"
+import socket
+if socket.gethostname() == 'minimac.tomtebo.org':
+    BASE_DIR = "/Library/WebServer/Documents/ferenda.lagen.nu/testdata"
+else:
+    BASE_DIR = "testdata"

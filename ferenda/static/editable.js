@@ -19,12 +19,16 @@ EditableBox = {
       boxElement = getElement("comment-" + fragmentId);
       if (!boxElement) {
 	log("Code for creating an comment box and attaching it");
-	boxElement = P({'class':'comment editable',
+	boxElement = DIV({'class':'comment editable',
 			'id':'comment-'+fragmentId},'Kommentar...');
 	boxElement.style.position = "absolute";
 	boxElement.style.display = "block";			
-	appendChildNodes('right',boxElement);
-	MovableBox.currentBoxMovingPolicy('comment');
+	// only for jslayout
+	// appendChildNodes('right',boxElement);
+	// MovableBox.currentBoxMovingPolicy('comment');
+	// for floatlayout
+	appendChildNodes('right-'+fragmentId,boxElement)
+	
       }	
       EditableBox.makeEditable(boxElement);
     } else if (boxElement.id.substring(0,7) == 'comment') {
@@ -64,7 +68,15 @@ EditableBox = {
     replaceChildNodes(boxElement,form);
     addElementClass(boxElement,'editor');
   },
-    
+  /* copied from base.js, but simplefied for floatlayout */
+  resizeToCollapsed: function(element) {
+    dim = getElementDimensions(element);
+    element.style.zIndex=0;
+    dim.w = element.origWidth;
+    dim.h = element.collapsedHeight;
+    setElementDimensions(element,dim);
+  },
+
   cancel: function(e) {
     log("Canceling editor");
     editor = e.src().parentNode.parentNode;
@@ -72,7 +84,7 @@ EditableBox = {
     replaceChildNodes(editor,
 		      SPAN({'class':'commentid'},commentid),EditableBox.origtexts[commentid]);
     removeElementClass(editor,"editor");
-    MovableBox.resizeToCollapsed(editor);
+    EditableBox.resizeToCollapsed(editor);
   },
   
   save: function(e) {
@@ -104,7 +116,7 @@ EditableBox = {
     replaceChildNodes(EditableBox.curEditor,
 		      SPAN({'class':'commentid'},EditableBox.curCommentid),xhr.responseText);
     EditableBox.deferred = null;
-    MovableBox.resizeToCollapsed(EditableBox.curEditor);
+    EditableBox.resizeToCollapsed(EditableBox.curEditor);
   },
   
   saveFailed: function(xhr) {
@@ -114,7 +126,7 @@ EditableBox = {
     replaceChildNodes(EditableBox.curEditor,
 		      SPAN({'class':'commentid'},EditableBox.curCommentid),SPAN({'class':'error'},xhr.req.responseText));
     EditableBox.deferred = null;
-    MovableBox.resizeToCollapsed(EditableBox.curEditor);
+    EditableBox.resizeToCollapsed(EditableBox.curEditor);
   },
   /* not used */
   createNextEditIcon: function() {

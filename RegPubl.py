@@ -86,6 +86,9 @@ class RegPublParser(LegalSource.Parser):
 
 class RegPublManager(LegalSource.Manager):
 
+    def _getModuleDir(self):
+        return __moduledir__
+
     def DownloadAll(self,id):
         rd = RegPublDownloader(self.baseDir)
         rd._downloadSingle("http://www.regeringen.se/sb/d/108/a/%s" % id)
