@@ -176,9 +176,9 @@ class AnnotatedDoc:
         indata = codecs.open(htmlfname, encoding="iso-8859-1")
         # fsock = open(htmlfname)
         buf = StringIO()
-        outdata = codecs.getwriter('iso-8859-1')(buf)
+        outdata = codecs.getwriter('utf-8')(buf)
         # buf = None
-        # out = codecs.open(htmlfname.replace(".html", ".out.html"), "w", encoding="iso-8859-1", errors="replace")
+        # out = codecs.open(htmlfname.replace(".html", ".out.html"), "w", encoding="utf-8", errors="replace")
 
         pos = 0
         # get first start idx
@@ -205,11 +205,11 @@ class AnnotatedDoc:
             pos = c[1]
         outdata.write(indata.read())
         if hasattr(buf, "getvalue"):
-            return unicode(buf.getvalue(), 'iso-8859-1')
+            return unicode(buf.getvalue(), 'utf-8')
             outdata.close()
         else:
             outdata.close()
-            return codecs.open(htmlfname.replace(".html",".out.html"), encoding="iso-8859-1").read()
+            return codecs.open(htmlfname.replace(".html",".out.html"), encoding="utf-8").read()
 
     def __formatComment(self, comment):
         # add markdown parsing here

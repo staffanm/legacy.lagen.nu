@@ -27,8 +27,10 @@ def view(request,displayid,module):
     ld = get_object_or_404(Document, displayid=displayid)
     if module == 'sfs':
         mgr = SFSManager(settings.BASE_DIR,'sfs')
+        source = u'Regeringskansliets rättsdatabaser';
     elif module == 'dv':
         mgr = DVManager(settings.BASE_DIR,'dv')
+        source = u'Domstolsverket';
         
     
     htmlFile = mgr._htmlFileName(ld.basefile)
@@ -44,7 +46,8 @@ def view(request,displayid,module):
     content = ad.Combine(comments,references)
     return render_to_response('docview/view.html', 
                               {'displayid':displayid,
-                               'content':content},
+                               'content':content,
+                               'source':source},
                               context_instance=RequestContext(request))
     
     # document = codecs.open(filename,encoding='iso-8859-1').read().encode('utf-8')
