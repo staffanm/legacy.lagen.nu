@@ -706,7 +706,7 @@ class Manager:
         sys.stdout.write(" %s sec\n" % (time() - start))
     
     def Publish(self):
-        cmd = "tar czf - %s/%s | ssh staffan@minimac.tomtebo.org \"cd /Library/WebServer/Documents/ferenda.lagen.nu && tar xvzf - \"" % (self.baseDir, self._getModuleDir())
+        cmd = "tar czf - %s/%s | ssh staffan@minimac.tomtebo.org \"cd /Library/WebServer/Documents/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s/%s\"" % (self.baseDir, self._getModuleDir(),self.baseDir, self._getModuleDir())
         print "executing %s" % cmd
         os.system(cmd)
 
