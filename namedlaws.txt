@@ -22,3 +22,4 @@ aktiebolagslagen		1975:1385	ABL
 lösöresköpslagen		1845:50 s. 1
 knivlagen			1988:254
 anställningsskyddslagen		1982:80		LAS
+rättsprövningslagen		2006:304	RpL
