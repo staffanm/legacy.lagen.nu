@@ -4,22 +4,36 @@
 import sys, os, re, codecs, types
 import pickle
 from time import time
-try:
-    import cElementTree as ET
-    print "Sucessfully loaded cElementTree"
-except ImportError:
-    print "WARNING: could not import cElementTree, falling back to standard ElementTree"
-    import elementtree.ElementTree as ET
-    
-sys.path.append("3rdparty")
-import BeautifulSoup
 
+# Do required codec/locale magic here, since this is included by all runnable scripts
+sys.stdout.write(u"sys.getdefaultencoding():   %s\n" % sys.getdefaultencoding())
+sys.stdout.write(u"sys.stdout.encoding:        %s\n" % sys.stdout.encoding)
+
+import locale
+locale.setlocale(locale.LC_ALL,'')
+reload(sys)
+
+if sys.stdout.encoding: # not set when stdout is redirected
+    sys.setdefaultencoding(sys.stdout.encoding)
+else:
+    if sys.platform == 'win32':
+        sys.setdefaultencoding('cp850')
+    else:
+        sys.setdefaultencoding('iso-8859-1') # a reasonable default?
+        
+
+
+# Python 2.5 plz
+import xml.etree.cElementTree as ET
+# import cElementTree as ET
+# import elementtree.ElementTree as ET
+import BeautifulSoup
 import Util
 
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import *
-from ferenda.wiki.models import Article
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
+# from ferenda.docview.models import *
+# from ferenda.wiki.models import Article
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -121,9 +135,9 @@ class Parser:
                      not isinstance(e,BeautifulSoup.Comment))]))
 
 class Manager:
-    relationCache = {}
-    predicateCache = {} # a dict of Predicate objects (to be used as foreign keys, so that we don't have to initialize a Predicate object from the db for every call to _createRelation
-    predicateCache[Predicate.IDENTIFIER] = Predicate.objects.get(uri=Predicate.IDENTIFIER)
+    # relationCache = {}
+    # predicateCache = {} # a dict of Predicate objects (to be used as foreign keys, so that we don't have to initialize a Predicate object from the db for every call to _createRelation
+    # predicateCache[Predicate.IDENTIFIER] = Predicate.objects.get(uri=Predicate.IDENTIFIER)
 
     
     
@@ -159,13 +173,13 @@ class Manager:
     
     def _htmlFileName(self,basefile):
         # will typically never be overridden
-        """Returns the full path of the GENERATED XHTML fragment that represents a legal document"""
+        """Returns the full path of the GENERATED HTML fragment that represents a legal document"""
         return "%s/%s/generated/%s.html" % (self.baseDir, self.moduleDir,basefile)        
 
     def _xmlFileName(self,basefile):
         # will typically never be overridden
-        """Returns the full path of the XML that represents the parsed legal document"""
-        return "%s/%s/parsed/%s.xml" % (self.baseDir, self.moduleDir,basefile)
+        """Returns the full path of the XHTML2/RDFa doc that represents the parsed legal document"""
+        return "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir,basefile)
     
     def _refFileName(self,basefile,moduleDir=None):
         # will typically never be overridden
@@ -476,13 +490,13 @@ class Manager:
         (urn,fragment) = self._splitUrn(urn)
         return self.__fetchDocumentIDs(urn=urn.encode('utf-8')).displayid.decode('utf-8')
     
-    def _outfileIsNewer(infiles,outfile):
+    def _outfileIsNewer(self,infiles,outfile):
         """check to see if the outfile is newer than all ingoing files"""
-        outfileMTime = os.stat(filename).st_mtime
+        if not os.path.exists(outfile): return False
+        outfileMTime = os.stat(outfile).st_mtime
         newer = False
-        for type in files.keys():
-            for f in files[type]:
-                if os.stat(f).st_mtime > outfileMTime: newer = True
+        for f in infiles:
+            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = True
         return newer
     
     ####################################################################
@@ -720,23 +734,6 @@ class Manager:
         else:
             TestParser.RunAll(self.parserClass,"test/data/sfs")
     
-    def Profile(self, testname):
-        """Run a named test for the Parser and profile it"""
-        import hotshot, hotshot.stats
-        prof = hotshot.Profile("%s.prof" % testname)
-        prof.runcall(self.Test, testname)
-        s = hotshot.stats.load("%s.prof" % testname)
-        s.strip_dirs().sort_stats("time").print_stats()
-
-    def ProfileRelate(self,basefile):
-        """Run Relate for a given basefile and profile it"""
-        import hotshot, hotshot.stats
-        prof = hotshot.Profile("%s.prof" % basefile.replace('/','_'))
-        prof.runcall(self.Relate, basefile)
-        s = hotshot.stats.load("%s.prof" % basefile.replace('/','_'))
-        s.strip_dirs().sort_stats("time").print_stats()
-
-
 class DownloadedResource:
     """Data object for containing information about a downloaded resource.
 

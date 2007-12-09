@@ -8,16 +8,24 @@ class DispatchMixin:
     t = Test()
     t.dispatch()
 
-Note that your class cannot have a method called `dispatch`.
+Note that your class cannot have a method called `Dispatch`.
     """
 
     def Dispatch(self,argv):
-        if len(argv) < 2:
+        myargs = argv
+        if len(myargs) < 2:
             print "No command argument given"
             self.__printValidCommands()
             return
     
-        cmd = argv[1]
+        cmd = myargs[1]
+               
+        profiling = False 
+        if cmd == "Profile":
+            profiling = True
+            myargs = myargs[1:]
+            cmd = myargs[1]
+        
         if not hasattr(self,cmd):
             print "%s not a valid command" % cmd
             self.__printValidCommands()
@@ -26,7 +34,7 @@ Note that your class cannot have a method called `dispatch`.
         func = getattr(self,cmd)
         # lots of futzing to get default argument handling somewhat usable
         requiredArgs = inspect.getargspec(func)[0][1:]
-        providedArgs = argv[2:]
+        providedArgs = myargs[2:]
         defaultArgs = inspect.getargspec(func)[3] or ()
         if len(providedArgs) + len(defaultArgs) < len(requiredArgs):
             print "%s takes %d arguments:" % (cmd,len(requiredArgs))
@@ -38,7 +46,18 @@ Note that your class cannot have a method called `dispatch`.
                 combinedArgs = tuple(providedArgs)
             else:
                 combinedArgs = tuple(providedArgs) + defaultArgs[-(neededDefaultArgs):]
-        func(*combinedArgs)
+        
+        if profiling: 
+            import hotshot, hotshot.stats
+            profile_filename = "%s.prof" % os.getpid()
+            prof = hotshot.Profile(profile_filename)
+            # prof.runcall(self.Relate, basefile)
+            prof.runcall(func,*combinedArgs)
+            s = hotshot.stats.load(profile_filename)
+            s.sort_stats("cumulative").print_stats(20)
+            print "Profile data saved as %s" % profile_filename
+        else:
+            func(*combinedArgs)
 
     def __printValidCommands(self):
         

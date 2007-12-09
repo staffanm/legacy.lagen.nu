@@ -93,6 +93,13 @@ class TransformError(Exception):
     def __str__(self):
         return repr(self.value)
 
+
+class ExternalCommandError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 # FIXME: phase code out to use odict instead
 class OrderedDict:
     """A combination of a list and a dictionary. There probably exists
@@ -128,9 +135,13 @@ class OrderedDict:
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
     tmpfile = "tmp.%s.xml" % os.getpid()
-    (ret,stdout,stderr) = runcmd("xmllint --format %s > %s" % (filename,tmpfile))
-    os.remove(filename)
-    os.rename(tmpfile,filename)
+    cmdline = "xmllint --format %s > %s" % (filename,tmpfile)
+    (ret,stdout,stderr) = runcmd(cmdline)
+    if (not ret):
+        os.remove(filename)
+        os.rename(tmpfile,filename)
+    else:
+        raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
     # The tidy invocation is for wrapping long lines for easier readability
     # (something that xmllint won't do for us) -- however, it seems that Tidy,
     # even though -raw is used, mangles tag names with non-us-ascci characters

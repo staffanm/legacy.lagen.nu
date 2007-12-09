@@ -15,10 +15,11 @@ import pickle
 from cStringIO import StringIO
 # from DispatchMixin import DispatchMixin
 import Util
-try:
-    import cElementTree as ET
-except ImportError:
-    import elementtree.ElementTree as ET
+
+# try:
+#     import cElementTree as ET
+# except ImportError:
+#     import elementtree.ElementTree as ET
 
 
 class AnnotatedDoc:
