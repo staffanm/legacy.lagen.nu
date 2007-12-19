@@ -33,6 +33,11 @@ def mkdir(newdir):
         if tail:
             os.mkdir(newdir)
 
+def ensureDir(filename):
+    d = os.path.dirname(filename)
+    if not os.path.exists(d):
+        mkdir(d)
+
 # from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135435
 # author: Chui Tey
 # license: PSL

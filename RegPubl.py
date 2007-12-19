@@ -4,6 +4,7 @@
 
 Modulen laddar ner publikationer och konverterar till XML
 """
+# From python stdlib
 import sys
 import os
 import re
@@ -12,13 +13,18 @@ import urllib
 import unittest
 import pprint
 import types
+import xml.etree.cElementTree as ET # Python 2.5 spoken here
+
+# 3rd party modules
+import BeautifulSoup
+from genshi.template import TemplateLoader
+
+# My own stuff
 import LegalSource
 import Util
 import Robot
+from DispatchMixin import DispatchMixin
 
-sys.path.append('3rdparty')
-import BeautifulSoup
-import elementtree.ElementTree as ET
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -44,7 +50,7 @@ class RegPublDownloader(LegalSource.Downloader):
         print "id is %s " %id
         f = Robot.Store(url,r'http://www.regeringen.se/sb/d/108/a/(\d+)',r'%s/\1/index.html'%self.dir)
         soup = self.loadDoc(f)
-        node = soup.find("div", "articleContent")
+        node = soup.find("div", id="content")
         
         for n in node.findAll(True,'pdf'):
             tmpurl = urllib.basejoin(url,n.a['href'].replace("&amp;","&"))
@@ -63,25 +69,49 @@ class RegPublDownloader(LegalSource.Downloader):
             # print "stored at %s" % df
             
 class RegPublParser(LegalSource.Parser):
-    def __init__(self,id,files,baseDir):
-        self.id = id
-        self.dir = baseDir + "/regpubl/parsed"
-        if not os.path.exists(self.dir):
-            Util.mkdir(self.dir)
-        self.files = files
+    #def __init__(self,baseDir):
+    #    self.id = id
+    #    self.dir = baseDir + "/regpubl/parsed"
+    #    if not os.path.exists(self.dir):
+    #        Util.mkdir(self.dir)
+    #    self.files = files
 
-    def Parse(self):
-        soup = self.loadDoc("/regpubl/downloaded/%s/index.html")
-        node = soup.find("div", "articleContent")
-        # first, create metadata-XML from the HTML index page
-        for n in node.findAll(True,'publicationInfoBoxTextLeft'):
-            key = self.elementText(n)
-            val = self.elementText(n.findNextSibling(True,'publicationInfoBoxTextRight'))
-        # secondly, create plaintext-in-a-XML-wrapper for the actual documents
-        for f in files.values():
-            Util.runcmd("pdftotext -layout %s > %s/%s.txt" % f, self.dir,
-                        os.path.splitext(os.path.basename(f))[0])
+    def Parse(self, id, files):
+        # FIXME: extract relevant data from the HTML page
+        # soup = self.LoadDoc(files['html'][0])
 
+        text = ""
+        for f in files['pdf']:
+            # create a tmp textfile 
+            outfile = f.replace(".pdf",".txt").replace("downloaded","intermediate")
+            Util.ensureDir(outfile)
+            cmd = "pdftotext -layout %s %s" % (f, outfile)
+            print "Running %s" % cmd
+            (ret,stdout,stderr) = Util.runcmd(cmd)
+            if (ret != 0):
+                print "ERROR"
+                print stderr
+            text += open(outfile).read()
+        lines = text.split("\n")
+
+        body = makeProp(lines)
+
+    def makeRapport(lines):
+        pass
+
+    def makeAvdelning(lines):
+        pass
+
+    # En propositions struktur (jfr även PDF-bookmarkshiearkin
+    #
+    # Rubrik / Överlämnande / Propositionens huvudsakliga innnehåll
+    # Innehållsförteckning
+    # Avdelningar
+    #   Underavdelning
+    #     Underunderavdelning
+    # Bilagor
+    # Utdrag ur protokoll vid regeringssammanträde
+    # Rättsdatablad
 
 
 class RegPublManager(LegalSource.Manager):
@@ -89,10 +119,27 @@ class RegPublManager(LegalSource.Manager):
     def _getModuleDir(self):
         return __moduledir__
 
-    def DownloadAll(self,id):
+    def Download(self,id):
         rd = RegPublDownloader(self.baseDir)
         rd._downloadSingle("http://www.regeringen.se/sb/d/108/a/%s" % id)
+
+    def DownloadAll(self):
+        print "RegPubl: DownloadAll not implemented"
+
+    def __listfiles(self,basefile,suffix):
+        d = "%s/%s/downloaded/%s" % (self.baseDir,__moduledir__,basefile)
+        return Util.listDirs(d, suffix)
         
+    def Parse(self, basefile):
+        # create something like
+        # {'html':['testdata/regpubl/downloaded/60809/index.html'],
+        #  'pdf': ['testdata/regpubl/downloaded/60809/2c0a24ce.pdf']}
+        files = {'html':list(self.__listfiles(basefile,'.html')),
+                 'pdf':list(self.__listfiles(basefile,'.pdf'))}
+        print files
+        rp = RegPublParser()
+        rp.Parse(basefile,files)
+    
     def ParseAll(self):
         print "RegPubl: ParseAll not implemented"
         return
@@ -118,5 +165,6 @@ class TestRegPublCollection(unittest.TestCase):
                 
 if __name__ == "__main__":
     # unittest.main()
-    mgr = RegPublManager("testdata")
-    mgr.run(sys.argv)
+    RegPublManager.__bases__ += (DispatchMixin,)
+    mgr = RegPublManager("testdata",__moduledir__)
+    mgr.Dispatch(sys.argv)
