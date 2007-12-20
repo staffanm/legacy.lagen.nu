@@ -1,0 +1,7 @@
+h { background-color: #f5f5dc; } /* beige */
+
+p { background-color: #e0ffff; } /* lightblue */
+
+section > p:first-of-type { background-color: #add8e6; } /* lightcyan */
+
+section { background-color: #ffa07a } /* lightsalmon */ 

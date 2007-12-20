@@ -1,46 +1,79 @@
-@import "html.css";
+/* -*- coding: utf-8 -*- */
+@import "xhtml.css";
+/* @import "debug.css"; */
 @namespace rinfo "http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#";
 @namespace "http://www.w3.org/2002/06/xhtml2/";
 
+@page {
+    size: a4 portrait;
+    font: 10pt/1.4 Georgia;
+}
 
-@page { 
+@page:left {
     @top-left {
-	content: "Lagen.nu:" string(titlex) ": " string(paragrafx) "§";
- }
-    @bottom-right { 
-        content: counter(page);
-	font-style: italic;
+	/* "Miljöbalk (1998:808), 2 kap. 4 § - 3 kap. 1 §" */
+	content: string(titel) ", " string(kapitelnr, start) " kap. " string(paragrafnr, start) " §  - " string(kapitelnr, last) " kap. " string(paragrafnr, last) " §";
+	/* Förvaltningslag (1986:223) */
+	content: string(titel) ", " string(paragrafnr, start) " §";
+	/* "Miljöbalk (1998:808), 13 kap." */
+	content: string(titel) ", " string(kapitelnr) " kap.";
+    }
+    @bottom-left {
+	content: counter(page);
     }
 }
 
-title {
-    display: block;
-    font: bold 14pt;
-    string-set: titlex string(.);
+@page:right { 
+    @top-right {
+	content: string(titel) ", " string(kapitelnr, start) " kap.";
+    }
+    @bottom-right { 
+        content: counter(page);
+    }
+}
+
+@page:first {
+    @top-right {
+	content: "";
+    }
+    @bottom-right {
+	content: "En PDF från lagen.nu";
+    }
+}
+
+/* Grundläggande typografi och utrymme */
+
+body {
+    font: 10pt/1.4 Georgia;
+    text-align: justify;
+    hyphens: auto;
+    prince-hyphenate-patterns: "sv.hyp"; 
+    margin-outside: 3cm;
 }
 
 h {
     display: block;
     font-weight: bold;
-    background-color: #ea9;
+    margin-top: 10pt;
 }
 
+/* indentera alla stycken utom det första i varje paragraf */
 p {
     display: block;
-    background-color: #bbb;
+    padding-left: 10pt;
+    text-indent: -10pt hanging;
     margin: 0;
-    indent: 10pt hanging;
 }
-
+/* första stycket i varje paragraf ska inte indenteras */
 section > p:first-of-type {
-    background-color: #bff;
-    indent: 0;
+    text-indent: 0;
+    padding-left: 0;
 }
 
 
-ul {
-    margin: 0;
-}
+
+/* since we can't use OL lists, to make wrapped lines indent somewhat correct */
+ul { margin: 0; }
 ul.numreradlista > li {
     list-style: none;
     text-indent: 12pt hanging;
@@ -59,23 +92,49 @@ section.upphavd {
     font-style: italic;
 }
 
+span.ikrafttradande
+span.upphor
+span.andringsforfattning {
+    font-style: italic;
+}
+
+
 
 section {
     display: block;
-    border: solid 0.1pt green;
     padding: 1pt;
-    //counter-increment: paragrafcnt;
-    //string-set: paragrafx counter(paragrafcnt);
+    margin-top: 5pt;
 }
 
-section[rel^="paragraf"] {
-    background-color: #faa;
+body > section > h { page-break-before: always }
+
+/* Make the TOC look like a normal TOC, including leaders and correct page numbers */
+ul.toc { list-style: none; }
+ul.toc a::after {   content: leader('.') target-counter(attr(href), page); }
+
+a[href] {
+    text-decoration: none;
 }
 
-section[rel^="kapitel"] {
-    background-color: #cadetblue;
+.warning {
+    border: solid 2pt red;
+    font-weight: bold;
+    font-style: italic;
 }
 
-meta[property^="paragrafordinal"] {
-    string-set: paragrafx "M1-" string(.);
-}
+/* Sättande av variabler som används i sidhuvudet */
+*[property="dc:title"] { string-set: titel content() }
+*[property="rinfo:kapitelnummer"] { string-set: kapitelnr attr(content) } 
+*[property="rinfo:paragrafnummer"] { string-set: paragrafnr attr(content) }
+span.paragrafbeteckning { string-set: altparagraf content() };
+
+    
+
+/* PDF bookmark handling */ 
+section > h { prince-bookmark-level: 1 }
+section > h.underrubrik { prince-bookmark-level: none }
+section > section > h { prince-bookmark-level: 3 }
+section > section > h.kapitelrubrik { prince-bookmark-level: 2 }
+section > section > section > h { prince-bookmark-level: 4 }
+section > section > section > section > h { prince-bookmark-level: 5 }
+

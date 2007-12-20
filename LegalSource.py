@@ -6,11 +6,8 @@ import pickle
 from time import time
 
 # Do required codec/locale magic here, since this is included by all runnable scripts
-sys.stdout.write(u"sys.getdefaultencoding():   %s\n" % sys.getdefaultencoding())
-sys.stdout.write(u"sys.stdout.encoding:        %s\n" % sys.stdout.encoding)
-
 import locale
-locale.setlocale(locale.LC_ALL,'')
+locale.setlocale(locale.LC_ALL,'') 
 reload(sys)
 
 if sys.stdout.encoding: # not set when stdout is redirected
@@ -20,7 +17,10 @@ else:
         sys.setdefaultencoding('cp850')
     else:
         sys.setdefaultencoding('iso-8859-1') # a reasonable default?
-        
+
+sys.stdout = codecs.getwriter(sys.getdefaultencoding())(sys.__stdout__, 'replace')
+sys.stderr = codecs.getwriter(sys.getdefaultencoding())(sys.__stderr__, 'replace')
+
 
 
 # Python 2.5 plz
