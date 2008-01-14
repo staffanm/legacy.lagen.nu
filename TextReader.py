@@ -221,13 +221,15 @@ class TextReader:
 
 import unittest
 if sys.platform == 'win32':
-    LIBPREFIX = sys.prefix 
+    PREFIX = sys.prefix
+    LIBPREFIX = PREFIX + "/Lib"
 else:
-    LIBPREFIX = sys.prefix +  "/lib/python2.5"
+    PREFIX = sys.prefix +  "/lib/python2.5"
+    LIBPREFIX = PREFIX
 
 class Basic(unittest.TestCase):
     def setUp(self):
-        self.f = TextReader(LIBPREFIX + "/LICENSE.txt")
+        self.f = TextReader(PREFIX + "/LICENSE.txt")
 
     def testReadline(self):
         self.assertEqual(self.f.readline(),
@@ -282,7 +284,7 @@ class Basic(unittest.TestCase):
 
 class Codecs(unittest.TestCase):
     def testUTF(self):
-        f = TextReader(LIBPREFIX + "/Lib/test/test_doctest4.txt", "utf-8")
+        f = TextReader(LIBPREFIX + "/test/test_doctest4.txt", "utf-8")
         f.cue(u"u'f")
         self.assertEquals(f.read(5),
                           u"u'f\u00f6\u00f6") 
@@ -291,21 +293,21 @@ class Codecs(unittest.TestCase):
                           u"u'b\u0105r")
 
     def testISO(self):
-        f = TextReader(LIBPREFIX + "/Lib/test/test_shlex.py", "iso-8859-1")
+        f = TextReader(LIBPREFIX + "/test/test_shlex.py", "iso-8859-1")
         f.cue(';|-|)|')
         f.readline()
         self.assertEquals(f.read(5),
                           u"\u00e1\u00e9\u00ed\u00f3\u00fa")
 
     def testKOI8(self):
-        f = TextReader(LIBPREFIX + "/Lib/test/test_pep263.py", "koi8-r")
+        f = TextReader(LIBPREFIX + "/test/test_pep263.py", "koi8-r")
         f.cue(u'u"')
         self.assertEquals(f.read(7),
                           u'u"\u041f\u0438\u0442\u043e\u043d')
 
 class Processing(unittest.TestCase):
     def setUp(self):
-        self.f = TextReader(LIBPREFIX + "/LICENSE.txt")
+        self.f = TextReader(PREFIX + "/LICENSE.txt")
 
     def testStrip(self):
         self.f.autostrip = True
@@ -336,7 +338,7 @@ class Processing(unittest.TestCase):
     
 class Subreaders(unittest.TestCase):
     def setUp(self):
-        self.f = TextReader(LIBPREFIX + "/Lib/test/test_base64.py")
+        self.f = TextReader(LIBPREFIX + "/test/test_base64.py")
 
     def testPage1(self):
         p = self.f.getreader(self.f.readpage)
@@ -363,7 +365,7 @@ class Subreaders(unittest.TestCase):
 
 class Edgecases(unittest.TestCase):
     def setUp(self):
-        self.f = TextReader(LIBPREFIX + "/LICENSE.txt")
+        self.f = TextReader(PREFIX + "/LICENSE.txt")
 
     def testPeekPastEOF(self):
         self.assertRaises(IOError,
