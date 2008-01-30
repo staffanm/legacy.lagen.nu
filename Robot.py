@@ -12,14 +12,14 @@ import time
 import re
 import os
 import urllib # for urllib.urlencode
-import urllib2
+import urllib2, cookielib
 import httplib
 import md5
 # import mimetools
 
-sys.path.append('3rdparty')
-sys.path.append('../3rdparty')
-import ClientCookie
+# sys.path.append('3rdparty')
+# sys.path.append('../3rdparty')
+# import ClientCookie
 
 import StringIO
 
@@ -135,7 +135,7 @@ class CachedResponse(StringIO.StringIO):
 # ensure that the same instance of HTTPRobotRulesProcessor is reused
 # -- otherwise the robots.txt file is requested for each ordinary
 # request, wheter cached or not -- not that friendly
-robotRulesProcessor = ClientCookie.HTTPRobotRulesProcessor()
+# robotRulesProcessor = ClientCookie.HTTPRobotRulesProcessor()
 def Open(url,
          method="GET",
          parameters={},
@@ -151,27 +151,36 @@ def Open(url,
     """
     handlers=[]
     if useCache:
+        #print "Using cache"
         handlers.append(CacheHandler(cacheLocation))
-    if respectRobotsTxt:
-        handlers.append(robotRulesProcessor)
+    #if respectRobotsTxt:
+    #    print "Respecting robots.txt"
+    #    handlers.append(robotRulesProcessor)
     if useThrottling:
+        #print "Throttling requests"
         handlers.append(ThrottlingProcessor(throttleDelay))
+
+    handlers.append(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+    
     
     # ClientCookie is a extended wrapper around urllib2 that adds 
     # automatic cookie handling and other stuff. It also provides the 
     # HTTPRobotRulesProcessor. However, the other handlers (CacheHandlers,
     # and ThrottlingProcessor) can be used with vanilla urllib2 as well.
-    opener = ClientCookie.build_opener(*handlers)
-    # opener = urllib2.build_opener(*handlers)
-    # 
+    # opener = ClientCookie.build_opener(*handlers)
+    opener = urllib2.build_opener(*handlers)
+
     opener.addheaders = [('User-agent', userAgent)]
     retries = 3
     while retries >= 0:
         try:
             if (method == "POST"):
                 data = urllib.urlencode(parameters)
-                #print "POSTing data: %s" % data
+                print "POSTing data: %s" % data
                 response = opener.open(url,data)
+                print "Response code: %d" % response.code
+                print "Response headers"
+                print response.info()
             else:
                 response = opener.open(url)
             return response
@@ -181,7 +190,6 @@ def Open(url,
                 raise e
             else:
                 print "WARNING: Robot.Open got a URLError, %s retries left" % retries
-            
 
 
 def Get(url,
@@ -253,7 +261,7 @@ def Store(url,
     """Fetch the contents of a given URL, and store it on disk.
 
     The urlPattern is a regexp that should match the URL being
-    used. It should contain at least one paranthesided expression. The
+    used. It should contain at least one paranthesized expression. The
     filePattern is a template that is used with the matches from the
     urlPattern regexp, eg:
 
@@ -294,6 +302,9 @@ def Store(url,
     _mkdir(os.path.dirname(filename))
     fp = open(filename,"w")
     fp.write(resp.read())
+    #while not resp.closed:
+    #    time.sleep(0.5)
+    #    fp.write(resp.read())
     fp.close()
     return filename
         

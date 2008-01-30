@@ -97,6 +97,12 @@ class Manager:
             print "  * %s: %s" % (m,modules[m])
         print "  or `all' to do it to all modules"
 
+    def DownloadAll(self, module):
+        self._doAction('DownloadAll',module)
+
+    def DownloadNew(self, module):
+        self._doAction('DownloadNew', module)
+        
     def ParseAll(self,module):
         self._doAction('ParseAll',module)
 

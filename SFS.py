@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-"""Hanterar författningar i SFS från Regeringskansliet rättsdatabaser.
+"""Hanterar (konsoliderade) författningar i SFS från Regeringskansliet
+rättsdatabaser.
 """
 # system libraries
 import sys, os, re
@@ -21,6 +22,8 @@ import xml.etree.cElementTree as ET
 # 3rdparty libs
 # sys.path.append('3rdparty')
 from genshi.template import TemplateLoader
+from configobj import ConfigObj
+from mechanize import Browser, LinkNotFoundError
 # import gnosis.xml.pickle
 
 
@@ -28,7 +31,7 @@ from genshi.template import TemplateLoader
 import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
-# from DocComments import AnnotatedDoc
+from TextReader import TextReader
 # from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
 # from Verva / rättsinformationsprojektet
@@ -36,26 +39,21 @@ sys.path.append('../rinfo-datacore/scripts/converters/sfst')
 from create_example_data import SFSParser as VervaSFSParser
 from create_example_data import SFSParserRunner as VervaSFSParserRunner
 
-
-# Django stuff
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-# from ferenda.docview.models import *
-
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Författningar i SFS"
 __moduledir__ = "sfs"
 
 # module global utility functions
-def SFSidToFilename(sfsid):
+def SFSnrToFilename(sfsnr):
     """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
     s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
     id."""
-    if sfsid.find(":") < 0: return None
-    return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
+    if sfsnr.find(":") < 0: return None
+    return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsnr.replace(' ', '_'))
 
-def FilenameToSFSid(filename):
-    """converts a filename, sans suffix, to a sfsid, eg:
+def FilenameToSFSnr(filename):
+    """converts a filename, sans suffix, to a sfsnr, eg:
     '1909/bih._29_s.1' => '1909:bih. 29 s.1'"""
     (dir,file)=filename.split("/")
     if file.startswith('RFS'):
@@ -67,22 +65,183 @@ def FilenameToSFSid(filename):
 class SFSDownloader(LegalSource.Downloader):
     def __init__(self,baseDir="data"):
         self.dir = baseDir + "/%s/downloaded" % __moduledir__
-        if not os.path.exists(self.dir):
+        if not os.path.exists(self.dir): 
             Util.mkdir(self.dir)
-        self.ids = {}
+        self.config = ConfigObj("%s/%s.ini" % (self.dir, __moduledir__))
+
+        # Why does this say "super() argument 1 must be type, not classobj"
+        # super(SFSDownloader,self).__init__()
+        self.browser = Browser()
+
     
     def DownloadAll(self):
-        pass
+        start = 1600
+        end = datetime.date.today().year
+        self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
+
+        pagecnt = 1
+        done = False
+        while not done:
+            print "Result page #%s" % pagecnt
+            for l in (self.browser.links(text_regex=r'\d+:\d+')):
+                self._downloadSingle(l.text)
+                # self.browser.back()
+            try:
+                self.browser.find_link(text='Fler poster')
+                self.browser.follow_link(text='Fler poster')
+                pagecnt += 1
+            except LinkNotFoundError:
+                print "No next page link found, we must be done"
+                done = True
+        self._setLastSFSnr(self)
+
+
+    def _setLastSFSnr(self,last_sfsnr=None):
+        if not last_sfsnr:
+            print "Looking for the most recent SFS nr"
+            last_sfsnr = "1600:1"
+            for f in Util.listDirs("%s/sfst" % self.dir, ".html"):
+
+                tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.dir)+6:-5]), f)
+                # FIXME: RFS1975:6 > 2008:1
+                if tmp > last_sfsnr:
+                    print "%s > %s (%s)" % (tmp, last_sfsnr, f)
+                    last_sfsnr = tmp
+        self.config['next_sfsnr'] = last_sfsnr 
+        self.config.write()
 
     def DownloadNew(self):
-        pass
+        (year,nr) = [int(x) for x in self.config['next_sfsnr'].split(":")]
+        done = False
+        while not done:
+            print "Looking for SFS %s:%s" % (year,nr)
+            if not self._checkForSFS(year,nr):
+                if datetime.date.today().year > year:
+                    print "    Possible end-of-year condition"
+                    if self._checkForSFS(datetime.date.today().year, 1):
+                        year = datetime.date.today().year
+                        nr = 1
+                    else:
+                        print "    We're done"
+                        done = True
+            else:
+                # men snälla nån!
+                self._downloadSingle("%s:%s" % (year,nr))
+                nr = nr + 1
+        self._setLastSFSnr("%s:%s" % (year,nr))
+                
+    def _checkForSFS(self,year,nr):
+        # Titta först efter grundförfattning
+        print "    Checking for base"
+        url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
+        if self._searchError(url):
+            # Sen efter ändringsförfattning
+            print "    Base not found, checking for amendment"
+            url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
+            if self._searchError(url):
+                print "    Amendment not found"
+                return False
+        return True
 
+    def _searchError(self,url):
+        self.browser.retrieve(url,"sfs.tmp")
+        t = TextReader("sfs.tmp")
+        try:
+            t.cue("<p>Sökningen gav ingen träff!</p>")
+            return True
+        except IOError:
+            return False
+
+    def _downloadSingle(self, sfsnr):
+        """Laddar ner senaste konsoliderade versionen av
+        grundförfattningen med angivet SFS-nr. Om en tidigare version
+        finns på disk, arkiveras den."""
+        print "    Downloading %s" % sfsnr
+        # enc_sfsnr = sfsnr.replace(" ", "+")
+        # Div specialhack för knepiga författningar
+        if sfsnr == "1723:1016+1": parts = ["1723:1016"]
+        elif sfsnr == "1942:740": parts = ["1942:740 A", "1942:740 B"]
+        else: parts = [sfsnr]
+
+        uppdaterad_tom = old_uppdaterad_tom = None
+        for part in parts:
+            sfst_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
+            sfst_file = "%s/sfst/%s.html" % (self.dir, SFSnrToFilename(part))
+            # print "        Getting %s" % sfst_url
+            self.browser.retrieve(sfst_url,"sfst.tmp")
+            if os.path.exists(sfst_file):
+                if (self._checksum(sfst_file) != self._checksum("sfst.tmp")):
+                    old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
+                    uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
+                    if uppdaterad_tom != old_uppdaterad_tom:
+                        print "        %s has changed (%s -> %s)" % (sfsnr,old_uppdaterad_tom,uppdaterad_tom)
+                        self._archive(sfst_file, sfsnr, uppdaterad_tom)
+
+                    # replace the current file, regardless of wheter
+                    # we've updated it or not
+                    Util.robustRename("sfst.tmp", sfst_file)
+                else:
+                    pass # leave the current file untouched
+            else:
+                Util.robustRename("sfst.tmp", sfst_file)
+
+            
+
+        sfsr_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
+        sfsr_file = "%s/sfsr/%s.html" % (self.dir, SFSnrToFilename(sfsnr))
+        if uppdaterad_tom != old_uppdaterad_tom:
+            self._archive(sfsr_file, sfsnr, uppdaterad_tom)
+
+        Util.ensureDir(sfsr_file)
+        self.browser.retrieve(sfsr_url, sfsr_file)
+        
+            
+        
+    def _archive(self, filename, sfsnr, uppdaterad_tom):
+        """Arkivera undan filen filename, som ska vara en
+        grundförfattning med angivet sfsnr och vara uppdaterad
+        t.o.m. det angivna sfsnumret"""
+        if sfsnr == "1942:740":
+            two_parter_mode = True
+        archive_filename = "%s/sfst/%s-%s.html" % (self.dir, SFSnrToFilename(sfsnr),
+                                         SFSnrToFilename(uppdaterad_tom).replace("/","-"))
+        print "        Archiving %s to %s" % (filename, archive_filename)
+
+        if not os.path.exists(archive_filename):
+            os.rename(filename,archive_filename)
+        
+
+        
+
+    def _findUppdateradTOM(self, sfsnr, filename):
+        reader = TextReader(filename)
+        try:
+            reader.cue("&Auml;ndring inf&ouml;rd:<b> t.o.m. SFS")
+            l = reader.readline()
+            m = re.search('(\d+:\s?\d+)',l)
+            if m:
+                return m.group(1)
+            else:
+                # if m is None, the SFS id is using a non-standard
+                # formatting (eg 1996/613-first-version) -- interpret
+                # it as if it didn't exist
+                return sfsnr
+        except IOError:
+            return sfsnr
+
+    def _checksum(self,filename):
+        """Given a SHA-1 checksum for a downloaded file"""
+        # FIXME: We should be looking only at the plaintext part
+        import sha
+        c = sha.new()
+        c.update(open(filename).read())
+        return c.hexdigest()
 
 class SFSParser(LegalSource.Parser):
    
     def Parse(self,basefile,files):
         self.verbose = True
-        self.id = FilenameToSFSid(basefile)
+        self.id = FilenameToSFSnr(basefile)
         # find out when data was last fetched (use the oldest file)
         timestamp = sys.maxint
         for filelist in files.values():
@@ -216,7 +375,7 @@ class SFSManager(LegalSource.Manager):
 
         if 'law' in e.attrib: # this is an 'absolute' reference, no context needed
             return self._createSFSUrn(e)
-        e.attrib['law'] = context['sfsid']
+        e.attrib['law'] = context['sfsnr']
         if restartingSectionNumbering:
             if 'chapter' not in e.attrib:
                 if context['chapter']:
@@ -240,26 +399,26 @@ class SFSManager(LegalSource.Manager):
     
     def _findDisplayId(self,root,basefile):
         # we don't need the (ElementTree) root -- basename is enough
-        return FilenameToSFSid(basefile)
+        return FilenameToSFSnr(basefile)
 
     def _basefileToDisplayId(self,basefile, urnprefix):    
         assert(urnprefix == u'urn:x-sfs')
-        return FilenameToSFSid(basefile)
+        return FilenameToSFSnr(basefile)
         
     def _basefileToUrn(self, basefile, urnprefix):        
         assert(urnprefix == u'urn:x-sfs')
-        return u'urn:x-sfs:%s' % FilenameToSFSid(basefile).replace(' ','_')
+        return u'urn:x-sfs:%s' % FilenameToSFSnr(basefile).replace(' ','_')
         
     def _displayIdToBasefile(self,displayid, urnprefix):        
         assert(urnprefix == u'urn:x-sfs')
-        return SFSidToFilename(displayid)
+        return SFSnrToFilename(displayid)
         
     def _displayIdToURN(self,displayid, urnprefix):        
         assert(urnprefix == u'urn:x-sfs')
         return u'urn:x-sfs:%s' % displayid.replace(' ','_')
     
     def _UrnToBasefile(self,urn):
-        return SFSidToFilename(self._UrnToDisplayId(urn))
+        return SFSnrToFilename(self._UrnToDisplayId(urn))
         
     def _UrnToDisplayId(self,urn):
         return urn.split(':',2)[-1].replace('_',' ')
@@ -314,13 +473,13 @@ class SFSManager(LegalSource.Manager):
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
-        sanitized_sfsid = basefile.replace(' ','.')
+        sanitized_sfsnr = basefile.replace(' ','.')
         print "Transforming %s > %s" % (infile,outfile)
         Util.mkdir(os.path.dirname(outfile))
         Util.transform("xsl/sfs.xsl",
                        infile,
                        outfile,
-                       {'lawid': sanitized_sfsid,
+                       {'lawid': sanitized_sfsnr,
                         'today':datetime.date.today().strftime("%Y-%m-%d")},
                        validate=False)
         #  print "Generating index for %s" % outfile
@@ -364,7 +523,7 @@ class SFSManager(LegalSource.Manager):
         # this second call to root.getiterator() could possibly be merged 
         # with the first one, if I understood how it worked...
         parent_map = dict((c, p) for p in root.getiterator() for c in p)
-        context = {'sfsid':     displayid,
+        context = {'sfsnr':     displayid,
                    'changeid':  None, # not really sure it belongs
                    'chapter':   None,
                    'section':   None,
@@ -450,7 +609,19 @@ class SFSManager(LegalSource.Manager):
         # print "SFS: RelateAll temporarily disabled"
         # return
         self.__doAll('parsed','xml',self.Relate)
-        
+
+    def Download(self,id):
+        sd = SFSDownloader(self.baseDir)
+        sd._downloadSingle(id)
+
+    def DownloadAll(self):
+        sd = SFSDownloader(self.baseDir)
+        sd.DownloadAll()
+
+    def DownloadNew(self):
+        sd = SFSDownloader(self.baseDir)
+        sd.DownloadNew()
+    
 
 if __name__ == "__main__":
     if not '__file__' in dir():

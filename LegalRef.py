@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-"""This module finds references to legal sources (including individual sections,
-eg "Upphovsrättslag (1960:729) 49 a §") in plaintext"""
+"""This module finds references to legal sources (including individual
+sections, eg 'Upphovsrättslag (1960:729) 49 a §') in plaintext"""
 import os,pprint
 
 import sys
@@ -784,12 +784,3 @@ if __name__ == "__main__":
     t = TestLegalRef()
     t.Dispatch(sys.argv)
     
-    # LawParser.runtest("parsertest/verdict-2000-28.txt",verbose=True)
-    # LawParser.teststring("20 § förordningen ( 1995:521 ) om behöriga myndigheter")
-    # LawParser.teststring("5 kap. 1 § och 4 §, 6 kap. 2 § 3 st. och 4 st. samt 10 kap. 1 § yttrandefrihetsgrundlagen (1991:1469)")
-    # LawParser.teststring("6 kap. 2 § 3 st. och 4 st.")
-    # LawParser.teststring("5 kap. 1 § och 4 § och 6 kap. 2 § 3 st. och 4 st.")
-    # LawParser.teststring("51 kap. 23 a § 1 rättegångsbalken (1942:740)")
-    # LawParser.teststring("5 kap. 1 § och 3 §, 9 kap. 6 § samt 16 kap. 7 § miljöbalken (1998:808)")
-    # LawParser.teststring("/Träder i kraft I:2006-03-31/")
-    # SFSRefParser.runalltests()

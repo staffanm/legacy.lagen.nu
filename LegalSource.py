@@ -23,13 +23,15 @@ sys.stderr = codecs.getwriter(sys.getdefaultencoding())(sys.__stderr__, 'replace
 
 
 
-# Python 2.5 plz
-import xml.etree.cElementTree as ET
-# import cElementTree as ET
-# import elementtree.ElementTree as ET
-import BeautifulSoup
-import Util
 
+import xml.etree.cElementTree as ET
+
+# 3rd party modules
+import BeautifulSoup
+from mechanize import Browser, LinkNotFoundError
+
+# my own code
+import Util
 
 # os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
 # from ferenda.docview.models import *
@@ -48,6 +50,63 @@ class IdNotFound(Exception):
     def __str__(self):
         return repr(self.value)
 
+#----------------------------------------------------------------
+# DATAOBJEKT: Andra rättskällemoduler kan bygga sina källspecifika
+#   objektmodeller ovanpå dessa tre grundobjekt
+#
+# 
+
+class AbstractStructure(object):
+    def __new__(cls):
+        obj = super(Base,cls).__new__(cls)
+        # Declare this instance not quite ready for prime time
+        object.__setattr__(obj,'__initialized',False)
+        return obj
+
+    def __init__(self):
+        # self.basevar = "%s@%d" % (self.__class__.__name__,id(self))
+
+        # Declare this instance ready for usage. Note that derived
+        # objects must do their own initialization first, before
+        # calling the superclass constructor (i.e. this function).
+        # Call object.__setattr__ directly to bypass our own
+        # __setattr__ implementation.
+        object.__setattr__(self, '__initialized', True)
+
+    def __setattr__(self,name,value):
+        if object.__getattribute__(self,'__initialized'):
+            # initialization phase is over -- no new attributes should
+            # be created. Check to see if the attribute exists -- if it
+            # doesn't, we raise an AttributeError (with a sensible
+            # error message)
+            try:
+                object.__getattribute__(self,name)
+                object.__setattr__(self,name,value)
+            except AttributeError:
+                raise AttributeError("Can't set attribute '%s' on object '%s' after initialization" % (name, self.__class__.__name__))
+        else:
+            # Still in initialization phase -- ok to create new
+            # attributes
+            object.__setattr__(self,name,value)
+    
+class SimpleStructure(AbstractStructure,unicode):
+    """En SimpleStructure är bärare av ett värde (en textsträng av
+    något slag). Den kan även ha andra egenskaper (ordningsnummer,
+    ikraftträdandedatum etc)."""
+    def __new__(cls, s):
+        return unicode.__new__(cls,s)
+
+class CompoundStructure(AbstractStructure,list):
+    """En CompoundStructure fungerar som en lista av andra Structureobjekt. 
+    Den kan också  ha egna egenskaper (kapitelrubrik, paragrafnummer etc)"""
+    def serialize(self):
+        print "%s (" % (self.__class__.__name__)
+        for x in self:
+            x.serialize()
+        print ")"
+
+
+
 class Downloader:
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
     """Abstract base class for downloading legal source documents
@@ -57,26 +116,32 @@ class Downloader:
     index.xml file, subclasses should do as little modification to the
     data as possible."""
 
-    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
-    def _mkdir(self,newdir):
-        """works the way a good mkdir should :)
-        - already exists, silently complete
-        - regular file in the way, raise an exception
-        - parent directory(ies) does not exist, make them as well
-        """
-        if os.path.isdir(newdir):
-            pass
-        elif os.path.isfile(newdir):
-            raise OSError("a file with the same name as the desired " \
-                          "dir, '%s', already exists." % newdir)
-        else:
-            head, tail = os.path.split(newdir)
-            if head and not os.path.isdir(head):
-                self._mkdir(head)
-            #print "_mkdir %s" % repr(newdir)
-            if tail:
-                os.mkdir(newdir)
+    #    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
+    #    def _mkdir(self,newdir):
+    #        """works the way a good mkdir should :)
+    #        - already exists, silently complete
+    #        - regular file in the way, raise an exception
+    #        - parent directory(ies) does not exist, make them as well
+    #        """
+    #        if os.path.isdir(newdir):
+    #            pass
+    #        elif os.path.isfile(newdir):
+    #            raise OSError("a file with the same name as the desired " \
+    #                          "dir, '%s', already exists." % newdir)
+    #        else:
+    #            head, tail = os.path.split(newdir)
+    #            if head and not os.path.isdir(head):
+    #                self._mkdir(head)
+    #            #print "_mkdir %s" % repr(newdir)
+    #            if tail:
+    #                os.mkdir(newdir)
 
+    def __init__():
+        self.browser = Browser()
+        # FIXME: Set user-agent header somehow. Also, if we could make
+        # it support Robot.ThrottlingProcessor it would be cool
+        self.ids = {}
+ 
     def DownloadAll():
         raise NotImplementedError
     
@@ -104,10 +169,6 @@ class Downloader:
             resource.localFile = node.get("localFile")
             resource.fetched = time.strptime(node.get("fetched"), self.TIME_FORMAT)
             self.ids[id] = resource
-    def loadDoc(self,filename,encoding='iso-8859-1'):
-        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
-                                           convertEntities='html')
-
 
 
 class Parser:

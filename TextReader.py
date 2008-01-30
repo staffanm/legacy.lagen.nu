@@ -35,12 +35,13 @@ class TextReader:
         self.autodehyphenate = False
         self.f = codecs.open(self.name,"rb",encoding)
 
-        chararray = []
-        c = self.f.read(1)
-        while (c):
-            chararray.append(c) # is this inefficent, or does python optimize behind the scenes?
-            c = self.f.read(1)
-        self.data = "".join(chararray)
+        chunks = []
+        chunk = self.f.read(1024*1024)
+        while (chunk):
+            chunks.append(chunk) 
+            chunk = self.f.read(1024*1024)
+
+        self.data = "".join(chunks)
         self.currpos = 0
         self.maxpos = len(self.data)
         self.lastread = u''

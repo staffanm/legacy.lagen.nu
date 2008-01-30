@@ -4,8 +4,8 @@
 @page {
     margin-top: 50pt;
     margin-bottom: 50pt;
-    margin-left: 30pt;
-    margin-right: 30pt;
+    margin-inside: 50pt;
+    margin-outside: 30pt;
     padding: 0;
 }
 
@@ -15,6 +15,9 @@ body {
     column-gap: 1.5em;
     column-fill: auto; 
     text-align: justify;
-    font: 9pt/1.4 Georgia;
+    font: 8pt/1.2 Georgia;
 }
     
+body > section > h {
+    page-break-before: auto;
+}
