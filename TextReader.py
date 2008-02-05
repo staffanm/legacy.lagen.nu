@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
-"""Fancy class for reading (not writing) text files. It can read files
-in different encodings (but TextReader gives you unicode, dammit)"""
+"""Fancy file-like-class for reading (not writing) text files by line,
+paragraph, page or any other user-defined unit of text, with support
+for peeking ahead and looking backwards. It can read files in
+different encodings, but converts/handles everything using unicode.
+Alternatively, it can be initialized from an existing (unicode) buffer""" 
 
 import os, sys, codecs, copy, unittest
 
@@ -14,39 +17,53 @@ class TextReader:
     #----------------------------------------------------------------
     # Internal helper methods etc
     
-    def __init__(self,filename,encoding=None,linesep=None):
+    def __init__(self, filename=None, ustring=None, encoding=None, linesep=None):
+        if not filename and not ustring:
+            raise TypeError("Must specify either filename or ustring")
 
         # implementation of file attributes
         self.closed = False
-        self.encoding = encoding
         self.mode = "r+"
         self.name = filename
         self.newlines = None
         self.softspace = 0
+
+        # 2.5 syntax goodness
+        self.encoding = encoding if encoding else 'ascii'
 
         # Other initialization
         if linesep:
             self.linesep = linesep
         else:
             self.linesep = os.linesep
-        
+
+        # can be changed through getiterator, if we want to iterate over anything else but lines
+        self.iterfunc = self.readline
+        self.iterargs = []
+        self.iterkwargs = {}
         self.autostrip = False
         self.autodewrap = False
         self.autodehyphenate = False
-        self.f = codecs.open(self.name,"rb",encoding)
 
-        chunks = []
-        chunk = self.f.read(1024*1024)
-        while (chunk):
-            chunks.append(chunk) 
+        if filename:
+            self.f = codecs.open(self.name,"rb",encoding)
+            chunks = []
             chunk = self.f.read(1024*1024)
-
-        self.data = "".join(chunks)
+            while (chunk):
+                chunks.append(chunk) 
+                chunk = self.f.read(1024*1024)
+                # FIXME: check to see if this speeds things up
+                # s = struct.pack("%dB" % (len(a),), *a)
+                self.data = "".join(chunks)
+        else:
+            assert(isinstance(ustring,unicode))
+            self.data = ustring
         self.currpos = 0
         self.maxpos = len(self.data)
         self.lastread = u''
 
     def __iter__(self):
+        # self.iterfunc = self.readline
         return self
 
     def __find(self,delimiter,startpos):
@@ -87,6 +104,7 @@ class TextReader:
     def __dehyphenate(self,s):
         return s # FIXME: implement
 
+
     #----------------------------------------------------------------
     # Implementation of a file-like interface
 
@@ -94,7 +112,9 @@ class TextReader:
 
     def next(self):
         oldpos = self.currpos
-        res = self.__process(self.readline())
+        # res = self.__process(self.readline())
+        # print "self.iterfunc is %r" % self.iterfunc
+        res = self.__process(self.iterfunc(*self.iterargs,**self.iterkwargs))
         if self.currpos == oldpos:
             raise StopIteration
         else:
@@ -137,11 +157,29 @@ class TextReader:
     #----------------------------------------------------------------
     # Added convenience methods
 
-    def cue(self,string): # should maybe be called 'cue' or similar?
+    def eof(self):
+        return (self.currpos == self.maxpos)
+
+    def bof(self):
+        return (self.currpos == 0)
+
+    def cue(self,string):
         idx = self.data.find(string,self.currpos)
         if idx == -1:
             raise IOError("Could not find %r in file" % string)
         self.currpos = idx
+
+    def cuepast(self,string):
+        self.cue(string)
+        self.currpos += len(string)
+
+    def readto(self,string):
+        idx = self.data.find(string,self.currpos)
+        if idx == -1:
+            raise IOError("Could not find %r in file" % string)
+        res = self.data[self.currpos:idx]
+        self.currpos = idx
+        return self.__process(res)
 
     def readparagraph(self):
         return self.readchunk(self.linesep*2)
@@ -216,6 +254,11 @@ class TextReader:
         clone.maxpos = len(clone.data)
         return clone
 
+    def getiterator(self,callableObj,*args,**kwargs):
+        self.iterfunc = callableObj
+        self.iterargs = args
+        self.iterkwargs = kwargs
+        return self
 
 #----------------------------------------------------------------
 # Unit tests
@@ -241,8 +284,12 @@ class Basic(unittest.TestCase):
         self.f.seek(0)
 
     def testIterateFile(self):
+        self.assertEqual(self.f.bof(), True)
+        self.assertEqual(self.f.eof(), False)
         for line in self.f:
             pass
+        self.assertEqual(self.f.bof(), False)
+        self.assertEqual(self.f.eof(), True)
         self.f.seek(0)
         
     def testReadparagraph(self):
@@ -282,8 +329,27 @@ class Basic(unittest.TestCase):
         self.f.cue("Guido")
         self.assertEquals(self.f.readline(),
                           u'Guido van Rossum at Stichting')
+        self.f.seek(0)
 
-class Codecs(unittest.TestCase):
+    def testCuePast(self):
+        self.f.cuepast("Guido")
+        self.assertEquals(self.f.readline(),
+                          u' van Rossum at Stichting')
+        self.f.seek(0)
+
+    def testReadTo(self):
+        self.assertEquals(self.f.readto("SOFTWARE"),
+                          u'A. HISTORY OF THE ')
+
+
+# run all basic tests again, but this time initialised from a unicode buffer
+class Ustring(Basic):
+    def setUp(self):
+        data = codecs.open(PREFIX + "/LICENSE.txt",encoding='ascii').read()
+        self.f = TextReader(ustring=data)
+
+
+class Codecs:
     def testUTF(self):
         f = TextReader(LIBPREFIX + "/test/test_doctest4.txt", "utf-8")
         f.cue(u"u'f")
@@ -337,6 +403,19 @@ class Processing(unittest.TestCase):
         # Should this even be in the Processing test suite?
         pass
     
+
+class Customiterator(unittest.TestCase):
+    def setUp(self):
+        self.f = TextReader(PREFIX + "/LICENSE.txt")
+
+    def testIterateParagraph(self):
+        cnt = 0
+        for p in self.f.getiterator(self.f.readchunk,self.f.linesep*2):
+            cnt += 1
+
+        self.assertEquals(cnt, 44) 
+        
+
 class Subreaders(unittest.TestCase):
     def setUp(self):
         self.f = TextReader(LIBPREFIX + "/test/test_base64.py")
@@ -377,7 +456,7 @@ class Edgecases(unittest.TestCase):
                           self.f.prevline, 4711)
 
     def testReadPastEOF(self):
-        self.assertEqual(len(self.f.read(1)), 1) 
+        self.assertEqual(len(self.f.read(1)), 1)
         self.f.read(sys.maxint) # read past end of file - no license text is THAT big
         self.assertNotEqual(self.f.currpos, sys.maxint+1)
         self.assertEqual(len(self.f.read(1)), 0) # no more to read

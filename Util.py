@@ -251,3 +251,12 @@ def loadSoup(filename,encoding='iso-8859-1'):
     return BeautifulSoup.BeautifulSoup(
         codecs.open(filename,encoding=encoding,errors='replace').read(),
         convertEntities='html')
+
+
+def elementText(element):
+    """finds the plaintext contained in a BeautifulSoup element"""
+    return normalizeSpace(
+        ''.join(
+        [e for e in element.recursiveChildGenerator() 
+         if (isinstance(e,unicode) and 
+             not isinstance(e,BeautifulSoup.Comment))]))

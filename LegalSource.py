@@ -50,62 +50,6 @@ class IdNotFound(Exception):
     def __str__(self):
         return repr(self.value)
 
-#----------------------------------------------------------------
-# DATAOBJEKT: Andra rättskällemoduler kan bygga sina källspecifika
-#   objektmodeller ovanpå dessa tre grundobjekt
-#
-# 
-
-class AbstractStructure(object):
-    def __new__(cls):
-        obj = super(Base,cls).__new__(cls)
-        # Declare this instance not quite ready for prime time
-        object.__setattr__(obj,'__initialized',False)
-        return obj
-
-    def __init__(self):
-        # self.basevar = "%s@%d" % (self.__class__.__name__,id(self))
-
-        # Declare this instance ready for usage. Note that derived
-        # objects must do their own initialization first, before
-        # calling the superclass constructor (i.e. this function).
-        # Call object.__setattr__ directly to bypass our own
-        # __setattr__ implementation.
-        object.__setattr__(self, '__initialized', True)
-
-    def __setattr__(self,name,value):
-        if object.__getattribute__(self,'__initialized'):
-            # initialization phase is over -- no new attributes should
-            # be created. Check to see if the attribute exists -- if it
-            # doesn't, we raise an AttributeError (with a sensible
-            # error message)
-            try:
-                object.__getattribute__(self,name)
-                object.__setattr__(self,name,value)
-            except AttributeError:
-                raise AttributeError("Can't set attribute '%s' on object '%s' after initialization" % (name, self.__class__.__name__))
-        else:
-            # Still in initialization phase -- ok to create new
-            # attributes
-            object.__setattr__(self,name,value)
-    
-class SimpleStructure(AbstractStructure,unicode):
-    """En SimpleStructure är bärare av ett värde (en textsträng av
-    något slag). Den kan även ha andra egenskaper (ordningsnummer,
-    ikraftträdandedatum etc)."""
-    def __new__(cls, s):
-        return unicode.__new__(cls,s)
-
-class CompoundStructure(AbstractStructure,list):
-    """En CompoundStructure fungerar som en lista av andra Structureobjekt. 
-    Den kan också  ha egna egenskaper (kapitelrubrik, paragrafnummer etc)"""
-    def serialize(self):
-        print "%s (" % (self.__class__.__name__)
-        for x in self:
-            x.serialize()
-        print ")"
-
-
 
 class Downloader:
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
@@ -182,18 +126,12 @@ class Parser:
         raise NotImplementedError
     
     # Misc useful methods for subclassed classes
-    def LoadDoc(self,filename,encoding='iso-8859-1'):
-        return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
-                                           convertEntities='html')
+    #def LoadDoc(self,filename,encoding='iso-8859-1'):
+    #    return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
+    #                                       convertEntities='html')
     def NormalizeSpace(self,string):
         return self.re_NormalizeSpace(' ',string).strip()
-    def ElementText(self,element):
-        """finds the plaintext contained in a BeautifulSoup element"""
-        return self.NormalizeSpace(
-            ''.join(
-                [e for e in element.recursiveChildGenerator() 
-                 if (isinstance(e,unicode) and 
-                     not isinstance(e,BeautifulSoup.Comment))]))
+
 
 class Manager:
     # relationCache = {}
