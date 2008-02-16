@@ -13,6 +13,7 @@ import codecs
 from cStringIO import StringIO
 from time import time
 import pickle
+import htmlentitydefs
 import traceback
 # Python 2.5 plz
 import xml.etree.cElementTree as ET
@@ -117,6 +118,14 @@ class Listelement(CompoundStructure, OrdinalStructure):
     fragment_label = "N"
 
 
+class Overgangsbestammelser(CompoundStructure):
+    def __init__(self, *args, **kwargs):
+        self.rubrik = kwargs['rubrik'] if 'rubrik' in kwargs else u'Övergångsbestämmelser'
+    
+
+class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
+    pass
+
 class Register(CompoundStructure):
     """Innehåller lite metadata om en grundförfattning och dess
     efterföljande ändringsförfattningar"""
@@ -128,7 +137,7 @@ class Register(CompoundStructure):
 
 class Registerpost(MapStructure):
     """Metadata för en viss (ändrings)författning: SFS-nummer,
-    omfattning, förarbeten m.m
+    omfattning, förarbeten m.m 
 
     * sfsnr: en sträng, exv u'1970:488'
     * ansvarigmyndighet: en sträng, exv u'Justitiedepartementet L3'
@@ -354,15 +363,26 @@ class SFSDownloader(LegalSource.Downloader):
             return sfsnr
 
     def _checksum(self,filename):
-        """Given a SHA-1 checksum for a downloaded file"""
-        # FIXME: We should be looking only at the plaintext part
+        """Given a SHA-1 checksum for (the plaintext part of) a downloaded file"""
         import sha
         c = sha.new()
-        c.update(open(filename).read())
+        c.update(self._extractSFST([filename]))
         return c.hexdigest()
 
 class SFSParser(LegalSource.Parser):
-   
+    re_SimpleSfsId     = re.compile(r'^\d{4}:\d+\s*$').match
+    re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
+    re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
+    re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
+    re_SectionIdOld    = re.compile(r'^§ (\d+ ?\w?).')     # as used in eg 1810:0926
+    re_DottedNumber    = re.compile(r'^(\d+)\. ').match
+    re_NumberRightPara = re.compile(r'^(\d+)\) ').match
+    re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
+    re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
+    re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
+    re_RevokeDate      = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
+    re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(d\+)-(\d+)-(\d+)/')
+    
     def Parse(self,basefile,files):
         self.verbose = True
         self.id = FilenameToSFSnr(basefile)
@@ -373,12 +393,21 @@ class SFSParser(LegalSource.Parser):
                 if os.path.getmtime(file) < timestamp:
                     timestamp = os.path.getmtime(file)
         
-        
-        # registry = self._parseSFSR(files['sfsr'])
-        
-        lawtext = self._extractSFST(files['sfst'])
-        return ""
-        data = self._parseSFST(lawtext, registry)
+        registry = self._parseSFSR(files['sfsr'])
+        plaintext = self._extractSFST(files['sfst'])
+        sys.stdout.write("plaintext: %r\r\n" % plaintext[280:305])
+        sys.stdout.write("test: %r\r\n" % u'räksmörgås')
+        # FIXME: Maybe Parser classes should be directly told what the
+        # current basedir is, rather than having to do it the ugly way
+        # (c.f. RegPubParser.Parse, which does something similar to
+        # the below
+        plaintextfile = files['sfst'][0].replace(".html", ".txt").replace("downloaded/sfst", "intermediate")
+        Util.ensureDir(plaintextfile)
+        f = codecs.open(plaintextfile, "w",'iso-8859-1')
+        f.write(plaintext)
+        f.close()
+
+        data = self._parseSFST(plaintext, registry)
         # runner = VervaSFSParserRunner("../rinfo-datacore/scripts/converters/sfst/authrec.n3")
         xhtml = runner._generate_xhtml(data)
         return xhtml
@@ -428,6 +457,31 @@ class SFSParser(LegalSource.Parser):
         lagtexten från (idag) nedladdade HTML-filer"""
         if not files:
             return ""
+
+        t = TextReader(files[0], encoding="iso-8859-1")
+        if keepHead:
+            t.cuepast(u'<pre>')
+        else:
+            t.cuepast(u'<hr>')
+
+        print 
+        txt = t.readto(u'</pre>')
+        print "txt: %r" % txt[354:385]
+        re_entities = re.compile("&(\w+?);")
+        txt = re_entities.sub(self._descapeEntity,txt)
+        print "txt: %r" % txt[324:349]
+        re_tags = re.compile("</?\w{1,3}>")
+        txt = re_tags.sub(u'',txt)
+        print "txt: %r" % txt[280:305]
+        return txt + self._extractSFST(files[1:],keepHead=False)
+
+    # det är overkill -- och långsamt -- att använda BeautifulSoup för
+    # att plocka fram preformatterad text
+    def _extractSFSTold(self, files = [], keepHead=True):
+        """Plockar fram plaintextversionen av den konsoliderade
+        lagtexten från (idag) nedladdade HTML-filer"""
+        if not files:
+            return ""
         soup = Util.loadSoup(files[0])
         idx = 0
         if keepHead == False: # find out where the <hr> that separates the header from the body is
@@ -443,8 +497,11 @@ class SFSParser(LegalSource.Parser):
             else:
                 # typical BeautifulSoup idiom for extracting the text contents of nested html nodes
                 txt = ''.join([e for e in soup.body('pre')[1].recursiveChildGenerator() if isinstance(e, unicode)]).replace('\r\n','\n')
-
         return txt + self._extractSFST(files[1:],keepHead=False)
+
+    def _descapeEntity(self,m):
+        return unichr(htmlentitydefs.name2codepoint[m.group(1)])
+        
 
     # rekursera igenom dokumentet på jakt efter adresserbara enheter (kapitel, paragrafer, stycken, punkter)
     # * konstruera xml:id's för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2 § 3 st. 4 p)
@@ -468,6 +525,7 @@ class SFSParser(LegalSource.Parser):
 
     def _parseSFST(self, lawtext, registry):
         self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
+        # self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
         self.reader.autostrip = True
 
         self.current_section = u'0'
@@ -523,13 +581,14 @@ class SFSParser(LegalSource.Parser):
 
 
     def makeHeader(self):
-        subreader = self.reader.getreader(self.reader.readchunk, "\n\n\n")
+        subreader = self.reader.getreader(self.reader.readchunk, self.reader.linesep * 3)
         # FIXME: consider using a MapStructure subclass
         headers = []
 
         for line in subreader.getiterator(subreader.readparagraph):
-            (key,value) = [Util.normalizeSpace(x) for x in line.split(":",1)]
-            headers.append([key, value])
+            if ":" in line:
+                (key,value) = [Util.normalizeSpace(x) for x in line.split(":",1)]
+                headers.append([key, value])
         
         return headers
 
@@ -614,14 +673,14 @@ class SFSParser(LegalSource.Parser):
         return h
 
     def makeUpphavdParagraf(self):
-        paragrafnummer = self.idOfParagraf()
+        paragrafnummer = self.idOfParagraf(self.reader.peekline())
         p = UpphavdParagraf(value=self.reader.readline(),
                             ordinal = paragrafnummer)
         if self.verbose: sys.stdout.write(u"      Upphävd paragraf: '%s...'\n" % p[:30])
         return p
     
     def makeParagraf(self):
-        paragrafnummer = self.idOfParagraf()
+        paragrafnummer = self.idOfParagraf(self.reader.peekline())
         self.current_section = paragrafnummer
         firstline = self.reader.peekline()
         if self.verbose: sys.stdout.write(u"      Ny paragraf: '%s...'\n" % firstline[:30])
@@ -705,6 +764,7 @@ class SFSParser(LegalSource.Parser):
                 if self.verbose: sys.stdout.write(u"          Listpunkt %s avslutad\n" % listelement_ordinal)
         return n
 
+
     def makePunktlista(self):
         n = Punktlista()
         cnt = 0
@@ -723,7 +783,7 @@ class SFSParser(LegalSource.Parser):
 
 
     def blankline(self):
-        self.reader.readline
+        self.reader.readline()
         return None
 
     #def eof(self, lines):
@@ -735,9 +795,19 @@ class SFSParser(LegalSource.Parser):
         # ha med åtminstone de som kan ha relevans för gällande rätt
 
         # TODO: hantera detta
+        sys.stdout.write(u"    Ny Övergångsbestämmelser\n")
+
+        rubrik = self.reader.readparagraph()
+        obs = Overgangsbestammelser(rubrik)
+        
         for p in self.reader.getiterator(self.reader.readparagraph):
             pass
+        
         return None
+
+    def makeOvergangsbestammelse(self):
+        pass
+        
 
     def makeBilaga(self): # svenska: bilaga
         for p in self.reader.getiterator(self.reader.readparagraph):
@@ -759,6 +829,7 @@ class SFSParser(LegalSource.Parser):
 
     
     def guess_state(self):
+        # sys.stdout.write("        Guessing for '%s...'" % self.reader.peekline()[:30])
         if self.reader.peekline() == "":     handler = self.blankline
         elif self.isAvdelning():             handler = self.makeAvdelning
         elif self.isUpphavtKapitel():        handler = self.makeUpphavtKapitel
@@ -771,6 +842,7 @@ class SFSParser(LegalSource.Parser):
         elif self.isPunktlista():            handler = self.makePunktlista
         elif self.isRubrik():                handler = self.makeRubrik
         else:                                handler = self.makeStycke
+        # sys.stdout.write("%r\n" % handler)
         return handler
 
 
@@ -865,9 +937,6 @@ class SFSParser(LegalSource.Parser):
     def isRubrik(self, p=None):
         if not p:
             p = self.reader.peekparagraph()
-        # the rules for something being a headline:
-        # if len(lines) <= 1: # it cannot be the last line of the document
-        #    return False
         
         if len(p) > 100: # it shouldn't be too long
             return False
@@ -888,8 +957,7 @@ class SFSParser(LegalSource.Parser):
             p.endswith("eller")):
             return False
 
-        if  (not self.isParagraf(self.reader.peekparagraph(2)) and
-             not self.isRubrik(self.reader.peekparagraph(2))): # finally, it should be followed by a paragraph or another headline
+        if  (not self.isParagraf(self.reader.peekparagraph())): # finally, it should be followed by a paragraph 
             return False
         
         # ok, all tests passed, this might be a headline!
@@ -899,8 +967,11 @@ class SFSParser(LegalSource.Parser):
         match = self.re_SectionRevoked(self.reader.peekline())
         return match != None
 
-    def isParagraf(self):
-        paragrafnummer = self.idOfParagraf()
+    def isParagraf(self, p=None):
+        if not p:
+            p = self.reader.peekparagraph()
+
+        paragrafnummer = self.idOfParagraf(p)
         if paragrafnummer == None:
             return False
         if paragrafnummer == '1':
@@ -910,7 +981,9 @@ class SFSParser(LegalSource.Parser):
         # section is probably just a reference and not really the
         # start of a new section. One example of that is
         # /1991:1469#K1P7S1.
-        if numcmp(self.current_section, paragrafnummer) <= 0:
+        #
+        # FIXME: "10" should be larger than "2"
+        if cmp(self.current_section, paragrafnummer) <= 0:
             # ok, the sort order's still the same, which means the potential new section has a larger ID
             # sys.stdout.write(u"is_section: '%s' looks like the start of the section, and it probably is (%s < %s)" % (lines[0][:30], self.current_section, paragrafnummer))
             return True
@@ -918,9 +991,7 @@ class SFSParser(LegalSource.Parser):
             # sys.stdout.write(u"is_section: Even though '%s' looks like the start of the section, the numbering's wrong (%s > %s)" % (lines[0][:30], self.current_section, paragrafnummer))
             return False
 
-    def idOfParagraf(self):
-        #match = re.match("^(\d+ ?\w?) §[ \.]", p)
-        p = self.reader.peekline()
+    def idOfParagraf(self, p):
         match = self.re_SectionId.match(p)
         if match:
             return match.group(1)
@@ -980,7 +1051,10 @@ class SFSParser(LegalSource.Parser):
         return False
 
     def isOvergangsbestammelser(self):
-        return self.reader.peekline == u"Övergångsbestämmelser"
+        #p = self.reader.peekline()
+        #print "%r == %r: %r" % (u"Övergångsbestämmelser", p[:30], p == u"Övergångsbestämmelser")
+        return self.reader.peekline() == u"Övergångsbestämmelser"
+
 
     def isBilaga(self):
         return (self.reader.peekline in (u"Bilaga", u"Bilaga 1"))
@@ -1041,7 +1115,7 @@ class SFSManager(LegalSource.Manager):
                 else:
                     # due to incorrect parsing, some link elements have no
                     # chapter data even though they should
-                    raise IdNotFound("No chapter found")
+                    raise LegalSource.IdNotFound("No chapter found")
         if context['section'] and 'section' not in e.attrib:
             e.attrib['section'] = context['section']
         if context['piece'] and 'piece' not in e.attrib:
@@ -1094,7 +1168,7 @@ class SFSManager(LegalSource.Manager):
                      'sfsr':self.__listfiles('sfsr',basefile)}
             # sanity check - if no files are returned
             if (not files['sfst'] and not files['sfsr']):
-                raise IdNotFound("No files found for %s" % basefile)
+                raise LegalSource.IdNotFound("No files found for %s" % basefile)
             filename = self._xmlFileName(basefile)
             # check to see if the outfile is newer than all ingoing files. If it
             # is (and force is False), don't parse
@@ -1289,7 +1363,7 @@ class SFSManager(LegalSource.Manager):
 if __name__ == "__main__":
     if not '__file__' in dir():
         print "probably running from within emacs"
-        sys.argv = ['SFS.py','Parse', '1960:729']
+        sys.argv = ['SFS.py','Parse', '1960/729']
     
     SFSManager.__bases__ += (DispatchMixin,)
     mgr = SFSManager("testdata",__moduledir__)

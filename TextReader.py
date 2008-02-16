@@ -9,6 +9,7 @@ Alternatively, it can be initialized from an existing (unicode) buffer"""
 
 import os, sys, codecs, copy, unittest
 
+
 class TextReader:
     UNIX = '\n'
     DOS = '\r\n'
@@ -28,8 +29,10 @@ class TextReader:
         self.newlines = None
         self.softspace = 0
 
-        # 2.5 syntax goodness
-        self.encoding = encoding if encoding else 'ascii'
+        if encoding:
+            self.encoding = encoding
+        else:
+            self.encoding = 'ascii'
 
         # Other initialization
         if linesep:

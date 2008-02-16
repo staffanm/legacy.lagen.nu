@@ -1,0 +1,9 @@
+<Forfattning>
+  <Paragraf ordinal="1">
+    <Stycke>Första paragrafen.</Stycke>
+    <Stycke>Första paragrafens andra stycke.</Stycke>
+  </Paragraf>
+  <Paragraf ordinal="2">
+    <Stycke>Andra paragrafen.</Stycke>
+  </Paragraf>
+</Forfattning>

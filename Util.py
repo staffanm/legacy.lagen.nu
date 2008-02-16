@@ -43,7 +43,13 @@ def robustRename(old,new):
     removed, if the target dir doesn't exist, it's created"""
     ensureDir(new)
     if os.path.exists(new):
-        os.unlink(new)
+        try:
+            os.unlink(new)
+        except WindowsError:
+            print "Caught WindowsError, sleeping"
+            import time
+            time.sleep(1)
+            os.unlink(new)
     os.rename(old, new)
     
 # # from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135435
