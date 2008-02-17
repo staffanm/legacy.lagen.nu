@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
-
+import xml.etree.cElementTree as ET
+import sys
 
 class AbstractStructure(object):
 
@@ -126,6 +127,73 @@ class OrdinalStructure():
     def __ge__(self,other):
         return self.ordinal == other.ordinal
 
+def serialize(root):
+    t = __serializeNode(root)
+    __indentTree(t)
+    return ET.tostring(t,sys.stdout.encoding)
+
+# http://infix.se/2007/02/06/gentlemen-indent-your-xml
+def __indentTree(elem, level=0):
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for e in elem:
+            indent(e, level+1)
+            if not e.tail or not e.tail.strip():
+                e.tail = i + "  "
+        if not e.tail or not e.tail.strip():
+            e.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
+def __serializeNode(node):
+    # print "serializing: %s" % node.__class__.__name__
+    e = ET.Element(node.__class__.__name__)
+    if hasattr(node,'__dict__'):
+        for key in [x for x in node.__dict__.keys() if not x.startswith('__')]:
+            if node.__dict__[key]:
+                e.set(key,node.__dict__[key])
+            else:
+                e.set(key,"(None)")
+    if isinstance(node,unicode):
+        e.text = node
+    elif isinstance(node,str):
+        e.text = node
+    elif isinstance(node,list):
+        for x in node:
+            e.append(__serializeNode(x))
+    elif isinstance(node,dict):
+        for x in node.keys():
+            k = ET.Element("Key")
+            k.text = x # assume keys are always str/unicode
+            e.append(k)
+
+            v = ET.Element("Value")
+            v.append(__serializeNode(node[x]))
+            e.append(v)
+    else:
+        raise TypeError("Can't serialize %r (%r)" % (type(node), node))
+    return e
+
+# in-place prettyprint formatter
+
+def indent(elem, level=0):
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for elem in elem:
+            indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
+
+
 #----------------------------------------------------------------
 # Exempel på andra mixinklasser och ärvda klasser
 
@@ -174,3 +242,5 @@ if __name__ == '__main__':
     print "\td.keyword: %r" % d.keyword
     print "\td.iseven: %r"  % d.iseven()
 
+    c = DerivedList([u,l,d])
+    print serialize(c)

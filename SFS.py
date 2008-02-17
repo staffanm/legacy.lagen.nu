@@ -22,11 +22,11 @@ import xml.etree.cElementTree as ET
 
 
 # 3rdparty libs
-# sys.path.append('3rdparty')
 from genshi.template import TemplateLoader
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
-# import gnosis.xml.pickle
+from rdflib.Graph import Graph
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 
 # my own libraries
@@ -34,7 +34,7 @@ import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
-from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, TemporalStructure, OrdinalStructure
+from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, TemporalStructure, OrdinalStructure, serialize
 
 # from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
@@ -47,6 +47,7 @@ __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Författningar i SFS"
 __moduledir__ = "sfs"
+
 
 
 class Forfattning(CompoundStructure,TemporalStructure):
@@ -122,7 +123,6 @@ class Overgangsbestammelser(CompoundStructure):
     def __init__(self, *args, **kwargs):
         self.rubrik = kwargs['rubrik'] if 'rubrik' in kwargs else u'Övergångsbestämmelser'
     
-
 class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
     pass
 
@@ -154,17 +154,9 @@ class Registerpost(MapStructure):
     * celexnr: en node,  exv link(uri='http://www.eurlex.eu/393L0098', text=u'393L0098')
     """
     pass
-#     def __init__(self, sfsnr = None, ansvarigmyndighet=None, rubrik = None, ikraft = None, overgangsbestammelse = False, omfattning = [], forarbeten = [], celexnr = None):
-#         super(Registerpost,self).__init__()
-#         self['sfsnr'] = sfsnr
-#         self['ansvarigmyndighet'] = ansvarigmyndighet
-#         self['rubrik'] = rubrik
-#         self['ikraft'] = ikraft
-#         self['overgangsbestammelse'] = overgangsbestammelse
-#         self['omfattning'] = omfattning
-#         self['forarbeten'] = forarbeten
-#         self['celexnr'] = celexnr
 
+class Forfattningsinfo(MapStructure):
+    pass
 
 # module global utility functions
 def SFSnrToFilename(sfsnr):
@@ -383,6 +375,17 @@ class SFSParser(LegalSource.Parser):
     re_RevokeDate      = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(d\+)-(\d+)-(\d+)/')
     
+    def __init__(self):
+        self.authority_rec = self._load_authority_rec("authrec.n3")
+    
+    def _load_authority_rec(self, file):
+        graph = Graph()
+        graph.load(file, format='n3')
+        d = {}
+        for uri, label in graph.subject_objects(RDFS.label):
+            d[unicode(label)] = str(uri)
+        return d
+    
     def Parse(self,basefile,files):
         self.verbose = True
         self.id = FilenameToSFSnr(basefile)
@@ -395,8 +398,7 @@ class SFSParser(LegalSource.Parser):
         
         registry = self._parseSFSR(files['sfsr'])
         plaintext = self._extractSFST(files['sfst'])
-        sys.stdout.write("plaintext: %r\r\n" % plaintext[280:305])
-        sys.stdout.write("test: %r\r\n" % u'räksmörgås')
+
         # FIXME: Maybe Parser classes should be directly told what the
         # current basedir is, rather than having to do it the ugly way
         # (c.f. RegPubParser.Parse, which does something similar to
@@ -407,9 +409,10 @@ class SFSParser(LegalSource.Parser):
         f.write(plaintext)
         f.close()
 
-        data = self._parseSFST(plaintext, registry)
+        data = self._parseSFST(plaintextfile, registry)
+        print serialize(data[1])
         # runner = VervaSFSParserRunner("../rinfo-datacore/scripts/converters/sfst/authrec.n3")
-        xhtml = runner._generate_xhtml(data)
+        xhtml = self._generate_xhtml(data)
         return xhtml
 
     def _parseSFSR(self,files):
@@ -466,45 +469,23 @@ class SFSParser(LegalSource.Parser):
 
         print 
         txt = t.readto(u'</pre>')
-        print "txt: %r" % txt[354:385]
+        #print "txt: %r" % txt[354:385]
         re_entities = re.compile("&(\w+?);")
         txt = re_entities.sub(self._descapeEntity,txt)
-        print "txt: %r" % txt[324:349]
+        #print "txt: %r" % txt[324:349]
         re_tags = re.compile("</?\w{1,3}>")
         txt = re_tags.sub(u'',txt)
-        print "txt: %r" % txt[280:305]
-        return txt + self._extractSFST(files[1:],keepHead=False)
-
-    # det är overkill -- och långsamt -- att använda BeautifulSoup för
-    # att plocka fram preformatterad text
-    def _extractSFSTold(self, files = [], keepHead=True):
-        """Plockar fram plaintextversionen av den konsoliderade
-        lagtexten från (idag) nedladdade HTML-filer"""
-        if not files:
-            return ""
-        soup = Util.loadSoup(files[0])
-        idx = 0
-        if keepHead == False: # find out where the <hr> that separates the header from the body is
-            for el in soup.body('pre')[1].contents:
-                if (hasattr(el,'name') and el.name == 'hr'):
-                    break
-                idx += 1
-            # sys.stdout.write(u"idx: %s\n" % idx)
-            txt = ''.join([e for e in el.nextGenerator() if isinstance(e, unicode)]).replace('\r\n','\n')
-        else:
-            if not soup.body('pre'):
-                txt = ''
-            else:
-                # typical BeautifulSoup idiom for extracting the text contents of nested html nodes
-                txt = ''.join([e for e in soup.body('pre')[1].recursiveChildGenerator() if isinstance(e, unicode)]).replace('\r\n','\n')
+        #print "txt: %r" % txt[280:305]
         return txt + self._extractSFST(files[1:],keepHead=False)
 
     def _descapeEntity(self,m):
         return unichr(htmlentitydefs.name2codepoint[m.group(1)])
         
 
-    # rekursera igenom dokumentet på jakt efter adresserbara enheter (kapitel, paragrafer, stycken, punkter)
-    # * konstruera xml:id's för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2 § 3 st. 4 p)
+    # rekursera igenom dokumentet på jakt efter adresserbara enheter
+    # (kapitel, paragrafer, stycken, punkter) * konstruera xml:id's
+    # för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2
+    # § 3 st. 4 p)
     def _construct_ids(self, element, prefix):
         cnt = 0
         if hasattr(element, 'parts'):
@@ -523,9 +504,9 @@ class SFSParser(LegalSource.Parser):
                 self._construct_ids(p,fragment)
             
 
-    def _parseSFST(self, lawtext, registry):
-        self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
-        # self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
+    def _parseSFST(self, lawtextfile, registry):
+        # self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
+        self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
         self.reader.autostrip = True
 
         self.current_section = u'0'
@@ -555,14 +536,14 @@ class SFSParser(LegalSource.Parser):
                               (u'Utfärdad','rinfo:utfardandedatum')):
 
             try:
-                meta[predicate] = list_get(key, head)
+                meta[predicate] = head[key]
             except KeyError:
                 meta[predicate] = u''
 
-        meta['dc:publisher'] = self.find_authority_rec("Regeringskansliet")
-        meta['dc:creator'] = self.find_authority_rec(list_get("Departement/ myndighet",head))
+        meta['dc:publisher'] = self._find_authority_rec("Regeringskansliet")
+        meta['dc:creator'] = self._find_authority_rec(head["Departement/ myndighet"])
         meta['rinfo:konsoliderar'] = self._storage_uri_value(
-                "http://rinfo.lagrummet.se/data/sfs/%s" % list_get('SFS nr',head))
+                "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
         
         return meta, body
 
@@ -574,7 +555,17 @@ class SFSParser(LegalSource.Parser):
         stream = tmpl.generate(meta=meta, body=body, **globals())
         return stream.render()
 
+    def _find_authority_rec(self, label):
+        """Givet en textsträng som refererar till någon typ av
+        organisation, person el. dyl (exv 'Justitiedepartementet
+        Gransk', returnerar en URI som är auktoritetspost för denna."""
+        for (key, value) in self.authority_rec.items():
+            if label.startswith(key):
+                return self._storage_uri_value(value)
+        raise KeyError(label)
 
+    def _storage_uri_value(self, value):
+        return value.replace(" ", '_')
     #----------------------------------------------------------------
     #
     # SFST-PARSNING
@@ -583,14 +574,14 @@ class SFSParser(LegalSource.Parser):
     def makeHeader(self):
         subreader = self.reader.getreader(self.reader.readchunk, self.reader.linesep * 3)
         # FIXME: consider using a MapStructure subclass
-        headers = []
+        i = Forfattningsinfo()
 
         for line in subreader.getiterator(subreader.readparagraph):
             if ":" in line:
                 (key,value) = [Util.normalizeSpace(x) for x in line.split(":",1)]
-                headers.append([key, value])
+                i[key] = value
         
-        return headers
+        return i
 
 
     def makeForfattning(self):
@@ -745,7 +736,7 @@ class SFSParser(LegalSource.Parser):
 
     def makeStycke(self):
         if self.verbose: sys.stdout.write(u"        Nytt stycke: '%s...'\n" % self.reader.peekline()[:30])
-        s = Stycke(self.reader.readparagraph())
+        s = Stycke(text=self.reader.readparagraph())
         return s
 
     def makeNumreradLista(self): 
@@ -759,7 +750,7 @@ class SFSParser(LegalSource.Parser):
             else:
                 if self.verbose: sys.stdout.write(u"          Ny listpunkt: '%s...'\n" % self.reader.peekline()[:30])
                 listelement_ordinal = self.idOfNumreradLista()
-                li = Listelement(self.reader.readparagraph(), ordinal = listelement_ordinal)
+                li = Listelement(text=self.reader.readparagraph(), ordinal = listelement_ordinal)
                 n.append(li)
                 if self.verbose: sys.stdout.write(u"          Listpunkt %s avslutad\n" % listelement_ordinal)
         return n
@@ -982,7 +973,7 @@ class SFSParser(LegalSource.Parser):
         # start of a new section. One example of that is
         # /1991:1469#K1P7S1.
         #
-        # FIXME: "10" should be larger than "2"
+        # FIXME: "10" should be larger than "9"
         if cmp(self.current_section, paragrafnummer) <= 0:
             # ok, the sort order's still the same, which means the potential new section has a larger ID
             # sys.stdout.write(u"is_section: '%s' looks like the start of the section, and it probably is (%s < %s)" % (lines[0][:30], self.current_section, paragrafnummer))
