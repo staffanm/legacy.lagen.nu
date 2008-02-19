@@ -1,6 +1,3 @@
-Rubrik: Lag med paragrafer och rubriker
-
-
 Första rubriken
 
 1 § Första paragrafen.

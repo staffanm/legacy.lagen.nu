@@ -6,7 +6,7 @@ rättsdatabaser.
 # system libraries
 import sys, os, re
 import shutil
-import pprint
+from pprint import pprint
 import types
 import datetime
 import codecs
@@ -38,11 +38,6 @@ from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, Tempo
 
 # from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 
-# from Verva / rättsinformationsprojektet
-# sys.path.append('../rinfo-datacore/scripts/converters/sfst')
-# from create_example_data import SFSParser as VervaSFSParser
-# from create_example_data import SFSParserRunner as VervaSFSParserRunner
-
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = "Författningar i SFS"
@@ -61,12 +56,6 @@ class Forfattning(CompoundStructure,TemporalStructure):
 
 class Rubrik(UnicodeStructure,TemporalStructure):
     fragment_label = "R"
-#     def __init__(self):
-#         # self.value = value
-#         super(UnicodeStructure,self).__init__(value)
-#         self.ikrafttrader = ikrafttrader
-#         self.upphor = upphor
-#         self.inaktuell = False
 
 class Stycke(CompoundStructure):
     fragment_label = "S"
@@ -89,14 +78,8 @@ class Tabell(CompoundStructure): pass # each table row is a part
 
 class TabellRad(CompoundStructure): pass # each table cell is a part
 
-class Avdelning(CompoundStructure, OrdinalStructure): 
-    def __init__(self, ordinal, rubrik, underrubrik):
-        super(Avdelning,self).__init__()
-        self.rubrik = rubrik
-        self.underrubrik = underrubrik
-        self.ordinal = ordinal
-        # self.parts  = []
-        # self.index = 0
+class Avdelning(CompoundStructure, OrdinalStructure):
+    pass
 
 class UpphavtKapitel(UnicodeStructure, OrdinalStructure):
     """Ett UpphavtKapitel är annorlunda från ett Kapitel vars expires
@@ -374,8 +357,33 @@ class SFSParser(LegalSource.Parser):
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
     re_RevokeDate      = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(d\+)-(\d+)-(\d+)/')
+    # use this custom matcher to ensure any strings you intend to convert
+    # are legal roman numerals (simpler than having from_roman throwing
+    # an exception)
+    re_roman_numeral_matcher = re.compile('^M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?)$').match
+
+    swedish_ordinal_list = (u'första', u'andra', u'tredje', u'fjärde', 
+                            u'femte', u'sjätte', u'sjunde', u'åttonde', 
+                            u'nionde', u'tionde', u'elfte', u'tolfte')
+    swedish_ordinal_dict = dict(zip(swedish_ordinal_list, range(1,len(swedish_ordinal_list)+1)))
+    roman_numeral_map = (('M',  1000),
+                         ('CM', 900),
+                         ('D',  500),
+                         ('CD', 400),
+                         ('C',  100),
+                         ('XC', 90),
+                         ('L',  50),
+                         ('XL', 40),
+                         ('X',  10),
+                         ('IX', 9),
+                         ('V',  5),
+                         ('IV', 4),
+                         ('I',  1))
+
+
     
     def __init__(self):
+        self.verbose = True
         self.authority_rec = self._load_authority_rec("authrec.n3")
     
     def _load_authority_rec(self, file):
@@ -387,7 +395,6 @@ class SFSParser(LegalSource.Parser):
         return d
     
     def Parse(self,basefile,files):
-        self.verbose = True
         self.id = FilenameToSFSnr(basefile)
         # find out when data was last fetched (use the oldest file)
         timestamp = sys.maxint
@@ -411,7 +418,6 @@ class SFSParser(LegalSource.Parser):
 
         data = self._parseSFST(plaintextfile, registry)
         print serialize(data[1])
-        # runner = VervaSFSParserRunner("../rinfo-datacore/scripts/converters/sfst/authrec.n3")
         xhtml = self._generate_xhtml(data)
         return xhtml
 
@@ -467,20 +473,15 @@ class SFSParser(LegalSource.Parser):
         else:
             t.cuepast(u'<hr>')
 
-        print 
         txt = t.readto(u'</pre>')
-        #print "txt: %r" % txt[354:385]
         re_entities = re.compile("&(\w+?);")
         txt = re_entities.sub(self._descapeEntity,txt)
-        #print "txt: %r" % txt[324:349]
         re_tags = re.compile("</?\w{1,3}>")
         txt = re_tags.sub(u'',txt)
-        #print "txt: %r" % txt[280:305]
         return txt + self._extractSFST(files[1:],keepHead=False)
 
     def _descapeEntity(self,m):
         return unichr(htmlentitydefs.name2codepoint[m.group(1)])
-        
 
     # rekursera igenom dokumentet på jakt efter adresserbara enheter
     # (kapitel, paragrafer, stycken, punkter) * konstruera xml:id's
@@ -566,6 +567,26 @@ class SFSParser(LegalSource.Parser):
 
     def _storage_uri_value(self, value):
         return value.replace(" ", '_')
+
+
+    def _swedish_ordinal(self,s):
+        sl = s.lower()
+        if sl in self.swedish_ordinal_dict:
+            return self.swedish_ordinal_dict[sl]
+        return None
+
+    # Example code from http://www.diveintopython.org/
+    def _from_roman(self,s):
+        """convert Roman numeral to integer"""
+        result = 0
+        index = 0
+        for numeral, integer in self.romanNumeralMap:
+            while s[index:index+len(numeral)] == numeral:
+                result += integer
+                index += len(numeral)
+        return result
+
+
     #----------------------------------------------------------------
     #
     # SFST-PARSNING
@@ -595,13 +616,14 @@ class SFSParser(LegalSource.Parser):
 
     def makeAvdelning(self):
         avdelningsnummer = self.idOfAvdelning()
-        p = Avdelning(self.reader.peekline(),
-                      ordinal = avdelningsnummer)
+        p = Avdelning(rubrik = self.reader.readline(),
+                      ordinal = avdelningsnummer,
+                      subheading = None)
         if self.reader.peekline(1) == "" and self.reader.peekline(3) == "":
             self.reader.readline()
             p.subheading = self.reader.readline()
 
-        if self.verbose: sys.stdout.write(u"  Ny avdelning: '%s...'\n" % p[:30])
+        if self.verbose: sys.stdout.write(u"  Ny avdelning: '%s...'\n" % p.rubrik[:30])
 
         while not self.reader.eof():
             state_handler = self.guess_state()
@@ -839,7 +861,7 @@ class SFSParser(LegalSource.Parser):
 
     def isAvdelning(self):
         # The start of a part ("avdelning") should be a single line
-        if self.reader.peekline(2) != "":
+        if '\n' in self.reader.peekparagraph() != "":
             return False
                       
         return self.idOfAvdelning() != None
@@ -870,11 +892,11 @@ class SFSParser(LegalSource.Parser):
         p = self.reader.peekline()
         if p.lower().endswith(u"avdelningen") and len(p.split()) == 2:
             ordinal = p.split()[0]
-            return swedish_ordinal(ordinal)
+            return self._swedish_ordinal(ordinal)
         elif p.startswith(u"AVD. "):
             roman = re.split(r'\W',p)[2]
-            if re_roman_numeral_matcher(roman):
-                return from_roman(roman)
+            if self.re_roman_numeral_matcher(roman):
+                return self._from_roman(roman)
         elif p[2:6] == "avd.":
             if p[0].isdigit():
                 return p[0]
@@ -1190,6 +1212,35 @@ class SFSManager(LegalSource.Manager):
         # return
         self.__doAll('downloaded/sfst','html',self.Parse)
 
+    def ParseTest(self,testfile):
+        print "\n\n\nRunning test %s\n------------------------------" % testfile
+        p = SFSParser()
+        p.verbose = False
+        p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
+        p.reader.autostrip=True
+        b = p.makeForfattning()
+        testlines = serialize(b).split("\n")
+        #pprint(testlines)
+        keyfile = testfile.replace(".txt",".xml")
+        if os.path.exists(keyfile):
+            keylines = [x.rstrip('\r\n') for x in codecs.open(keyfile,encoding='utf-8').readlines()]
+        else:
+            keylines = []
+        #pprint(keylines)
+        from difflib import Differ
+        difflines = Differ().compare(testlines,keylines)
+        sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
+        return difflines == [] # no differences = successful test
+
+    def ParseTestAll(self):
+        res = []
+        for f in Util.listDirs("test/data/SFS", ".txt"):
+            res.append(self.ParseTest(f))
+
+        succeeded = len([r for r in res if r])
+        all       = len(res)
+        print "\n%s/%s" % (succeeded,all)
+
     def IndexAll(self):
         # print "SFS: IndexAll temporarily disabled"
         # return
@@ -1350,6 +1401,8 @@ class SFSManager(LegalSource.Manager):
         sd = SFSDownloader(self.baseDir)
         sd.DownloadNew()
     
+    
+
 
 if __name__ == "__main__":
     if not '__file__' in dir():
@@ -1357,7 +1410,7 @@ if __name__ == "__main__":
         sys.argv = ['SFS.py','Parse', '1960/729']
     
     SFSManager.__bases__ += (DispatchMixin,)
-    mgr = SFSManager("testdata",__moduledir__)
+    mgr = SFSManager("tesdtata",__moduledir__)
     mgr.Dispatch(sys.argv)
 
 

@@ -1,4 +1,1 @@
-Rubrik: Enskilt stycke
-
-
 En lag bestående av ett enda stycke.

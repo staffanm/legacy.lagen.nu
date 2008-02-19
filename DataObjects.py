@@ -130,7 +130,7 @@ class OrdinalStructure():
 def serialize(root):
     t = __serializeNode(root)
     __indentTree(t)
-    return ET.tostring(t,sys.stdout.encoding)
+    return ET.tostring(t,'utf-8').decode('utf-8')
 
 # http://infix.se/2007/02/06/gentlemen-indent-your-xml
 def __indentTree(elem, level=0):
@@ -153,10 +153,7 @@ def __serializeNode(node):
     e = ET.Element(node.__class__.__name__)
     if hasattr(node,'__dict__'):
         for key in [x for x in node.__dict__.keys() if not x.startswith('__')]:
-            if node.__dict__[key]:
-                e.set(key,node.__dict__[key])
-            else:
-                e.set(key,"(None)")
+            e.set(key,str(node.__dict__[key]))
     if isinstance(node,unicode):
         e.text = node
     elif isinstance(node,str):
