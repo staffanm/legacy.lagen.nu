@@ -652,10 +652,11 @@ class SFSParser(LegalSource.Parser):
         (line, upphor, ikrafttrader) = self.andringsDatum(para)
         
         today = datetime.date.today()
-        k = Kapitel(rubrik=line,
-                    ordinal = kapitelnummer,
-                    ikrafttrader = ikrafttrader,
-                    upphor = upphor)
+        kwargs = {'rubrik':  line,
+                  'ordinal': kapitelnummer}
+        if upphor: kwargs['upphor'] = upphor
+        if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
+        k = Kapitel(**kwargs)
 
         if upphor and upphor < today:
             k.inaktuell = True
@@ -714,10 +715,10 @@ class SFSParser(LegalSource.Parser):
 
         (firstline, upphor, ikrafttrader) = self.andringsDatum(firstline)
         today = datetime.date.today()
-
-        p = Paragraf(ordinal=paragrafnummer,
-                     ikrafttrader = ikrafttrader,
-                     upphor = upphor)
+        kwargs = {'ordinal': paragrafnummer}
+        if upphor: kwargs['upphor'] = upphor
+        if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
+        p = Paragraf(**kwargs)
 
         if upphor and upphor < today:
             p.inaktuell = True
@@ -758,7 +759,7 @@ class SFSParser(LegalSource.Parser):
 
     def makeStycke(self):
         if self.verbose: sys.stdout.write(u"        Nytt stycke: '%s...'\n" % self.reader.peekline()[:30])
-        s = Stycke(text=self.reader.readparagraph())
+        s = Stycke([self.reader.readparagraph()])
         return s
 
     def makeNumreradLista(self): 
@@ -1212,10 +1213,11 @@ class SFSManager(LegalSource.Manager):
         # return
         self.__doAll('downloaded/sfst','html',self.Parse)
 
-    def ParseTest(self,testfile):
-        print "\n\n\nRunning test %s\n------------------------------" % testfile
+    def ParseTest(self,testfile,verbose=False, quiet=False):
+        if not quiet:
+            print "\n\n\nRunning test %s\n------------------------------" % testfile
         p = SFSParser()
-        p.verbose = False
+        p.verbose = verbose
         p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
         p.reader.autostrip=True
         b = p.makeForfattning()
@@ -1228,14 +1230,28 @@ class SFSManager(LegalSource.Manager):
             keylines = []
         #pprint(keylines)
         from difflib import Differ
-        difflines = Differ().compare(testlines,keylines)
-        sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
-        return difflines == [] # no differences = successful test
+        difflines = list(Differ().compare(testlines,keylines))
+        diffedlines = [x for x in difflines if x[0] != ' ']
+        if len(diffedlines) > 0:
+            if quiet:
+                sys.stdout.write("F")
+            else:
+                print "FAIL %s" % testfile
+                sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
+            return False
+        else:
+            if quiet:
+                sys.stdout.write(".")
+            else:
+                print "OK %s" % testfile
+            return True
+        
+
 
     def ParseTestAll(self):
         res = []
         for f in Util.listDirs("test/data/SFS", ".txt"):
-            res.append(self.ParseTest(f))
+            res.append(self.ParseTest(f,verbose=False,quiet=True))
 
         succeeded = len([r for r in res if r])
         all       = len(res)

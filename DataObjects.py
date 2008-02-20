@@ -158,13 +158,15 @@ def __serializeNode(node):
         e.text = node
     elif isinstance(node,str):
         e.text = node
+    elif isinstance(node,int):
+        e.text = unicode(node)
     elif isinstance(node,list):
         for x in node:
             e.append(__serializeNode(x))
     elif isinstance(node,dict):
         for x in node.keys():
             k = ET.Element("Key")
-            k.text = x # assume keys are always str/unicode
+            k.append(__serializeNode(x))
             e.append(k)
 
             v = ET.Element("Value")

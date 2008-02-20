@@ -2,18 +2,18 @@
   <Avdelning ordinal="1" rubrik="FÖRSTA AVDELNINGEN" subheading="ÖVERGRIPANDE BESTÄMMELSER">
     <Kapitel ordinal="1" rubrik="1 Kap. Första kapitlet">
       <Paragraf ordinal="1">
-	<Stycke>
-	  <unicode>1 § Första paragrafen.</unicode>
-	</Stycke>
+        <Stycke>
+          <unicode>1 § Första paragrafen.</unicode>
+        </Stycke>
       </Paragraf>
     </Kapitel>
   </Avdelning>
   <Avdelning ordinal="2" rubrik="ANDRA AVDELNINGEN" subheading="NÅGOT ANNAT">
     <Kapitel ordinal="2" rubrik="2 Kap. Andra kapitlet">
       <Paragraf ordinal="1">
-	<Stycke>
-	  <unicode>1 § Första paragrafen.</unicode>
-	</Stycke>
+        <Stycke>
+          <unicode>1 § Första paragrafen.</unicode>
+        </Stycke>
       </Paragraf>
     </Kapitel>
   </Avdelning>
