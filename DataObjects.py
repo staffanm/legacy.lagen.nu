@@ -153,7 +153,7 @@ def __serializeNode(node):
     e = ET.Element(node.__class__.__name__)
     if hasattr(node,'__dict__'):
         for key in [x for x in node.__dict__.keys() if not x.startswith('__')]:
-            e.set(key,str(node.__dict__[key]))
+            e.set(key,unicode(node.__dict__[key]))
     if isinstance(node,unicode):
         e.text = node
     elif isinstance(node,str):
