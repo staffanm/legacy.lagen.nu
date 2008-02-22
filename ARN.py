@@ -14,18 +14,18 @@ import os
 import md5
 import datetime
 import urllib
+import xml.etree.cElementTree as ET # Python 2.5 spoken here
 
+# 3rd party
+import BeautifulSoup
+
+# My own stuff
 import LegalSource
 import Robot
 
-
-sys.path.append('3rdparty')
-import BeautifulSoup
-import elementtree.ElementTree as ET
-
-__version__ = (0,1)
-__author__ = "Staffan Malmgren <staffan@tomtebo.org>"
-__shortdesc__ = "Referat från ARN"
+__version__   = (0,1)
+__author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = u"Referat från ARN"
 __moduledir__ = "arn"
 
 class ARNDownloader(LegalSource.Downloader):

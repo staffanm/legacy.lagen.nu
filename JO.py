@@ -5,6 +5,7 @@
 Modulen hanterar hämtande av beslut från JOs webbplats samt
 omvandlande av dessa till XML.
 """
+# From python stdlib
 import unittest
 import sys
 import time
@@ -13,18 +14,19 @@ import os
 import md5
 import datetime
 import urllib
+import xml.etree.cElementTree as ET # Python 2.5 spoken here
 
+# 3rd party modules
+import BeautifulSoup
+
+# My own stuff
 import LegalSource
 import Robot
 import Util
 
-sys.path.append('3rdparty')
-import BeautifulSoup
-import elementtree.ElementTree as ET
-
-__version__ = (0,1)
-__author__ = "Staffan Malmgren <staffan@tomtebo.org>"
-__shortdesc__ = "Beslut från JO"
+__version__   = (0,1)
+__author__    = "Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = u"Beslut från JO"
 __moduledir__ = "jo"
 
 class JODownloader(LegalSource.Downloader):

@@ -25,14 +25,11 @@ import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
-# import Robot
+from DataObjects import UnicodeStructure, CompoundStructure, serialize
 
-
-
-
-__version__ = (0,1)
-__author__  = "Staffan Malmgren <staffan@tomtebo.org>"
-__shortdesc__ = "Förarbeten (SOU/Ds/Prop)"
+__version__   = (0,1)
+__author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = u"Förarbeten (SOU/Ds/Prop)"
 __moduledir__ = "regpubl"
 
 class RegPublDownloader(LegalSource.Downloader):
@@ -76,7 +73,7 @@ class RegPublDownloader(LegalSource.Downloader):
 
         
     def DownloadNew(self):
-        then = datetime.datetime.strptime(self.config['last_updated']), '%Y-%m-%d')
+        then = datetime.datetime.strptime(self.config['last_updated'], '%Y-%m-%d')
         now =  datetime.datetime.now()
         if (now - then).days > 30:
             pass
@@ -121,12 +118,13 @@ class RegPublDownloader(LegalSource.Downloader):
             
 class RegPublParser(LegalSource.Parser):
     # Rättskällespecifika dataobjekt
-    class Stycke(LegalSource.SimpleStructure):
+    class Stycke(UnicodeStructure):
         pass
-    class Avsnitt(LegalSource.CompoundStructure):
+
+    class Avsnitt(CompoundStructure):
         pass
     
-    class Forfattningskommentar(LegalSource.CompoundStructure):
+    class Forfattningskommentar(CompoundStructure):
         pass
 
     # FIXME: Flytta till LegalSource
@@ -148,7 +146,7 @@ class RegPublParser(LegalSource.Parser):
             self.foreslarAndringAv = []   # (URI:er till) noll eller flera lagar i sin grundform (möjligtvis även andra författningar)
             self.beslutsdatum = None
 
-    class Utredningsbetankande(LegalSource.CompoundStructure):
+    class Utredningsbetankande(Rattsinformationsdokument):
         # utgår från rinfo:Utredningsbetankande i ESFR
         def __init__(self):
             self.utgarFran = ''         # (URI:er till) ett komittedirektiv

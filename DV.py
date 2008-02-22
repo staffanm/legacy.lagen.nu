@@ -12,14 +12,10 @@ import types
 import codecs
 from cStringIO import StringIO
 from time import time
+import xml.etree.cElementTree as ET # Python 2.5 spoken here
 
 # 3rdparty libs
-sys.path.append('3rdparty')
 import BeautifulSoup
-try:
-    import cElementTree as ET
-except ImportError:
-    import elementtree.ElementTree as ET
 
 # my libs
 import LegalSource
@@ -27,70 +23,10 @@ from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
 import Util
 from DispatchMixin import DispatchMixin
 
-# Django stuff
-from DocComments import AnnotatedDoc
-os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-from ferenda.docview.models import *
-
-__version__ = (0,1)
-__author__  = "Staffan Malmgren <staffan@tomtebo.org>"
-__shortdesc__ = "Domslut (detaljer och referat)"
+__version__   = (0,1)
+__author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
+__shortdesc__ = u"Domslut (detaljer och referat)"
 __moduledir__ = "dv"
-
-class DVMigrate:
-    """Engångsflyttkod"""
-
-    def Migrate():
-        import sha
-        from difflib import Differ
-        basedir = "legacy/verdict"
-        newdir = "testdata/dv/downloaded"
-        moves = {}
-        checksums = {}
-        for d in os.listdir(basedir):
-            if d.isdigit():
-                for f in os.listdir("%s/%s" % (basedir,d)):
-                    oldfile = "%s/%s/%s" % (basedir,d,f)
-                    if f.startswith("report-"):
-                        id = f[7:-5]
-                        filename = "%s/%s.referat.html" % (newdir, id)
-                    elif f.startswith("summary-"):
-                        id = f[8:-5]
-                        filename = "%s/%s.detalj.html" % (newdir, id)
-                    else:
-                        filename = None
-                        continue
-                    
-                    # print "%s -> %s" % (oldfile,filename)
-                    c = sha.new()
-                    c.update(file(oldfile).read())
-                    if filename in moves:
-                        print "WARNING: %s previously exists as %s" % (oldfile, moves[filename])
-                        if c.hexdigest() == checksums[filename]:
-                            print "But %s == %s, so no matter" % (c.hexdigest(), checksums[filename])
-                        else:
-                            print "Checksums differ (%s vs %s), can't be good. Checking diff:" % (c.hexdigest(), checksums[filename])
-                            (ret,stdout,stderr) = runcmd("diff %s %s" % (moves[filename], oldfile))
-                            print ret
-                            print stdout
-                            print stderr
-                    
-                    moves[filename] = oldfile
-                    checksums[filename] = c.hexdigest()
-                    print "%s (%s) A-OK" % (moves[filename], checksums[filename])
-                    
-                    # assert(not os.path.exists(filename))
-                    shutil.copy2(oldfile,filename)
-
-    def runcmd(cmdline):
-        import subprocess
-        print "runcmd: %s" % cmdline
-        p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        stdout = p.stdout.read()
-        stderr = p.stderr.read()
-        ret = p.wait()
-        return (ret,stdout,stderr)
- 
 
 
 class DVParser(LegalSource.Parser):

@@ -8,7 +8,7 @@ import inspect
 from time import time
 # my libs
 from DispatchMixin import DispatchMixin
-
+import LegalSource
 #class ParseManager:
     #"""Given a directory prepared by a Downlader, iterates and calls
     #the appropriate Parser for each downloaded LegalSource"""
@@ -89,12 +89,12 @@ class Manager:
     def PrintUsage(self):
         print "Syntax: %s [action] [module]"
         print "action can be one of:"
-        for a in ACTIONS.keys():
-            print "  * %s: %s" % (a,ACTIONS[a])
+        for a in self.ACTIONS.keys():
+            print "  * %s: %s" % (a,self.ACTIONS[a])
         print "modules can be one of:"
         modules = self._findModules()
         for m in modules.keys():
-            print "  * %s: %s" % (m,modules[m])
+            print u"  * %r: %r" % (m,modules[m])
         print "  or `all' to do it to all modules"
 
     def DownloadAll(self, module):
