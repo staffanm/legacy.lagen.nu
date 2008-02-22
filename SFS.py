@@ -384,7 +384,7 @@ class SFSParser(LegalSource.Parser):
     
     def __init__(self):
         self.verbose = True
-        self.authority_rec = self._load_authority_rec("authrec.n3")
+        self.authority_rec = self._load_authority_rec("etc/authrec.n3")
     
     def _load_authority_rec(self, file):
         graph = Graph()

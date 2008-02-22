@@ -1,0 +1,16 @@
+<Forfattning>
+  <Rubrik>Första rubriken</Rubrik>
+  <Paragraf ordinal="1">
+    <Stycke>
+      <unicode>1 § Första paragrafen.</unicode>
+    </Stycke><Stycke>
+      <unicode>Första paragrafens andra stycke.</unicode>
+    </Stycke>
+  </Paragraf>
+  <Rubrik>Andra rubriken</Rubrik>
+  <Paragraf ordinal="2">
+    <Stycke>
+      <unicode>2 § Andra paragrafen.</unicode>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

@@ -1,0 +1,45 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<http://rdf.kb.se/ap/20061121145747> rdfs:label "Regeringskansliet" .
+<http://rdf.kb.se/ap/20061121164911> rdfs:label "Justitiedepartementet" .
+<http://rdf.kb.se/ap/20070812184800> rdfs:label "Arbetsmarknadsdepartementet" .
+<http://rdf.kb.se/ap/20070812184801> rdfs:label "Bostadsdepartementet" .
+<http://rdf.kb.se/ap/20070812184802> rdfs:label "Civildepartementet" .
+<http://rdf.kb.se/ap/20070812184803> rdfs:label "Fartygsuttagningskommissionen" .
+<http://rdf.kb.se/ap/20070812184804> rdfs:label "Finansdepartementet" .
+<http://rdf.kb.se/ap/20070812184805> rdfs:label "Finansinspektionen" .
+<http://rdf.kb.se/ap/20070812184806> rdfs:label "Försvarsdepartementet" .
+<http://rdf.kb.se/ap/20070812184807> rdfs:label "Försäkringskassan" .
+<http://rdf.kb.se/ap/20070812184808> rdfs:label "Industridepartementet" .
+<http://rdf.kb.se/ap/20070812184809> rdfs:label "Inrikesdepartementet" .
+<http://rdf.kb.se/ap/20070812184810> rdfs:label "Integrations- och jämställdhetsdepartementet" .
+<http://rdf.kb.se/ap/20070812184811> rdfs:label "Jordbruksdepartementet" .
+<http://rdf.kb.se/ap/20070812184812> rdfs:label "Kammarkollegiet" .
+<http://rdf.kb.se/ap/20070812184813> rdfs:label "Kommunikationsdepartementet" .
+<http://rdf.kb.se/ap/20070812184814> rdfs:label "Kulturdepartementet" .
+<http://rdf.kb.se/ap/20070812184815> rdfs:label "Miljö- och departementet" .
+<http://rdf.kb.se/ap/20070812184816> rdfs:label "Miljö- och energidepartementet" .
+<http://rdf.kb.se/ap/20070812184817> rdfs:label "Miljö- och naturresursdepartementet" .
+<http://rdf.kb.se/ap/20070812184818> rdfs:label "Miljö- och samhällsbyggnadsdepartementet" .
+<http://rdf.kb.se/ap/20070812184819> rdfs:label "Miljödepartementet" .
+<http://rdf.kb.se/ap/20070812184820> rdfs:label "Närings- och handelsdepartementet" .
+<http://rdf.kb.se/ap/20070812184821> rdfs:label "Näringsdepartementet" .
+<http://rdf.kb.se/ap/20070812184822> rdfs:label "Riksbanken" .
+<http://rdf.kb.se/ap/20070812184823> rdfs:label "Riksgäldskontoret" .
+<http://rdf.kb.se/ap/20070812184824> rdfs:label "Riksförsäkringsverket" .
+<http://rdf.kb.se/ap/20070812184825> rdfs:label "Riksrevisionsverket" .
+<http://rdf.kb.se/ap/20070812184826> rdfs:label "Riksskattenämnden" .
+<http://rdf.kb.se/ap/20070812184827> rdfs:label "Riksåklagaren" .
+<http://rdf.kb.se/ap/20070812184828> rdfs:label "Socialdepartementet" .
+<http://rdf.kb.se/ap/20070812184829> rdfs:label "Statens bostadskreditnämnd" .
+<http://rdf.kb.se/ap/20070812184830> rdfs:label "Statens provningsanstalt" .
+<http://rdf.kb.se/ap/20070812184831> rdfs:label "Statistiska centralbyrån" .
+<http://rdf.kb.se/ap/20070812184832> rdfs:label "Statskontoret" .
+<http://rdf.kb.se/ap/20070812184833> rdfs:label "Statsrådsberedningen" .
+<http://rdf.kb.se/ap/20070812184834> rdfs:label "Utbildnings- och kulturdepartementet" .
+<http://rdf.kb.se/ap/20070812184835> rdfs:label "Utbildningsdepartementet" .
+<http://rdf.kb.se/ap/20070812184836> rdfs:label "Utrikesdepartementet" .
