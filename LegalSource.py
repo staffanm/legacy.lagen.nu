@@ -8,20 +8,32 @@ from time import time
 # Do required codec/locale magic here, since this is included by all runnable scripts
 import locale
 locale.setlocale(locale.LC_ALL,'') 
-reload(sys)
+# reload(sys)
+# 
+# if sys.stdout.encoding: # not set when stdout is redirected
+#     sys.setdefaultencoding(sys.stdout.encoding)
+# else:
+#     if sys.platform == 'win32':
+#         sys.setdefaultencoding('cp850')
+#     else:
+#         sys.setdefaultencoding('iso-8859-1') # a reasonable default?
 
-if sys.stdout.encoding: # not set when stdout is redirected
-    sys.setdefaultencoding(sys.stdout.encoding)
-else:
-    if sys.platform == 'win32':
-        sys.setdefaultencoding('cp850')
-    else:
-        sys.setdefaultencoding('iso-8859-1') # a reasonable default?
+#print "LegalSource: sys.getdefaultencoding() is %s" % sys.getdefaultencoding()
+#print "LegalSource: locale.getpreferredencoding() is %s" % locale.getpreferredencoding()
 
-sys.stdout = codecs.getwriter(sys.getdefaultencoding())(sys.__stdout__, 'replace')
-sys.stderr = codecs.getwriter(sys.getdefaultencoding())(sys.__stderr__, 'replace')
+defaultencoding = locale.getpreferredencoding()
+#if sys.getdefaultencoding() == 'ascii':
+#    defaultencoding = 'iso-8859-1' # let the terminal handle it
+#else:
+#    defaultencoding = sys.getdefaultencoding()
 
+    
 
+#sys.stdout.write("LegalSource: sys.stdout is %r\n" % type(sys.stdout))
+sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+#sys.stdout.write(u"Legalsource: Test: \u00e1\u00e9\u00ed\u00f3\u00fa :end\n")
+#sys.stdout.write("LegalSource: sys.stdout is %r\n" % type(sys.stdout))
 
 
 import xml.etree.cElementTree as ET

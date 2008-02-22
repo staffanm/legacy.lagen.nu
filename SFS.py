@@ -36,7 +36,7 @@ from DispatchMixin import DispatchMixin
 from TextReader import TextReader
 from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, TemporalStructure, OrdinalStructure, serialize
 
-# from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
+from LegalRef import SFSRefParser, ParseError
 
 __version__ = (0,1)
 __author__  = "Staffan Malmgren <staffan@tomtebo.org>"
@@ -385,6 +385,7 @@ class SFSParser(LegalSource.Parser):
     def __init__(self):
         self.verbose = True
         self.authority_rec = self._load_authority_rec("etc/authrec.n3")
+        self.references = SFSRefParser()
     
     def _load_authority_rec(self, file):
         graph = Graph()
@@ -586,7 +587,6 @@ class SFSParser(LegalSource.Parser):
                 index += len(numeral)
         return result
 
-
     #----------------------------------------------------------------
     #
     # SFST-PARSNING
@@ -698,18 +698,15 @@ class SFSParser(LegalSource.Parser):
         self.current_section = paragrafnummer
         firstline = self.reader.peekline()
         if self.verbose: sys.stdout.write(u"      Ny paragraf: '%s...'\n" % firstline[:30])
-        # trim of section numbering
-        if self.re_SectionIdOld.match(firstline):
-            firstline = self.re_SectionIdOld.sub('',firstline)
-        else:
-            firstline = self.re_SectionId.sub('',firstline)
+        # Läs förbi paragrafnumret:
+        self.reader.read(len(paragrafnummer)+ len(u' § '))
 
         # some really old laws have sections split up in "elements"
         # (moment), eg '1 § 1 mom.', '1 § 2 mom.' etc
         match = self.re_ElementId.match(firstline)
         if self.re_ElementId.match(firstline):
             momentnummer = match.group(1)
-            firstline = self.re_ElementId.sub('',firstline)
+            self.reader.read(len(momentnummer) + len(u' mom. '))
         else:
             momentnummer = None
 
@@ -759,7 +756,11 @@ class SFSParser(LegalSource.Parser):
 
     def makeStycke(self):
         if self.verbose: sys.stdout.write(u"        Nytt stycke: '%s...'\n" % self.reader.peekline()[:30])
-        s = Stycke([self.reader.readparagraph()])
+        p = self.reader.readparagraph()
+        #nodes= self.references.parse(p)
+        #for node in nodes:
+        #    print "%r: %s" % (node,node.__class__.__name__)
+        s = Stycke(self.references.parse(p))
         return s
 
     def makeNumreradLista(self): 
@@ -1249,13 +1250,19 @@ class SFSManager(LegalSource.Manager):
 
 
     def ParseTestAll(self):
-        res = []
+        results = []
+        failures = []
         for f in Util.listDirs("test/data/SFS", ".txt"):
-            res.append(self.ParseTest(f,verbose=False,quiet=True))
+            result = self.ParseTest(f,verbose=False,quiet=True)
+            if not result:
+                failures.append(f)
+            results.append(result)
 
-        succeeded = len([r for r in res if r])
-        all       = len(res)
+        succeeded = len([r for r in results if r])
+        all       = len(results)
         print "\n%s/%s" % (succeeded,all)
+        if failures:
+            print "\n".join(failures)
 
     def IndexAll(self):
         # print "SFS: IndexAll temporarily disabled"
