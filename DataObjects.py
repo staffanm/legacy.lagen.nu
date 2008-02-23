@@ -215,6 +215,9 @@ class DerivedUnicode(UnicodeStructure, EvenMixin):
             del kwargs['keyword']
         super(DerivedUnicode,self).__init__(*args, **kwargs)
 
+    #def __repr__(self):
+    #    return u'%s(\'%s\',keyword=%s)'%(self.__class__.__name__,self,self.keyword)
+
 class DerivedList(CompoundStructure, EvenMixin):
     pass
 #    def __init__(self, *args, **kwargs):
@@ -230,6 +233,7 @@ if __name__ == '__main__':
 
     print "Testing DerivedUnicode"
     u = DerivedUnicode(u'blahonga', keyword='myunicode')
+    print "\trepr(u): %s"   % repr(u)
     print "\tu[1:4]: %r"    % u[1:4]
     print "\tu.keyword: %r" % u.keyword
     print "\tu.iseven: %r"  % u.iseven()

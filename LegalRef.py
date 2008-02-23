@@ -20,7 +20,10 @@ from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, serialize
 
 class Link(UnicodeStructure): # just a unicode string with a .uri property
-    pass
+
+    def __repr__(self):
+        return u'Link(\'%s\',uri=%r)' % (unicode.__repr__(self),self.uri)
+
 
 def SFSidToFilename(sfsid):
     """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
@@ -196,16 +199,18 @@ class SFSRefParser:
                          'sjunde' :'7',
                          'åttonde':'8',
                          'nionde' :'9'}
-        keymapping = {'chapter':'K',
+        keymapping = {'lawref':'L',
+                      'chapter':'K',
                       'section':'P',
                       'piece':'S',
-                      'item':'N'}
+                      'item':'N',
+                      'sentence':'M', # is this ever used?
+                      }
 
         res = u'http://lagen.nu/sfs/'
         resolvetobase = True
         addfragment = False
         for key in self.attributeorder:
-            
             if attributes.has_key(key):
                 resolvetobase = False
                 val = attributes[key]
@@ -239,7 +244,7 @@ class SFSRefParser:
         
         self.depth += 1
         if self.verbose: print ". "*self.depth+"find_attributes: starting with %s"%d
-        if self.verbose: print ". "*self.depth+"find_attributes: currentchapter: %s" % self.currentchapter
+        # if self.verbose: print ". "*self.depth+"find_attributes: currentchapter: %s" % self.currentchapter
         if extra:
             # print ". "*self.depth+"find_attributes: updating with extra attributes %s" % extra
             d.update(extra)
@@ -256,7 +261,7 @@ class SFSRefParser:
                 #        current_part_tag = 'lawrefrefid' # not my cleanest..
                     
                 # strip away ending "refid"
-                if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %s" % (current_part_tag[:-5],part.text.strip())
+                if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %r" % (current_part_tag[:-5],part.text.strip())
                 d[current_part_tag[:-5]] = part.text.strip()
                 if self.verbose: print ". "*self.depth+"find_attributes: d is now %s" % d
                 
@@ -319,12 +324,12 @@ class SFSRefParser:
         self.currentchapter = part.nodes[0].text.strip()
 
         if self.currentlaw:
-            res = [format_custom_link({'law':self.currentlaw,
-                                      'chapter':self.currentchapter},
-                                     part.text)]
+            res = [self.format_custom_link({'law':self.currentlaw,
+                                            'chapter':self.currentchapter},
+                                           part.text)]
         else:
-            res = [format_custom_link({'chapter':self.currentchapter},
-                                      part.text)]
+            res = [self.format_custom_link({'chapter':self.currentchapter},
+                                           part.text)]
 
         res.extend(self.formatter_dispatch(root.nodes[1]))
         res.extend(self.formatter_dispatch(root.nodes[2]))
@@ -348,8 +353,7 @@ class SFSRefParser:
         sectionrefid = root.nodes[0]
         sectionid = sectionrefid.text
       
-        return self.format_generic_link(self.find_attributes([root]),
-                                        root.text)
+        return [self.format_generic_link(root)]
 
 
     def format_SectionPieceRefs(self, root):
@@ -357,8 +361,8 @@ class SFSRefParser:
         # assert(len(root.nodes) >= 7) # SectionRef, wc, (PieceRef, Comma, wc)*, PieceRef, wc, AndOr, wc, PieceRef
         self.currentsection = root.nodes[0].nodes[0].text.strip()
 
-        return self.format_custom_link(self.find_attributes([root.nodes[2]]),
-                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text))
+        res = [self.format_custom_link(self.find_attributes([root.nodes[2]]),
+                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text))]
         for node in root.nodes[3:]:
             #if self.verbose:
             #    print (". "*self.depth)+ "format_SectionPieceRefs: calling formatter_dispatch for '%s'" % node.tag
@@ -458,8 +462,8 @@ class SFSRefParser:
     def format_PieceRef(self,root):
         assert(root.tag == 'PieceRef')
         assert(len(root.nodes) == 3 or len(root.nodes) == 5) #PieceRefID, wc, PieceOrPieces (Whitespace, ItemRef)
-        return [self.format_custom_link(self.find_attributes([root.nodes[2]]),
-                                        "%s %s" % (root.nodes[0].text, root.nodes[2].text))]
+        return [self.format_generic_link(root)]
+        
     
     def format_ChapterRef(self,root):
         return [self.format_generic_link(root)]
@@ -584,15 +588,16 @@ class SFSRefParser:
         if self.verbose: print (". "*self.depth)+ "format_tokentree: called for %s" % part.tag
         # this is like the bottom case, or something
         if (not part.nodes) and (not part.tag.endswith("RefID")):
-            res.append(part.text)
+            res.append(part.text.decode('iso-8859-1'))
         else:
             if part.tag.endswith("RefID"):
-                res += self.format_generic_link(part)
+                res.append(self.format_generic_link(part))
             else:
                 for subpart in part.nodes:
                     if self.verbose and part.tag == 'LawRef':
                         print (". "*self.depth) + "format_tokentree: part '%s' is a %s" % (subpart.text, subpart.tag)
                     res.extend(self.formatter_dispatch(subpart))
+        #if self.verbose: print (". "*self.depth)+ "format_tokentree: returning '%s' for %s" % (res,part.tag)
         if self.verbose: print (". "*self.depth)+ "format_tokentree: returning '%s' for %s" % (res,part.tag)
         return res
     
@@ -665,10 +670,7 @@ class SFSRefParser:
                 result.extend(self.formatter_dispatch(part))
             else:
                 assert(part.tag == 'plain')
-                if (len(result)>0 and not isinstance(result[-1],Link)):
-                    result[-1] += part.text.decode('iso-8859-1')
-                else:
-                    result.append(part.text.decode('iso-8859-1'))
+                result.append(part.text.decode('iso-8859-1'))
 
             # clear state
             if self.currentlaw != None: self.lastlaw = self.currentlaw
@@ -678,14 +680,18 @@ class SFSRefParser:
         if taglist[-1] != len(fixedindata):
             raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(self.indata), self.indata[(taglist[-1]-8):taglist[-1]+8])
 
-        for i in range(len(result)-1):
+        normres = []
+        for i in range(len(result)):
+            text = self.re_descape.sub(r'\1',result[i])
             if isinstance(result[i], Link):
-                result[i] = Link(self.re_descape.sub(r'\1',result[i]),
-                                 uri=result[i].uri)
+                normres.append(Link(text, uri=result[i].uri))
             else:
-                result[i] = self.re_descape.sub(r'\1',result[i])
+                if len(normres) > 0 and not isinstance(normres[-1],Link):
+                    normres[-1] += text
+                else:
+                    normres.append(text)
             
-        return result
+        return normres
 
 class PreparatoryRefParser(SFSRefParser):
     """Subclass of SFSRefParser, but handles things like references to

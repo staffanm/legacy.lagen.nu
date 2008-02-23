@@ -1,0 +1,9 @@
+<Forfattning>
+  <Stycke id="S1">
+    <unicode>Hänvisning till </unicode>
+    <Link uri="http://lagen.nu/sfs/1234:567#P1">1</Link>
+    <unicode> och </unicode>
+    <Link uri="http://lagen.nu/sfs/1234:567#P2">2 §§</Link>
+    <unicode> med slutkläm.</unicode>
+  </Stycke>
+</Forfattning>

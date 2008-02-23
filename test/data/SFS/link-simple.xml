@@ -1,8 +1,8 @@
 <Forfattning>
-  <Paragraf ordinal="1">
-    <Stycke>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
       <unicode>Ett stycke som hänvisar till </unicode>
-      <Link uri="http://lagen.nu/sfs/9999:999#K9P2">2 §</Link>
+      <Link uri="http://lagen.nu/sfs/1234:567#P2">2 §</Link>
       <unicode> i samma lag.</unicode>
     </Stycke>
   </Paragraf>

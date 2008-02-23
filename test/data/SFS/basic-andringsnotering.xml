@@ -1,0 +1,14 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>En paragraf med en ändringsnotering. </unicode>
+      <Link uri="http://lagen.nu/sfs/1234:567#L1234:567">Lag (1234:567)</Link>
+    </Stycke>
+  </Paragraf>
+  <Paragraf id="P2" ordinal="2">
+    <Stycke id="P2S1">
+      <unicode>En paragraf en annan notering. </unicode>
+      <Link uri="http://lagen.nu/sfs/1234:567#L1234:568">Förordning (1234:568)</Link>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

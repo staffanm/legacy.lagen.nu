@@ -33,6 +33,26 @@ def mkdir(newdir):
         if tail:
             os.mkdir(newdir)
 
+# the rest of the code is my fault
+
+class ValidationError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class TransformError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class ExternalCommandError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 def ensureDir(filename):
     d = os.path.dirname(filename)
     if not os.path.exists(d):
@@ -52,104 +72,24 @@ def robustRename(old,new):
             os.unlink(new)
     os.rename(old, new)
     
-# # from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135435
-# # author: Chui Tey
-# # license: PSL
-# def numsort(alist):
-#     """
-#     Sorts a list in numeric order. For example:
-#         ['aaa35', 'aaa6', 'aaa261'] 
-#     is sorted into:
-#         ['aaa6', 'aaa35', 'aaa261']
-#     """
-# 
-#     def _generate_index(str):
-#         """
-#         Splits a string into alpha and numeric elements, which
-#         is used as an index for sorting
-#         """
-#         #
-#         # the index is built progressively
-#         # using the _append function
-#         #
-#         index = []
-#         def _append(fragment, alist=index):
-#             if fragment.isdigit(): fragment = int(fragment)
-#             alist.append(fragment)
-#     
-#         # initialize loop
-#         prev_isdigit = str[0].isdigit()
-#         current_fragment = ''
-#         # group a string into digit and non-digit parts
-#         for char in str:
-#             curr_isdigit = char.isdigit()
-#             if curr_isdigit == prev_isdigit:
-#                 current_fragment += char
-#             else:
-#                 _append(current_fragment)
-#                 current_fragment = char
-#                 prev_isdigit = curr_isdigit
-#         _append(current_fragment)
-#         return tuple(index)
-#     indices = map(_generate_index, alist)
-#     decorated = zip(indices, alist)
-#     decorated.sort()
-#     return [ item for index, item in decorated ]
-# 
 
+def numcmp(x,y):
+    return cmp(split_numalpha(x),split_numalpha(y))
 
-# the rest of the code is my fault
-
-class ValidationError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
-class TransformError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
-
-class ExternalCommandError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
-# FIXME: phase code out to use odict instead
-class OrderedDict:
-    """A combination of a list and a dictionary. There probably exists
-    a much-better built-in version somewhere"""
-    
-    def __init__(self):
-        self.list = []
-        self.dict = {}
-
-    def append(self,key,value):
-        self.list.append([key,value])
-        self.dict[key] = self.list[-1]
-
-    def append_to_value(self,key,value):
-        #print "append_to_value: initial value: '%s'" % self.dict[key][1]
-        #print "append_to_value: value to append: '%s'" % value
-        l = self.dict[key]
-        l[1] += value
-        #print "append_to_value: final value: '%s'" % self.dict[key][1]
-        
-    def item(self,key):
-        return self.dict[key][1]
-
-    def has_key(self,key):
-        return self.dict.has_key(key)
-
-    def extend(self,dict2):
-        for item in dict2.list:
-            self.list.append(item)
-
-
+# '10 a §' => [10, ' a §']
+def split_numalpha(s):
+    res = []
+    seg = ''
+    digit = s[0].isdigit()
+    for c in s:
+        if (c.isdigit() and digit) or (not c.isdigit() and not digit):
+            seg += c
+        else:
+            res.append(int(seg) if seg.isdigit() else seg)
+            seg = c
+            digit = not digit
+    res.append(int(seg) if seg.isdigit() else seg)
+    return res
 
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""

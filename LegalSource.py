@@ -5,36 +5,24 @@ import sys, os, re, codecs, types
 import pickle
 from time import time
 
-# Do required codec/locale magic here, since this is included by all runnable scripts
+# Do required codec/locale magic here, since this is included by all
+# runnable scripts
 import locale
 locale.setlocale(locale.LC_ALL,'') 
-# reload(sys)
-# 
-# if sys.stdout.encoding: # not set when stdout is redirected
-#     sys.setdefaultencoding(sys.stdout.encoding)
-# else:
-#     if sys.platform == 'win32':
-#         sys.setdefaultencoding('cp850')
-#     else:
-#         sys.setdefaultencoding('iso-8859-1') # a reasonable default?
 
-#print "LegalSource: sys.getdefaultencoding() is %s" % sys.getdefaultencoding()
-#print "LegalSource: locale.getpreferredencoding() is %s" % locale.getpreferredencoding()
-
-defaultencoding = locale.getpreferredencoding()
-#if sys.getdefaultencoding() == 'ascii':
-#    defaultencoding = 'iso-8859-1' # let the terminal handle it
-#else:
-#    defaultencoding = sys.getdefaultencoding()
-
-    
-
-#sys.stdout.write("LegalSource: sys.stdout is %r\n" % type(sys.stdout))
+if sys.platform == 'win32':
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+    else:
+        defaultencoding = 'cp850'
+else:
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+    else:
+        defaultencoding = locale.getpreferredencoding()
+print "setting sys.stdout to a '%s' writer" % defaultencoding
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
-#sys.stdout.write(u"Legalsource: Test: \u00e1\u00e9\u00ed\u00f3\u00fa :end\n")
-#sys.stdout.write("LegalSource: sys.stdout is %r\n" % type(sys.stdout))
-
 
 import xml.etree.cElementTree as ET
 
@@ -44,10 +32,6 @@ from mechanize import Browser, LinkNotFoundError
 
 # my own code
 import Util
-
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'ferenda.settings'
-# from ferenda.docview.models import *
-# from ferenda.wiki.models import Article
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -71,26 +55,6 @@ class Downloader:
     Apart from naming the resulting files, and constructing a
     index.xml file, subclasses should do as little modification to the
     data as possible."""
-
-    #    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
-    #    def _mkdir(self,newdir):
-    #        """works the way a good mkdir should :)
-    #        - already exists, silently complete
-    #        - regular file in the way, raise an exception
-    #        - parent directory(ies) does not exist, make them as well
-    #        """
-    #        if os.path.isdir(newdir):
-    #            pass
-    #        elif os.path.isfile(newdir):
-    #            raise OSError("a file with the same name as the desired " \
-    #                          "dir, '%s', already exists." % newdir)
-    #        else:
-    #            head, tail = os.path.split(newdir)
-    #            if head and not os.path.isdir(head):
-    #                self._mkdir(head)
-    #            #print "_mkdir %s" % repr(newdir)
-    #            if tail:
-    #                os.mkdir(newdir)
 
     def __init__():
         self.browser = Browser()
@@ -137,21 +101,11 @@ class Parser:
     def Parse(self):
         raise NotImplementedError
     
-    # Misc useful methods for subclassed classes
-    #def LoadDoc(self,filename,encoding='iso-8859-1'):
-    #    return BeautifulSoup.BeautifulSoup(codecs.open(filename,encoding=encoding,errors='replace').read(),
-    #                                       convertEntities='html')
     def NormalizeSpace(self,string):
         return self.re_NormalizeSpace(' ',string).strip()
 
 
 class Manager:
-    # relationCache = {}
-    # predicateCache = {} # a dict of Predicate objects (to be used as foreign keys, so that we don't have to initialize a Predicate object from the db for every call to _createRelation
-    # predicateCache[Predicate.IDENTIFIER] = Predicate.objects.get(uri=Predicate.IDENTIFIER)
-
-    
-    
     def __init__(self,baseDir,moduleDir):
         """basedir is the top-level directory in which all file-based data is
         stored and handled. moduledir is a sublevel directory that is unique
@@ -160,8 +114,6 @@ class Manager:
         self.moduleDir = moduleDir
         self.referenceCache = {}
         
-        # print "LegalSource.py/Manager: self.baseDir set to " + self.baseDir
-
     def __del__(self):
         if hasattr(self,'referenceCache') and self.referenceCache:
             print "__del__: flushing cache(s)"

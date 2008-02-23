@@ -1,0 +1,10 @@
+<Forfattning>
+  <Stycke id="S1">
+    <unicode>Det här är stycke nummer ett.</unicode>
+  </Stycke>
+  <Stycke id="S2">
+    <unicode>Det här är stycke nummer två som hänvisar till </unicode>
+    <Link uri="http://lagen.nu/sfs/1234:567#S1">första stycket</Link>
+    <unicode>.</unicode>
+  </Stycke>
+</Forfattning>

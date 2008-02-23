@@ -1,21 +1,20 @@
 <Forfattning>
-  <Kapitel ordinal="1" rubrik="1 Kap. Första kapitlet">
-    <Paragraf ordinal="1">
-      <Stycke>
-        <unicode>1 § Första paragrafen.</unicode>
+  <Kapitel id="K1" ordinal="1" rubrik="1 Kap. Första kapitlet">
+    <Paragraf id="K1P1" ordinal="1">
+      <Stycke id="K1P1S1">
+        <unicode>Första paragrafen.</unicode>
       </Stycke>
-    </Paragraf><Paragraf ordinal="2">
-      <Stycke>
-        <unicode>2 § Andra paragrafen.</unicode>
+    </Paragraf><Paragraf id="K1P2" ordinal="2">
+      <Stycke id="K1P2S1">
+        <unicode>Andra paragrafen.</unicode>
       </Stycke>
     </Paragraf>
   </Kapitel>
-  <Kapitel ordinal="2" rubrik="2 Kap. Andra kapitlet">
-    <Paragraf ordinal="1">
-      <Stycke>
-        <unicode>1 § Första paragrafen.</unicode>
+  <Kapitel id="K2" ordinal="2" rubrik="2 Kap. Andra kapitlet">
+    <Paragraf id="K2P1" ordinal="1">
+      <Stycke id="K2P1S1">
+        <unicode>Första paragrafen.</unicode>
       </Stycke>
     </Paragraf>
   </Kapitel>
 </Forfattning>
-

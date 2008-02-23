@@ -1,9 +1,14 @@
 <Forfattning>
-  <Paragraf ordinal="1">
-    <Stycke>Första paragrafen.</Stycke>
-    <Stycke>Första paragrafens andra stycke.</Stycke>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>Första paragrafen.</unicode>
+    </Stycke><Stycke id="P1S2">
+      <unicode>Första paragrafens andra stycke.</unicode>
+    </Stycke>
   </Paragraf>
-  <Paragraf ordinal="2">
-    <Stycke>Andra paragrafen.</Stycke>
+  <Paragraf id="P2" ordinal="2">
+    <Stycke id="P2S1">
+      <unicode>Andra paragrafen.</unicode>
+    </Stycke>
   </Paragraf>
 </Forfattning>

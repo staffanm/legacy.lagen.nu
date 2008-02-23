@@ -93,7 +93,7 @@ Slash                ::= '/'
 # 'ref' construct above
 
 
-ChangeRef ::= ('Lag '/'lag '/'Förordning '/'förordning '),LawRef,'.'?
+ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,LawRef,'.'?
 
 ExternalRef          ::= GenericRef, Whitespace, ExternalLawRef
 

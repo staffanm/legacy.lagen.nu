@@ -1,18 +1,18 @@
 <Forfattning>
   <Avdelning ordinal="1" rubrik="FÖRSTA AVDELNINGEN" subheading="ÖVERGRIPANDE BESTÄMMELSER">
-    <Kapitel ordinal="1" rubrik="1 Kap. Första kapitlet">
-      <Paragraf ordinal="1">
-        <Stycke>
-          <unicode>1 § Första paragrafen.</unicode>
+    <Kapitel id="K1" ordinal="1" rubrik="1 Kap. Första kapitlet">
+      <Paragraf id="K1P1" ordinal="1">
+        <Stycke id="K1P1S1">
+          <unicode>Första paragrafen.</unicode>
         </Stycke>
       </Paragraf>
     </Kapitel>
   </Avdelning>
   <Avdelning ordinal="2" rubrik="ANDRA AVDELNINGEN" subheading="NÅGOT ANNAT">
-    <Kapitel ordinal="2" rubrik="2 Kap. Andra kapitlet">
-      <Paragraf ordinal="1">
-        <Stycke>
-          <unicode>1 § Första paragrafen.</unicode>
+    <Kapitel id="K2" ordinal="2" rubrik="2 Kap. Andra kapitlet">
+      <Paragraf id="K2P1" ordinal="1">
+        <Stycke id="K2P1S1">
+          <unicode>Första paragrafen.</unicode>
         </Stycke>
       </Paragraf>
     </Kapitel>

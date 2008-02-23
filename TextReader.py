@@ -58,9 +58,11 @@ class TextReader:
                 # FIXME: check to see if this speeds things up
                 # s = struct.pack("%dB" % (len(a),), *a)
                 self.data = "".join(chunks)
+            self.f.close()
         else:
             assert(isinstance(ustring,unicode))
             self.data = ustring
+        
         self.currpos = 0
         self.maxpos = len(self.data)
         self.lastread = u''
@@ -212,7 +214,7 @@ class TextReader:
         return self.peekchunk(self.linesep,times)
 
     def peekparagraph(self,times=1):
-        return self.peekchunk(self.linesep,times)
+        return self.peekchunk(self.linesep*2,times)
 
     def peekchunk(self,delimiter,times=1):
         oldpos = self.currpos
@@ -318,6 +320,17 @@ class Basic(unittest.TestCase):
         self.assertEqual(l, u'Python was created in the early 1990s by Guido van Rossum at Stichting')
         self.f.seek(0)
         
+    def testPeekParagraph(self):
+        l = self.f.peekparagraph()
+        self.assertEqual(l, u'A. HISTORY OF THE SOFTWARE'+self.f.linesep+'==========================')
+        l = self.f.peekparagraph(2)
+        self.assertEqual(l, u'Python was created in the early 1990s by Guido van Rossum at Stichting'+self.f.linesep+
+                         'Mathematisch Centrum (CWI, see http://www.cwi.nl) in the Netherlands'+self.f.linesep+
+                         'as a successor of a language called ABC.  Guido remains Python\'s'+self.f.linesep+
+                         'principal author, although it includes many contributions from others.')
+        self.f.seek(0)
+
+    
 
     def testPrevLine(self):
         self.f.readparagraph()
@@ -478,6 +491,18 @@ class Edgecases(unittest.TestCase):
         self.assertRaises(IOError,
                           self.f.cue, u'I am a little teapot')
         self.f.seek(0)
+
+class Fileops(unittest.TestCase):
+
+    def testClose(self):
+        f = open("textreader.tmp","w")
+        f.write("foo")
+        f.close()
+        r = TextReader("textreader.tmp")
+        # make sure TextReader isn't keeping the file open
+        os.rename("textreader.tmp", "textreader2.tmp")
+        os.unlink("textreader2.tmp")
+        self.assertEqual("foo",r.readline())
                        
 if __name__ == '__main__':
     unittest.main()
