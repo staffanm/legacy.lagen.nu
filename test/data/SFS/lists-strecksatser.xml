@@ -1,0 +1,11 @@
+<Forfattning>
+  <Strecksatslista>
+    <Listelement id="N1" ordinal="1">
+      <unicode>- En punkt</unicode>
+    </Listelement><Listelement id="N2" ordinal="2">
+      <unicode>- En annan punkt</unicode>
+    </Listelement><Listelement id="N3" ordinal="3">
+      <unicode>- En tredje punkt</unicode>
+    </Listelement>
+  </Strecksatslista>
+</Forfattning>

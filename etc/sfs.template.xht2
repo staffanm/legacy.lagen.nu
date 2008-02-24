@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.w3.org/2002/06/xhtml2/ http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/"
+      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+      xml:base="${meta['xml:base']}"
+      xml:lang="sv"
+      xmlns:py="http://genshi.edgewall.org/"
+      >
+    <head>
+      <title property="dc:title" py:content="meta['dc:title']">Författningsrubrik</title>
+
+      <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
+      <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
+
+      <meta property="rinfo:fsNummer" content="${meta['rinfo:fsNummer']}" xml:lang=""/>
+
+      <link rel="dc:publisher" href="${meta['dc:publisher']}"/>
+      <link rel="dc:creator" href="${meta['dc:creator']}"/>
+      <meta property="rinfo:utfardandedatum"
+            content="${meta['rinfo:utfardandedatum']}" datatype="xsd:date"/>
+
+      <py:if test="meta['rinfo:upphaver']">
+        <link rel="rinfo:upphaver" href="${meta['rinfo:upphaver']}"/>
+      </py:if>
+
+      <!--! Kan den här egenskapen utläsas ur SFST/SFSR-datat? -->
+      <py:if test="meta['rinfo:ikrafttradandedatum']">
+        <meta property="rinfo:ikrafttradandedatum"
+              content="${meta['rinfo:ikrafttradandedatum']}" datatype="xsd:date"/>
+      </py:if>
+
+      <py:for each="forarbete in meta.forarbeten">
+        <link rel="rinfo:forarbete" href="http://rinfo.lagrummet.se/data/ds/1998:10"/>
+      </py:for>
+
+      <link rel="rinfo:konsoliderar" href="${meta['rinfo:konsoliderar']}"/>
+
+      <!--! FIXME: Hur konstruera en länkad lista RDF-påståenden från
+           en vanlig lista (SFSR-posterna) med Genshi?
+      <link rel="rinfo:konsolideringsUnderlag">
+          <link rel="rdf:type" href="http://www.w3.org/1999/02/22-rdf-syntax-ns#Collection"/>
+          <link rel="rdf:first" href="http://rinfo.lagrummet.se/data/sfs/1999:175/kons_grf-n1"/>
+          <link rel="rdf:rest">
+              <link rel="rdf:first" href="http://rinfo.lagrummet.se/data/sfs/2006:87"/>
+              <link rel="rdf:rest" href="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+          </link>
+      </link>
+      -->
+    </head>
+    <body>
+
+      <!--! macro definitions -->
+      <h py:def="render_rubrik(rubrik)" py:content="rubrik.value">Rubrik</h>
+
+
+      <section py:def="render_avdelning(avdelning)"
+	       xml:id="${avdelning.id}"
+	       instanceof="rinfo:Avdelning"
+	       rel="rinfo:avdelning">
+	<h py:content="avdelning.value">Avdelningsrubrik</h>
+	<h py:if="avdelning.subheading" py:content="avdelning.subheading" class="underrubrik">Underrubrik</h>
+	<py:for each="part in avdelning" py:choose="">
+	  <div py:when="isinstance(part,Rubrik)"  py:strip="">${render_rubrik(part)}</div>
+	  <div py:when="isinstance(part,UpphavtKapitel)" py:strip="">${render_upphavtkapitel(part)}</div>
+	  <div py:when="isinstance(part,Kapitel)" py:strip="">${render_kapitel(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_avdelning</div>
+	</py:for>
+      </section>
+      
+      <section py:def="render_upphavtkapitel(paragraf)"
+               instanceof="rinfo:Kapitel"
+	       rel="rinfo:kapitel"
+	       class="upphavd"
+	       property="rinfo:kapitelnummer"
+	       content="${paragraf.ordinal}">
+	       ${paragraf.value}
+      </section>
+
+      <section py:def="render_kapitel(kapitel)"
+	       xml:id="${kapitel.id}"
+	       instanceof="rinfo:Kapitel"
+	       rel="rinfo:kapitel"
+	       property="rinfo:kapitelnummer"
+	       content="${kapitel.ordinal}">
+	<h class="kapitelrubrik" py:content="kapitel.value">Kapitelrubrik</h>
+	
+	<py:for each="part in kapitel" py:choose="">
+	  <div py:when="isinstance(part, Rubrik)"   py:strip="">${render_rubrik(part)}</div>
+	  <div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
+	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_kapitel</div>
+	</py:for>
+      </section>
+      
+      
+      <section py:def="render_upphavdparagraf(paragraf)"
+               instanceof="rinfo:Paragraf"
+	       rel="rinfo:paragraf"
+	       class="upphavd"
+	       property="rinfo:paragrafnummer"
+	       content="${paragraf.ordinal}">
+	       ${paragraf.value}
+      </section>
+      
+      <section py:def="render_paragraf(paragraf)" xml:id="${paragraf.id}"
+               instanceof="rinfo:Paragraf"
+	       rel="rinfo:paragraf"
+	       property="rinfo:paragrafnummer"
+	       content="${paragraf.ordinal}"
+	       >
+	<!--! första stycket måste rendreras tillsammans med
+	     paragrafbeteckningen (inuti samma p-element) -->
+	
+	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${paragraf.ikrafttrader})</span>
+	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${paragraf.upphor})</span>
+        ${render_stycke(paragraf[0], paragraf.ordinal)}
+        <py:for each="part in paragraf[1:]" py:choose="">
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_paragraf</div>
+        </py:for>
+      </section>
+            
+      
+      <p py:def="render_stycke(stycke,paragrafnummer=None)"
+	 instanceof="rinfo:Stycke"
+	 xml:id="${stycke.id}"
+	 property="rinfo:styckenummer"
+	 content="${stycke.ordinal}">
+        <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
+        ${stycke.value}
+        <py:for each="part in stycke" py:choose="">
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:when="isinstance(part, Punktlista)" py:strip="">${render_punktlista(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div>
+        </py:for>
+      </p>
+      
+
+      <!--! unfortunately, the XHTML2 model for ordered lists is too strict
+      to be compatible with how numbered lists are used in swedish law -
+      e.g Mervärdesskattelag (1994:200) 5 kap. 9 § features a numbered lists
+      that have ten items labeled 1, 2, 3, 4, 4 a, 5, 6, 6 a, 7, and 8.
+      Because of this we use <ul> instead of <ol> even for numbered lists.
+      -->
+      <ul class="numreradlista" py:def="render_numreradlista(lista)" xml:id="${lista.id}">
+        <py:for each="part in lista" py:choose="">
+          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_numreradlista</div>
+        </py:for>
+      </ul>
+
+      <ul class="punktlista" py:def="render_punktlista(lista)" xml:id="${lista.id}">
+        <py:for each="part in lista" py:choose="">
+          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_punktlista</div>
+        </py:for>
+      </ul>
+
+
+
+      <li py:def="render_listelement(listelement)" xml:id="${listelement.id}">
+      ${listelement.value}
+      <!--! for nested lists -->
+      <py:for each="part in listelement" py:choose="">
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_listelement</div>
+      </py:for>
+      </li>
+      
+      <!--! main body -->
+      <h property="dc:title" py:content="meta['dc:title']">Författningsrubrik</h>
+      <section>
+      <py:for each="part in body" py:choose="">
+	<div py:when="isinstance(part, Avdelning)" py:strip="">${render_avdelning(part)}</div>
+	<div py:when="isinstance(part, UpphavtKapitel)" py:strip="">${render_upphavtkapitel(part)}</div>
+	<div py:when="isinstance(part, Kapitel)" py:strip="">${render_kapitel(part)}</div>
+	<div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
+	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
+	<div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
+	<div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
+      </py:for>
+      </section>
+    </body>
+</html>

@@ -1,0 +1,11 @@
+<Forfattning>
+  <Bokstavslista>
+    <Listelement id="Na" ordinal="a">
+      <unicode>a) Vissa ordnade listor använder bokstäver</unicode>
+    </Listelement><Listelement id="Nb" ordinal="b">
+      <unicode>b) istället för siffror</unicode>
+    </Listelement><Listelement id="Nc" ordinal="c">
+      <unicode>c) men i verkliga världen är de alltid underlistor</unicode>
+    </Listelement>
+  </Bokstavslista>
+</Forfattning>

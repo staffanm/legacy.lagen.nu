@@ -59,11 +59,11 @@ class Stycke(CompoundStructure):
         self.id = kwargs['id'] if 'id' in kwargs else None
         super(Stycke,self).__init__(*args, **kwargs)
 
-class Punktlista (CompoundStructure): pass
-
 class NumreradLista (CompoundStructure): pass
 
-class OnumreradLista (CompoundStructure): pass
+class Strecksatslista (CompoundStructure): pass
+
+class Bokstavslista (CompoundStructure): pass
 
 class Preformatted(UnicodeStructure): pass
 
@@ -354,8 +354,9 @@ class SFSParser(LegalSource.Parser):
     re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
     re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
     re_SectionIdOld    = re.compile(r'^§ (\d+ ?\w?).')     # as used in eg 1810:0926
-    re_DottedNumber    = re.compile(r'^(\d+)\. ').match
+    re_DottedNumber    = re.compile(r'^(\d+ ?\w?)\. ').match
     re_NumberRightPara = re.compile(r'^(\d+)\) ').match
+    re_Bokstavslista   = re.compile(r'^(\w)\) ').match
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
     re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
@@ -567,7 +568,7 @@ class SFSParser(LegalSource.Parser):
         """Skapa det färdiga XHTML2-dokumentet för en konsoliderad lagtext"""
         (meta, body) = data
         loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
-        tmpl = loader.load("template.xht2")
+        tmpl = loader.load("etc/sfs.template.xht2")
         stream = tmpl.generate(meta=meta, body=body, **globals())
         return stream.render()
 
@@ -764,7 +765,7 @@ class SFSParser(LegalSource.Parser):
                 if self.verbose: sys.stdout.write(u"      Paragraf %s färdig\n" % paragrafnummer)
                 return p
             elif state_handler in (self.makeNumreradLista,
-                                   self.makePunktlista):
+                                   self.makeStrecksatslista):
                 res = state_handler()
                 p[-1].append(res)
             else:
@@ -786,33 +787,64 @@ class SFSParser(LegalSource.Parser):
         n = NumreradLista()
         while not self.reader.eof():
             state_handler = self.guess_state()
-            if state_handler not in (self.blankline, self.makeNumreradLista):
+            if state_handler not in (self.blankline,
+                                     self.makeNumreradLista,
+                                     self.makeBokstavslista,
+                                     self.makeStrecksatslista):
+                return n
+            elif state_handler == self.blankline:
+                state_handler()
+            else:
+                if state_handler == self.makeNumreradLista:
+                    if self.verbose: sys.stdout.write(u"          Ny punkt: '%s...'\n" % self.reader.peekline()[:30])
+                    listelement_ordinal = self.idOfNumreradLista()
+                    li = Listelement(ordinal = listelement_ordinal)
+                    p = self.reader.readparagraph()
+                    li.append(p)
+                    n.append(li)
+                else:
+                    # this must be a sublist
+                    res = state_handler()
+                    n[-1].append(res)
+                if self.verbose: sys.stdout.write(u"          Punkt %s avslutad\n" % listelement_ordinal)
+        return n
+
+    def makeBokstavslista(self):
+        n = Bokstavslista()
+        while not self.reader.eof():
+            state_handler = self.guess_state()
+            if state_handler not in (self.blankline, self.makeBokstavslista):
                 return n
             elif state_handler == self.blankline:
                 res = state_handler()
             else:
-                if self.verbose: sys.stdout.write(u"          Ny listpunkt: '%s...'\n" % self.reader.peekline()[:30])
-                listelement_ordinal = self.idOfNumreradLista()
-                li = Listelement(text=self.reader.readparagraph(), ordinal = listelement_ordinal)
+                if self.verbose: sys.stdout.write(u"            Ny underpunkt: '%s...'\n" % self.reader.peekline()[:30])
+                listelement_ordinal = self.idOfBokstavslista()
+                li = Listelement(ordinal = listelement_ordinal)
+                p = self.reader.readparagraph()
+                li.append(p)
                 n.append(li)
-                if self.verbose: sys.stdout.write(u"          Listpunkt %s avslutad\n" % listelement_ordinal)
+                if self.verbose: sys.stdout.write(u"            Underpunkt %s avslutad\n" % listelement_ordinal)
         return n
+        
 
-
-    def makePunktlista(self):
-        n = Punktlista()
+    def makeStrecksatslista(self):
+        n = Strecksatslista()
         cnt = 0
         while not self.reader.eof():
             state_handler = self.guess_state()
-            if state_handler not in (self.blankline, self.makePunktlista):
+            if state_handler not in (self.blankline, self.makeStrecksatslista):
                 return n
             elif state_handler == self.blankline:
                 res = state_handler()
             else:
-                if self.verbose: sys.stdout.write(u"          Ny listpunkt: '%s...'\n" % self.reader.peekline()[:30])
+                if self.verbose: sys.stdout.write(u"            Ny strecksats: '%s...'\n" % self.reader.peekline()[:30])
                 cnt += 1
-                li = Listelement(self.reader.readparagraph(), ordinal = str(cnt))
-                if self.verbose: sys.stdout.write(u"          Listpunkt #%s avslutad\n" % cnt)
+                p = self.reader.readparagraph()
+                li = Listelement(ordinal = unicode(cnt))
+                li.append(p)
+                n.append(li)
+                if self.verbose: sys.stdout.write(u"            Strecksats #%s avslutad\n" % cnt)
         return n
 
 
@@ -829,18 +861,30 @@ class SFSParser(LegalSource.Parser):
         # ha med åtminstone de som kan ha relevans för gällande rätt
 
         # TODO: hantera detta
-        sys.stdout.write(u"    Ny Övergångsbestämmelser\n")
+        if self.verbose: sys.stdout.write(u"    Ny Övergångsbestämmelser\n")
 
         rubrik = self.reader.readparagraph()
-        obs = Overgangsbestammelser(rubrik)
+        obs = Overgangsbestammelser(rubrik=rubrik)
         
-        for p in self.reader.getiterator(self.reader.readparagraph):
-            pass
-        
-        return None
+        while not self.reader.eof():
+            state_handler = self.guess_state()
+            res = state_handler()
+            if res != None:
+                obs.append(res)
+            
+        return obs
 
     def makeOvergangsbestammelse(self):
-        pass
+        p = self.reader.readline()
+        if self.verbose: sys.stdout.write(u"      Ny Övergångsbestämmelse: %s\n" % p)
+        ob = Overgangsbestammelse(sfsnr=p)
+        while not self.reader.eof():
+            state_handler = self.guess_state()
+            res = state_handler()
+            if res != None:
+                ob.append(res)
+
+        return ob
         
 
     def makeBilaga(self): # svenska: bilaga
@@ -872,13 +916,15 @@ class SFSParser(LegalSource.Parser):
         elif self.isParagraf():              handler = self.makeParagraf
         elif self.isTabell():                handler = self.makeTabell
         elif self.isOvergangsbestammelser(): handler = self.makeOvergangsbestammelser
+        elif self.isOvergangsbestammelse():  handler = self.makeOvergangsbestammelse
+        elif self.isBilaga():                handler = self.makeBilaga
         elif self.isNumreradLista():         handler = self.makeNumreradLista
-        elif self.isPunktlista():            handler = self.makePunktlista
+        elif self.isStrecksatslista():       handler = self.makeStrecksatslista
+        elif self.isBokstavslista():         handler = self.makeBokstavslista
         elif self.isRubrik():                handler = self.makeRubrik
         else:                                handler = self.makeStycke
         # sys.stdout.write("%r\n" % handler)
         return handler
-
 
     def isAvdelning(self):
         # The start of a part ("avdelning") should be a single line
@@ -1092,11 +1138,22 @@ class SFSParser(LegalSource.Parser):
                 return match.group(1).replace(" ", "")
         return None
 
-    def isPunktlista(self):
+    def isStrecksatslista(self):
         p = self.reader.peekline()
         return (p.startswith("- ") or
                 p.startswith("--"))
 
+    def isBokstavslista(self):
+        return self.idOfBokstavslista() != None
+
+    def idOfBokstavslista(self):
+        p = self.reader.peekline()
+        match = self.re_Bokstavslista(p)
+
+        if match != None:
+            return match.group(1).replace(" ", "")
+        return None
+        
 
     def isPreformatted(self):
         # Preformatted sections are usually tables, but so complex that
@@ -1116,11 +1173,15 @@ class SFSParser(LegalSource.Parser):
     def isOvergangsbestammelser(self):
         #p = self.reader.peekline()
         #print "%r == %r: %r" % (u"Övergångsbestämmelser", p[:30], p == u"Övergångsbestämmelser")
-        return self.reader.peekline() == u"Övergångsbestämmelser"
+        return self.reader.peekline() in [u'Övergångsbestämmelser',
+                                          u'Ikraftträdande- och övergångsbestämmelser']
+
+    def isOvergangsbestammelse(self):
+        return self.re_SimpleSfsId(self.reader.peekline())
 
 
     def isBilaga(self):
-        return (self.reader.peekline in (u"Bilaga", u"Bilaga 1"))
+        return (self.reader.peekline() in (u"Bilaga", u"Bilaga 1"))
 
         
 class SFSManager(LegalSource.Manager):
@@ -1252,7 +1313,6 @@ class SFSManager(LegalSource.Manager):
             out.close()
             #  Util.indentXmlFile(filename)
         except Exception,e :
-            # Log this properly
             tb = sys.exc_info()[2]
             formatted_tb = traceback.format_tb(sys.exc_info()[2])
             print (u" Exception:\nType: %s\nValue: %s\nTraceback:\n %s" %
@@ -1268,39 +1328,54 @@ class SFSManager(LegalSource.Manager):
     def ParseTest(self,testfile,verbose=False, quiet=False):
         if not quiet:
             print "Running test %s\n------------------------------" % testfile
-        p = SFSParser()
-        p.verbose = verbose
-        p.references.verbose = verbose
-        p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
-        p.reader.autostrip=True
-        b = p.makeForfattning()
-        p._construct_ids(b, u'', u'http://lagen.nu/1234:567#')
-        testlines = serialize(b).split("\n")
-        # pprint(testlines)
-        keyfile = testfile.replace(".txt",".xml")
-        if os.path.exists(keyfile):
-            keylines = [x.rstrip('\r\n') for x in codecs.open(keyfile,encoding='utf-8').readlines()]
-        else:
-            keylines = []
-        # pprint(keylines)
-        from difflib import Differ
-        difflines = list(Differ().compare(testlines,keylines))
-        diffedlines = [x for x in difflines if x[0] != ' ']
-        if len(diffedlines) > 0:
-            if quiet:
-                sys.stdout.write("F")
+
+        try:
+            p = SFSParser()
+            p.verbose = verbose
+            p.references.verbose = verbose
+            p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
+            p.reader.autostrip=True
+            b = p.makeForfattning()
+            p._construct_ids(b, u'', u'http://lagen.nu/1234:567#')
+            testlines = serialize(b).split("\n")
+            # pprint(testlines)
+            keyfile = testfile.replace(".txt",".xml")
+            if os.path.exists(keyfile):
+                keylines = [x.rstrip('\r\n') for x in codecs.open(keyfile,encoding='utf-8').readlines()]
             else:
+                keylines = []
+            # pprint(keylines)
+            from difflib import Differ
+            difflines = list(Differ().compare(testlines,keylines))
+            diffedlines = [x for x in difflines if x[0] != ' ']
+
+            if len(diffedlines) > 0:
+                result = "F"
+            else:
+                result = "."
+
+        except Exception:
+            result = "E"
+
+        if quiet:
+            sys.stdout.write(result)
+            return result == '.'
+
+        else:
+            if result == '.':
+                sys.stdout.write("OK %s" % testfile)
+                return True
+            elif result == 'F':
                 print "FAIL %s" % testfile
                 sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
-            return False
-        else:
-            if quiet:
-                sys.stdout.write(".")
-            else:
-                print "OK %s" % testfile
-            return True
-        
-
+                return False
+            elif result == 'E':
+                tb = sys.exc_info()[2]
+                formatted_tb = traceback.format_tb(sys.exc_info()[2])
+                print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
+                       (sys.exc_info()[0],
+                        sys.exc_info()[1],
+                        u''.join(formatted_tb)))
 
     def ParseTestAll(self):
         results = []
