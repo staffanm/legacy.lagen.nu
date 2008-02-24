@@ -35,7 +35,7 @@ import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
 from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, TemporalStructure, OrdinalStructure, serialize
-from LegalRef import SFSRefParser, ParseError
+from LegalRef import SFSRefParser, ParseError, Link
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -110,7 +110,12 @@ class Overgangsbestammelser(CompoundStructure):
         super(Overgangsbestammelser,self).__init__(*args,**kwargs)
     
 class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
-    pass
+    fragment_label = "L"
+    def __init__(self, *args, **kwargs):
+        self.id = kwargs['id'] if 'id' in kwargs else None
+        super(Overgangsbestammelse,self).__init__(*args,**kwargs)
+
+
 
 class Register(CompoundStructure):
     """Innehåller lite metadata om en grundförfattning och dess
@@ -393,6 +398,9 @@ class SFSParser(LegalSource.Parser):
         self.current_section = u'0'
         self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
+        self.trace = {'rubrik':False,
+                      'paragraf':False,
+                      'numreradlista':False}
     
     def _load_authority_rec(self, file):
         graph = Graph()
@@ -510,6 +518,8 @@ class SFSParser(LegalSource.Parser):
                     elementtype = p.fragment_label
                     if hasattr(p, 'ordinal'):
                         elementordinal = p.ordinal.replace(" ","")
+                    elif hasattr(p, 'sfsnr'):
+                        elementordinal = p.sfsnr
                     else:
                         elementordinal = counters[type(p)]
                     fragment = "%s%s%s" % (prefix, elementtype, elementordinal)
@@ -517,12 +527,16 @@ class SFSParser(LegalSource.Parser):
                 else:
                     fragment = prefix
                 self._construct_ids(p,fragment,baseuri)
-            if isinstance(element, Stycke):
+            if isinstance(element, Stycke) or isinstance(element, Listelement):
                 nodes = []
                 # print u'%s: Letar hänvisningar...' % fragment
-                for p in element: # normally only one
-                    nodes.extend(self.references.parse(p,baseuri+prefix))
-                element[:] = nodes
+                for p in element: # normally only one, but can be more
+                                  # if the Stycke has a NumreradLista
+                                  # or similar
+                    if isinstance(p,unicode): # look for stuff
+                        nodes.extend(self.references.parse(p,baseuri+prefix))
+                        idx = element.index(p)
+                element[idx:idx+1] = nodes
 
     def _parseSFST(self, lawtextfile, registry):
         # self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
@@ -633,10 +647,10 @@ class SFSParser(LegalSource.Parser):
         avdelningsnummer = self.idOfAvdelning()
         p = Avdelning(rubrik = self.reader.readline(),
                       ordinal = avdelningsnummer,
-                      subheading = None)
+                      underrubrik = None)
         if self.reader.peekline(1) == "" and self.reader.peekline(3) == "":
             self.reader.readline()
-            p.subheading = self.reader.readline()
+            p.underrubrik = self.reader.readline()
 
         if self.verbose: sys.stdout.write(u"  Ny avdelning: '%s...'\n" % p.rubrik[:30])
 
@@ -765,6 +779,7 @@ class SFSParser(LegalSource.Parser):
                 if self.verbose: sys.stdout.write(u"      Paragraf %s färdig\n" % paragrafnummer)
                 return p
             elif state_handler in (self.makeNumreradLista,
+                                   self.makeBokstavslista,
                                    self.makeStrecksatslista):
                 res = state_handler()
                 p[-1].append(res)
@@ -880,6 +895,8 @@ class SFSParser(LegalSource.Parser):
         ob = Overgangsbestammelse(sfsnr=p)
         while not self.reader.eof():
             state_handler = self.guess_state()
+            if state_handler == self.makeOvergangsbestammelse:
+                return ob
             res = state_handler()
             if res != None:
                 ob.append(res)
@@ -1016,35 +1033,41 @@ class SFSParser(LegalSource.Parser):
 
     def isRubrik(self, p=None):
         if p == None:
-            # print "isRubrik: direct"
+            if self.trace['rubrik']: print "isRubrik: direct"
             p = self.reader.peekparagraph()
             indirect = False
         else:
-            # print "isRubrik: indirect"
+            if self.trace['rubrik']: print "isRubrik: indirect"
             indirect = True
 
-        # print "isRubrik: p=%s" % p
+        if self.trace['rubrik']: print "isRubrik: p=%s" % p
         if len(p) > 100: # it shouldn't be too long
-            #print "isRubrik: too long"
+            if self.trace['rubrik']: print "isRubrik: too long"
             return False
 
-        if self.isParagraf(): # A headline should not look like the start of a paragraph
-            #print "isRubrik: looks like para"
+        # A headline should not look like the start of a paragraph or a numbered list
+        if self.isParagraf(p): 
+            if self.trace['rubrik']: print "isRubrik: looks like para"
             return False
+
+        if self.isNumreradLista(p):
+            if self.trace['rubrik']: print "isRubrik: looks like numreradlista"
+            return False
+            
 
         if (p.endswith(".") and # a headline never ends with a period, unless it ends with "m.m." or similar
             not (p.endswith("m.m.") or 
                  p.endswith("m. m.") or 
                  p.endswith("m.fl.") or 
                  p.endswith("m. fl."))):
-            #print "isRubrik: ends with period"
+            if self.trace['rubrik']: print "isRubrik: ends with period"
             return False 
 
         if (p.endswith(",") or  # a headline never ends with these characters
             p.endswith(":") or 
             p.endswith("samt") or 
             p.endswith("eller")):
-            #print "isRubrik: ends with comma/colon etc"
+            if self.trace['rubrik']: print "isRubrik: ends with comma/colon etc"
             return False
 
         try:
@@ -1057,7 +1080,7 @@ class SFSParser(LegalSource.Parser):
         # infinite recursion)
         if not indirect:
             if (not self.isParagraf(nextp)) and (not self.isRubrik(nextp)):
-                #print "isRubrik: is not followed by a paragraf or rubrik"
+                if self.trace['rubrik']: print "isRubrik: is not followed by a paragraf or rubrik"
                 return False
 
         # if this headline is followed by a second headline, that
@@ -1067,6 +1090,7 @@ class SFSParser(LegalSource.Parser):
             self.current_headline_level = 1
         
         # ok, all tests passed, this might be a headline!
+        if self.trace['rubrik']: print "isRubrik: All tests passed for %s" % p
         return True
 
     def isUpphavdParagraf(self):
@@ -1076,16 +1100,16 @@ class SFSParser(LegalSource.Parser):
     def isParagraf(self, p=None):
         if not p:
             p = self.reader.peekparagraph()
-        #else:
-        #    print "isParagraf: called w/ '%s'" % p[:30]
+        else:
+            if self.trace['paragraf']: print "isParagraf: called w/ '%s'" % p[:30]
 
         paragrafnummer = self.idOfParagraf(p)
         if paragrafnummer == None:
-            #print "isParagraf: '%s': no paragrafnummer" % p[:30]
+            if self.trace['paragraf']: print "isParagraf: '%s': no paragrafnummer" % p[:30]
             return False
         if paragrafnummer == '1':
             # if self.verbose: sys.stdout.write(u"is_section: The section numbering's restarting\n")
-            #print "isParagraf: paragrafnummer = 1, return true"
+            if self.trace['paragraf']: print "isParagraf: paragrafnummer = 1, return true"
             return True
         # now, if this sectionid is less than last section id, the
         # section is probably just a reference and not really the
@@ -1094,10 +1118,10 @@ class SFSParser(LegalSource.Parser):
         #
         # FIXME: "10" should be larger than "9"
         if Util.numcmp(paragrafnummer, self.current_section) >= 0:
-            #print "isParagraf: sectionnumberingcompare succeded (%s > %s)" % (paragrafnummer, self.current_section)
+            if self.trace['paragraf']: print "isParagraf: sectionnumberingcompare succeded (%s > %s)" % (paragrafnummer, self.current_section)
             return True
         else:
-            #print "isParagraf: section numbering compare failed (%s <= %s)" % (paragrafnummer, self.current_section)
+            if self.trace['paragraf']: print "isParagraf: section numbering compare failed (%s <= %s)" % (paragrafnummer, self.current_section)
             return False
 
     def idOfParagraf(self, p):
@@ -1123,19 +1147,27 @@ class SFSParser(LegalSource.Parser):
     def makeFastbredd(self):
         return None
 
-    def isNumreradLista(self):
-        return self.idOfNumreradLista() != None
+    def isNumreradLista(self, p=None):
+        return self.idOfNumreradLista(p) != None
 
-    def idOfNumreradLista(self):
-        p = self.reader.peekline()
+    def idOfNumreradLista(self, p=None):
+        if not p:
+            p = self.reader.peekline()
+            if self.trace['numreradlista']: print "idOfNumreradLista: called directly (%s)" % p[:30]
+        else:
+            if self.trace['paragraf']: print "idOfNumreradLista: called w/ '%s'" % p[:30]
         match = self.re_DottedNumber(p)
 
         if match != None:
+            if self.trace['numreradlista']: print "idOfNumreradLista: match DottedNumber" 
             return match.group(1).replace(" ", "")
         else:
             match = self.re_NumberRightPara(p)
             if match != None:
+                if self.trace['numreradlista']: print "idOfNumreradLista: match NumberRightPara" 
                 return match.group(1).replace(" ", "")
+
+        if self.trace['numreradlista']: print "idOfNumreradLista: no match"
         return None
 
     def isStrecksatslista(self):
@@ -1337,7 +1369,7 @@ class SFSManager(LegalSource.Manager):
             p.reader.autostrip=True
             b = p.makeForfattning()
             p._construct_ids(b, u'', u'http://lagen.nu/1234:567#')
-            testlines = serialize(b).split("\n")
+            testlines = [x.rstrip('\r') for x in serialize(b).split("\n")]
             # pprint(testlines)
             keyfile = testfile.replace(".txt",".xml")
             if os.path.exists(keyfile):

@@ -100,7 +100,7 @@ class SFSRefParser:
     
     #parser = generator.buildParser(decl).parserbyname('root')
     simpleparser = Parser(decl, "root")
-
+    
     def __init__(self,verbose=False,namedlaws={}):
         self.currentlaw     = None
         self.currentchapter = None
@@ -646,6 +646,7 @@ class SFSRefParser:
         # put in a '|' sign just before the substring (and then we
         # remove the pipe just before returning the marked-up string)
         # Assume proper locale has been set elsewhere
+        # print repr(indata)
         fixedindata = self.re_escape.sub(r'|\1', indata)
         
         # SimpleParse has no unicode support... It might be possible
