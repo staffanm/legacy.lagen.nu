@@ -47,7 +47,7 @@ class TextReader:
         self.autostrip = False
         self.autodewrap = False
         self.autodehyphenate = False
-
+        self.expandtabs = True
         if filename:
             self.f = codecs.open(self.name,"rb",encoding)
             chunks = []
@@ -98,6 +98,8 @@ class TextReader:
             s = self.__dewrap(s)
         if self.autodehyphenate:
             s = self.__dehyphenate(s)
+        if self.expandtabs:
+            s = self.__expandtabs(s)
         return s
 
     def __strip(self,s):
@@ -109,6 +111,9 @@ class TextReader:
     def __dehyphenate(self,s):
         return s # FIXME: implement
 
+    def __expandtabs(self,s):
+        return s.expandtabs(8)
+        
 
     #----------------------------------------------------------------
     # Implementation of a file-like interface
@@ -413,6 +418,9 @@ class Processing(unittest.TestCase):
         
 
     def testDehyphenate(self):
+        pass
+
+    def testExpandtabs(self):
         pass
 
     def testReadTable(self):

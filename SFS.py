@@ -43,10 +43,17 @@ __shortdesc__ = u"Författningar i SFS"
 __moduledir__ = "sfs"
 
 
-
+# Objektmodellen för en författning är uppbyggd av massa byggstenar
+# (kapitel, paragrafen, stycken m.m.) där de allra flesta är någon
+# form av lista. Även stycken är listor, dels då de kan innehålla
+# lagrumshänvisningar i den löpande texten, som uttrycks som
+# Link-objekt mellan de vanliga unicodetextobjekten, dels då de kan
+# innehålla en punkt- eller nummerlista.
 class Forfattning(CompoundStructure,TemporalStructure):
     pass
 
+# Rubrike är en av de få byggstenarna som faktiskt inte kan innehålla
+# något annat (det förekommer "aldrig" en hänvisning i en rubriktext).
 class Rubrik(UnicodeStructure,TemporalStructure):
     fragment_label = "R"
     def __init__(self, *args, **kwargs):
@@ -67,9 +74,11 @@ class Bokstavslista (CompoundStructure): pass
 
 class Preformatted(UnicodeStructure): pass
 
-class Tabell(CompoundStructure): pass # each table row is a part
+class Tabell(CompoundStructure): pass # Varje tabellrad är ett objekt
 
-class TabellRad(CompoundStructure): pass # each table cell is a part
+class Tabellrad(CompoundStructure, TemporalStructure): pass # Varje tabellcell är ett objekt
+
+class Tabellcell(CompoundStructure): pass # ..som kan innehålla text och länkar
 
 class Avdelning(CompoundStructure, OrdinalStructure):
     pass
@@ -114,8 +123,6 @@ class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
     def __init__(self, *args, **kwargs):
         self.id = kwargs['id'] if 'id' in kwargs else None
         super(Overgangsbestammelse,self).__init__(*args,**kwargs)
-
-
 
 class Register(CompoundStructure):
     """Innehåller lite metadata om en grundförfattning och dess
@@ -365,8 +372,8 @@ class SFSParser(LegalSource.Parser):
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
     re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
-    re_RevokeDate      = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
-    re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(d\+)-(\d+)-(\d+)/')
+    re_RevokeDate       = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
+    re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(\d+)-(\d+)-(\d+)/')
     # use this custom matcher to ensure any strings you intend to convert
     # are legal roman numerals (simpler than having from_roman throwing
     # an exception)
@@ -400,7 +407,8 @@ class SFSParser(LegalSource.Parser):
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
         self.trace = {'rubrik':False,
                       'paragraf':False,
-                      'numreradlista':False}
+                      'numreradlista':False,
+                      'tabell':True}
     
     def _load_authority_rec(self, file):
         graph = Graph()
@@ -572,7 +580,11 @@ class SFSParser(LegalSource.Parser):
                 meta[predicate] = u''
 
         meta['dc:publisher'] = self._find_authority_rec("Regeringskansliet")
-        meta['dc:creator'] = self._find_authority_rec(head["Departement/ myndighet"])
+        try:
+            meta['dc:creator'] = self._find_authority_rec(head["Departement/ myndighet"])
+        except KeyError:
+            # Nån sorts vettig default?
+            meta['dc:creator'] = self._find_authority_rec(u'Regeringskansliet')
         meta['rinfo:konsoliderar'] = self._storage_uri_value(
                 "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
         
@@ -748,20 +760,23 @@ class SFSParser(LegalSource.Parser):
         else:
             momentnummer = None
 
-        (firstline, upphor, ikrafttrader) = self.andringsDatum(firstline)
-        today = datetime.date.today()
+        (fixedline, upphor, ikrafttrader) = self.andringsDatum(firstline)
+        # Läs förbi '/Upphör [...]/' och '/Ikraftträder [...]/'-strängarna
+        self.reader.read(len(firstline)-len(fixedline))
         kwargs = {'ordinal': paragrafnummer}
         if upphor: kwargs['upphor'] = upphor
         if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
-        p = Paragraf(**kwargs)
 
+        today = datetime.date.today()
         if upphor and upphor < today:
-            p.inaktuell = True
+            kwargs['inaktuell'] = True
         elif ikrafttrader and ikrafttrader > today:
-            p.inaktuell = True
+            kwargs['inaktuell'] = True
             
         if momentnummer:
-            p.moment = momentnummer
+            kwargs['moment'] = momentnummer
+
+        p = Paragraf(**kwargs)
 
         state_handler = self.makeStycke
         res = self.makeStycke()
@@ -780,7 +795,8 @@ class SFSParser(LegalSource.Parser):
                 return p
             elif state_handler in (self.makeNumreradLista,
                                    self.makeBokstavslista,
-                                   self.makeStrecksatslista):
+                                   self.makeStrecksatslista,
+                                   self.makeTabell):
                 res = state_handler()
                 p[-1].append(res)
             else:
@@ -1135,11 +1151,140 @@ class SFSParser(LegalSource.Parser):
             else:
                 return None
 
-    def isTabell(self):
+    def isTabell(self, p=None, singlelineok = False):
+        if not p:
+            p = self.reader.peekparagraph()
+        lines = p.split(self.reader.linesep)
+        numlines = len(lines)
+        # Heuristiken för att gissa om detta stycke är en tabellrad:
+        # Om varje rad är 
+        # 1. kort (> 50 tecken) 
+        # (detta indikerar en tabellrad med en enda vänstercell)
+        if singlelineok or numlines > 1:
+            if numlines == 1:
+                # Om stycket har en enda rad kan det vara en kort
+                # rubrik -- kolla om den följs av en paragraf, isåfall
+                # är nog tabellen slut
+                if self.isParagraf(self.reader.peekparagraph(2)):
+                    if self.trace['tabell']: print "isTabell('%s'): followed by Paragraf, not Tabellrad" % (p[:20])
+                    return False
+            matches = [l for l in lines if len(l) < 50]
+            if len(matches) == numlines:
+                if self.trace['tabell']: print "isTabell('%s'): %s lines, all short" % (p[:20], numlines)
+                return True
+            
+        # 2. has more than one contignious space in each line
+        matches = [l for l in lines if '  ' in l]
+        if len(matches) == numlines:
+            if self.trace['tabell']: print "isTabell('%s'): %s lines, all columns" % (p[:20],numlines)
+            return True
+
+        # 3. is short OR has contignous space
+        if singlelineok or numlines > 1:
+            matches = [l for l in lines if '  ' in l or len(l) < 50]
+            if len(matches) == numlines:
+                if self.trace['tabell']: print "isTabell('%s'): %s lines, all short and/or columns" % (p[:20],numlines)
+                return True
+
+        if self.trace['tabell']: print "isTabell('%s'): %s lines, no tests matched" % (p[:20],numlines)
         return False
 
     def makeTabell(self):
-        return None
+        pcnt = 0
+        t = Tabell()
+        autostrip = self.reader.autostrip
+        self.reader.autostrip = False
+        p = self.reader.readparagraph()
+        if self.trace['tabell']: print u"makeTabell: 1st line: '%s'" % p[:30]
+        (tr, tabstops) = self.makeTabellrad(p)
+        t.append(tr)
+        while (not self.reader.eof()):
+            (l,upphor,ikrafttrader) = self.andringsDatum(self.reader.peekline())
+            if upphor:
+                current_upphor = upphor
+                self.reader.readline()
+                pcnt = 1
+            elif ikrafttrader:
+                current_ikrafttrader = ikrafttrader
+                current_upphor = None
+                self.reader.readline()
+                pcnt = -pcnt + 1
+            elif self.isTabell(singlelineok=True):
+                kwargs = {}
+                if pcnt > 0:
+                    kwargs['upphor'] = current_upphor
+                    pcnt += 1
+                elif pcnt < 0:
+                    kwargs['ikrafttrader'] = current_ikrafttrader
+                    pcnt += 1
+                elif pcnt == 0:
+                    current_ikrafttrader = None
+                p = self.reader.readparagraph()
+                if p:
+                    (tr,tabstops) = self.makeTabellrad(p,tabstops,kwargs=kwargs)
+                    t.append(tr)
+            else:
+                self.reader.autostrip = autostrip
+                return t
+                
+        self.reader.autostrip = autostrip
+        return t
+
+    def makeTabellrad(self,p,tabstops=None,kwargs={}):
+    # Algoritmen är anpassad för att hantera tabeller där texten inte
+    # alltid är så jämnt ordnat i spalter, som fallet är med
+    # SFSR-datat (gissningvis på grund av någon trasig
+    # tab-till-space-konvertering nånstans).
+        def makeTabellcell(text):
+            # Avavstavningsalgoritmen lämnar lite i övrigt att önska
+            return Tabellcell([text.replace("- ", "").strip()])
+        cols = [u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än fem kolumner
+        if tabstops:
+            statictabstops = True # Använd de tabbstoppositioner vi fick förra raden
+        else:
+            statictabstops = False # Bygg nya tabbstoppositioner från scratch
+            tabstops = [0,0,0,0,0]
+        lines = p.split(self.reader.linesep)
+        linecount = 0
+        for l in lines:
+            linecount += 1
+            charcount = 0
+            spacecount = 0
+            lasttab = 0
+            colcount = 0
+            for c in l:
+                charcount += 1
+                if c == u' ':
+                    spacecount += 1
+                else:
+                    if spacecount > 1: # Vi har stött på en ny tabellcell
+                                       # - fyll den gamla
+                        # Lägg till ett mellanslag istället för den nyrad
+                        # vi kapat - överflödiga mellanslag trimmas senare
+                        cols[colcount] += u' ' + l[lasttab:charcount-(spacecount+1)]
+                        lasttab = charcount - 1
+
+                        # för hantering av tomma vänsterceller
+                        if linecount > 1 or statictabstops: 
+                            if tabstops[colcount+1]+5 < charcount: # tillåt en ojämnhet om max fem tecken
+                                if self.trace['tabell']: print u'charcount shoud be max %s, is %s - adjusting to next tabstop (%s)' % (tabstops[colcount+1] + 5, charcount,  tabstops[colcount+2])
+                                colcount += 1
+                        colcount += 1 
+                        tabstops[colcount] = charcount
+                    spacecount = 0
+            cols[colcount] += u' ' + l[lasttab:charcount]
+            if self.trace['tabell']: pprint(tabstops)
+        if self.trace['tabell']: pprint(cols)
+        r = Tabellrad(**kwargs)
+        emptyok = True
+        for c in cols:
+            if c or emptyok:
+                r.append(makeTabellcell(c))
+                if c.strip() != u'':
+                    emptyok = False
+
+        return (r, tabstops)
+
 
     def isFastbredd(self):
         return False
@@ -1186,22 +1331,6 @@ class SFSParser(LegalSource.Parser):
             return match.group(1).replace(" ", "")
         return None
         
-
-    def isPreformatted(self):
-        # Preformatted sections are usually tables, but so complex that
-        # it's too hard to convert them to proper tables, therefore we
-        # punt and just preformat the section.
-        tabstops = self.find_tabstops(self.reader.peekline())
-        if tabstops == []: # means there were no lines, ie p was empty string. shouldn't happen.
-            # sys.stdout.write(u"Returning False")
-            return False
-        for tabstops_line in tabstops:
-            if len(tabstops_line) > 1:
-                # sys.stdout.write(u"is_preformatted: this is a complex line")
-                return True
-
-        return False
-
     def isOvergangsbestammelser(self):
         #p = self.reader.peekline()
         #print "%r == %r: %r" % (u"Övergångsbestämmelser", p[:30], p == u"Övergångsbestämmelser")
@@ -1214,6 +1343,7 @@ class SFSParser(LegalSource.Parser):
 
     def isBilaga(self):
         return (self.reader.peekline() in (u"Bilaga", u"Bilaga 1"))
+
 
         
 class SFSManager(LegalSource.Manager):
@@ -1364,19 +1494,22 @@ class SFSManager(LegalSource.Manager):
         try:
             p = SFSParser()
             p.verbose = verbose
+            if quiet:
+                for k in p.trace.keys():
+                    p.trace[k] = False
             p.references.verbose = verbose
             p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
             p.reader.autostrip=True
             b = p.makeForfattning()
             p._construct_ids(b, u'', u'http://lagen.nu/1234:567#')
             testlines = [x.rstrip('\r') for x in serialize(b).split("\n")]
-            # pprint(testlines)
+            # print repr(testlines)
             keyfile = testfile.replace(".txt",".xml")
             if os.path.exists(keyfile):
                 keylines = [x.rstrip('\r\n') for x in codecs.open(keyfile,encoding='utf-8').readlines()]
             else:
                 keylines = []
-            # pprint(keylines)
+            # print repr(keylines)
             from difflib import Differ
             difflines = list(Differ().compare(testlines,keylines))
             diffedlines = [x for x in difflines if x[0] != ' ']

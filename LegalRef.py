@@ -154,7 +154,7 @@ class SFSRefParser:
         elif self.global_namedlaws.has_key(text):
             return self.global_namedlaws[text]
         else:
-            print "WARNING: I don't know the ID of named law '%s'" % text
+            print u"WARNING: I don't know the ID of named law '%s'" % text.decode('iso-8859-1')
             return None
 
     def lawabbr_to_sfsid(self,abbr):
@@ -549,7 +549,7 @@ class SFSRefParser:
                 self.namedlaws[namedlaw] = self.currentlaw
 
         if self.currentlaw == None: # if we can't find a ID for this law, better not <link> it
-            ret = root.text
+            res = root.text
         else:
             res = [self.format_generic_link(root)]
         if resetcurrentlaw:

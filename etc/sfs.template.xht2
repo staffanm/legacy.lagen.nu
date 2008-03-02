@@ -92,7 +92,7 @@
 	       rel="rinfo:kapitel"
 	       property="rinfo:kapitelnummer"
 	       content="${kapitel.ordinal}">
-	<h class="kapitelrubrik" py:content="kapitel">Kapitelrubrik</h>
+	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
 	<py:for each="part in kapitel" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)"   py:strip="">${render_rubrik(part)}</div>
@@ -140,6 +140,7 @@
         <py:for each="part in stycke" py:choose="">
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
 	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
+	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
 	  <div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div>
 	  <div py:when="isinstance(part, unicode)" py:strip="">${part}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div>
@@ -185,6 +186,24 @@
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_listelement</div>
       </py:for>
       </li>
+
+      <table py:def="render_tabell(tabell)">
+	<py:for each="part in tabell" py:choose="">
+	  <tr py:when="isinstance(part, Tabellrad)">
+	    <py:for each="subpart in part" py:choose="">
+	      <td py:when="isinstance(subpart, Tabellcell)">
+		<py:for each="node in subpart" py:choose="">
+		  <div py:when="isinstance(node, Link)" py:strip="">${render_link(node)}</div>
+		  <div py:when="isinstance(node, unicode)" py:strip="">${node}</div>
+		  <div py:otherwise="" class="warning">${node.__class__.__name__} utelämnad pga internt fel i render_tabell (td)</div>
+		</py:for>
+	      </td>
+	      <div py:otherwise="" class="warning">${subpart.__class__.__name__} utelämnad pga internt fel i render_tabell (tr)</div>
+	    </py:for>
+	  </tr>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_tabell</div>
+	</py:for>
+      </table>
       
       <!--! main body -->
       <h property="dc:title" py:content="meta['dc:title']">Författningsrubrik</h>
@@ -197,6 +216,7 @@
 	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
 	<div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
 	<div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	<div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
       </section>

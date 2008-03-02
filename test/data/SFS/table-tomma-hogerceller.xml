@@ -1,0 +1,37 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>En förenklad version av sekrl sextonde kapitels
+första paragraf utan direkta lagrumshänvisningar, avsedd att testa
+tabellkodens förmåga att hantera tomma högerceller, ojämna
+kolumnplaceringar samt avavstavning</unicode>
+      <Tabell>
+        <Tabellrad>
+          <Tabellcell>
+            <unicode>1. beslut enligt ett visst lagrum i en viss lag, närmare bestämt ett visst stycke</unicode>
+          </Tabellcell>
+        </Tabellrad><Tabellrad>
+          <Tabellcell>
+            <unicode>Ett annat lagrum i RO eller beslut enligt två andra lagrum som också återfinns i samma ordning för riksdagen</unicode>
+          </Tabellcell><Tabellcell>
+            <unicode>såvitt avser uppgift vars röjande kan antas sätta rikets säkerhet i fara eller annars skada landet</unicode>
+          </Tabellcell>
+        </Tabellrad><Tabellrad>
+          <Tabellcell>
+            <unicode>2. Ett lagrum i tyrkfrihetsförordningen eller ett annat i ytrrandefrihetsgrundlagen</unicode>
+          </Tabellcell>
+        </Tabellrad><Tabellrad>
+          <Tabellcell>
+            <unicode>3. denna lag enligt</unicode>
+          </Tabellcell>
+        </Tabellrad><Tabellrad>
+          <Tabellcell>
+            <unicode>ett lagrum i aktuell lag</unicode>
+          </Tabellcell><Tabellcell>
+            <unicode>såvitt avser uppgift vars röjande kan antas sätta rikets säkerhet i fara eller annars skada landet allvarligt</unicode>
+          </Tabellcell>
+        </Tabellrad>
+      </Tabell>
+    </Stycke>
+  </Paragraf>
+</Forfattning>
