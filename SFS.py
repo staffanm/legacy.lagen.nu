@@ -799,10 +799,12 @@ class SFSParser(LegalSource.Parser):
                                    self.makeTabell):
                 res = state_handler()
                 p[-1].append(res)
+            elif state_handler == self.blankline:
+                state_handler() # Bara att slänga bort
             else:
                 assert(state_handler == self.makeStycke)
                 #if state_handler != self.makeStycke:
-                #    sys.stdout.write(u"VARNING: behandlar '%s...' som stycke, inte med %s\n" % (lines[0][:30], state_handler.__name__))
+                #    sys.stdout.write(u"VARNING: behandlar '%s...' som stycke, inte med %s\n" % (self.reader.peekline()[:30], state_handler.__name__))
                 res = self.makeStycke()
                 p.append(res)
 
@@ -1157,36 +1159,48 @@ class SFSParser(LegalSource.Parser):
         lines = p.split(self.reader.linesep)
         numlines = len(lines)
         # Heuristiken för att gissa om detta stycke är en tabellrad:
-        # Om varje rad är 
-        # 1. kort (> 50 tecken) 
-        # (detta indikerar en tabellrad med en enda vänstercell)
+        # Om varje rad
+        # 1. Är kort (indikerar en tabellrad med en enda vänstercell)
         if singlelineok or numlines > 1:
-            if numlines == 1:
-                # Om stycket har en enda rad kan det vara en kort
-                # rubrik -- kolla om den följs av en paragraf, isåfall
-                # är nog tabellen slut
-                if self.isParagraf(self.reader.peekparagraph(2)):
-                    if self.trace['tabell']: print "isTabell('%s'): followed by Paragraf, not Tabellrad" % (p[:20])
-                    return False
             matches = [l for l in lines if len(l) < 50]
             if len(matches) == numlines:
-                if self.trace['tabell']: print "isTabell('%s'): %s lines, all short" % (p[:20], numlines)
+                if self.trace['tabell']: print u"isTabell('%s'): Alla rader korta, undersöker undantag" % (p[:20])
+                
+                if numlines == 1:
+                    # Om stycket har en enda rad *kan* det vara en kort
+                    # rubrik -- kolla om den följs av en paragraf, isåfall
+                    # är nog tabellen slut
+                    if self.isParagraf(self.reader.peekparagraph(2)):
+                        if self.trace['tabell']: print u"isTabell('%s'): följs av Paragraf, inte Tabellrad" % (p[:20])
+                        return False
+
+                elif numlines == 2:
+                    # om stycket har två rader kan det vara en nummerpunkt
+                    # följt av en ändringsförfattningshänvisning
+                    if self.isNumreradLista() and (
+                        lines[1].startswith(u'Förordning (') or
+                        lines[1].startswith(u'Lag (')):
+                        if self.trace['tabell']: print u"isTabell('%s'): ser ut som nummerpunkt följd av ändringsförfattningshänvisning" % (p[:20])
+                        return False
+
+                # inget av undantagen tillämpliga, huvudregel 1 gäller
+                if self.trace['tabell']: print u"isTabell('%s'): %s rader, alla korta" % (p[:20], numlines)
                 return True
-            
-        # 2. has more than one contignious space in each line
+                
+        # 2. Har mer än ett mellanslag i följd på varje rad (spaltuppdelning)
         matches = [l for l in lines if '  ' in l]
         if len(matches) == numlines:
-            if self.trace['tabell']: print "isTabell('%s'): %s lines, all columns" % (p[:20],numlines)
+            if self.trace['tabell']: print "isTabell('%s'): %s rader, alla spaltuppdelade" % (p[:20],numlines)
             return True
 
-        # 3. is short OR has contignous space
+        # 3. Är kort ELLER har spaltuppdelning 
         if singlelineok or numlines > 1:
             matches = [l for l in lines if '  ' in l or len(l) < 50]
             if len(matches) == numlines:
-                if self.trace['tabell']: print "isTabell('%s'): %s lines, all short and/or columns" % (p[:20],numlines)
+                if self.trace['tabell']: print "isTabell('%s'): %s rader, alla korta eller spaltuppdelade" % (p[:20],numlines)
                 return True
 
-        if self.trace['tabell']: print "isTabell('%s'): %s lines, no tests matched" % (p[:20],numlines)
+        if self.trace['tabell']: print "isTabell('%s'): %s rader, inga test matchade" % (p[:20],numlines)
         return False
 
     def makeTabell(self):
