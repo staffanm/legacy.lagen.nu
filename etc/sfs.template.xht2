@@ -197,26 +197,57 @@
 		  <div py:when="isinstance(node, unicode)" py:strip="">${node}</div>
 		  <div py:otherwise="" class="warning">${node.__class__.__name__} utelämnad pga internt fel i render_tabell (td)</div>
 		</py:for>
-	      </td>
+ </td>
 	      <div py:otherwise="" class="warning">${subpart.__class__.__name__} utelämnad pga internt fel i render_tabell (tr)</div>
 	    </py:for>
 	  </tr>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_tabell</div>
 	</py:for>
       </table>
+
+      <section py:def="render_overgangsbestammelser(obs)">
+        <py:for each="part in obs" py:choose="">
+	  <div py:when="isinstance(part, Overgangsbestammelse)" py:strip="">${render_overgangsbestammelse(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_overgangsbestammelser</div>
+        </py:for>
+      </section>
+
+      <section py:def="render_overgangsbestammelse(ob)"
+	       instanceof="rinfo:Overgangsbestammelse"
+	       xml:id="${ob.id}">
+	<p py:content="ob.sfsnr">sfsnr</p>
+        <py:for each="part in ob" py:choose="">
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_overgangsbestammelse</div>
+        </py:for>
+      </section>
+
+      <section py:def="render_bilaga(bilaga)">
+        <py:for each="part in bilaga" py:choose="">
+	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bilaga</div>
+        </py:for>
+      </section>
       
       <!--! main body -->
       <h property="dc:title" py:content="meta['dc:title']">Författningsrubrik</h>
       <section>
       <py:for each="part in body" py:choose="">
-	<div py:when="isinstance(part, Avdelning)" py:strip="">${render_avdelning(part)}</div>
-	<div py:when="isinstance(part, UpphavtKapitel)" py:strip="">${render_upphavtkapitel(part)}</div>
-	<div py:when="isinstance(part, Kapitel)" py:strip="">${render_kapitel(part)}</div>
-	<div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
+	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>
+	<div py:when="isinstance(part, UpphavtKapitel)"  py:strip="">${render_upphavtkapitel(part)}</div>
+	<div py:when="isinstance(part, Kapitel)"         py:strip="">${render_kapitel(part)}</div>
+	<div py:when="isinstance(part, Rubrik)"          py:strip="">${render_rubrik(part)}</div>
 	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
-	<div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
-	<div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
-	<div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
+	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part)}</div>
+	<div py:when="isinstance(part, Stycke)"          py:strip="">${render_stycke(part)}</div>
+	<div py:when="isinstance(part, NumreradLista)"   py:strip="">${render_numreradlista(part)}</div>
+	<div py:when="isinstance(part, Tabell)"          py:strip="">${render_tabell(part)}</div>
+	<div py:when="isinstance(part, Overgangsbestammelser)" py:strip="">${render_overgangsbestammelser(part)}</div>
+	<div py:when="isinstance(part, Bilaga)"          py:strip="">${render_bilaga(part)}</div>
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
       </section>

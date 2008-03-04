@@ -124,6 +124,9 @@ class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
         self.id = kwargs['id'] if 'id' in kwargs else None
         super(Overgangsbestammelse,self).__init__(*args,**kwargs)
 
+class Bilaga(CompoundStructure): pass
+
+
 class Register(CompoundStructure):
     """Innehåller lite metadata om en grundförfattning och dess
     efterföljande ändringsförfattningar"""
@@ -406,9 +409,9 @@ class SFSParser(LegalSource.Parser):
         self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
         self.trace = {'rubrik':False,
-                      'paragraf':True,
+                      'paragraf':False,
                       'numreradlista':False,
-                      'tabell':True}
+                      'tabell':False}
     
     def _load_authority_rec(self, file):
         graph = Graph()
@@ -557,7 +560,7 @@ class SFSParser(LegalSource.Parser):
         head = self.makeHeader()
         body = self.makeForfattning()
 
-        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % self.id)
+        # self._construct_ids(body, u'', u'http://lagen.nu/%s#' % self.id)
         # * använd dessa som URI-fragment och konstruera fullständiga URI:er,
         # (* skapa rinfo:firstParagraph och rinfo:nextParagraph-påståenden)
         # massera metadatat halvvägs till RDF-påståenden (FIXME: gör
@@ -599,7 +602,10 @@ class SFSParser(LegalSource.Parser):
         loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
         tmpl = loader.load("etc/sfs.template.xht2")
         stream = tmpl.generate(meta=meta, body=body, **globals())
-        return stream.render()
+        res = stream.render()
+        if 'class="warning"' in res:
+            print u"VARNING: Data utelämnades ur XHT2-dokumentet för %s" % self.id
+        return res
 
     def _find_authority_rec(self, label):
         """Givet en textsträng som refererar till någon typ av
@@ -795,7 +801,8 @@ class SFSParser(LegalSource.Parser):
                                  self.makeUpphavdParagraf,
                                  self.makeAvdelning,
                                  self.makeRubrik,
-                                 self.makeOvergangsbestammelser):
+                                 self.makeOvergangsbestammelser,
+                                 self.makeBilaga):
                 if self.verbose: sys.stdout.write(u"      Paragraf %s färdig\n" % paragrafnummer)
                 return p
             elif state_handler in (self.makeNumreradLista,
@@ -913,6 +920,8 @@ class SFSParser(LegalSource.Parser):
         
         while not self.reader.eof():
             state_handler = self.guess_state()
+            if state_handler == self.makeBilaga:
+                return obs
             res = state_handler()
             if res != None:
                 obs.append(res)
@@ -925,7 +934,8 @@ class SFSParser(LegalSource.Parser):
         ob = Overgangsbestammelse(sfsnr=p)
         while not self.reader.eof():
             state_handler = self.guess_state()
-            if state_handler == self.makeOvergangsbestammelse:
+            if state_handler in (self.makeOvergangsbestammelse,
+                                 self.makeBilaga):
                 return ob
             res = state_handler()
             if res != None:
@@ -935,9 +945,18 @@ class SFSParser(LegalSource.Parser):
         
 
     def makeBilaga(self): # svenska: bilaga
-        for p in self.reader.getiterator(self.reader.readparagraph):
-            pass
-        return None
+        rubrik = self.reader.readparagraph()
+        b = Bilaga(rubrik=rubrik)
+        if self.verbose: sys.stdout.write(u"    Ny bilaga: %s\n" % rubrik)
+        while not self.reader.eof():
+            state_handler = self.guess_state()
+            if state_handler in (self.makeBilaga,
+                                 self.makeOvergangsbestammelser):
+                return b
+            res = state_handler()
+            if res != None:
+                b.append(res)
+        return b
 
     def andringsDatum(self,line,match=False):
         # Hittar ändringsdatumdirektiv i line. Om inte match, sök i hela strängen, annars bara från början
@@ -1062,6 +1081,11 @@ class SFSParser(LegalSource.Parser):
 
                 # sys.stdout.write(u"chapter_id: '%s' failed second check" % p)
                 return None
+
+            # Om det ser ut som en tabell är det nog ingen kapitelrubrik
+            if self.isTabell(p, requireColumns=True):
+                return None 
+
             else:
                 return m.group(1)
         else:
@@ -1176,13 +1200,38 @@ class SFSParser(LegalSource.Parser):
     # annars. Den är False för den första raden i en tabell, men True
     # för de efterföljande.
     #
-    # Om requireColums är True krävs att samtliga rader är
+    # Om requireColumns är True krävs att samtliga rader är
     # spaltuppdelade
     
     def isTabell(self, p=None, assumeTable = False, requireColumns = False):
         if not p:
             p = self.reader.peekparagraph()
-        lines = p.split(self.reader.linesep)
+        # Vissa snedformatterade tabeller kan ha en högercell som går
+        # ned en rad för långt gentemot nästa rad, som har en tom
+        # högercell:
+
+        # xxx xxx xxxxxx     xxxx xx xxxxxx xx
+        # xxxxx xx xx x      xxxxxx xxx xxx x 
+        #                    xx xxx xxx xxx 
+        # xxx xx xxxxx xx
+        # xx xxx xx x xx
+
+        # dvs något som egentligen är två stycken läses in som
+        # ett. Försök hitta sådana fall, och titta i så fall endast på
+        # första stycket
+        lines = []
+        emptyleft = False
+        for l in p.split(self.reader.linesep):
+            if l.startswith(' '):
+                emptyleft = True
+                lines.append(l)
+            else:
+                if emptyleft:
+                    if self.trace['tabell']: print u"isTabell('%s'): Snedformatterade tabellrader" % (p[:20])
+                    break
+                else:
+                    lines.append(l)
+
         numlines = len(lines)
         # Heuristiken för att gissa om detta stycke är en tabellrad:
         # Om varje rad
@@ -1197,7 +1246,11 @@ class SFSParser(LegalSource.Parser):
                 # spaltindelad rad - annars är det nog bara två korta
                 # stycken, ett kort stycke följt av kort rubrik, eller
                 # liknande.
-                if not assumeTable and not self.isTabell(self.reader.peekparagraph(2),
+                try:
+                    p2 = self.reader.peekparagraph(2)
+                except IOError:
+                    p2 = ''
+                if not assumeTable and not self.isTabell(p2,
                                                          assumeTable = True, 
                                                          requireColumns = True):
                     if self.trace['tabell']: print u"isTabell('%s'): generellt undantag från alla rader korta-regeln" % (p[:20])
@@ -1210,9 +1263,17 @@ class SFSParser(LegalSource.Parser):
                     # fånga det här. Testfall
                     # regression-tabell-foljd-av-kort-rubrik.txt och
                     # temporal-paragraf-med-tabell.txt
-                    
-                    if self.isParagraf(self.reader.peekparagraph(2)):
+                    if self.isParagraf(p2):
                         if self.trace['tabell']: print u"isTabell('%s'): Specialundantag: följs av Paragraf, inte Tabellrad" % (p[:20])
+                        return False
+                    # Om stycket är *exakt* detta signalerar det nog
+                    # övergången från tabell (kanske i slutet på en
+                    # bilaga, som i SekrL) till övergångsbestämmelserna
+                    if self.isOvergangsbestammelser():
+                        if self.trace['tabell']: print u"isTabell('%s'): Specialundantag: Övergångsbestämmelser" % (p[:20])
+                        return False
+                    if self.isBilaga():
+                        if self.trace['tabell']: print u"isTabell('%s'): Specialundantag: Bilaga" % (p[:20])
                         return False
 
                 # Detta undantag behöves förmodligen inte när genererella undantaget används
@@ -1301,16 +1362,17 @@ class SFSParser(LegalSource.Parser):
             tabstops = [0,0,0,0,0]
         lines = p.split(self.reader.linesep)
         numlines = len([x for x in lines if x])
+        potentialrows = len([x for x in lines if x and (x[0].isupper() or x[0].isdigit())])
         linecount = 0
-        if self.trace['tabell']: print "%s %s" % (numlines, len([x for x in lines if x and x[0].isupper()]))
-        if (numlines > 1 and
-            numlines == len([x for x in lines if x and x[0].isupper()])):
+        if self.trace['tabell']: print "%s %s" % (numlines, potentialrows)
+        if (numlines > 1 and numlines == potentialrows):
             if self.trace['tabell']: print u'makeTabellrad: Detta verkar vara en tabellrad-per-rad'
             singlelinemode = True
         else:
             singlelinemode = False
 
         rows = []
+        emptyleft = False
         for l in lines:
             if l == "":
                 continue
@@ -1320,7 +1382,16 @@ class SFSParser(LegalSource.Parser):
             lasttab = 0
             colcount = 0
             if singlelinemode:
-                cols = [u'',u'',u'',u'',u''] 
+                cols = [u'',u'',u'',u'',u'']
+            if l[0] == ' ':
+                emptyleft = True
+            else:
+                if emptyleft:
+                    if self.trace['tabell']: print u'makeTabellrad: skapar ny tabellrad pga snedformatering'
+                    rows.append(cols)
+                    cols = [u'',u'',u'',u'',u'']
+                    emptyleft = False
+                    
             for c in l:
                 charcount += 1
                 if c == u' ':
@@ -1335,7 +1406,7 @@ class SFSParser(LegalSource.Parser):
 
                         # för hantering av tomma vänsterceller
                         if linecount > 1 or statictabstops: 
-                            if tabstops[colcount+1]+5 < charcount: # tillåt en ojämnhet om max fem tecken
+                            if tabstops[colcount+1]+7 < charcount: # tillåt en ojämnhet om max sju tecken
                                 if self.trace['tabell']: print u'charcount shoud be max %s, is %s - adjusting to next tabstop (%s)' % (tabstops[colcount+1] + 5, charcount,  tabstops[colcount+2])
                                 colcount += 1
                         colcount += 1 
@@ -1348,7 +1419,7 @@ class SFSParser(LegalSource.Parser):
                 rows.append(cols)
 
         if not singlelinemode:
-            rows = [cols]
+            rows.append(cols)
 
         if self.trace['tabell']: pprint(rows)
         

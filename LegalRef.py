@@ -655,7 +655,9 @@ class SFSRefParser:
         if isinstance(fixedindata,unicode):
             fixedindata = fixedindata.encode('iso-8859-1')
         #taglist = TextTools.tag(fixedindata, self.parser)
+
         taglist = self.simpleparser.parse(fixedindata)
+
         result = []
         #print "Calling w %s" % fixedindata
         root = NodeTree(taglist,fixedindata)

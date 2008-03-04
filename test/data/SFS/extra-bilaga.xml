@@ -1,0 +1,12 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>Det här är en paragraf.</unicode>
+    </Stycke>
+  </Paragraf>
+  <Bilaga rubrik="Bilaga">
+    <Stycke id="S1">
+      <unicode>Det här är en enkel bilaga.</unicode>
+    </Stycke>
+  </Bilaga>
+</Forfattning>
