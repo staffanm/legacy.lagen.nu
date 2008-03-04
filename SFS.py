@@ -483,6 +483,8 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'CELEX-nr':
                             # FIXME: run this through LegalRef
                             p['celexnr'] = val
+                        elif key == u'Tidsbegränsad':
+                            p['tidsbegransad'] = datetime.datetime.strptime(val[:10], '%Y-%m-%d')
                         else:
                             print u"    WARNING: Jag vet inte vad jag ska göra med raden '%s'" % key
                 r.append(p)
@@ -1249,8 +1251,8 @@ class SFSParser(LegalSource.Parser):
         self.reader.autostrip = False
         p = self.reader.readparagraph()
         if self.trace['tabell']: print u"makeTabell: 1st line: '%s'" % p[:30]
-        (tr, tabstops) = self.makeTabellrad(p)
-        t.append(tr)
+        (trs, tabstops) = self.makeTabellrad(p)
+        t.extend(trs)
         while (not self.reader.eof()):
             (l,upphor,ikrafttrader) = self.andringsDatum(self.reader.peekline(),match=True)
             if upphor:
@@ -1274,8 +1276,8 @@ class SFSParser(LegalSource.Parser):
                     current_ikrafttrader = None
                 p = self.reader.readparagraph()
                 if p:
-                    (tr,tabstops) = self.makeTabellrad(p,tabstops,kwargs=kwargs)
-                    t.append(tr)
+                    (trs,tabstops) = self.makeTabellrad(p,tabstops,kwargs=kwargs)
+                    t.extend(trs)
             else:
                 self.reader.autostrip = autostrip
                 return t
@@ -1298,13 +1300,27 @@ class SFSParser(LegalSource.Parser):
             statictabstops = False # Bygg nya tabbstoppositioner från scratch
             tabstops = [0,0,0,0,0]
         lines = p.split(self.reader.linesep)
+        numlines = len([x for x in lines if x])
         linecount = 0
+        if self.trace['tabell']: print "%s %s" % (numlines, len([x for x in lines if x and x[0].isupper()]))
+        if (numlines > 1 and
+            numlines == len([x for x in lines if x and x[0].isupper()])):
+            if self.trace['tabell']: print u'makeTabellrad: Detta verkar vara en tabellrad-per-rad'
+            singlelinemode = True
+        else:
+            singlelinemode = False
+
+        rows = []
         for l in lines:
+            if l == "":
+                continue
             linecount += 1
             charcount = 0
             spacecount = 0
             lasttab = 0
             colcount = 0
+            if singlelinemode:
+                cols = [u'',u'',u'',u'',u''] 
             for c in l:
                 charcount += 1
                 if c == u' ':
@@ -1327,16 +1343,27 @@ class SFSParser(LegalSource.Parser):
                     spacecount = 0
             cols[colcount] += u' ' + l[lasttab:charcount]
             if self.trace['tabell']: pprint(tabstops)
-        if self.trace['tabell']: pprint(cols)
-        r = Tabellrad(**kwargs)
-        emptyok = True
-        for c in cols:
-            if c or emptyok:
-                r.append(makeTabellcell(c))
-                if c.strip() != u'':
-                    emptyok = False
+            if singlelinemode:
+                if self.trace['tabell']: print u'makeTabellrad: skapar ny tabellrad'
+                rows.append(cols)
 
-        return (r, tabstops)
+        if not singlelinemode:
+            rows = [cols]
+
+        if self.trace['tabell']: pprint(rows)
+        
+        res = []
+        for r in rows:
+            tr = Tabellrad(**kwargs)
+            emptyok = True
+            for c in r:
+                if c or emptyok:
+                    tr.append(makeTabellcell(c))
+                    if c.strip() != u'':
+                        emptyok = False
+            res.append(tr)
+
+        return (res, tabstops)
 
 
     def isFastbredd(self):
