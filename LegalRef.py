@@ -126,7 +126,8 @@ class SFSRefParser:
     def namedlaw_to_sfsid(self,text):
         text = self.normalize_lawname(text)
         
-        nolaw = ['anslagen',
+        nolaw = ['aktieslagen',
+                 'anslagen',
                  'avslagen',
                  'bolagen',
                  'bergslagen',
@@ -435,9 +436,9 @@ class SFSRefParser:
         # chapter/section part, is linked
         if (len(self.find_nodes(root,'GenericRefs')) == 1 and
             len(self.find_nodes(root,'SectionRefID')) == 1):
-            res = self.format_generic_link(root)
+            res = [self.format_generic_link(root)]
         else:
-            res = self.format_tokentree(root)    
+            res = self.format_tokentree(root)
 
         # print "DEBUG: about to return from format_ExternalRefs; self.currentlaw is %s" % self.currentlaw
         # self.currentlaw = None

@@ -406,7 +406,7 @@ class SFSParser(LegalSource.Parser):
         self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
         self.trace = {'rubrik':False,
-                      'paragraf':False,
+                      'paragraf':True,
                       'numreradlista':False,
                       'tabell':True}
     
@@ -441,7 +441,8 @@ class SFSParser(LegalSource.Parser):
         f.close()
 
         data = self._parseSFST(plaintextfile, registry)
-        print serialize(data[1])
+        if self.verbose:
+            print serialize(data[1])
         xhtml = self._generate_xhtml(data)
         return xhtml
 
@@ -710,7 +711,9 @@ class SFSParser(LegalSource.Parser):
         while not self.reader.eof():
             state_handler = self.guess_state()
 
-            if state_handler in (self.makeKapitel, self.makeAvdelning): # a new chapter (or part) signals the end of this chapter
+            if state_handler in (self.makeKapitel, # Strukturer som signalerar slutet på detta kapitel
+                                 self.makeAvdelning,
+                                 self.makeOvergangsbestammelser): 
                 if self.verbose: sys.stdout.write(u"    Kapitel %s färdigt\n" % k.ordinal)
                 return (k)
             else:
@@ -819,7 +822,14 @@ class SFSParser(LegalSource.Parser):
     def makeNumreradLista(self): 
         n = NumreradLista()
         while not self.reader.eof():
-            state_handler = self.guess_state()
+            # Utgå i första hand från att nästa stycke är ytterligare
+            # en listpunkt (vissa tänkbara stycken kan även matcha
+            # tabell m.fl.)
+            if self.isNumreradLista():
+                state_handler = self.makeNumreradLista
+            else:
+                state_handler = self.guess_state()
+
             if state_handler not in (self.blankline,
                                      self.makeNumreradLista,
                                      self.makeBokstavslista,
@@ -927,14 +937,21 @@ class SFSParser(LegalSource.Parser):
             pass
         return None
 
-    def andringsDatum(self,line):
+    def andringsDatum(self,line,match=False):
+        # Hittar ändringsdatumdirektiv i line. Om inte match, sök i hela strängen, annars bara från början
         ikrafttrader = None
         upphor = None
-        m = self.re_RevokeDate.search(line)
+        if match:
+            m = self.re_RevokeDate.match(line)
+        else:
+            m = self.re_RevokeDate.search(line)
         if m:
             upphor = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            line = self.re_RevokeDate.sub("", line) 
-        m = self.re_EntryIntoForceDate.search(line)
+            line = self.re_RevokeDate.sub("", line)
+        if match:
+            m = self.re_EntryIntoForceDate.match(line)
+        else:
+            m = self.re_EntryIntoForceDate.search(line)
         if m:
             ikrafttrader = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
             line = self.re_EntryIntoForceDate.sub("", line) 
@@ -1153,7 +1170,14 @@ class SFSParser(LegalSource.Parser):
             else:
                 return None
 
-    def isTabell(self, p=None, singlelineok = False):
+    # Om assumeTable är True är testerna något generösare än
+    # annars. Den är False för den första raden i en tabell, men True
+    # för de efterföljande.
+    #
+    # Om requireColums är True krävs att samtliga rader är
+    # spaltuppdelade
+    
+    def isTabell(self, p=None, assumeTable = False, requireColumns = False):
         if not p:
             p = self.reader.peekparagraph()
         lines = p.split(self.reader.linesep)
@@ -1161,28 +1185,43 @@ class SFSParser(LegalSource.Parser):
         # Heuristiken för att gissa om detta stycke är en tabellrad:
         # Om varje rad
         # 1. Är kort (indikerar en tabellrad med en enda vänstercell)
-        if singlelineok or numlines > 1:
+        if (assumeTable or numlines > 1) and not requireColumns:
             matches = [l for l in lines if len(l) < 50]
             if len(matches) == numlines:
                 if self.trace['tabell']: print u"isTabell('%s'): Alla rader korta, undersöker undantag" % (p[:20])
                 
-                if numlines == 1:
+                # generellt undantag: Om en tabells första rad har
+                # enbart vänsterkolumn MÅSTE den följas av en
+                # spaltindelad rad - annars är det nog bara två korta
+                # stycken, ett kort stycke följt av kort rubrik, eller
+                # liknande.
+                if not assumeTable and not self.isTabell(self.reader.peekparagraph(2),
+                                                         assumeTable = True, 
+                                                         requireColumns = True):
+                    if self.trace['tabell']: print u"isTabell('%s'): generellt undantag från alla rader korta-regeln" % (p[:20])
+                    return False
+                elif numlines == 1:
                     # Om stycket har en enda rad *kan* det vara en kort
                     # rubrik -- kolla om den följs av en paragraf, isåfall
                     # är nog tabellen slut
+                    # FIXME: Kolla om inte generella undantaget borde
+                    # fånga det här. Testfall
+                    # regression-tabell-foljd-av-kort-rubrik.txt och
+                    # temporal-paragraf-med-tabell.txt
+                    
                     if self.isParagraf(self.reader.peekparagraph(2)):
-                        if self.trace['tabell']: print u"isTabell('%s'): följs av Paragraf, inte Tabellrad" % (p[:20])
+                        if self.trace['tabell']: print u"isTabell('%s'): Specialundantag: följs av Paragraf, inte Tabellrad" % (p[:20])
                         return False
 
-                elif numlines == 2:
-                    # om stycket har två rader kan det vara en nummerpunkt
-                    # följt av en ändringsförfattningshänvisning
-                    if self.isNumreradLista() and (
-                        lines[1].startswith(u'Förordning (') or
-                        lines[1].startswith(u'Lag (')):
-                        if self.trace['tabell']: print u"isTabell('%s'): ser ut som nummerpunkt följd av ändringsförfattningshänvisning" % (p[:20])
-                        return False
-
+                # Detta undantag behöves förmodligen inte när genererella undantaget används
+                #elif (numlines == 2 and
+                #      self.isNumreradLista() and (
+                #    lines[1].startswith(u'Förordning (') or
+                #    lines[1].startswith(u'Lag ('))):
+                #
+                #        if self.trace['tabell']: print u"isTabell('%s'): Specialundantag: ser ut som nummerpunkt följd av ändringsförfattningshänvisning" % (p[:20])
+                #        return False
+                
                 # inget av undantagen tillämpliga, huvudregel 1 gäller
                 if self.trace['tabell']: print u"isTabell('%s'): %s rader, alla korta" % (p[:20], numlines)
                 return True
@@ -1194,7 +1233,7 @@ class SFSParser(LegalSource.Parser):
             return True
 
         # 3. Är kort ELLER har spaltuppdelning 
-        if singlelineok or numlines > 1:
+        if (assumeTable or numlines > 1) and not requireColumns:
             matches = [l for l in lines if '  ' in l or len(l) < 50]
             if len(matches) == numlines:
                 if self.trace['tabell']: print "isTabell('%s'): %s rader, alla korta eller spaltuppdelade" % (p[:20],numlines)
@@ -1213,7 +1252,7 @@ class SFSParser(LegalSource.Parser):
         (tr, tabstops) = self.makeTabellrad(p)
         t.append(tr)
         while (not self.reader.eof()):
-            (l,upphor,ikrafttrader) = self.andringsDatum(self.reader.peekline())
+            (l,upphor,ikrafttrader) = self.andringsDatum(self.reader.peekline(),match=True)
             if upphor:
                 current_upphor = upphor
                 self.reader.readline()
@@ -1223,7 +1262,7 @@ class SFSParser(LegalSource.Parser):
                 current_upphor = None
                 self.reader.readline()
                 pcnt = -pcnt + 1
-            elif self.isTabell(singlelineok=True):
+            elif self.isTabell(assumeTable=True):
                 kwargs = {}
                 if pcnt > 0:
                     kwargs['upphor'] = current_upphor
@@ -1480,6 +1519,9 @@ class SFSManager(LegalSource.Manager):
             p = SFSParser()
             p.verbose = verbose
             p.references.verbose = verbose
+            if not verbose:
+                for k in p.trace.keys():
+                    p.trace[k] = False
             parsed = p.Parse(basefile,files)
             
             Util.mkdir(os.path.dirname(filename))
