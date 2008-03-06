@@ -5,6 +5,9 @@ sections, eg 'Upphovsrättslag (1960:729) 49 a §') in plaintext"""
 import sys,os,re
 import codecs
 import traceback
+from pprint import pprint
+import locale
+locale.setlocale(locale.LC_ALL,'') 
 
 # 3rdparty libs
 from simpleparse.parser import Parser
@@ -13,6 +16,11 @@ from simpleparse.parser import Parser
 from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, serialize
 import Util
+
+# The charset used for the bytestrings that is sent to/from
+# simpleparse (which does not handle unicode)
+
+SP_CHARSET='iso-8859-1'
 
 class Link(UnicodeStructure): # just a unicode string with a .uri property
     def __repr__(self):
@@ -52,8 +60,8 @@ class SFSRefParser:
     attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
     global_namedlaws = {}
     global_lawabbr   = {}
-    re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?)\b', re.LOCALE)
-    re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?)')
+    re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?)\b', re.LOCALE)
+    re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?)')
     re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:\d+)#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(P(\d+)|)')
     
 
@@ -77,13 +85,12 @@ class SFSRefParser:
             for abbr in fields[2].split(","):
                 # we need to go by unicode to get lower() to work
                 # regardless of current locale
-                # abbr = unicode(abbr,'iso-8859-1').lower().encode('iso-8859-1')
+                # abbr = unicode(abbr,SP_CHARSET).lower().encode(SP_CHARSET)
                 # print "mapping %s to %s" % (abbr,id)
                 global_lawabbr[abbr] = id
-                
+
     decl = open('etc/sfs.ebnf').read()
     decl += "LawAbbreviation ::= ('%s')" % "'/'".join(global_lawabbr.keys())
-    
     #parser = generator.buildParser(decl).parserbyname('root')
     simpleparser = Parser(decl, "root")
     
@@ -152,11 +159,11 @@ class SFSRefParser:
             return self.global_namedlaws[text]
         else:
             if self.verbose:
-                print u"WARNING: I don't know the ID of named law '%s'" % text.decode('iso-8859-1')
+                print u"WARNING: I don't know the ID of named law '%s'" % text.decode(SP_CHARSET)
             return None
 
     def lawabbr_to_sfsid(self,abbr):
-        # abbr = unicode(abbr,'iso-8859-1').lower().encode('iso-8859-1')
+        # abbr = unicode(abbr,SP_CHARSET).lower().encode(SP_CHARSET)
         return self.global_lawabbr[abbr] 
 
     
@@ -205,6 +212,7 @@ class SFSRefParser:
                       'section':'P',
                       'piece':'S',
                       'item':'N',
+                      'element':'O',
                       'sentence':'M', # is this ever used?
                       }
 
@@ -212,6 +220,7 @@ class SFSRefParser:
         res = self.baseuri_attributes['baseuri']
         resolvetobase = True
         addfragment = False
+        justincase = None
         for key in self.attributeorder:
             if attributes.has_key(key):
                 resolvetobase = False
@@ -234,10 +243,16 @@ class SFSRefParser:
                         res += val
                         addfragment = True
                     else:
+                        if justincase:
+                            res += justincase
+                            justincase = None
                         val = val.replace(" ", "")
                         val = val.replace("\n", "")
                         val = val.replace("\r", "")
                         res += '%s%s' % (keymapping[key],val)
+            else:
+                if key == 'piece':
+                    justincase = "S1" 
         return res
         
 
@@ -422,6 +437,12 @@ class SFSRefParser:
             else:
                 # the NamedLaw case
                 self.currentlaw = self.namedlaw_to_sfsid(namedlaw_node.text)
+                if self.currentlaw == None:
+                    # unknow law name - in this case it's better to
+                    # bail out rather than resolving chapter/paragraph
+                    # references relative to baseuri (which is almost
+                    # certainly wrong)
+                    return [root.text.decode(SP_CHARSET)]
         else:
             self.currentlaw = lawrefid_node.text
             if self.find_node(root,'NamedLaw'):
@@ -553,7 +574,7 @@ class SFSRefParser:
                 self.namedlaws[namedlaw] = self.currentlaw
 
         if self.currentlaw == None: # if we can't find a ID for this law, better not <link> it
-            res = root.text
+            res = [root.text]
         else:
             res = [self.format_generic_link(root)]
         if resetcurrentlaw:
@@ -592,7 +613,7 @@ class SFSRefParser:
         if self.verbose: print (". "*self.depth)+ "format_tokentree: called for %s" % part.tag
         # this is like the bottom case, or something
         if (not part.nodes) and (not part.tag.endswith("RefID")):
-            res.append(part.text.decode('iso-8859-1'))
+            res.append(part.text.decode(SP_CHARSET))
         else:
             if part.tag.endswith("RefID"):
                 res.append(self.format_generic_link(part))
@@ -607,7 +628,7 @@ class SFSRefParser:
     
 
     def prettyprint(self,root,indent=0):
-        res = u"%s'%s': '%s'\n" % ("    "*indent,root.tag,re.sub(r'\s+', ' ',root.text.decode('iso-8859-1')))
+        res = u"%s'%s': '%s'\n" % ("    "*indent,root.tag,re.sub(r'\s+', ' ',root.text.decode(SP_CHARSET)))
         if root.nodes != None:
             for subpart in root.nodes:
                 res += self.prettyprint(subpart,indent+1)
@@ -619,14 +640,14 @@ class SFSRefParser:
         uri = self.format_uri(self.find_attributes([part]))
         if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
         if isinstance(part.text, str):
-            return Link(part.text.decode('iso-8859-1'), uri=uri)
+            return Link(part.text.decode(SP_CHARSET), uri=uri)
         else:
             return Link(part.text, uri=uri)
 
     def format_custom_link(self, attributes, text):
         uri = self.format_uri(attributes)
         if isinstance(text,str):
-            return Link(text.decode('iso-8859-1'),uri=uri)
+            return Link(text.decode(SP_CHARSET),uri=uri)
         else:
             return Link(text,uri=uri)
     
@@ -657,7 +678,7 @@ class SFSRefParser:
         # SimpleParse has no unicode support... It might be possible
         # to convert to utf-8 if we convert sfs.ebnf
         if isinstance(fixedindata,unicode):
-            fixedindata = fixedindata.encode('iso-8859-1')
+            fixedindata = fixedindata.encode(SP_CHARSET)
         #taglist = TextTools.tag(fixedindata, self.parser)
 
         taglist = self.simpleparser.parse(fixedindata)
@@ -678,8 +699,8 @@ class SFSRefParser:
                 result.extend(self.formatter_dispatch(part))
             else:
                 assert(part.tag == 'plain')
-                result.append(part.text.decode('iso-8859-1'))
-
+                result.append(part.text.decode(SP_CHARSET))
+                
             # clear state
             if self.currentlaw != None: self.lastlaw = self.currentlaw
             self.currentlaw = None
@@ -695,10 +716,13 @@ class SFSRefParser:
                 normres.append(Link(text, uri=result[i].uri))
             else:
                 if len(normres) > 0 and not isinstance(normres[-1],Link):
-                    normres[-1] += text
+                    # print "concatenating %r" % text
+                    if isinstance(text,unicode):
+                        normres[-1] += text
+                    else:
+                        normres[-1] += text.decode(SP_CHARSET)
                 else:
                     normres.append(text)
-            
         return normres
 
 class PreparatoryRefParser(SFSRefParser):
@@ -738,10 +762,7 @@ class PreparatoryRefParser(SFSRefParser):
 class ShortenedRefParser(SFSRefParser):
     """Subclass of SFSRefParser, but uses a different root production to
     handle shortened references like '15 § AvtL' or 'JB 22:2'"""
-    
-    decl = open('etc/sfs.ebnf').read()
-    simpleparser = Parser(decl,'shortrefroot')
-
+    simpleparser = Parser(SFSRefParser.decl,'shortrefroot')
 
 
 
@@ -750,21 +771,23 @@ class TestLegalRef:
         if not quiet:
             print("Running test %s\n------------------------------" % testfile)
         try:
+            namedlaws = {}
             if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
-                p = SFSRefParser(verbose,{})
+                p = SFSRefParser(verbose,namedlaws)
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
-                p = ShortenedRefParser(verbose,{})
+                p = ShortenedRefParser(verbose,namedlaws)
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
-                p = PreparatoryRefParser(verbose,{})
+                p = PreparatoryRefParser(verbose,namedlaws)
             else:
                 print u'WARNING: Har ingen aning om hur %s ska testas' % testfile
-                
-            testdata = codecs.open(testfile,encoding='iso-8859-1').read()
+                return False
+            
+            testdata = codecs.open(testfile,encoding=SP_CHARSET).read()
             paragraphs = re.split('\r?\n\r?\n',testdata,1)
             if len(paragraphs) == 1:
                 (test, key) = (testdata,None)
             elif len(paragraphs) == 2:
-                (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding='iso-8859-1').read(),1)
+                (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding=SP_CHARSET).read(),1)
             else:
                 print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
                 return false
@@ -774,9 +797,9 @@ class TestLegalRef:
                 keyparas = re.split('\r?\n---\r?\n',key)
             resparas = []
 
-            namedlaws = {}
             for i in range(len(testparas)):
-                if testparas[i].startswith("RESET:"): namedlaws.clear()
+                if testparas[i].startswith("RESET:"):
+                    namedlaws.clear()
                 resparas.append(serialize(p.parse(testparas[i],u'http://lagen.nu/1:2#')))
 
             res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
@@ -799,11 +822,10 @@ class TestLegalRef:
                 sys.stdout.write("OK %s" % testfile)
             elif result == 'F':
                 sys.stdout.write("FAIL %s" % testfile)
+                from difflib import Differ
+                difflines = list(Differ().compare(res.split('\n'),key.split('\n')))
                 print "----------------------------------------"
-                print "EXPECTED:"
-                print key
-                print "GOT:"
-                print res
+                sys.stdout.write(u'\n'.join(difflines))
                 print "----------------------------------------"
             elif result == 'N':
                 print "NOT IMPLEMENTED: %s" % testfile
@@ -822,8 +844,8 @@ class TestLegalRef:
 
         
     def ParseTestString(self,s, verbose=True):
-        p = SFSRefParser(s, verbose)
-        print p.parse()
+        p = SFSRefParser(verbose)
+        print p.parse(s, 'http://lagen.nu/1:2#')
 
 #    def ParseTestAll(self,quiet=False):
 #        res = []

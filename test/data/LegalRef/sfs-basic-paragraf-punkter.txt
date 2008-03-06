@@ -5,10 +5,10 @@ den tillträdesdag som anges i 36 §
 
 <list>
   <unicode>förmånsrätt enligt </unicode>
-  <Link uri="http://lagen.nu/1:2#P6N1">6 § 1</Link>
+  <Link uri="http://lagen.nu/1:2#P6S1N1">6 § 1</Link>
   <unicode>
 fordran som skall utgå med förmånsrätt enligt </unicode>
-  <Link uri="http://lagen.nu/1970:979#P6N1">6 § 1</Link>
+  <Link uri="http://lagen.nu/1970:979#P6S1N1">6 § 1</Link>
   <unicode> eller </unicode>
   <Link uri="http://lagen.nu/1970:979#P7">7 §</Link>
   <unicode> </unicode>

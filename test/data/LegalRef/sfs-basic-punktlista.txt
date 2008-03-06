@@ -28,7 +28,7 @@ stycket</Link>
   <unicode>Upptagningar som avses i </unicode>
   <Link uri="http://lagen.nu/1:2#S1">första stycket</Link>
   <unicode> och </unicode>
-  <Link uri="http://lagen.nu/1:2#N3">3</Link>
+  <Link uri="http://lagen.nu/1:2#S1N3">3</Link>
   <unicode> får användas endast för
 de ändamål som anges där. Om sådana upptagningar har dokumentariskt
 värde, får de dock bevaras i Statens ljud- och bildarkiv.</unicode>

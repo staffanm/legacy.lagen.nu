@@ -29,7 +29,7 @@
      i lydelsen före den 1 januari 1999
                  
      </unicode>
-  <Link uri="http://lagen.nu/1949:105#K7P4N13">7 kap. 4 § 13 tryckfrihetsförordningen
+  <Link uri="http://lagen.nu/1949:105#K7P4S1N13">7 kap. 4 § 13 tryckfrihetsförordningen
      
      (1949:105)</Link>
 </list>

@@ -8,7 +8,7 @@ rättigheter som avses i  </unicode>
   <Link uri="http://lagen.nu/1974:152#K2">2 kap.</Link>
   <unicode> </unicode>
   <Link uri="http://lagen.nu/1974:152">regeringsformen</Link>
-  <unicode>får ej grundas enbart
+  <unicode> får ej grundas enbart
 på bestämmelserna i  </unicode>
   <Link uri="http://lagen.nu/1:2#S1">första stycket</Link>
   <unicode>.</unicode>
