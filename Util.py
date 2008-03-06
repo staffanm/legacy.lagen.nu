@@ -101,20 +101,22 @@ def indentXmlFile(filename):
         os.rename(tmpfile,filename)
     else:
         raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
-    # The tidy invocation is for wrapping long lines for easier readability
-    # (something that xmllint won't do for us) -- however, it seems that Tidy,
-    # even though -raw is used, mangles tag names with non-us-ascci characters
-    # when the file is utf-8-encoded ('<Sökord>Lis pendens</Sökord>' comes
-    # out as '<Sàkord="">Lis pendens</Sþ'). Therefore it's disabled until I find
-    # a better XML formatting tool.
+    # The tidy invocation is for wrapping long lines for easier
+    # readability (something that xmllint won't do for us) -- however,
+    # it seems that Tidy, even though -raw is used, mangles tag names
+    # with non-us-ascci characters when the file is utf-8-encoded
+    # ('<Sökord>Lis pendens</Sökord>' comes out as '<Sàkord="">Lis
+    # pendens</Sþ'). This is not a problem when using XHTML2, but it's
+    # still a bug.
     #
     # Also, tidy will hang (due to excessive stderr messages?) for 1992:1226 -- we should
     # try to get runcmd handle this
-    # (ret,stdout,stderr) = runcmd("tidy -xml -raw -i %s > %s" % (tmpfile,filename))
-    # if (ret != 0):
-    #    raise TransformError(stderr)
+    (ret,stdout,stderr) = runcmd("tidy -xml -raw -i -m %s" % (filename))
+    if (ret != 0):
+        raise TransformError(stderr)
+    # This fails occasionally - why?
     # os.remove(tmpfile)
-    # 
+    
 
 def tidyHtmlFile(filename):    
     """Neatifies an existing XHTML file in-place by running tidy"""
@@ -184,7 +186,7 @@ def listDirs(dir,suffix=None):
         dir = directories.pop()
         for f in os.listdir(dir):
             
-            f = "%s/%s" % (dir,f)
+            f = "%s%s%s" % (dir,os.path.sep,f)
             if os.path.isdir(f):
                 directories.append(f)
             elif os.path.isfile:

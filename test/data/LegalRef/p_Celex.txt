@@ -1,9 +1,0 @@
-32002L0019, 32002L0020, 32002L0021, 32002L0022, 32002L0058
-392L0100  393L0083
-395L0046
-
-<link type="docref" doctype="celex" docid="32002L0019">32002L0019</link>, <link type="docref" doctype="celex" docid="32002L0020">32002L0020</link>, <link type="docref" doctype="celex" docid="32002L0021">32002L0021</link>, <link type="docref" doctype="celex" docid="32002L0022">32002L0022</link>, <link type="docref" doctype="celex" docid="32002L0058">32002L0058</link>
-<link type="docref" doctype="celex" docid="392L0100">392L0100</link>  <link type="docref" doctype="celex" docid="393L0083">393L0083</link>
-<link type="docref" doctype="celex" docid="395L0046">395L0046</link>
-
-

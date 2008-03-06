@@ -2,35 +2,21 @@
 # -*- coding: iso-8859-1 -*-
 """This module finds references to legal sources (including individual
 sections, eg 'Upphovsrättslag (1960:729) 49 a §') in plaintext"""
-import os,pprint
-
-import sys
-import re
+import sys,os,re
 import codecs
-from StringIO import StringIO
+import traceback
+
+# 3rdparty libs
 from simpleparse.parser import Parser
 
+# my own libraries
 from DispatchMixin import DispatchMixin
-
-
-# This should really be imported from SFS.py ("from SFS import
-# SFSidToFilename"), but since that imports LegalRef that doesn't seem to be
-# possible (circular reference problems?)
-
 from DataObjects import UnicodeStructure, serialize
+import Util
 
 class Link(UnicodeStructure): # just a unicode string with a .uri property
-
     def __repr__(self):
         return u'Link(\'%s\',uri=%r)' % (unicode.__repr__(self),self.uri)
-
-
-def SFSidToFilename(sfsid):
-    """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
-    s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
-    id."""
-    if sfsid.find(":") < 0: return None
-    return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
 
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""
@@ -64,12 +50,12 @@ class ParseError(Exception):
 class SFSRefParser:
     """Identifierar referenser till svensk lagtext i löpande text"""
     attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
-    pp = pprint.PrettyPrinter(indent=4)
     global_namedlaws = {}
     global_lawabbr   = {}
     re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?)\b', re.LOCALE)
     re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?)')
-    re_urisegments = re.compile(r'http://[^/]*/(\d+:\d+)#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(P(\d+)|)')
+    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:\d+)#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(P(\d+)|)')
+    
 
     # the first file contains all numbered laws that
     # find-named-laws.sh can find. It contains several ID's for the
@@ -101,6 +87,16 @@ class SFSRefParser:
     #parser = generator.buildParser(decl).parserbyname('root')
     simpleparser = Parser(decl, "root")
     
+    # This should really be imported from SFS.py ("from SFS import
+    # SFSidToFilename"), but since that imports LegalRef that doesn't seem to be
+    # possible (circular reference problems?)
+    def SFSidToFilename(sfsid):
+        """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
+        s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
+        id."""
+        if sfsid.find(":") < 0: return None
+        return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
+
     def __init__(self,verbose=False,namedlaws={}):
         self.currentlaw     = None
         self.currentchapter = None
@@ -155,7 +151,8 @@ class SFSRefParser:
         elif self.global_namedlaws.has_key(text):
             return self.global_namedlaws[text]
         else:
-            print u"WARNING: I don't know the ID of named law '%s'" % text.decode('iso-8859-1')
+            if self.verbose:
+                print u"WARNING: I don't know the ID of named law '%s'" % text.decode('iso-8859-1')
             return None
 
     def lawabbr_to_sfsid(self,abbr):
@@ -187,6 +184,9 @@ class SFSRefParser:
                         val = val.replace(" ", "_")
                     else:
                         val = val.replace(" ", "")
+                        val = val.replace("\n", "")
+                        val = val.replace("\r", "")
+                        
                     res += ' %s="%s"' % (key,val)
         return res
 
@@ -208,7 +208,8 @@ class SFSRefParser:
                       'sentence':'M', # is this ever used?
                       }
 
-        res = u'http://lagen.nu/sfs/'
+        # res = u'http://lagen.nu/sfs/'
+        res = self.baseuri_attributes['baseuri']
         resolvetobase = True
         addfragment = False
         for key in self.attributeorder:
@@ -234,6 +235,8 @@ class SFSRefParser:
                         addfragment = True
                     else:
                         val = val.replace(" ", "")
+                        val = val.replace("\n", "")
+                        val = val.replace("\r", "")
                         res += '%s%s' % (keymapping[key],val)
         return res
         
@@ -631,11 +634,12 @@ class SFSRefParser:
     def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9"):
         if indata == "": return indata # this actually triggered a bug...
         m = self.re_urisegments.match(baseuri)
-        self.baseuri_attributes = {'law':m.group(1),
-                                   'chapter':m.group(3),
-                                   'section':m.group(5),
-                                   'piece':m.group(7),
-                                   'item':m.group(9)}
+        self.baseuri_attributes = {'baseuri':m.group(1),
+                                   'law':m.group(2),
+                                   'chapter':m.group(4),
+                                   'section':m.group(6),
+                                   'piece':m.group(8),
+                                   'item':m.group(10)}
         # there's one thing I can't get the EBNF grammar to do:
         # recognizing words that ends in a given substring, eg for the
         # substring 'lagen', recognize 'bokföringslagen'. Since any
@@ -700,121 +704,171 @@ class SFSRefParser:
 class PreparatoryRefParser(SFSRefParser):
     """Subclass of SFSRefParser, but handles things like references to
     preparatory works, like propositions etc"""
-    attributeorder = ['type','doctype','docid']
+
     decl = open('etc/sfs.ebnf').read()
     decl += "LawAbbreviation ::= 'blahonga'" # How to define a production that matches nothing?
     simpleparser = Parser(decl,'extroot')
-    pp = pprint.PrettyPrinter(indent=4)
 
+    def format_uri(self,attributes):
+        res = self.baseuri_attributes['baseuri']
+        resolvetobase = True
+        addfragment = False
+        
+        for key,val in attributes.items():
+            if key == 'prop':
+                res += "prop/%s" % val
+            elif key == 'consid':
+                res += "bet/%s" % val
+            elif key == 'skrivelse':
+                res += "rskr/%s" % val
+            elif key == 'celex':
+                res += "celex/%s" % val
+        return res
+        
 
-    def format_generic_link(self,part):
-        attr = self.find_attributes([part])
-        assert(len(attr.values()) == 1)
-        docid = attr.values()[0]
-        tagattr = {'type': 'docref',
-                   'doctype': attr.keys()[0],
-                   'docid'  : docid }
-        return "<link%s>%s</link>" % (self.format_attributes(tagattr), part.text)
+#    def format_generic_link(self,part):
+#        attr = self.find_attributes([part])
+#        assert(len(attr.values()) == 1)
+#        docid = attr.values()[0]
+#        tagattr = {'type': 'docref',
+#                   'doctype': attr.keys()[0],
+#                   'docid'  : docid }
+#        return "<link%s>%s</link>" % (self.format_attributes(tagattr), part.text)
 
-# class ShortenedRefParser(LawParser):
-#     """Subclass of LawParser, but uses a different root production to
-#     handle shortened references like '15 § AvtL' or 'JB 22:2'"""
-#     
-#     decl = open('law.def').read()
-#     parser = generator.buildParser(decl).parserbyname('shortrefroot')
-#     pp = pprint.PrettyPrinter(indent=4)
+class ShortenedRefParser(SFSRefParser):
+    """Subclass of SFSRefParser, but uses a different root production to
+    handle shortened references like '15 § AvtL' or 'JB 22:2'"""
+    
+    decl = open('etc/sfs.ebnf').read()
+    simpleparser = Parser(decl,'shortrefroot')
+
 
 
 
 class TestLegalRef:
-    def Run(self,filename,verbose=False,quiet=False):
-        # print "testing %s" % filename
-        # print open(filename).read().split("\n\n")
-        testdata = codecs.open(filename,encoding='iso-8859-1').read()
-        paragraphs = re.split('\r?\n\r?\n',testdata,1)
-        if len(paragraphs) == 1:
-            (test, answer) = (testdata,None)
-        elif len(paragraphs) == 2:
-            (test,answer) = re.split('\r?\n\r?\n',codecs.open(filename,encoding='iso-8859-1').read(),1)
-        else:
-            print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % filename
-            return false
-        # print "Verbose is %s, test is %s" % (verbose, test)
-
-        testparas   = re.split('\r?\n---\r?\n',test)
-        if answer:
-            answerparas = re.split('\r?\n---\r?\n',answer)
-        resparas = []
-
-        namedlaws = {}
-        for i in range(len(testparas)):
-            # print "Testing %s" % testparas[i]
-            if testparas[i].startswith("RESET:"):
-                namedlaws.clear()
-            if filename.startswith("test/data/LegalRef/p_"):
-                p = PreparatoryRefParser(testparas[i],verbose,namedlaws)
+    def ParseTest(self,testfile,verbose=False,quiet=False):
+        if not quiet:
+            print("Running test %s\n------------------------------" % testfile)
+        try:
+            if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
+                p = SFSRefParser(verbose,{})
+            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
+                p = ShortenedRefParser(verbose,{})
+            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
+                p = PreparatoryRefParser(verbose,{})
             else:
-                p = SFSRefParser(testparas[i],verbose,namedlaws)
-            resparas.append(p.parse())
+                print u'WARNING: Har ingen aning om hur %s ska testas' % testfile
+                
+            testdata = codecs.open(testfile,encoding='iso-8859-1').read()
+            paragraphs = re.split('\r?\n\r?\n',testdata,1)
+            if len(paragraphs) == 1:
+                (test, answer) = (testdata,None)
+            elif len(paragraphs) == 2:
+                (test,answer) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding='iso-8859-1').read(),1)
+            else:
+                print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
+                return false
 
-        res = "\n---\n".join(resparas)
-        if answer:
-            answer = "\n---\n".join(answerparas)
-        if not answer:
-            print "NOT IMPLEMENTED: %s" % filename
-            if verbose:
-                print "----------------------------------------"
-                print "GOT:"
-                print res.encode('iso-8859-1')
-                print "----------------------------------------"
-            return False
-        elif res.strip() == answer.strip():
-            print "Pass: %s" % filename
-            return True
+            testparas = re.split('\r?\n---\r?\n',test)
+            if answer:
+                answerparas = re.split('\r?\n---\r?\n',answer)
+            resparas = []
+
+            namedlaws = {}
+            for i in range(len(testparas)):
+                if testparas[i].startswith("RESET:"): namedlaws.clear()
+                resparas.append(serialize(p.parse(testparas[i],u'http://lagen.nu/1:2#')))
+
+            res = "\n---\n".join(resparas)
+            if answer:
+                answer = "\n---\n".join(answerparas)
+                if res.strip() == answer.strip():
+                    result = "."
+                else:
+                    result = "F"
+            else:
+                result = "N"
+
+        except Exception:
+            result = "E"
+
+        if quiet:
+            sys.stdout.write(result)
         else:
-            print "FAIL: %s" % filename
-            if not quiet:
+            if result == '.':
+                sys.stdout.write("OK %s" % testfile)
+            elif result == 'F':
+                sys.stdout.write("FAIL %s" % testfile)
                 print "----------------------------------------"
                 print "EXPECTED:"
-                print answer.encode('iso-8859-1')
+                print answer
                 print "GOT:"
-                print res.encode('iso-8859-1')
+                print res
                 print "----------------------------------------"
-                return False
-    #runtest = staticmethod(runtest)
+            elif result == 'N':
+                print "NOT IMPLEMENTED: %s" % testfile
+                print "----------------------------------------"
+                print "GOT:"
+                print res
+                print "----------------------------------------"
+            elif result == 'E':
+                tb = sys.exc_info()[2]
+                formatted_tb = traceback.format_tb(sys.exc_info()[2])
+                print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
+                       (sys.exc_info()[0],
+                        sys.exc_info()[1],
+                        u''.join(formatted_tb)))
+        return result == '.'
+
         
-    def RunString(self,s, verbose=True):
+    def ParseTestString(self,s, verbose=True):
         p = SFSRefParser(s, verbose)
         print p.parse()
-    #teststring = staticmethod(teststring)
 
-    def prep_teststring(self,s):
-        p = PreparatoryRefParser(s, True)
-        print p.parse()
-    #prep_teststring = staticmethod(prep_teststring)
+#    def ParseTestAll(self,quiet=False):
+#        res = []
+#        for f in os.listdir("test/data/LegalRef"):
+#            if not f.endswith(".txt"): continue
+#            # print "trying %s..." % f
+#
+#            res.append(self.ParseTest('test/data/LegalRef/%s'%f, quiet=quiet))
+#        succeeded = len([r for r in res if r])
+#        all       = len(res)
+#                        
+#        print "%s/%s" % (succeeded,all)
+#        return(succeeded,all)
 
-#     def shortened_teststring(s):
-#         p = ShortenedRefParser(s, True)
-#         print p.parse()
-#     shortened_teststring = staticmethod(shortened_teststring)   
+    def ParseTestAll(self):
+        results = []
+        failures = []
+        for f in Util.listDirs("test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
+            result = self.ParseTest(f,verbose=False,quiet=True)
+            if not result:
+                failures.append(f)
+            results.append(result)
 
-    def RunAll(self,quiet=False):
-        res = []
-        for f in os.listdir("test/data/LegalRef"):
-            if not f.endswith(".txt"): continue
-            # print "trying %s..." % f
-
-            res.append(self.Run('test/data/LegalRef/%s'%f, quiet=quiet))
-        succeeded = len([r for r in res if r])
-        all       = len(res)
-                        
-        print "%s/%s" % (succeeded,all)
-        return(succeeded,all)
-    #runalltests = staticmethod(runalltests)
-
-
+        succeeded = len([r for r in results if r])
+        all       = len(results)
+        print "\n%s/%s" % (succeeded,all)
+        if failures:
+            print "\n".join(failures)
 
 if __name__ == "__main__":
+    if sys.platform == 'win32':
+        if sys.stdout.encoding:
+            defaultencoding = sys.stdout.encoding
+        else:
+            defaultencoding = 'cp850'
+    else:
+        if sys.stdout.encoding:
+            defaultencoding = sys.stdout.encoding
+        else:
+            defaultencoding = locale.getpreferredencoding()
+    # print "setting sys.stdout to a '%s' writer" % defaultencoding
+    sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+    sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+
+
     # 47/55 innan jag började ha sönder saker, alla implementerade tester funkar
     TestLegalRef.__bases__ += (DispatchMixin,)
     t = TestLegalRef()

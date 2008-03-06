@@ -206,6 +206,7 @@
       </table>
 
       <section py:def="render_overgangsbestammelser(obs)">
+	<h py:content="obs.rubrik">Övergångsbestämmelser</h>
         <py:for each="part in obs" py:choose="">
 	  <div py:when="isinstance(part, Overgangsbestammelse)" py:strip="">${render_overgangsbestammelse(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_overgangsbestammelser</div>
@@ -224,6 +225,7 @@
       </section>
 
       <section py:def="render_bilaga(bilaga)">
+	<h py:content="bilaga.rubrik">Bilagerubrik</h>
         <py:for each="part in bilaga" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>

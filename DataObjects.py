@@ -134,7 +134,7 @@ def serialize(root):
 
 # http://infix.se/2007/02/06/gentlemen-indent-your-xml
 def __indentTree(elem, level=0):
-    i = "\n" + level*"  "
+    i = "\r\n" + level*"  "
     if len(elem):
         if not elem.text or not elem.text.strip():
             elem.text = i + "  "

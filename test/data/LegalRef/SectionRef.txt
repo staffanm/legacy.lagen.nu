@@ -1,6 +1,0 @@
-    Vid ändring av en bolagsordning eller av en beviljad koncession
-    gäller 3 § eller 4 a § i tillämpliga delar.
-
-    Vid ändring av en bolagsordning eller av en beviljad koncession
-    gäller <link section="3">3 §</link> eller <link section="4a">4 a §</link> i tillämpliga delar.
-    
