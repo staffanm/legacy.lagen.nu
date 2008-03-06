@@ -10,14 +10,30 @@ användas. I underlaget skall det i förekommande fall ingå
    efterlevandestöd till barn eller lagen (2000:462) om införande av
    nämnda lag,
 
-Lag om garantipension, andra kapitlet fjärde paragrafen:
+<list>
+  <unicode>Lag om garantipension, andra kapitlet fjärde paragrafen:
 Som underlag för beräkning av den pensionsberättigades årliga
-garantipension enligt <link section="11">11</link>-<link section="16">16 §§</link> skall ett beräkningsunderlag
+garantipension enligt </unicode>
+  <Link uri="http://lagen.nu/1:2#P11">11</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/1:2#P16">16 §§</Link>
+  <unicode> skall ett beräkningsunderlag
 användas. I underlaget skall det i förekommande fall ingå
-1. tilläggspension enligt <link law="1998:674" chapter="6">6 kap.</link> lagen (<link law="1998:674">1998:674</link>) om inkomstgrundad
-   ålderspension för samma år efter samordning enligt <link law="1998:674" chapter="12" section="10">12 kap. 10 §
-   samma lag</link>,
+1. tilläggspension enligt </unicode>
+  <Link uri="http://lagen.nu/1998:674#K6">6 kap.</Link>
+  <unicode> lagen (</unicode>
+  <Link uri="http://lagen.nu/1998:674">1998:674</Link>
+  <unicode>) om inkomstgrundad
+   ålderspension för samma år efter samordning enligt </unicode>
+  <Link uri="http://lagen.nu/1998:674#K12P10">12 kap. 10 §
+   samma lag</Link>
+  <unicode>,
 2. svensk tjänstepension,
-3. änkepension enligt lagen (<link law="2000:461">2000:461</link>) om efterlevandepension och
-   efterlevandestöd till barn eller lagen (<link law="2000:462">2000:462</link>) om införande av
-   nämnda lag,
+3. änkepension enligt lagen (</unicode>
+  <Link uri="http://lagen.nu/2000:461">2000:461</Link>
+  <unicode>) om efterlevandepension och
+   efterlevandestöd till barn eller lagen (</unicode>
+  <Link uri="http://lagen.nu/2000:462">2000:462</Link>
+  <unicode>) om införande av
+   nämnda lag,</unicode>
+</list>

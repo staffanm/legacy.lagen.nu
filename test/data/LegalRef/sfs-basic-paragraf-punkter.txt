@@ -3,6 +3,17 @@ fordran som skall utgå med förmånsrätt enligt 6 § 1 eller 7 § 1 eller
 2 förmånsrättslagen (1970:979) och som förfaller till betalning senast
 den tillträdesdag som anges i 36 §
 
-förmånsrätt enligt <link section="6" item="1">6 § 1</link>
-fordran som skall utgå med förmånsrätt enligt <link law="1970:979" section="6" item="1">6 § 1</link> eller <link law="1970:979" section="7">7 §</link> <link law="1970:979">förmånsrättslagen (1970:979)</link> och som förfaller till betalning senast
-den tillträdesdag som anges i <link section="36">36 §</link>
+<list>
+  <unicode>förmånsrätt enligt </unicode>
+  <Link uri="http://lagen.nu/1:2#P6N1">6 § 1</Link>
+  <unicode>
+fordran som skall utgå med förmånsrätt enligt </unicode>
+  <Link uri="http://lagen.nu/1970:979#P6N1">6 § 1</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://lagen.nu/1970:979#P7">7 §</Link>
+  <unicode> </unicode>
+  <Link uri="http://lagen.nu/1970:979">förmånsrättslagen (1970:979)</Link>
+  <unicode> och som förfaller till betalning senast
+den tillträdesdag som anges i </unicode>
+  <Link uri="http://lagen.nu/1:2#P36">36 §</Link>
+</list>

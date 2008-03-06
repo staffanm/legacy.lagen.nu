@@ -1,5 +1,11 @@
 Allmänna handlingar skall oavsett upphovsrätten tillhandahållas enligt
 2 kap. tryckfrihetsförordningen.
 
-Allmänna handlingar skall oavsett upphovsrätten tillhandahållas enligt
-<link law="1949:105" chapter="2">2 kap.</link> <link law="1949:105">tryckfrihetsförordningen</link>.
+<list>
+  <unicode>Allmänna handlingar skall oavsett upphovsrätten tillhandahållas enligt
+</unicode>
+  <Link uri="http://lagen.nu/1949:105#K2">2 kap.</Link>
+  <unicode> </unicode>
+  <Link uri="http://lagen.nu/1949:105">tryckfrihetsförordningen</Link>
+  <unicode>.</unicode>
+</list>

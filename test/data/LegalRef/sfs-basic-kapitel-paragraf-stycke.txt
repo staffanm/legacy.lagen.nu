@@ -1,7 +1,13 @@
-    [...] som avses i 2 kap. 3 a § första stycket klasserna 1 och 2
-    samt med rörelse [...] som avses i 2 kap. 3 a § andra stycket 11
-    avseende återförsäkring (indirekt försäkring) av försäkring [...]
+[...] som avses i 2 kap. 3 a § första stycket klasserna 1 och 2
+samt med rörelse [...] som avses i 2 kap. 3 a § andra stycket 11
+avseende återförsäkring (indirekt försäkring) av försäkring [...]
 
-    [...] som avses i <link chapter="2" section="3a" piece="1">2 kap. 3 a § första stycket</link> klasserna 1 och 2
-    samt med rörelse [...] som avses i <link chapter="2" section="3a" piece="2" item="11">2 kap. 3 a § andra stycket 11</link>
-    avseende återförsäkring (indirekt försäkring) av försäkring [...]
+<list>
+  <unicode>[...] som avses i </unicode>
+  <Link uri="http://lagen.nu/1:2#K2P3aS1">2 kap. 3 a § första stycket</Link>
+  <unicode> klasserna 1 och 2
+samt med rörelse [...] som avses i </unicode>
+  <Link uri="http://lagen.nu/1:2#K2P3aS2N11">2 kap. 3 a § andra stycket 11</Link>
+  <unicode>
+avseende återförsäkring (indirekt försäkring) av försäkring [...]</unicode>
+</list>

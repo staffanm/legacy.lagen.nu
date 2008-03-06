@@ -7,11 +7,29 @@ Upptagningar som avses i första stycket och 3 får användas endast för
 de ändamål som anges där. Om sådana upptagningar har dokumentariskt
 värde, får de dock bevaras i Statens ljud- och bildarkiv.
 
-Var och en får återge verk, vilka ingår i de handlingar som avses i <link section="9" piece="1">9
-§ första stycket</link> och är av de slag som anges i <link section="9" piece="2">9 § andra stycket</link>
-<link section="9" piece="2" item="2">2</link>-<link section="9" piece="2" item="4">4</link>. Detta gäller dock inte ett sådant verk som avses i <link section="9" piece="3">9 § tredje
-stycket</link>. Upphovsmannen har rätt till ersättning
+<list>
+  <unicode>Var och en får återge verk, vilka ingår i de handlingar som avses i </unicode>
+  <Link uri="http://lagen.nu/1:2#P9S1">9
+§ första stycket</Link>
+  <unicode> och är av de slag som anges i </unicode>
+  <Link uri="http://lagen.nu/1:2#P9S2">9 § andra stycket</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://lagen.nu/1:2#P9S2N2">2</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/1:2#P9S2N4">4</Link>
+  <unicode>. Detta gäller dock inte ett sådant verk som avses i </unicode>
+  <Link uri="http://lagen.nu/1:2#P9S3">9 § tredje
+stycket</Link>
+  <unicode>. Upphovsmannen har rätt till ersättning</unicode>
+</list>
 ---
-Upptagningar som avses i <link piece="1">första stycket</link> och <link item="3">3</link> får användas endast för
+<list>
+  <unicode>Upptagningar som avses i </unicode>
+  <Link uri="http://lagen.nu/1:2#S1">första stycket</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#N3">3</Link>
+  <unicode> får användas endast för
 de ändamål som anges där. Om sådana upptagningar har dokumentariskt
-värde, får de dock bevaras i Statens ljud- och bildarkiv.
+värde, får de dock bevaras i Statens ljud- och bildarkiv.</unicode>
+</list>

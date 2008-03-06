@@ -1,10 +1,31 @@
+För europabolag med säte i Sverige som har beviljats koncession
+att driva försäkringsrörelse gäller 2-5, 7 och 8 §§, 16 § första
+och andra styckena, 17-29 och 32 §§ i lagen (2004:575) om
+europabolag samt bestämmelserna i detta kapitel.
 
-    För europabolag med säte i Sverige som har beviljats koncession
-    att driva försäkringsrörelse gäller 2-5, 7 och 8 §§, 16 § första
-    och andra styckena, 17-29 och 32 §§ i lagen (2004:575) om
-    europabolag samt bestämmelserna i detta kapitel.
-
-    För europabolag med säte i Sverige som har beviljats koncession
-    att driva försäkringsrörelse gäller <link law="2004:575" section="2">2</link>-<link law="2004:575" section="5">5</link>, <link law="2004:575" section="7">7</link> och <link law="2004:575" section="8">8 §§</link>, <link law="2004:575" section="16" piece="1">16 § första</link>
-    och <link law="2004:575" section="16" piece="2">andra styckena</link>, <link law="2004:575" section="17">17</link>-<link law="2004:575" section="29">29</link> och <link law="2004:575" section="32">32 §§</link> i lagen (<link law="2004:575">2004:575</link>) om
-    europabolag samt bestämmelserna i detta kapitel.
+<list>
+  <unicode>För europabolag med säte i Sverige som har beviljats koncession
+att driva försäkringsrörelse gäller </unicode>
+  <Link uri="http://lagen.nu/2004:575#P2">2</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/2004:575#P5">5</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/2004:575#P7">7</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/2004:575#P8">8 §§</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/2004:575#P16S1">16 § första</Link>
+  <unicode>
+och </unicode>
+  <Link uri="http://lagen.nu/2004:575#P16S2">andra styckena</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/2004:575#P17">17</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/2004:575#P29">29</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/2004:575#P32">32 §§</Link>
+  <unicode> i lagen (</unicode>
+  <Link uri="http://lagen.nu/2004:575">2004:575</Link>
+  <unicode>) om
+europabolag samt bestämmelserna i detta kapitel.</unicode>
+</list>

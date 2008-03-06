@@ -6,10 +6,14 @@
             
             ) om behöriga myndigheter m.m. i fråga om kör- och vilotider samt färdskrivare vid vägtransporter
 
-                <link law="1995:521" section="20">20 §
+<list>
+  <unicode>                </unicode>
+  <Link uri="http://lagen.nu/1995:521#P20">20 §
             
              förordningen (
             
                 1995:521
             
-            )</link> om behöriga myndigheter m.m. i fråga om kör- och vilotider samt färdskrivare vid vägtransporter
+            )</Link>
+  <unicode> om behöriga myndigheter m.m. i fråga om kör- och vilotider samt färdskrivare vid vägtransporter</unicode>
+</list>

@@ -4,9 +4,10 @@ judiciaire peut impartir un délai pour les produire ou accepter
 des documents équivalents ou, si elle s'estime suffisamment
 éclairée, en dispenser.
 
-À défaut de production des documents mentionnés à l'article 46
+<list>
+  <unicode>À défaut de production des documents mentionnés à l'article 46
 paragraphe 2 et à l'article 47 paragraphe 2, l'autorité
 judiciaire peut impartir un délai pour les produire ou accepter
 des documents équivalents ou, si elle s'estime suffisamment
-éclairée, en dispenser.
-
+éclairée, en dispenser.</unicode>
+</list>

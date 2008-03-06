@@ -1,5 +1,11 @@
-    Om teckningen av aktier innebär att någon som inte har prövats
-    enligt 3 § fjärde stycket 2 eller femte stycket kommer [...]
+Om teckningen av aktier innebär att någon som inte har prövats
+enligt 3 § fjärde stycket 2 eller femte stycket kommer [...]
 
-    Om teckningen av aktier innebär att någon som inte har prövats
-    enligt <link section="3" piece="4" item="2">3 § fjärde stycket 2</link> eller <link section="3" piece="5">femte stycket</link> kommer [...]
+<list>
+  <unicode>Om teckningen av aktier innebär att någon som inte har prövats
+enligt </unicode>
+  <Link uri="http://lagen.nu/1:2#P3S4N2">3 § fjärde stycket 2</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://lagen.nu/1:2#P3S5">femte stycket</Link>
+  <unicode> kommer [...]</unicode>
+</list>

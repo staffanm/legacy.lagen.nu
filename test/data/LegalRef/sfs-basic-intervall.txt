@@ -5,10 +5,45 @@ tillämpas på arbeten som avses i denna paragraf. Är ett sådant arbete
 eller en del av det föremål för upphovsrätt, får denna rätt också
 göras gällande.
 
-Bestämmelserna i <link section="2" piece="2">2 § andra</link> och <link section="2" piece="3">tredje styckena</link>, <link section="6">6</link> - <link section="9">9 §§</link>, <link section="11" piece="2">11 § andra
-stycket</link>, <link section="12" piece="1">12 § första</link> och <link section="12" piece="2">andra styckena</link>, <link section="13">13</link> - <link section="22">22</link>, <link section="25">25</link>, <link section="26">26</link> - <link section="26b">26 b</link>, <link section="26d">26 d</link>
-- <link section="26f">26 f §§</link>, <link section="26g" piece="5">26 g § femte</link> och <link section="26g" piece="6">sjätte styckena</link> samt <link section="26i">26 i §</link> skall
+<list>
+  <unicode>Bestämmelserna i </unicode>
+  <Link uri="http://lagen.nu/1:2#P2S2">2 § andra</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P2S3">tredje styckena</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P6">6</Link>
+  <unicode> - </unicode>
+  <Link uri="http://lagen.nu/1:2#P9">9 §§</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P11S2">11 § andra
+stycket</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P12S1">12 § första</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P12S2">andra styckena</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P13">13</Link>
+  <unicode> - </unicode>
+  <Link uri="http://lagen.nu/1:2#P22">22</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P25">25</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P26">26</Link>
+  <unicode> - </unicode>
+  <Link uri="http://lagen.nu/1:2#P26b">26 b</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P26d">26 d</Link>
+  <unicode>
+- </unicode>
+  <Link uri="http://lagen.nu/1:2#P26f">26 f §§</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P26gS5">26 g § femte</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P26gS6">sjätte styckena</Link>
+  <unicode> samt </unicode>
+  <Link uri="http://lagen.nu/1:2#P26i">26 i §</Link>
+  <unicode> skall
 tillämpas på arbeten som avses i denna paragraf. Är ett sådant arbete
 eller en del av det föremål för upphovsrätt, får denna rätt också
-göras gällande.
-
+göras gällande.</unicode>
+</list>

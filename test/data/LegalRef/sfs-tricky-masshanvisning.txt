@@ -4,44 +4,44 @@ tillämpas i fråga om framföranden som avses i denna paragraf.
 
 <list>
   <unicode>Bestämmelserna i </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P3">3</Link>
+  <Link uri="http://lagen.nu/1:2#P3">3</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P6">6</Link>
+  <Link uri="http://lagen.nu/1:2#P6">6</Link>
   <unicode>-</unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P9">9</Link>
+  <Link uri="http://lagen.nu/1:2#P9">9</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P11">11</Link>
+  <Link uri="http://lagen.nu/1:2#P11">11</Link>
   <unicode>-</unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P13">13</Link>
+  <Link uri="http://lagen.nu/1:2#P13">13</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P15">15</Link>
+  <Link uri="http://lagen.nu/1:2#P15">15</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P16">16</Link>
+  <Link uri="http://lagen.nu/1:2#P16">16</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P21">21</Link>
+  <Link uri="http://lagen.nu/1:2#P21">21</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P22">22</Link>
+  <Link uri="http://lagen.nu/1:2#P22">22</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P25">25</Link>
+  <Link uri="http://lagen.nu/1:2#P25">25</Link>
   <unicode>-</unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P26b">26 b</Link>
+  <Link uri="http://lagen.nu/1:2#P26b">26 b</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P26e">26 e</Link>
+  <Link uri="http://lagen.nu/1:2#P26e">26 e</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P26f">26
+  <Link uri="http://lagen.nu/1:2#P26f">26
 f</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P26k">26 k</Link>
+  <Link uri="http://lagen.nu/1:2#P26k">26 k</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P27">27</Link>
+  <Link uri="http://lagen.nu/1:2#P27">27</Link>
   <unicode>- </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P29">29</Link>
+  <Link uri="http://lagen.nu/1:2#P29">29</Link>
   <unicode>, </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P39M1">39 § första meningen</Link>
+  <Link uri="http://lagen.nu/1:2#P39M1">39 § första meningen</Link>
   <unicode> samt </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P41">41</Link>
+  <Link uri="http://lagen.nu/1:2#P41">41</Link>
   <unicode> och </unicode>
-  <Link uri="http://lagen.nu/sfs/1234:567#P42">42 §§</Link>
+  <Link uri="http://lagen.nu/1:2#P42">42 §§</Link>
   <unicode> skall
 tillämpas i fråga om framföranden som avses i denna paragraf.</unicode>
 </list>

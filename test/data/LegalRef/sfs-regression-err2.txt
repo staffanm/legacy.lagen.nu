@@ -1,11 +1,15 @@
-    Försäkringsaktiebolag skall ha ett aktiekapital. Aktiekapitalet
-    skall vara bestämt i bolagets redovisningsvaluta. Av 4 kap. 6 §
-    bokföringslagen (1999:1078) framgår att redovisningsvalutan får
-    vara antingen svenska kronor eller euro. Om aktiekapitalet är
-    fördelat på flera aktier, skall dessa lyda på lika belopp.
+Försäkringsaktiebolag skall ha ett aktiekapital. Aktiekapitalet
+skall vara bestämt i bolagets redovisningsvaluta. Av 4 kap. 6 §
+bokföringslagen (1999:1078) framgår att redovisningsvalutan får
+vara antingen svenska kronor eller euro. Om aktiekapitalet är
+fördelat på flera aktier, skall dessa lyda på lika belopp.
 
-    Försäkringsaktiebolag skall ha ett aktiekapital. Aktiekapitalet
-    skall vara bestämt i bolagets redovisningsvaluta. Av <link law="1999:1078" chapter="4" section="6">4 kap. 6 §
-    bokföringslagen (1999:1078)</link> framgår att redovisningsvalutan får
-    vara antingen svenska kronor eller euro. Om aktiekapitalet är
-    fördelat på flera aktier, skall dessa lyda på lika belopp.
+<list>
+  <unicode>Försäkringsaktiebolag skall ha ett aktiekapital. Aktiekapitalet
+skall vara bestämt i bolagets redovisningsvaluta. Av </unicode>
+  <Link uri="http://lagen.nu/1999:1078#K4P6">4 kap. 6 §
+bokföringslagen (1999:1078)</Link>
+  <unicode> framgår att redovisningsvalutan får
+vara antingen svenska kronor eller euro. Om aktiekapitalet är
+fördelat på flera aktier, skall dessa lyda på lika belopp.</unicode>
+</list>

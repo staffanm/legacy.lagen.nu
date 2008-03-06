@@ -1,6 +1,27 @@
-    6 kap. 8 §, 9 § och 10 §, 35 kap. 2 § och 2 a §, 37 kap. 25 § samt
-    40 kap. 2 §, 6 §, 7 § och 14 § inkomstskattelagen (1999:1229)
+6 kap. 8 §, 9 § och 10 §, 35 kap. 2 § och 2 a §, 37 kap. 25 § samt
+40 kap. 2 §, 6 §, 7 § och 14 § inkomstskattelagen (1999:1229)
 
-    <link law="1999:1229" chapter="6" section="8">6 kap. 8 §</link>, <link law="1999:1229" chapter="6" section="9">9 §</link> och <link law="1999:1229" chapter="6" section="10">10 §</link>, <link law="1999:1229" chapter="35" section="2">35 kap. 2 §</link> och <link law="1999:1229" chapter="35" section="2a">2 a §</link>, <link law="1999:1229" chapter="37" section="25">37 kap. 25 §</link> samt
-    <link law="1999:1229" chapter="40" section="2">40 kap. 2 §</link>, <link law="1999:1229" chapter="40" section="6">6 §</link>, <link law="1999:1229" chapter="40" section="7">7 §</link> och <link law="1999:1229" chapter="40" section="14">14 §</link> <link law="1999:1229">inkomstskattelagen (1999:1229)</link>
-
+<list>
+  <Link uri="http://lagen.nu/1999:1229#K6P8">6 kap. 8 §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K6P9">9 §</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K6P10">10 §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K35P2">35 kap. 2 §</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K35P2a">2 a §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K37P25">37 kap. 25 §</Link>
+  <unicode> samt
+</unicode>
+  <Link uri="http://lagen.nu/1999:1229#K40P2">40 kap. 2 §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K40P6">6 §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K40P7">7 §</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1999:1229#K40P14">14 §</Link>
+  <unicode> </unicode>
+  <Link uri="http://lagen.nu/1999:1229">inkomstskattelagen (1999:1229)</Link>
+</list>

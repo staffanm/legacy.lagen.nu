@@ -1,7 +1,37 @@
-    [...] sedan den gränsöverskridande verksamheten inletts, skall
-    bestämmelserna i 4 och 5 §§, eller kanske 22, 23 och 26 §§, eller
-    möjligtvis 4, 5, 8-10, 12, 13-16, 17 och 32 §§ tillämpas.
+[...] sedan den gränsöverskridande verksamheten inletts, skall
+bestämmelserna i 4 och 5 §§, eller kanske 22, 23 och 26 §§, eller
+möjligtvis 4, 5, 8-10, 12, 13-16, 17 och 32 §§ tillämpas.
 
-    [...] sedan den gränsöverskridande verksamheten inletts, skall
-    bestämmelserna i <link section="4">4</link> och <link section="5">5 §§</link>, eller kanske <link section="22">22</link>, <link section="23">23</link> och <link section="26">26 §§</link>, eller
-    möjligtvis <link section="4">4</link>, <link section="5">5</link>, <link section="8">8</link>-<link section="10">10</link>, <link section="12">12</link>, <link section="13">13</link>-<link section="16">16</link>, <link section="17">17</link> och <link section="32">32 §§</link> tillämpas.
+<list>
+  <unicode>[...] sedan den gränsöverskridande verksamheten inletts, skall
+bestämmelserna i </unicode>
+  <Link uri="http://lagen.nu/1:2#P4">4</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P5">5 §§</Link>
+  <unicode>, eller kanske </unicode>
+  <Link uri="http://lagen.nu/1:2#P22">22</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P23">23</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P26">26 §§</Link>
+  <unicode>, eller
+möjligtvis </unicode>
+  <Link uri="http://lagen.nu/1:2#P4">4</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P5">5</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P8">8</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/1:2#P10">10</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P12">12</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P13">13</Link>
+  <unicode>-</unicode>
+  <Link uri="http://lagen.nu/1:2#P16">16</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/1:2#P17">17</Link>
+  <unicode> och </unicode>
+  <Link uri="http://lagen.nu/1:2#P32">32 §§</Link>
+  <unicode> tillämpas.</unicode>
+</list>
