@@ -30,7 +30,10 @@ import LegalSource
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
-from DataObjects import UnicodeStructure, CompoundStructure, MapStructure, TemporalStructure, OrdinalStructure, serialize
+
+from DataObjects import UnicodeStructure, CompoundStructure, \
+     MapStructure, TemporalStructure, OrdinalStructure, serialize
+
 from LegalRef import SFSRefParser, ParseError, Link
 
 __version__   = (0,1)

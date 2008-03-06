@@ -762,16 +762,16 @@ class TestLegalRef:
             testdata = codecs.open(testfile,encoding='iso-8859-1').read()
             paragraphs = re.split('\r?\n\r?\n',testdata,1)
             if len(paragraphs) == 1:
-                (test, answer) = (testdata,None)
+                (test, key) = (testdata,None)
             elif len(paragraphs) == 2:
-                (test,answer) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding='iso-8859-1').read(),1)
+                (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding='iso-8859-1').read(),1)
             else:
                 print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
                 return false
 
             testparas = re.split('\r?\n---\r?\n',test)
-            if answer:
-                answerparas = re.split('\r?\n---\r?\n',answer)
+            if key:
+                keyparas = re.split('\r?\n---\r?\n',key)
             resparas = []
 
             namedlaws = {}
@@ -779,10 +779,10 @@ class TestLegalRef:
                 if testparas[i].startswith("RESET:"): namedlaws.clear()
                 resparas.append(serialize(p.parse(testparas[i],u'http://lagen.nu/1:2#')))
 
-            res = "\n---\n".join(resparas)
-            if answer:
-                answer = "\n---\n".join(answerparas)
-                if res.strip() == answer.strip():
+            res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
+            if key:
+                key = "\n---\n".join(keyparas).replace("\r\n","\n").strip()
+                if res.strip() == key.strip():
                     result = "."
                 else:
                     result = "F"
@@ -801,7 +801,7 @@ class TestLegalRef:
                 sys.stdout.write("FAIL %s" % testfile)
                 print "----------------------------------------"
                 print "EXPECTED:"
-                print answer
+                print key
                 print "GOT:"
                 print res
                 print "----------------------------------------"
