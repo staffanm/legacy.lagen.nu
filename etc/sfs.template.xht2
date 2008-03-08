@@ -139,6 +139,7 @@
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
         <py:for each="part in stycke" py:choose="">
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div>
 	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
 	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
 	  <div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div>
@@ -231,12 +232,15 @@
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_numreradlista(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bilaga</div>
         </py:for>
       </section>
       
       <!--! main body -->
       <h property="dc:title" py:content="meta['dc:title']">Författningsrubrik</h>
+      <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
       <section>
       <py:for each="part in body" py:choose="">
 	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>

@@ -62,7 +62,7 @@ class SFSRefParser:
     global_lawabbr   = {}
     re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?)\b', re.LOCALE)
     re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?)')
-    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:\d+)#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(P(\d+)|)')
+    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
     
 
     # the first file contains all numbered laws that
@@ -674,13 +674,14 @@ class SFSRefParser:
     
     def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9"):
         if indata == "": return indata # this actually triggered a bug...
+        # print "matching %s" % baseuri
         m = self.re_urisegments.match(baseuri)
         self.baseuri_attributes = {'baseuri':m.group(1),
                                    'law':m.group(2),
-                                   'chapter':m.group(4),
-                                   'section':m.group(6),
-                                   'piece':m.group(8),
-                                   'item':m.group(10)}
+                                   'chapter':m.group(6),
+                                   'section':m.group(8),
+                                   'piece':m.group(10),
+                                   'item':m.group(12)}
         # there's one thing I can't get the EBNF grammar to do:
         # recognizing words that ends in a given substring, eg for the
         # substring 'lagen', recognize 'bokföringslagen'. Since any

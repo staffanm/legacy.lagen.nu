@@ -235,16 +235,16 @@ class SFSDownloader(LegalSource.Downloader):
                 nr = nr + 1
             else:
                 if datetime.date.today().year > year:
-                    log.info('    Är det dags att byta år?')
+                    log.info(u'    Är det dags att byta år?')
                     base_sfsnr = self._checkForSFS(datetime.date.today().year, 1)
                     if base_sfsnr:
                         year = datetime.date.today().year
                         nr = 1 # actual downloading next loop
                     else:
-                        log.info("    We're done")
+                        log.info(u'    Vi är klara')
                         done = True
                 else:
-                    log.info("    We're done")
+                    log.info(u'    Vi är klara')
                     done = True
         self._setLastSFSnr("%s:%s" % (year,nr))
                 
@@ -252,7 +252,7 @@ class SFSDownloader(LegalSource.Downloader):
         """Givet ett SFS-nummer, returnera SFS-numret för dess
         grundförfattning, eller None om det inte finns ett sådant SFS-nummer"""
         # Titta först efter grundförfattning
-        log.info("    Checking for base")
+        log.info(u'    Letar efter grundförfattning')
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
         # FIXME: consider using mechanize
         self.browser.retrieve(url,"sfs.tmp")
@@ -263,27 +263,27 @@ class SFSDownloader(LegalSource.Downloader):
             return "%s:%s" % (year,nr)             
 
         # Sen efter ändringsförfattning
-        log.info("    Base not found, checking for amendment")
+        log.info(u'    Hittade ingen grundförfattning, letar efter ändringsförfattning')
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
         self.browser.retrieve(url, "sfs.tmp")
         # maybe this is better done through mechanize?
         t = TextReader("sfs.tmp",encoding="iso-8859-1")
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
-            log.info("    Amendment not found")
+            log.info(u'    Hittade ingen ändringsförfattning')
             return None
         except IOError:
             t.seek(0)
             t.cuepast(u'<input type="hidden" name="BET" value="')
             sfsnr = t.readto("$")
-            log.info("    Amendment found (to %s)" % sfsnr)
+            log.info('    Hittade ändringsförfattning (till %s)' % sfsnr)
             return sfsnr
 
     def _downloadSingle(self, sfsnr):
         """Laddar ner senaste konsoliderade versionen av
         grundförfattningen med angivet SFS-nr. Om en tidigare version
         finns på disk, arkiveras den."""
-        log.info("    Downloading %s" % sfsnr)
+        log.info(u'    Laddar ner %s' % sfsnr)
         # enc_sfsnr = sfsnr.replace(" ", "+")
         # Div specialhack för knepiga författningar
         if sfsnr == "1723:1016+1": parts = ["1723:1016"]
@@ -300,7 +300,7 @@ class SFSDownloader(LegalSource.Downloader):
                     old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
                     uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
                     if uppdaterad_tom != old_uppdaterad_tom:
-                        log.info("        %s has changed (%s -> %s)" % (sfsnr,old_uppdaterad_tom,uppdaterad_tom))
+                        log.info(u'        %s har ändrats (%s -> %s)' % (sfsnr,old_uppdaterad_tom,uppdaterad_tom))
                         self._archive(sfst_file, sfsnr, old_uppdaterad_tom)
 
                     # replace the current file, regardless of wheter
@@ -328,7 +328,7 @@ class SFSDownloader(LegalSource.Downloader):
             two_parter_mode = True
         archive_filename = "%s/sfst/%s-%s.html" % (self.dir, SFSnrToFilename(sfsnr),
                                          SFSnrToFilename(uppdaterad_tom).replace("/","-"))
-        log.info("        Archiving %s to %s" % (filename, archive_filename))
+        log.info(u'        Arkiverar %s till %s' % (filename, archive_filename))
 
         if not os.path.exists(archive_filename):
             os.rename(filename,archive_filename)
@@ -371,7 +371,7 @@ class SFSParser(LegalSource.Parser):
     re_NumberRightPara = re.compile(r'^(\d+)\) ').match
     re_Bokstavslista   = re.compile(r'^(\w)\) ').match
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
-    re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.$').match
+    re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.?$').match
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
     re_RevokeDate       = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(\d+)-(\d+)-(\d+)/')
@@ -465,6 +465,8 @@ class SFSParser(LegalSource.Parser):
             meta = self.__makeMetadata(head,body)
             data = (meta,body)
             
+        if self.verbose:
+            print serialize(data[1])
         xhtml = self._generate_xhtml(data)
         return xhtml
 
@@ -508,7 +510,7 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Tidsbegränsad':
                             p['tidsbegransad'] = datetime.datetime.strptime(val[:10], '%Y-%m-%d')
                         else:
-                            log.warning(u"    Jag vet inte vad jag ska göra med raden '%s'" % key)
+                            log.warning(u'%s: Obekant nyckel \'%s\'' % (SFSnrToFilename(self.id), key))
                 r.append(p)
         return r
 
@@ -624,10 +626,16 @@ class SFSParser(LegalSource.Parser):
         loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
         tmpl = loader.load("etc/sfs.template.xht2")
         stream = tmpl.generate(meta=meta, body=body, **globals())
-        res = stream.render()
-
+        try:
+            res = stream.render()
+        except Exception, e:
+            log.error(u'Fel vid templaterendring (%s):%r' % (e.__class__.__name__,sys.exc_info()[1]))
+            raise e
         if 'class="warning"' in res:
-            log.warning(u"Data utelämnades ur XHT2-dokumentet för %s" % self.id)
+            start = res.index('class="warning">')
+            end = res.index('</',start+16)
+            msg = Util.normalizeSpace(res[start+16:end]).decode('utf-8')
+            log.warning(u'%s: templatefel \'%s\'' % (SFSnrToFilename(self.id), msg[:80]))
         return res
 
     def _find_authority_rec(self, label):
@@ -679,7 +687,19 @@ class SFSParser(LegalSource.Parser):
 
 
     def makeForfattning(self):
-        b = Forfattning()
+        while self.reader.peekline() == "":
+            self.reader.readline()
+            
+        # log.debug(u'Första raden \'%s\'' % self.reader.peekline())
+        (line, upphor, ikrafttrader) = self.andringsDatum(self.reader.peekline())
+        if ikrafttrader:
+            log.debug(u'Författning med ikraftträdandedatum %s' % ikrafttrader)
+            b = Forfattning(ikrafttrader=ikrafttrader)
+            self.reader.readline()
+        else:
+            log.debug(u'Författning utan ikraftträdandedatum')
+            b = Forfattning()
+            
         while not self.reader.eof():
             state_handler = self.guess_state()
             res = state_handler()
@@ -776,6 +796,7 @@ class SFSParser(LegalSource.Parser):
         paragrafnummer = self.idOfParagraf(self.reader.peekline())
         p = UpphavdParagraf(self.reader.readline(),
                             ordinal = paragrafnummer)
+        self.current_section = paragrafnummer
         log.debug(u"      Upphävd paragraf: '%s...'" % p[:30])
         return p
     
@@ -823,19 +844,13 @@ class SFSParser(LegalSource.Parser):
             if state_handler in (self.makeParagraf,
                                  self.makeUpphavdParagraf,
                                  self.makeKapitel,
-                                 self.makeUpphavdParagraf,
+                                 self.makeUpphavtKapitel,
                                  self.makeAvdelning,
                                  self.makeRubrik,
                                  self.makeOvergangsbestammelser,
                                  self.makeBilaga):
                 log.debug(u"      Paragraf %s färdig" % paragrafnummer)
                 return p
-            elif state_handler in (self.makeNumreradLista,
-                                   self.makeBokstavslista,
-                                   self.makeStrecksatslista,
-                                   self.makeTabell):
-                res = state_handler()
-                p[-1].append(res)
             elif state_handler == self.blankline:
                 state_handler() # Bara att slänga bort
             else:
@@ -851,6 +866,19 @@ class SFSParser(LegalSource.Parser):
     def makeStycke(self):
         log.debug(u"        Nytt stycke: '%s...'" % self.reader.peekline()[:30])
         s = Stycke([self.reader.readparagraph()])
+        while not self.reader.eof():
+            state_handler = self.guess_state()
+            log.debug(u"            guess_state:%s " % state_handler.__name__)
+            if state_handler in (self.makeNumreradLista,
+                                 self.makeBokstavslista,
+                                 self.makeStrecksatslista,
+                                 self.makeTabell):
+                res = state_handler()
+                s.append(res)
+            elif state_handler == self.blankline:
+                state_handler() # Bara att slänga bort
+            else:
+                return s
         return s
 
     def makeNumreradLista(self): 
@@ -929,8 +957,8 @@ class SFSParser(LegalSource.Parser):
         self.reader.readline()
         return None
 
-    #def eof(self, lines):
-    #    return(None, lines)
+    def eof(self):
+        return None
 
     def makeOvergangsbestammelser(self): # svenska: övergångsbestämmelser
         # det kan diskuteras om dessa ska ses som en del av den
@@ -947,9 +975,18 @@ class SFSParser(LegalSource.Parser):
             state_handler = self.guess_state()
             if state_handler == self.makeBilaga:
                 return obs
+                
             res = state_handler()
             if res != None:
-                obs.append(res)
+                if state_handler != self.makeOvergangsbestammelse:
+                    if hasattr(self,'id'):
+                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer" % SFSnrToFilename(self.id))
+                    else:
+                        log.warning(u"Övergångsbestämmelsen saknar SFS-nummer")
+
+                    obs.append(Overgangsbestammelse([res], sfsnr=u'0000:000'))
+                else:
+                    obs.append(res)
             
         return obs
 
@@ -984,7 +1021,7 @@ class SFSParser(LegalSource.Parser):
         return b
 
     def andringsDatum(self,line,match=False):
-        # Hittar ändringsdatumdirektiv i line. Om inte match, sök i hela strängen, annars bara från början
+        # Hittar ändringsdatumdirektiv i line. Om match, matcha från strängens början, annars sök i hela strängen.
         ikrafttrader = None
         upphor = None
         if match:
@@ -1006,21 +1043,24 @@ class SFSParser(LegalSource.Parser):
     
     def guess_state(self):
         # sys.stdout.write("        Guessing for '%s...'" % self.reader.peekline()[:30])
-        if self.reader.peekline() == "":     handler = self.blankline
-        elif self.isAvdelning():             handler = self.makeAvdelning
-        elif self.isUpphavtKapitel():        handler = self.makeUpphavtKapitel
-        elif self.isUpphavdParagraf():       handler = self.makeUpphavdParagraf
-        elif self.isKapitel():               handler = self.makeKapitel
-        elif self.isParagraf():              handler = self.makeParagraf
-        elif self.isTabell():                handler = self.makeTabell
-        elif self.isOvergangsbestammelser(): handler = self.makeOvergangsbestammelser
-        elif self.isOvergangsbestammelse():  handler = self.makeOvergangsbestammelse
-        elif self.isBilaga():                handler = self.makeBilaga
-        elif self.isNumreradLista():         handler = self.makeNumreradLista
-        elif self.isStrecksatslista():       handler = self.makeStrecksatslista
-        elif self.isBokstavslista():         handler = self.makeBokstavslista
-        elif self.isRubrik():                handler = self.makeRubrik
-        else:                                handler = self.makeStycke
+        try:
+            if self.reader.peekline() == "": handler = self.blankline
+            elif self.isAvdelning():             handler = self.makeAvdelning
+            elif self.isUpphavtKapitel():        handler = self.makeUpphavtKapitel
+            elif self.isUpphavdParagraf():       handler = self.makeUpphavdParagraf
+            elif self.isKapitel():               handler = self.makeKapitel
+            elif self.isParagraf():              handler = self.makeParagraf
+            elif self.isTabell():                handler = self.makeTabell
+            elif self.isOvergangsbestammelser(): handler = self.makeOvergangsbestammelser
+            elif self.isOvergangsbestammelse():  handler = self.makeOvergangsbestammelse
+            elif self.isBilaga():                handler = self.makeBilaga
+            elif self.isNumreradLista():         handler = self.makeNumreradLista
+            elif self.isStrecksatslista():       handler = self.makeStrecksatslista
+            elif self.isBokstavslista():         handler = self.makeBokstavslista
+            elif self.isRubrik():                handler = self.makeRubrik
+            else:                                handler = self.makeStycke
+        except IOError:
+            handler=self.eof
         # sys.stdout.write("%r\n" % handler)
         return handler
 
@@ -1378,12 +1418,12 @@ class SFSParser(LegalSource.Parser):
         def makeTabellcell(text):
             # Avavstavningsalgoritmen lämnar lite i övrigt att önska
             return Tabellcell([text.replace("- ", "").strip()])
-        cols = [u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än fem kolumner
+        cols = [u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än fem kolumner
         if tabstops:
             statictabstops = True # Använd de tabbstoppositioner vi fick förra raden
         else:
             statictabstops = False # Bygg nya tabbstoppositioner från scratch
-            tabstops = [0,0,0,0,0]
+            tabstops = [0,0,0,0,0,0,0]
         lines = p.split(self.reader.linesep)
         numlines = len([x for x in lines if x])
         potentialrows = len([x for x in lines if x and (x[0].isupper() or x[0].isdigit())])
@@ -1546,7 +1586,7 @@ class SFSManager(LegalSource.Manager):
             if basefile.endswith('_A') or basefile.endswith('_B'):
                 basefile = basefile[:-2]
             basefiles.add(basefile)
-        for basefile in sorted(basefiles):
+        for basefile in sorted(basefiles,Util.numcmp,reverse=True):
             method(basefile)
   
     def __resolveFragment(self,
@@ -1640,20 +1680,19 @@ class SFSManager(LegalSource.Manager):
             # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
             p = SFSParser()
             p.verbose = verbose
-            p.references.verbose = verbose
+            # p.references.verbose = verbose
             if not verbose:
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
             parsed = p.Parse(basefile,files)
-            
             Util.mkdir(os.path.dirname(filename))
             out = file(filename, "w")
             out.write(parsed)
             out.close()
             Util.indentXmlFile(filename)
-            log.info('%s: OK (%.3f sec)', basefile,time()-start)
+            log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except Exception,e :
-            log.error(u'%s' % (basefile), exc_info=True)
+            log.error(u'%s: %s' % (basefile,sys.exc_info()[0].__name__), exc_info=True)
                      
     def ParseAll(self):
         self.__doAll('downloaded/sfst','html',self.Parse)
@@ -1700,12 +1739,12 @@ class SFSManager(LegalSource.Manager):
                 sys.stdout.write("OK %s" % testfile)
                 return True
             elif result == 'F':
-                sys.stdout.write("FAIL %s" % testfile)
+                sys.stdout.write("FAIL %s\n" % testfile)
                 sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
                 return False
             elif result == 'E':
                 tb = sys.exc_info()[2]
-                formatted_tb = traceback.format_tb(sys.exc_info()[2])
+                formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
                 print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
                        (sys.exc_info()[0],
                         sys.exc_info()[1],
@@ -1738,7 +1777,7 @@ class SFSManager(LegalSource.Manager):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
         sanitized_sfsnr = basefile.replace(' ','.')
-        log.info("Transforming %s > %s" % (infile,outfile))
+        log.info(u'Transformerar %s > %s' % (infile,outfile))
         Util.mkdir(os.path.dirname(outfile))
         Util.transform("xsl/sfs.xsl",
                        infile,

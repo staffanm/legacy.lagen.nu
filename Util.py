@@ -111,7 +111,7 @@ def indentXmlFile(filename):
     #
     # Also, tidy will hang (due to excessive stderr messages?) for 1992:1226 -- we should
     # try to get runcmd handle this
-    (ret,stdout,stderr) = runcmd("tidy -xml -raw -i -m %s" % (filename))
+    (ret,stdout,stderr) = runcmd("tidy -xml -raw -i -m -w 80 %s" % (filename))
     if (ret != 0):
         raise TransformError(stderr)
     # This fails occasionally - why?
