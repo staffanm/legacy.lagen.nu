@@ -1680,7 +1680,7 @@ class SFSManager(LegalSource.Manager):
             else:
                 keylines = []
             from difflib import Differ
-            difflines = list(Differ().compare(testlines,keylines))
+            difflines = list(Differ().compare(keylines,testlines))
             diffedlines = [x for x in difflines if x[0] != ' ']
 
             if len(diffedlines) > 0:

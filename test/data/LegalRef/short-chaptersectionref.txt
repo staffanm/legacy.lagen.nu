@@ -1,5 +1,9 @@
 JB 22:2. RB 5:1 2 st.
 
-<link law="1970:994" chapter="22" section="2">JB 22:2</link>. <link law="1942:740" chapter="5" section="1" piece="2">RB 5:1 2 st.</link>
+<list>
+  <Link uri="http://lagen.nu/1970:994#K22P2">JB 22:2</Link>
+  <unicode>. </unicode>
+  <Link uri="http://lagen.nu/1942:740#K5P1S2">RB 5:1 2 st.</Link>
+</list>
 
 

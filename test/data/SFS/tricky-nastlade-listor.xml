@@ -20,7 +20,7 @@ tjänster som avses i </unicode>
 den som förvärvar tjänsten,</unicode>
         </Listelement><Listelement id="P2S1N3" ordinal="3">
           <unicode>3. för omsättning som anges i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K5P1S1N1">1 § första stycket 1</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P1S1N1">1 § första stycket 1</Link>
           <unicode> av sådana
 varor som avses i </unicode>
           <Link uri="http://lagen.nu/sfs/1234:567#K5">5 kap.</Link>
@@ -61,14 +61,14 @@ enligt </unicode>
           <unicode>: den som förvärvar varan,</unicode>
         </Listelement><Listelement id="P2S1N4b" ordinal="4b">
           <unicode>4 b. för omsättning som anges i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K3P1S1N1">1 § första stycket 1</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P1S1N1">1 § första stycket 1</Link>
           <unicode> av sådana
 tjänster som avses i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K3S2">andra stycket</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P2S2">andra stycket</Link>
           <unicode>, om skattskyldighet inte
 föreligger enligt </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K3S1">första stycket</Link>
-          <unicode> 2 i denna paragraf: den som
+          <Link uri="http://lagen.nu/sfs/1234:567#P2S1N2">första stycket 2</Link>
+          <unicode> i denna paragraf: den som
 förvärvar tjänsten, om denne är</unicode>
           <Strecksatslista>
             <Listelement id="P2S1N4bN1" ordinal="1">
@@ -81,11 +81,15 @@ som avses i första strecksatsen sådana tjänster,</unicode>
           </Strecksatslista>
         </Listelement><Listelement id="P2S1N4c" ordinal="4c">
           <unicode>4 c. för annan omsättning som anges i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K3P1S1N1">1 § första stycket 1</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P1S1N1">1 § första stycket 1</Link>
           <unicode> än
 som avses i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K3S1">första stycket</Link>
-          <unicode> 2, 3 eller 4 b i denna paragraf, i </unicode>
+          <Link uri="http://lagen.nu/sfs/1234:567#P2S1N2">första stycket 2</Link>
+          <unicode>, </unicode>
+          <Link uri="http://lagen.nu/sfs/1234:567#P2S1N3">3</Link>
+          <unicode> eller </unicode>
+          <Link uri="http://lagen.nu/sfs/1234:567#P2S1N4b">4 b</Link>
+          <unicode> i denna paragraf, i </unicode>
           <Link uri="http://lagen.nu/sfs/1234:567#K3">3
 kap.</Link>
           <unicode> </unicode>
@@ -93,9 +97,7 @@ kap.</Link>
           <unicode> och </unicode>
           <Link uri="http://lagen.nu/sfs/1234:567#K3P3S3">tredje styckena</Link>
           <unicode>, i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K5P6">5 kap. 6 §</Link>
-          <unicode> </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K5N1">1</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#K5P6S1N1">5 kap. 6 § 1</Link>
           <unicode> eller i </unicode>
           <Link uri="http://lagen.nu/sfs/1234:567#K7P1S3N11">7
 kap. 1 § tredje stycket 11</Link>
@@ -103,11 +105,11 @@ kap. 1 § tredje stycket 11</Link>
 tjänsten är en utländsk företagare och förvärvaren är
 registrerad till mervärdesskatt här: den som förvärvar varan
 eller tjänsten, om inte annat följer av </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K5P2d">2 d §</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P2d">2 d §</Link>
           <unicode>,</unicode>
         </Listelement><Listelement id="P2S1N5" ordinal="5">
           <unicode>5. för sådant förvärv som anges i </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#K5P1S1N2">1 § första stycket 2</Link>
+          <Link uri="http://lagen.nu/sfs/1234:567#P1S1N2">1 § första stycket 2</Link>
           <unicode>: den som
 förvärvar varan, och</unicode>
         </Listelement><Listelement id="P2S1N6" ordinal="6">

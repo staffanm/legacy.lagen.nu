@@ -166,6 +166,11 @@ class SFSRefParser:
         # abbr = unicode(abbr,SP_CHARSET).lower().encode(SP_CHARSET)
         return self.global_lawabbr[abbr] 
 
+    def clear_state(self):
+        self.currentlaw     = None
+        self.currentchapter = None
+        self.currentsection = None
+        self.currentpiece   = None
     
     def format_attributes(self,attributes):
         piecemappings = {'första' :'1',
@@ -280,7 +285,7 @@ class SFSRefParser:
                 #        current_part_tag = 'lawrefrefid' # not my cleanest..
                     
                 # strip away ending "refid"
-                if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %r" % (current_part_tag[:-5],part.text.strip())
+                # if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %r" % (current_part_tag[:-5],part.text.strip())
                 d[current_part_tag[:-5]] = part.text.strip()
                 if self.verbose: print ". "*self.depth+"find_attributes: d is now %s" % d
                 
@@ -483,6 +488,15 @@ class SFSRefParser:
             print "DEBUG: wow, got a AttributeError in format_SectionItemRefs, that can't be good"
         return res
 
+    def format_PieceItemRefs(self,root):
+        self.currentpiece = root.nodes[0].nodes[0].text.strip()
+        res = [self.format_custom_link(self.find_attributes([root.nodes[2].nodes[0]]),
+                                       "%s %s" % (root.nodes[0].text, root.nodes[2].nodes[0].text))]
+        for node in root.nodes[2].nodes[1:]:
+            res.extend(self.formatter_dispatch(node))
+        
+        self.currentpiece = None
+        return res
 
     def format_PieceRef(self,root):
         assert(root.tag == 'PieceRef')
@@ -511,6 +525,9 @@ class SFSRefParser:
     def format_ChapterSectionPieceRef(self,root):
         return [self.format_generic_link(root)]
 
+    def format_ChapterSectionItemRef(self,root):
+        return [self.format_generic_link(root)]
+
     def format_ChapterSectionPieceItemRef(self,root):
         return [self.format_generic_link(root)]
         
@@ -533,6 +550,9 @@ class SFSRefParser:
         return [self.format_generic_link(root)]
 
     def format_SectionItemRef(self,root):
+        return [self.format_generic_link(root)]
+
+    def format_PieceItemRef(self,root):
         return [self.format_generic_link(root)]
 
     def format_AbbrevLawNormalRef(self,root):
@@ -696,9 +716,10 @@ class SFSRefParser:
             if part.tag != 'plain' and self.verbose:
                 sys.stdout.write(self.prettyprint(part))
             if part.tag in ['ref', 'refs', 'preprefs', 'shortref']:
+                self.clear_state()
                 result.extend(self.formatter_dispatch(part))
             else:
-                assert(part.tag == 'plain')
+                assert part.tag == 'plain',"Tag is %s" % part.tag
                 result.append(part.text.decode(SP_CHARSET))
                 
             # clear state
@@ -707,7 +728,8 @@ class SFSRefParser:
 
 
         if taglist[-1] != len(fixedindata):
-            raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(self.indata), self.indata[(taglist[-1]-8):taglist[-1]+8])
+            print u"Problem (%d:%d) with %s / %s" % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata)
+            raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
 
         normres = []
         for i in range(len(result)):
@@ -823,7 +845,7 @@ class TestLegalRef:
             elif result == 'F':
                 sys.stdout.write("FAIL %s" % testfile)
                 from difflib import Differ
-                difflines = list(Differ().compare(res.split('\n'),key.split('\n')))
+                difflines = list(Differ().compare(key.split('\n'),res.split('\n')))
                 print "----------------------------------------"
                 sys.stdout.write(u'\n'.join(difflines))
                 print "----------------------------------------"
@@ -845,7 +867,7 @@ class TestLegalRef:
         
     def ParseTestString(self,s, verbose=True):
         p = SFSRefParser(verbose)
-        print p.parse(s, 'http://lagen.nu/1:2#')
+        print serialize(p.parse(s, u'http://lagen.nu/1:2#'))
 
 #    def ParseTestAll(self,quiet=False):
 #        res = []
@@ -886,12 +908,18 @@ if __name__ == "__main__":
             defaultencoding = sys.stdout.encoding
         else:
             defaultencoding = locale.getpreferredencoding()
-    # print "setting sys.stdout to a '%s' writer" % defaultencoding
     sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
     sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
-
-    # 47/55 innan jag började ha sönder saker, alla implementerade tester funkar
+    # Resultat för ParseTestAll just nu
+    #
+    # ........NN.........................................N.N.......F..
+    # 59/64
+    # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
+    # test\data\LegalRef\sfs-basic-kungorelse.txt
+    # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
+    # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
+    # test\data\LegalRef\sfs-tricky-vvfs.txt
     TestLegalRef.__bases__ += (DispatchMixin,)
     t = TestLegalRef()
     t.Dispatch(sys.argv)

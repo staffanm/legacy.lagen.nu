@@ -1,4 +1,6 @@
 15 § AvtL
 
-<link law="1915:218" section="15">15 § AvtL</link>
+<list>
+  <Link uri="http://lagen.nu/1915:218#P15">15 § AvtL</Link>
+</list>
 

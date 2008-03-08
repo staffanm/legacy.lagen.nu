@@ -170,8 +170,21 @@ def uniqueList(*lists):
 def runcmd(cmdline):
     # print "runcmd: %s" % cmdline
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    stdout = p.stdout.read()
-    stderr = p.stderr.read()
+    chunk = p.stderr.read(8192)
+    stderr = ""
+    while not chunk == '':
+        #print "reading stderr chunk"
+        stderr += chunk
+        chunk = p.stderr.read(8192)
+
+    stdout = ""
+    chunk = p.stderr.read(8192)
+    while not chunk == '':
+        #print "reading stdout chunk"
+        stderr += chunk
+        chunk = p.stderr.read(8192)
+    #stderr = p.stderr.read()
+    #stdout = p.stdout.read()
     ret = p.wait()
     return (ret,stdout,stderr)
 
@@ -208,3 +221,6 @@ def elementText(element):
         [e for e in element.recursiveChildGenerator() 
          if (isinstance(e,unicode) and 
              not isinstance(e,BeautifulSoup.Comment))]))
+
+#print "indenting"
+#indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')
