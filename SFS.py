@@ -48,12 +48,30 @@ log = logging.getLogger(__moduledir__)
 # lagrumshänvisningar i den löpande texten, som uttrycks som
 # Link-objekt mellan de vanliga unicodetextobjekten, dels då de kan
 # innehålla en punkt- eller nummerlista.
+#
+# Alla klasser ärver från antingen CompoundStructure (som är en list
+# med lite extraegenskaper), UnicodeStructure (som är en unicode med
+# lite extraegenskaper) eller MapStructure (som är ett dict med lite
+# extraegenskaper).
+#
+# De kan även ärva från TemporalStructure om det är ett objekt som kan
+# upphävas eller träda ikraft (exv paragrafer och rubriker, men inte
+# enskilda stycken) och/eller OrdinalStructure om det är ett objekt
+# som har nån sorts löpnummer, dvs kan sorteras på ett meningsfullt
+# sätt (exv kapitel och paragrafer, men inte rubriker).
 class Forfattning(CompoundStructure,TemporalStructure):
+    """Grundklass för en konsoliderad författningstext. Metadatan
+    (SFS-numret, ansvarigt departement, 'uppdaterat t.o.m.' m.fl. fält
+    lagras inte här, utan i en separat Forfattningsinfo-instans"""
     pass
 
 # Rubrike är en av de få byggstenarna som faktiskt inte kan innehålla
-# något annat (det förekommer "aldrig" en hänvisning i en rubriktext).
+# något annat (det förekommer "aldrig" en hänvisning i en
+# rubriktext). Den ärver alltså från UnicodeStructure, inte
+# CompoundStructure.
 class Rubrik(UnicodeStructure,TemporalStructure):
+    """En rubrik av något slag - kan vara en huvud- eller underrubrik
+    i löptexten, en kapitelrubrik, eller något annat"""
     fragment_label = "R"
     def __init__(self, *args, **kwargs):
         self.id = kwargs['id'] if 'id' in kwargs else None
@@ -1469,8 +1487,9 @@ class SFSParser(LegalSource.Parser):
                         lasttab = charcount - 1
 
                         # för hantering av tomma vänsterceller
-                        if linecount > 1 or statictabstops: 
+                        if linecount > 1 or statictabstops:
                             if tabstops[colcount+1]+7 < charcount: # tillåt en ojämnhet om max sju tecken
+
                                 self.trace['tabell'].debug(u'charcount shoud be max %s, is %s - adjusting to next tabstop (%s)' % (tabstops[colcount+1] + 5, charcount,  tabstops[colcount+2]))
                                 colcount += 1
                         colcount += 1 
@@ -1691,8 +1710,18 @@ class SFSManager(LegalSource.Manager):
             out.close()
             Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
-        except Exception,e :
-            log.error(u'%s: %s' % (basefile,sys.exc_info()[0].__name__), exc_info=True)
+        except Exception:
+            # Vi hanterar traceback-loggning själva eftersom
+            # loggging-modulen inte klarar av när källkoden
+            # (iso-8859-1-kodad) innehåller svenska tecken
+            formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
+            log.error(u'%s: %s:\nTraceback (most recent call last):\n%s%s: %s' %
+                      (basefile,
+                       sys.exc_info()[0].__name__,
+                       u''.join(formatted_tb),
+                       sys.exc_info()[0].__name__,
+                       sys.exc_info()[1]))
+            # raise
                      
     def ParseAll(self):
         self.__doAll('downloaded/sfst','html',self.Parse)
@@ -1743,12 +1772,18 @@ class SFSManager(LegalSource.Manager):
                 sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
                 return False
             elif result == 'E':
-                tb = sys.exc_info()[2]
+                # Traceback-informationen i sys.exc_info()[2] är
+                # str-objekt med samma teckenkodning som
+                # källkodsfilen. Vi omvandlar till unicode innan
+                # utskrift eftersom det annars blir Dåligt om svenska
+                # tecken förekommer i källkodsraderna i tracebacken.
                 formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-                print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
-                       (sys.exc_info()[0],
-                        sys.exc_info()[1],
-                        u''.join(formatted_tb)))
+                print(u'%s: %s:\nTraceback (most recent call last):\n%s%s: %s' %
+                      (basefile,
+                       sys.exc_info()[0].__name__,
+                       u''.join(formatted_tb),
+                       sys.exc_info()[0].__name__,
+                       sys.exc_info()[1]))
 
     def ParseTestAll(self):
         results = []
