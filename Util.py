@@ -136,7 +136,7 @@ def tidyHtmlFile(filename):
     os.rename("tmp.xml",filename)
 
 def transform(stylesheet,infile,outfile,parameters={},validate=True):
-    """Does a XSLT transform with the selected stylesheet. Afterwards, tidies the resulting HTML tree and validates it"""
+    """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
     param_str = ""
     for p in parameters.keys():
         # this double style quoting is needed for lawlist.xsl when
@@ -221,6 +221,43 @@ def elementText(element):
         [e for e in element.recursiveChildGenerator() 
          if (isinstance(e,unicode) and 
              not isinstance(e,BeautifulSoup.Comment))]))
+
+def word_to_html(indoc,outhtml):
+    indoc = os.path.join(os.getcwd(),indoc.replace("/","\\"))
+    outhtml = os.path.join(os.getcwd(),outhtml.replace("/","\\"))
+    from win32com.client import Dispatch
+    import pywintypes
+    display_indoc = indoc[len(os.getcwd()):].replace("\\","/")
+    display_outhtml = outhtml[len(os.getcwd()):].replace("\\","/")
+    mkdir_for(outhtml)
+    if not os.path.exists(indoc):
+        print "indoc %s does not exists (seriously)" % indoc
+    if os.path.exists(outhtml):
+        # if self.verbose: print "local file %s exists, not doing Word->HTML conversion" % display_outhtml
+        return
+    #if os.path.exists(outhtml + ".err.log"):
+    #    print "Word->HTML conversion for local file %s has failed, not re-trying"% display_outhtml
+    #    return
+    wordapp = Dispatch("Word.Application")
+    if wordapp == None:
+        print "Couldn't start word"
+        return
+    # print "word_to_html: %s to %s" % (indoc,outhtml)
+    try:
+        wordapp.Documents.Open(indoc)
+        wordapp.Visible = False
+        doc = wordapp.ActiveDocument
+        doc.SaveAs(outhtml, 10) # 10 = filtered HTML output
+        doc.Close()
+        doc = None
+        wordapp.Quit
+    except pywintypes.com_error, e:
+        print "Warning: could not convert %s" % indoc
+        print e[2][2]
+        errlog = open(outhtml+".err.log","w")
+        errlog.write("%s:\n%s" % (indoc,e))
+
+
 
 #print "indenting"
 #indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')

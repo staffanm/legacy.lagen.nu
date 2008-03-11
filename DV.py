@@ -6,27 +6,124 @@ Modulen hanterar omvandlande av domslutsdetaljer och -referat till XML
 """
 # system libraries
 import sys, os, re
-#import unittest
 import pprint
 import types
 import codecs
-from cStringIO import StringIO
 from time import time
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
+import logging
+import zipfile
 
 # 3rdparty libs
-import BeautifulSoup
+from genshi.template import TemplateLoader
+from configobj import ConfigObj
+from mechanize import Browser, LinkNotFoundError
+from rdflib.Graph import Graph
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
 import LegalSource
-from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError
+from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError,Link
 import Util
 from DispatchMixin import DispatchMixin
+from DataObjects import UnicodeStructure, CompoundStructure, \
+     MapStructure, TemporalStructure, OrdinalStructure, serialize
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
-__shortdesc__ = u"Domslut (detaljer och referat)"
+__shortdesc__ = u"Domslut (referat)"
 __moduledir__ = "dv"
+log = logging.getLogger(__moduledir__)
+
+# NB: You can't use this class unless you have an account on
+# domstolsverkets FTP-server, and unfortunately I'm not at liberty to
+# give mine out in the source code...
+class DVDownloader(LegalSource.Downloader):
+    def __init__(self,baseDir="data"):
+        self.dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
+        if not os.path.exists(self.dir): 
+            Util.mkdir(self.dir)
+        inifile = self.dir + os.path.sep + __moduledir__ + ".ini"
+        log.info(u'Laddar inställningar från %s' % inifile)
+        self.config = ConfigObj(inifile)
+        # Why does this say "super() argument 1 must be type, not classobj"?
+        # super(DVDownloader,self).__init__()
+        self.browser = Browser()
+
+    def DownloadAll(self):
+        self.download(recurse=True)
+
+    def DownloadNew(self):
+        self.download(recurse=False)
+        
+    def download(self,dirname='',recurse=False):
+        # Download using ncftpls/ncftpget, since we can't get python:s
+        # ftplib to play nice w/ domstolsverkets ftp server
+        url = 'ftp://ftp.dom.se/%s' % dirname
+        log.info(u'Listar innehåll i %s' % url)
+        out = os.popen("ncftpls -m -u %s -p %s %s" % (self.config['ftp_user'], self.config['ftp_pass'], url))
+        lines = out.readlines()
+        for line in lines:
+            parts = line.split(";")
+            filename = parts[-1].strip()
+            if line.startswith('type=dir') and recurse:
+                self.download(filename,recurse)
+            elif line.startswith('type=file'):
+                if os.path.exists(os.path.sep.join([self.dir,dirname,filename])):
+                    pass 
+                else:
+                    if dirname:
+                        fullname = '%s/%s' % (dirname,filename)
+                        localdir = self.dir + os.path.sep + dirname
+                        Util.mkdir(localdir)
+                    else:
+                        fullname = filename
+                        localdir = self.dir
+                        
+                    log.info(u'Hämtar %s till %s' % (filename, localdir))
+                    os.system("ncftpget -E -u %s -p %s ftp.dom.se %s %s" %
+                              (self.config['ftp_user'], self.config['ftp_pass'], localdir, fullname))
+                    self.process_zipfile(localdir + os.path.sep + filename)
+
+    re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
+    def process_zipfile(self, zipfilename):
+        removed = replaced = created = untouched = 0
+        file = zipfile.ZipFile(zipfilename, "r")
+        for name in file.namelist():
+            # Namnen i zipfilen använder codepage 437 - retro!
+            uname = name.decode('cp437')
+            m = self.re_malnr.match(uname)
+            if m:
+                (court, malnr, referatnr) = (m.group(1), m.group(2), m.group(3))
+                if referatnr:
+                    outfilename = os.path.sep.join([self.dir, 'unzipped', court, "%s_%s.doc" % (malnr,referatnr)])
+                else:
+                    outfilename = os.path.sep.join([self.dir, 'unzipped', court, "%s.doc" % (malnr)])
+
+                if "_notis_" in name:
+                    continue
+                elif "BORT" in name:
+                    log.info(u'Raderar befintligt referat %s %s' % (court,malnr))
+                    os.unlink(outfilename)
+                    removed += 1
+                else:
+                    if "BYTUT" in name:
+                        replaced += 1
+                    else:
+                        if os.path.exists(outfilename):
+                            untouched += 1
+                            continue
+                        else:
+                            created += 1
+                    data = file.read(name)
+                    Util.ensureDir(outfilename)
+                    # sys.stdout.write(".")
+                    outfile = open(outfilename,"wb")
+                    outfile.write(data)
+                    outfile.close()
+            else:
+                log.warning(u'Kunde inte tolka filnamnet %s i %s' % (name, zipfilename))
+        log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
 
 
 class DVParser(LegalSource.Parser):
@@ -39,11 +136,12 @@ class DVParser(LegalSource.Parser):
             #Util.mkdir(self.dir)
         #self.files = files
 
-    def Parse(self,id,files):
+    def Parse(self,id,docfile):
         import codecs
         self.id = id
-        self.files = files
-        soup = self.LoadDoc(self.files['detalj'][0])
+        htmlfile = docfile.replace('downloaded','intermediate').replace('.doc','html')
+        Util.word_to_html(docfile,htmlfile)
+        soup = self.LoadDoc(htmlfile)
         data = {}
         for row in soup.first('td', 'sokmenyBkgrMiddle').table:
             key = val = ""
@@ -154,13 +252,13 @@ class DVParser(LegalSource.Parser):
                 node.text = p
             
         tree = ET.ElementTree(root)
-        buf = StringIO()
+        # buf = StringIO()
         
         #f = codecs.getwriter('iso-8859-1')(buf)
         # tree.write doesn't create initial '<?xml version=1.0 encoding='...'?>' so we add it ourselves to avoid problems with xmllint
-        buf.write('<?xml version="1.0" encoding="utf-8"?>')        
-        tree.write(buf,'utf-8')
-        return buf.getvalue()
+        #buf.write('<?xml version="1.0" encoding="utf-8"?>')        
+        #tree.write(buf,'utf-8')
+        #return buf.getvalue()
 
     def __createUrn(self,data):
         domstolar = {
@@ -314,6 +412,14 @@ class DVManager(LegalSource.Manager):
         self.__doAllParsed(self.Generate)
         
 
+    def DownloadAll(self):
+        sd = DVDownloader(self.baseDir)
+        sd.DownloadAll()
+
+    def DownloadNew(self):
+        sd = DVDownloader(self.baseDir)
+        sd.DownloadNew()
+
     def IndexAll(self):
         # print "DV: IndexAll temporarily disabled"
         # return
@@ -382,11 +488,11 @@ class DVManager(LegalSource.Manager):
         sys.stdout.write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
 
 if __name__ == "__main__":
-    if not '__file__' in dir():
-        print "probably running from within emacs"
-        sys.argv = ['DV.py','Parse', '42']
-    
+    #if not '__file__' in dir():
+    #    print "probably running from within emacs"
+    #    sys.argv = ['DV.py','Parse', '42']
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
     DVManager.__bases__ += (DispatchMixin,)
     mgr = DVManager("testdata", __moduledir__)
-    # print "argv: %r" % sys.argv   
     mgr.Dispatch(sys.argv)

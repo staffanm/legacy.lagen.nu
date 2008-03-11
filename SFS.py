@@ -9,7 +9,7 @@ rättsdatabaser.
 # from cStringIO import StringIO
 # import pickle
 import sys, os, re
-import datetime
+from datetime import datetime
 import codecs
 import htmlentitydefs
 import traceback
@@ -27,6 +27,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
 import LegalSource 
+from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError,Link
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
@@ -34,7 +35,6 @@ from TextReader import TextReader
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, TemporalStructure, OrdinalStructure, serialize
 
-from LegalRef import SFSRefParser, ParseError, Link
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -206,7 +206,7 @@ class SFSDownloader(LegalSource.Downloader):
     
     def DownloadAll(self):
         start = 1600
-        end = datetime.date.today().year
+        end = datetime.today().year
         self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
 
         pagecnt = 1
@@ -252,11 +252,11 @@ class SFSDownloader(LegalSource.Downloader):
                 self._downloadSingle(base_sfsnr)
                 nr = nr + 1
             else:
-                if datetime.date.today().year > year:
+                if datetime.today().year > year:
                     log.info(u'    Är det dags att byta år?')
-                    base_sfsnr = self._checkForSFS(datetime.date.today().year, 1)
+                    base_sfsnr = self._checkForSFS(datetime.today().year, 1)
                     if base_sfsnr:
-                        year = datetime.date.today().year
+                        year = datetime.today().year
                         nr = 1 # actual downloading next loop
                     else:
                         log.info(u'    Vi är klara')
@@ -484,7 +484,9 @@ class SFSParser(LegalSource.Parser):
             data = (meta,body)
             
         if self.verbose:
-            print serialize(data[1])
+            # print serialize(data[1])
+            print serialize(registry)
+            
         xhtml = self._generate_xhtml(data)
         return xhtml
 
@@ -514,7 +516,7 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Observera':
                             p['observera'] = val
                         elif key == u'Ikraft':
-                            p['ikraft'] = datetime.datetime.strptime(val[:10], '%Y-%m-%d')
+                            p['ikraft'] = datetime.strptime(val[:10], '%Y-%m-%d')
                             p['overgangsbestammelse'] = (val.find(u'\xf6verg.best.') != -1)
                         elif key == u'Omfattning':
                             # FIXME: run this through LegalRef
@@ -526,7 +528,7 @@ class SFSParser(LegalSource.Parser):
                             # FIXME: run this through LegalRef
                             p['celexnr'] = val
                         elif key == u'Tidsbegränsad':
-                            p['tidsbegransad'] = datetime.datetime.strptime(val[:10], '%Y-%m-%d')
+                            p['tidsbegransad'] = datetime.strptime(val[:10], '%Y-%m-%d')
                         else:
                             log.warning(u'%s: Obekant nyckel \'%s\'' % (SFSnrToFilename(self.id), key))
                 r.append(p)
@@ -762,18 +764,12 @@ class SFSParser(LegalSource.Parser):
         para = self.reader.readparagraph()
         (line, upphor, ikrafttrader) = self.andringsDatum(para)
         
-        today = datetime.date.today()
         kwargs = {'rubrik':  line,
                   'ordinal': kapitelnummer}
         if upphor: kwargs['upphor'] = upphor
         if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
         k = Kapitel(**kwargs)
         self.current_headline_level = 0
-        
-        if upphor and upphor < today:
-            k.inaktuell = True
-        elif ikrafttrader and ikrafttrader > today():
-            k.inaktuell = True
         
         log.debug(u"    Nytt kapitel: '%s...'" % line[:30])
         
@@ -842,12 +838,6 @@ class SFSParser(LegalSource.Parser):
         if upphor: kwargs['upphor'] = upphor
         if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
 
-        today = datetime.date.today()
-        if upphor and upphor < today:
-            kwargs['inaktuell'] = True
-        elif ikrafttrader and ikrafttrader > today:
-            kwargs['inaktuell'] = True
-            
         if momentnummer:
             kwargs['moment'] = momentnummer
 
@@ -1800,6 +1790,23 @@ class SFSManager(LegalSource.Manager):
         if failures:
             print "\n".join(failures)
 
+#    def FullTest(self,testname):
+#        p = Parser()
+#        parsed = Parser.Parse({'sfst':os.path.sep.join('test','data','SFS-full')+testname+"-sfst.html",
+#                               'sfsr':os.path.sep.join('test','data','SFS-full')+testname+"-sfsr.html"})
+#        xht2file = "tmp.xht2"
+#        xhtmlfile = "tmp.html"
+#        out = file("tmp.xht2", "w")
+#        out.write(parsed)
+#        out.close()
+#        
+#        Util.transform("xsl/sfs.xsl",
+#                       xht2file,
+#                       xhtmlfile,
+#                       {'lawid': '1960:728',
+#                        'today':datetime.today().strftime("%Y-%m-%d")},
+#                       validate=False)
+
     def IndexAll(self):
         # print "SFS: IndexAll temporarily disabled"
         # return
@@ -1818,7 +1825,7 @@ class SFSManager(LegalSource.Manager):
                        infile,
                        outfile,
                        {'lawid': sanitized_sfsnr,
-                        'today':datetime.date.today().strftime("%Y-%m-%d")},
+                        'today':datetime.today().strftime("%Y-%m-%d")},
                        validate=False)
         #ad = AnnotatedDoc(outfile)
         #ad.Prepare()

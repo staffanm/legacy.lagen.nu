@@ -3,6 +3,7 @@
 
 import xml.etree.cElementTree as ET
 import sys
+from datetime import datetime
 
 class AbstractStructure(object):
 
@@ -178,7 +179,8 @@ def __serializeNode(node):
             v.append(__serializeNode(node[x]))
             e.append(v)
     else:
-        raise TypeError("Can't serialize %r (%r)" % (type(node), node))
+        e.text = repr(node)
+        # raise TypeError("Can't serialize %r (%r)" % (type(node), node))
     return e
 
 # in-place prettyprint formatter
