@@ -1,10 +1,10 @@
 <Forfattning>
-  <Paragraf id="P4" inaktuell="True" ordinal="4" upphor="datetime.date(2007, 4, 1)">
+  <Paragraf id="P4" ordinal="4" upphor="datetime.datetime(2007, 4, 1, 0, 0)">
     <Stycke id="P4S1">
       <unicode>Här är den gamla lydelsen.</unicode>
     </Stycke>
   </Paragraf>
-  <Paragraf id="P4" ikrafttrader="datetime.date(2007, 4, 1)" ordinal="4">
+  <Paragraf id="P4" ikrafttrader="datetime.datetime(2007, 4, 1, 0, 0)" ordinal="4">
     <Stycke id="P4S1">
       <unicode>Här är den nya lydelsen.</unicode>
     </Stycke>

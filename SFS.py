@@ -1037,14 +1037,14 @@ class SFSParser(LegalSource.Parser):
         else:
             m = self.re_RevokeDate.search(line)
         if m:
-            upphor = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            upphor = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
             line = self.re_RevokeDate.sub("", line)
         if match:
             m = self.re_EntryIntoForceDate.match(line)
         else:
             m = self.re_EntryIntoForceDate.search(line)
         if m:
-            ikrafttrader = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            ikrafttrader = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
             line = self.re_EntryIntoForceDate.sub("", line) 
         return (line, upphor, ikrafttrader)
 
@@ -1769,7 +1769,7 @@ class SFSManager(LegalSource.Manager):
                 # tecken förekommer i källkodsraderna i tracebacken.
                 formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
                 print(u'%s: %s:\nTraceback (most recent call last):\n%s%s: %s' %
-                      (basefile,
+                      (testfile,
                        sys.exc_info()[0].__name__,
                        u''.join(formatted_tb),
                        sys.exc_info()[0].__name__,

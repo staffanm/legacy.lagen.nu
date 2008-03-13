@@ -1,5 +1,5 @@
 <Forfattning>
-  <Paragraf id="P9" inaktuell="True" ordinal="9" upphor="datetime.date(2008, 2, 15)">
+  <Paragraf id="P9" ordinal="9" upphor="datetime.datetime(2008, 2, 15, 0, 0)">
     <Stycke id="P9S1">
       <unicode>A Bestämmelser om betydelsen av följande begrepp, termer och
 uttryck finns i nedan angivna paragrafer:</unicode>
@@ -22,7 +22,7 @@ uttryck finns i nedan angivna paragrafer:</unicode>
       </Tabell>
     </Stycke>
   </Paragraf>
-  <Paragraf id="P9" ikrafttrader="datetime.date(2008, 2, 15)" ordinal="9">
+  <Paragraf id="P9" ikrafttrader="datetime.datetime(2008, 2, 15, 0, 0)" ordinal="9">
     <Stycke id="P9S1">
       <unicode>B Bestämmelser om betydelsen av följande begrepp, termer och
 uttryck finns i nedan angivna paragrafer:</unicode>

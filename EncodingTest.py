@@ -30,8 +30,8 @@ if __name__ == "__main__":
     sys.stdout.write(u"sys.stdout.encoding:        %s\n" % sys.stdout.encoding)
 
     sys.stdout.write(u"repr(teststring):           %r\n" % s)
-    sys.stdout.write(u"teststring.encode('cp850'): %s\n" % s.encode('cp850'))
-    sys.stdout.write(u"teststring:                 %s\n" % s)
+    #sys.stdout.write(u"teststring.encode('cp850'): %s\n" % s.encode('cp850'))
+    #sys.stdout.write(u"teststring:                 %s\n" % s)
     sys.stdout.write(u"'å'.isalpha():              %s\n" % 'å'.isalpha())
     sys.stdout.write(u"u'å'.isalpha():             %s\n" % u'å'.isalpha())
 
