@@ -788,6 +788,10 @@ class ShortenedRefParser(SFSRefParser):
     simpleparser = Parser(SFSRefParser.decl,'shortrefroot')
 
 
+class DVRefParser(SFSRefParser):
+    """Subclass of SFSRefParser, but handles references to verdicts/cases"""
+    # FIXME: Implement (sensibly)
+    pass
 
 class TestLegalRef:
     def ParseTest(self,testfile,verbose=False,quiet=False):
@@ -924,4 +928,15 @@ if __name__ == "__main__":
     TestLegalRef.__bases__ += (DispatchMixin,)
     t = TestLegalRef()
     t.Dispatch(sys.argv)
+    
+    # FIXME: såhär *borde* API:t se ut:
+    #
+    # p = LegalRef(LegalRef.LAGRUM, LegalRef.FORARBETEN,\
+    #              LegalRef.RATTSFALL, LegalRef.EGLAGSTIFTNING,\
+    #              LegalRef.KORTLAGRUM)
+    #
+    # p.parse("""Enligt Prop. 1998/99:123 ska 4 § och MB 14:7 tolkas i
+    #            ljuset av artikel 4 i direktiv 1996/13/EG
+    #            (32002L0019), vilket bekräftades i NJA 1992 s. 12.""")
+
     

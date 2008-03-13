@@ -229,7 +229,7 @@ def word_to_html(indoc,outhtml):
     import pywintypes
     display_indoc = indoc[len(os.getcwd()):].replace("\\","/")
     display_outhtml = outhtml[len(os.getcwd()):].replace("\\","/")
-    mkdir_for(outhtml)
+    ensureDir(outhtml)
     if not os.path.exists(indoc):
         print "indoc %s does not exists (seriously)" % indoc
     if os.path.exists(outhtml):

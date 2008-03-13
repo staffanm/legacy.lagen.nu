@@ -13,6 +13,7 @@ from time import time
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
 import zipfile
+import traceback
 
 # 3rdparty libs
 from genshi.template import TemplateLoader
@@ -23,7 +24,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
 import LegalSource
-from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError,Link
+from LegalRef import SFSRefParser,PreparatoryRefParser,DVRefParser,ParseError,Link
 import Util
 from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, CompoundStructure, \
@@ -35,12 +36,51 @@ __shortdesc__ = u"Domslut (referat)"
 __moduledir__ = "dv"
 log = logging.getLogger(__moduledir__)
 
+# Objektmodellen för rättsfall:
+# 
+# Referat (list)
+#   Metadata (map)
+#       'Domstol': Link (AP-uri)
+#       'Referatnummer': unicode
+#       'Målnummer': unicode
+#       'Domsnummer': unicode
+#       'Avgörandedatum': date
+#       'Rubrik': unicode
+#       'Lagrum': list
+#           Lagrum(list)
+#              unicode/Link
+#       'Rättsfall': list
+#           Rattsfall(list)
+#               unicode/Link
+#       'Sökord': list
+#           unicode
+#       'Litteratur': list
+#           unicode (på sikt även Link)
+#   Referatstext (list)
+#       Stycke (list)
+#           unicode/Link
+
+class Referat(CompoundStructure): pass
+
+class Metadata(MapStructure): pass
+
+class Lagrum(CompoundStructure): pass
+
+class Rattsfall(CompoundStructure): pass
+
+class Referatstext(CompoundStructure): pass
+
+class Stycke(CompoundStructure): pass
+
+    
+
 # NB: You can't use this class unless you have an account on
 # domstolsverkets FTP-server, and unfortunately I'm not at liberty to
 # give mine out in the source code...
 class DVDownloader(LegalSource.Downloader):
     def __init__(self,baseDir="data"):
         self.dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
+        self.intermediate_dir = baseDir + os.path.sep + __moduledir__ + 'word'
         if not os.path.exists(self.dir): 
             Util.mkdir(self.dir)
         inifile = self.dir + os.path.sep + __moduledir__ + ".ini"
@@ -126,9 +166,45 @@ class DVDownloader(LegalSource.Downloader):
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
 
 
+DC = Namespace("http://purl.org/dc/elements/1.1/")
+XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
+RINFO = Namespace("http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
 class DVParser(LegalSource.Parser):
     re_NJAref = re.compile(r'(NJA \d{4} s\. \d+) \(alt. (NJA \d{4}:\d+)\)')
     re_delimSplit = re.compile("[:;,] ?").split
+
+
+    # Mappar termer för enkel metadata (enstaka
+    # strängliteraler/datum/URI:er) från de strängar som används i
+    # worddokumenten ('Målnummer') till de URI:er som används i
+    # rinfo-vokabulären
+    # ("http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#avgorandedatum").
+
+    # FIXME: för allmänna och förvaltningsdomstolar ska kanske hellre
+    # referatAvDomstolsavgorande användas än malnummer - det är
+    # skillnad på ett domstolsavgörande och referatet av detsamma
+    #
+    # 'Referat' delas upp i rattsfallspublikation ('NJA'),
+    # publikationsordinal ('1987:39'), arsutgava (1987) och sidnummer
+    # (187). Alternativt kan publikationsordinal/arsutgava/sidnummer
+    # ersättas med publikationsplatsangivelse.
+    labels = {u'Rubrik':DC['title'],
+              u'Domstol':DC['creator'], # konvertera till auktoritetspost
+              u'Målnummer':RINFO['malnummer'], 
+              u'Domsnummer':RINFO['domsnummer'],
+              u'Diarienummer':RINFO['diarienummer'],
+              u'Avdelning':RINFO['domstolsavdelning'],
+              u'Referat':None, 
+              u'Avgörandedatum':RINFO['avgorandedatum'], # konvertera till xsd:date
+              }
+
+    # Metadata som kan innehålla noll eller flera poster.
+    # Litteratur/sökord har ingen motsvarighet i RINFO-vokabulären
+    multilabels = {u'Lagrum':RINFO['lagrum'],
+                   u'Rättsfall':RINFO['rattsfallshanvisning'],
+                   u'Litteratur':None,
+                   u'Sökord':None}
+
     #def __init__(self,id,files,baseDir):
         #self.id = id
         #self.dir = baseDir + "/dv/parsed"
@@ -139,126 +215,119 @@ class DVParser(LegalSource.Parser):
     def Parse(self,id,docfile):
         import codecs
         self.id = id
-        htmlfile = docfile.replace('downloaded','intermediate').replace('.doc','html')
+        htmlfile = docfile.replace('word','html').replace('.doc','.html')
         Util.word_to_html(docfile,htmlfile)
-        soup = self.LoadDoc(htmlfile)
-        data = {}
-        for row in soup.first('td', 'sokmenyBkgrMiddle').table:
-            key = val = ""
-            if len(row) > 3:
-                key = row('td')[1].string.strip()
-                if key == "":
-                    key = lastkey
-                if key[-1] == ":":
-                    key = key[:-1]
-                key = key.replace(" ", "-")
-                val = self.ElementText(row('td')[2])
 
-                #if val[:8] == "&#8226; ":
-                #    val = val[8:]
-                if val[:2] == u'\u2022 ':
-                    val = val[2:]
-                lastkey = key
-                if val != '-':
-                    # some keys are processed further
+        lagrum_parser = SFSRefParser()
+        rattsfall_parser = DVRefParser()
+
+        # Basic parsing
+        soup = Util.loadSoup(htmlfile)
+        head = Metadata()
+        # Worddokumenten är bara mestadels standardiserade...  En
+        # alternativ fallbackmetod vore att söka efter tabellceller
+        # vars enda text är något av de kända domstolsnamnen
+        if soup.first('span', 'riDomstolsRubrik'):
+            node = soup.first('span', 'riDomstolsRubrik').findParent('td')
+        elif soup.first('td', 'ritop1'):
+            node = soup.first('td', 'ritop1')
+        elif soup.first('span', style="letter-spacing:2.0pt"):
+            node = soup.first('span', style="letter-spacing:2.0pt").findParent('td')
+        elif soup.first('span', style="letter-spacing:1.3pt"):
+            node = soup.first('span', style="letter-spacing:1.3pt").findParent('td')
+        elif soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt"):
+            node = soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt").findParent('td')
+        elif soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt"):
+            node = soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt").findParent('td')
+        else:
+            raise AssertionError(u"Kunde inte hitta domstolsnamnet i %s" % htmlfile)
+        head[u'Domstol'] = Util.elementText(node)
+
+        # Det som står till höger om domstolsnamnet är referatnumret
+        # (exv "NJA 1987 s. 113")
+        node = node.findNextSibling('td')
+        head[u'Referatnummer'] = Util.elementText(node)
+        if not head[u'Referatnummer']:
+            # För specialdomstolarna kan man lista ut referatnumret
+            # från målnumret - det borde vi försöka göra här
+            raise AssertionError(u"Kunde inte hitta referatnumret i %s" % htmlfile)
+
+        # Hitta övriga enkla metadatafält i sidhuvudet
+        for key in self.labels.keys():
+            node = soup.firstText(key+u':')
+            if node:
+                head[key] = Util.elementText(node.findParent('td').findNextSibling('td'))
+
+        # Hitta sammansatta metadata i sidhuvudet
+        for key in [u"Lagrum", u"Rättsfall"]:
+            node = soup.firstText(key+u':')
+            if node:
+                items = []
+                for p in node.findParent('td').findNextSibling('td').findAll('p'):
+                    txt = Util.elementText(p)
+                    if txt.startswith(u'\xb7'):
+                        txt = txt[1:]
+                        items.append(Util.normalizeSpace(txt))
+                    else:
+                        items = [Util.normalizeSpace(x) for x in self.re_delimSplit(txt)]
+                if items != ['']:
                     if key == u'Lagrum':
-                        # print u'parsing %r with lawparser' % val
-                        parsed = SFSRefParser("<Lagrum>"+val+"</Lagrum>").parse()
-                        val = ET.fromstring(parsed.encode('utf-8'))
-                    elif key == u'Referat' and self.re_NJAref.match(val):
-                        m = self.re_NJAref.match(val)
-                        val = m.group(1)
-                        data["Alt"+key] = m.group(2)
+                        head[key] = [Lagrum([lagrum_parser.parse(i)]) for i in items]
+                    elif key == u'Rättsfall':
+                        head[key] = [Rattsfall([rattsfall_parser.parse(i)]) for i in items]
 
-                    if key in data:
-                        if type(data[key]) == types.ListType:
-                            data[key].append(val)
-                        else:
-                            data[key] = [data[key],val]
-                    else:
-                        data[key] = val
+        # Hitta själva referatstexten... här kan man göra betydligt
+        # mer, exv hitta avsnitten för de olika instanserna, hitta
+        # dissenternas domskäl, ledamöternas namn, hänvisning till
+        # rättsfall och lagrum i löpande text...
+        body = Referatstext()
+        for p in soup.firstText(u'REFERAT').findParent('tr').findNextSibling('tr').fetch('p'):
+            body.append(Stycke([Util.elementText(p)]))
 
-        urn = self.__createUrn(data)
-
-        referat = []
-        if 'referat' in self.files and self.files['referat']:
-            soup = self.LoadDoc(self.files['referat'][0])
-            if soup.first('span', 'riDomstolsRubrik'):
-                ref_domstol_node = soup.first('span', 'riDomstolsRubrik').findParent('td')
-            elif soup.first('td', 'ritop1'):
-                ref_domstol_node = soup.first('td', 'ritop1')
-            else:
-                raise LegalSource.ParseError("Kunde inte hitta domstolsnamnet i %s" % self.files['referat'])
-            ref_domstol = self.ElementText(ref_domstol_node)
-            ref_refid = self.ElementText(ref_domstol_node.findNextSibling('td'))
-            if not ref_refid:
-                raise LegalSource.ParseError("Kunde inte hitta referatnumret i %s" % self.files['referat'])
-            m = self.re_NJAref.match(val)
-            if m:
-                ref_refid = m.group(1)
-
-            if ref_domstol.lower() != data['Domstol'].lower():
-                pass
-                # print u"WARNING (Domstol): '%s' != '%s'" % (ref_domstol, data['Domstol'])
-            if ref_refid != data['Referat']:
-                pass
-                # print u"WARNING (Referat): '%s' != '%s'" % (ref_refid, data['Referat'])
-            for p in soup.firstText(u'REFERAT').findParent('tr').findNextSibling('tr').fetch('p'):
-                referat.append(self.ElementText(p))
-
-            ref_sokord = self.ElementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
-            ref_sokord_arr = [self.NormalizeSpace(x) for x in self.re_delimSplit(ref_sokord)]
-            ref_sokord_arr.sort()
-            if not u'Sökord' in data:
-                data_sokord_arr = []
-            elif type(data[u'Sökord']) == types.ListType:
-                data_sokord_arr = data[u'Sökord']
-            else:
-                data_sokord_arr = [data[u'Sökord']]
-
-            data_sokord_arr.sort()
-            if data_sokord_arr != ref_sokord_arr:
-                # print u"WARNING (Sokord): '%r' != '%r'" % (";".join(data_sokord_arr), ";".join(ref_sokord_arr))
-                data[u'Sökord'] = Util.uniqueList(ref_sokord_arr, data_sokord_arr)
-                
-                # print u" --- combining to '%r'" % ";".join(data[u'Sökord'])
-            if soup.firstText(u'Litteratur:'):
-                ref_litteratur = self.ElementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
-                data['Litteratur'] = [self.NormalizeSpace(x) for x in ref_litteratur.split(";")]
-
-        root = ET.Element("Dom")
-        root.attrib['urn'] = urn
-        meta = ET.SubElement(root,"Metadata")
-        for k in data.keys():
-            if type(data[k]) == types.ListType:
-                for i in data[k]:
-                    node = ET.SubElement(meta,k)
-                    if isinstance(i,unicode) or isinstance(i,str):
-                        node.text = i
-                    else:
-                        node.text = i.text
-                        node[:] = i[:]
-            else:
-                node = ET.SubElement(meta,k)
-                if isinstance(data[k],unicode) or isinstance(data[k],str):
-                    node.text = data[k]
-                else:
-                    node.text = data[k].text
-                    node[:] = data[k][:]
-        if referat:
-            ref = ET.SubElement(root,"Referat")
-            for p in referat:
-                node = ET.SubElement(ref,"p")
-                node.text = p
+        # Hitta sammansatta metadata i sidfoten
+        txt = Util.elementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
+        head[u'Sökord'] = [Util.normalizeSpace(x) for x in self.re_delimSplit(txt)]
             
-        tree = ET.ElementTree(root)
-        # buf = StringIO()
-        
-        #f = codecs.getwriter('iso-8859-1')(buf)
-        # tree.write doesn't create initial '<?xml version=1.0 encoding='...'?>' so we add it ourselves to avoid problems with xmllint
-        #buf.write('<?xml version="1.0" encoding="utf-8"?>')        
-        #tree.write(buf,'utf-8')
-        #return buf.getvalue()
+        if soup.firstText(u'Litteratur:'):
+            txt = Util.elementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
+            head[u'Litteratur'] = [Util.normalizeSpace(x) for x in txt.split(";")]
+
+
+        # Formulera om delar av metadatan till en RDF-graf
+        docuri = URIRef(u'http://lagen.nu/%s' % self.id)
+        graph = Graph()
+        graph.bind("dc", "http://purl.org/dc/elements/1.1/")
+        graph.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
+        graph.bind("rinfo", "http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
+        graph.add((docuri, RDF.type, RINFO['VagledandeDomstolsavgorande']))
+
+        for (key,val) in self.labels.items():
+            if key in head and val:
+                graph.add((docuri, val, Literal(head[key].encode('utf-8'))))
+                #graph.add((docuri, val, Literal(u'blahonga')))
+
+        for (key,val) in self.multilabels.items():
+            if key in head and val:
+                # bara sådana lagrums/rättsfallshänvisningar vi
+                # faktiskt lyckats uttyda är intressanta att ha med
+                for item in val:
+                    if isinstance(item,Link):
+                        #pass
+                        graph.add((docuri, RINFO['lagrum'],URIRef(item.uri)))
+
+        # tyvärr funkar inte graph.query på windows, så vi kan inte
+        # göra så mycket mer med grafen än att serialisera den...
+        #
+        # print graph.serialize(format="n3").decode('utf-8')
+        # 
+        # nsmap = {u'rdf':RDF.RDFNS,
+        #          u'rinfo':RINFO,
+        #          u'dc':DC}
+        # print graph.query(u'SELECT ?subj WHERE { ?obj dc:subject ?subj }', nsmap)
+
+        xhtml = self.generate_xhtml(head,body,__moduledir__,globals())
+        return xhtml
+    
 
     def __createUrn(self,data):
         domstolar = {
@@ -358,31 +427,46 @@ class DVManager(LegalSource.Manager):
     # IMPLEMENTATION OF Manager INTERFACE  
     ####################################################################
     
-    def Parse(self,basefile,force=False):
+    def Parse(self,basefile,verbose=False):
         """'basefile' here is a single digit representing the filename on disc, not
         any sort of inherit case id or similarly"""
-        start = time()
-        
-        files = {'detalj':self.__listfiles('detalj',basefile),
-                 'referat':self.__listfiles('referat',basefile)}
-        filename = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__, basefile)
-        # check to see if the outfile is newer than all ingoing files. If it
-        # is (and force is False), don't parse
-        if not force and self._outfileIsNewer(files,filename):
-            return
+        try:
+            if verbose:
+                print "Setting verbosity"
+                log.setLevel(logging.DEBUG)
+            start = time()
 
-        
-        # print("Files: %r" % files)
-        sys.stdout.write("\tParse %s" % basefile)
-        p = self.__parserClass()
-        parsed = p.Parse(basefile,files)
-        Util.mkdir(os.path.dirname(filename))
-        # print "saving as %s" % filename
-        out = file(filename, "w")
-        out.write(parsed)
-        out.close()
-        Util.indentXmlFile(filename)
-        sys.stdout.write("\t%s seconds\n" % (time()-start))
+            infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
+            outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
+
+            # check to see if the outfile is newer than all ingoing
+            # files. If it is, don't parse
+            if self._outfileIsNewer([infile],outfile):
+                return
+
+            p = self.__parserClass()
+            p.verbose = verbose
+            parsed = p.Parse(basefile,infile)
+            Util.ensureDir(outfile)
+
+            out = file(outfile, "w")
+            out.write(parsed)
+            out.close()
+            Util.indentXmlFile(outfile)
+            log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        except Exception:
+            # Vi hanterar traceback-loggning själva eftersom
+            # loggging-modulen inte klarar av när källkoden
+            # (iso-8859-1-kodad) innehåller svenska tecken
+            formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
+            log.error(u'%s: %s:\nMyTraceback (most recent call last):\n%s%s: %s' %
+                      (basefile,
+                       sys.exc_info()[0].__name__,
+                       u''.join(formatted_tb),
+                       sys.exc_info()[0].__name__,
+                       sys.exc_info()[1]))
+            # raise
+
 
     def ParseAll(self):
         # print "DV: ParseAll temporarily disabled"

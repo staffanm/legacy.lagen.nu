@@ -70,7 +70,7 @@ class RegPublDownloader(LegalSource.Downloader):
                 done = True
             pagecnt += 1
         self.config['last_updated'] = datetime.date.today()    
-
+        self.config.write()
         
     def DownloadNew(self):
         then = datetime.datetime.strptime(self.config['last_updated'], '%Y-%m-%d')
@@ -82,10 +82,8 @@ class RegPublDownloader(LegalSource.Downloader):
             pass
             # post a "last 12 months" query
         else:
-            pass
             # post a full query
-        
-        
+            self.DownloadAll()        
         
     def _downloadSingle(self,url):
         docid = re.match(r'http://www.regeringen.se/sb/d/108/a/(\d+)', url).group(1)

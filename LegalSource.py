@@ -4,10 +4,21 @@
 import sys, os, re, codecs, types
 import pickle
 from time import time
-
-# Do required codec/locale magic here, since this is included by all
-# runnable scripts
 import locale
+import xml.etree.cElementTree as ET
+import logging
+
+# 3rd party modules
+import BeautifulSoup
+from mechanize import Browser, LinkNotFoundError
+from genshi.template import TemplateLoader
+
+# my own code
+import Util
+
+
+# Do required codec/locale magic right away, since this is included by
+# all runnable scripts
 locale.setlocale(locale.LC_ALL,'') 
 
 if sys.platform == 'win32':
@@ -24,14 +35,8 @@ else:
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
-import xml.etree.cElementTree as ET
+log = logging.getLogger(u'legalsource')
 
-# 3rd party modules
-import BeautifulSoup
-from mechanize import Browser, LinkNotFoundError
-
-# my own code
-import Util
 
 class ParseError(Exception):
     def __init__(self, value):
@@ -100,10 +105,23 @@ class Parser:
     
     def Parse(self):
         raise NotImplementedError
-    
-    def NormalizeSpace(self,string):
-        return self.re_NormalizeSpace(' ',string).strip()
 
+    def generate_xhtml(self,meta,body,module,globals):
+        """Skapa en XHTML2-representation av ett rättsinformationsdokument"""
+        loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
+        tmpl = loader.load("etc/%s.template.xht2"%module)
+        stream = tmpl.generate(meta=meta, body=body, **globals)
+        try:
+            res = stream.render()
+        except Exception, e:
+            log.error(u'Fel vid templaterendring (%s):%r' % (e.__class__.__name__,sys.exc_info()[1]))
+            raise e
+        if 'class="warning"' in res:
+            start = res.index('class="warning">')
+            end = res.index('</',start+16)
+            msg = Util.normalizeSpace(res[start+16:end]).decode('utf-8')
+            log.warning(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
+        return res
 
 class Manager:
     def __init__(self,baseDir,moduleDir):

@@ -19,7 +19,6 @@ from pprint import pprint
 from time import time
 
 # 3rdparty libs
-from genshi.template import TemplateLoader
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
 from rdflib.Graph import Graph
@@ -444,7 +443,8 @@ class SFSParser(LegalSource.Parser):
         return d
     
     def Parse(self,basefile,files):
-        self.id = FilenameToSFSnr(basefile)
+        #self.id = FilenameToSFSnr(basefile)
+        self.id = basefile
         # find out when data was last fetched (use the oldest file)
         timestamp = sys.maxint
         for filelist in files.values():
@@ -464,7 +464,7 @@ class SFSParser(LegalSource.Parser):
             f = codecs.open(plaintextfile, "w",'iso-8859-1')
             f.write(plaintext)
             f.close()
-            data = self._parseSFST(plaintextfile, registry)
+            (meta, body) = self._parseSFST(plaintextfile, registry)
         except IOError:
             # extractSFST misslyckades, då det fanns någon post i
             # SFST-databasen. Fejka ihop vad vi kan utifrån SFSR-datat
@@ -481,13 +481,13 @@ class SFSParser(LegalSource.Parser):
             s = Stycke([u'(Lagtext saknas)'])
             body.append(s)
             meta = self.__makeMetadata(head,body)
-            data = (meta,body)
+            meta,body
             
         if self.verbose:
             # print serialize(data[1])
             print serialize(registry)
             
-        xhtml = self._generate_xhtml(data)
+        xhtml = self.generate_xhtml(meta,body,__moduledir__,globals())
         return xhtml
 
     def _parseSFSR(self,files):
@@ -530,7 +530,7 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Tidsbegränsad':
                             p['tidsbegransad'] = datetime.strptime(val[:10], '%Y-%m-%d')
                         else:
-                            log.warning(u'%s: Obekant nyckel \'%s\'' % (SFSnrToFilename(self.id), key))
+                            log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
                 r.append(p)
         return r
 
@@ -605,7 +605,7 @@ class SFSParser(LegalSource.Parser):
         return meta,body
 
     def __makeMetadata(self,head,body):
-        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % self.id)
+        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)))
         # * använd dessa som URI-fragment och konstruera fullständiga URI:er,
         # (* skapa rinfo:firstParagraph och rinfo:nextParagraph-påståenden)
         # massera metadatat halvvägs till RDF-påståenden (FIXME: gör
@@ -639,24 +639,6 @@ class SFSParser(LegalSource.Parser):
                 "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
         
         return meta
-
-    def _generate_xhtml(self,data):
-        """Skapa det färdiga XHTML2-dokumentet för en konsoliderad lagtext"""
-        (meta, body) = data
-        loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
-        tmpl = loader.load("etc/sfs.template.xht2")
-        stream = tmpl.generate(meta=meta, body=body, **globals())
-        try:
-            res = stream.render()
-        except Exception, e:
-            log.error(u'Fel vid templaterendring (%s):%r' % (e.__class__.__name__,sys.exc_info()[1]))
-            raise e
-        if 'class="warning"' in res:
-            start = res.index('class="warning">')
-            end = res.index('</',start+16)
-            msg = Util.normalizeSpace(res[start+16:end]).decode('utf-8')
-            log.warning(u'%s: templatefel \'%s\'' % (SFSnrToFilename(self.id), msg[:80]))
-        return res
 
     def _find_authority_rec(self, label):
         """Givet en textsträng som refererar till någon typ av
@@ -988,7 +970,7 @@ class SFSParser(LegalSource.Parser):
             if res != None:
                 if state_handler != self.makeOvergangsbestammelse:
                     if hasattr(self,'id'):
-                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer" % SFSnrToFilename(self.id))
+                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer" % self.id)
                     else:
                         log.warning(u"Övergångsbestämmelsen saknar SFS-nummer")
 
@@ -1669,7 +1651,7 @@ class SFSManager(LegalSource.Manager):
     # IMPLEMENTATION OF Manager INTERFACE
     ####################################################################    
 
-    def Parse(self, basefile, verbose=False, force=False):
+    def Parse(self, basefile, verbose=False):
         try:
             if verbose:
                 print "Setting verbosity"
