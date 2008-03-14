@@ -471,10 +471,11 @@ class DVManager(LegalSource.Manager):
     def ParseAll(self):
         # print "DV: ParseAll temporarily disabled"
         # return
-        downloadDir = self.baseDir + "/dv/downloaded"
-        for f in Util.listDirs(downloadDir,"detalj.html"):
-            basefile = os.path.basename(f)[:-12]
-            self.Parse(basefile)
+        downloadDir = os.path.sep.join([os.getcwd(),self.baseDir, 'dv', 'intermediate','word'])
+        for f in Util.listDirs(downloadDir,".doc"):
+            basefile = f[len(downloadDir)+1:-4]
+            print "Dping %s( %s)" % (basefile,f)
+            # self.Parse(basefile)
 
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
