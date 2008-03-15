@@ -293,7 +293,8 @@ class SFSDownloader(LegalSource.Downloader):
             t.seek(0)
             t.cuepast(u'<input type="hidden" name="BET" value="')
             sfsnr = t.readto("$")
-            log.info('    Hittade ändringsförfattning (till %s)' % sfsnr)
+
+            log.info(u'    Hittade ändringsförfattning (till %s)' % sfsnr)
             return sfsnr
 
     def _downloadSingle(self, sfsnr):
@@ -427,20 +428,12 @@ class SFSParser(LegalSource.Parser):
         self.trace['tabell'].debug(u'Tabelltracern är igång')
                       
         self.verbose = True
-        self.authority_rec = self._load_authority_rec("etc/authrec.n3")
         self.references = SFSRefParser()
 
         self.current_section = u'0'
         self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
-    
-    def _load_authority_rec(self, file):
-        graph = Graph()
-        graph.load(file, format='n3')
-        d = {}
-        for uri, label in graph.subject_objects(RDFS.label):
-            d[unicode(label)] = str(uri)
-        return d
+        LegalSource.Parser.__init__(self)
     
     def Parse(self,basefile,files):
         #self.id = FilenameToSFSnr(basefile)
@@ -606,23 +599,12 @@ class SFSParser(LegalSource.Parser):
 
     def __makeMetadata(self,head,body):
         self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)))
-        # * använd dessa som URI-fragment och konstruera fullständiga URI:er,
-        # (* skapa rinfo:firstParagraph och rinfo:nextParagraph-påståenden)
-        # massera metadatat halvvägs till RDF-påståenden (FIXME: gör
-        # en riktig RDF-graf) FIXME: bryt ut till en egen funktion
         meta = {}
         
-        # from domainutil import compute_canonical_uri
-        # 
-        # (check test_domainutil.py for info on how the rdf graph should look.
-        # The uri should be the same as the main subject in the rdf graph and
-        # can be on the form urn:uuid:4711)
-        # meta['xml:base'] = compute_canonical_url(some_rdf_graph, some_other_uri)
-
         # FIXME: Hantera esoteriska headers som Tidsbegränsad, Omtryck, m.m.
         for key, predicate in ((u'Rubrik','dc:title'),
-                              (u'SFS nr','rinfo:fsNummer'),
-                              (u'Utfärdad','rinfo:utfardandedatum')):
+                               (u'SFS nr','rinfo:fsNummer'),
+                               (u'Utfärdad','rinfo:utfardandedatum')):
 
             try:
                 meta[predicate] = head[key]
@@ -639,19 +621,6 @@ class SFSParser(LegalSource.Parser):
                 "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
         
         return meta
-
-    def _find_authority_rec(self, label):
-        """Givet en textsträng som refererar till någon typ av
-        organisation, person el. dyl (exv 'Justitiedepartementet
-        Gransk', returnerar en URI som är auktoritetspost för denna."""
-        for (key, value) in self.authority_rec.items():
-            if label.startswith(key):
-                return self._storage_uri_value(value)
-        raise KeyError(label)
-
-    def _storage_uri_value(self, value):
-        return value.replace(" ", '_')
-
 
     def _swedish_ordinal(self,s):
         sl = s.lower()
@@ -1687,7 +1656,7 @@ class SFSManager(LegalSource.Manager):
             # loggging-modulen inte klarar av när källkoden
             # (iso-8859-1-kodad) innehåller svenska tecken
             formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-            log.error(u'%s: %s:\nTraceback (most recent call last):\n%s%s: %s' %
+            log.error(u'%s: %s:\nMyTraceback (most recent call last):\n%s%s: %s' %
                       (basefile,
                        sys.exc_info()[0].__name__,
                        u''.join(formatted_tb),

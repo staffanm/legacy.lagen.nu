@@ -1,8 +1,6 @@
+# -*- coding: utf-8 -*-
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix dc: <http://purl.org/dc/elements/1.1/> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 <http://rdf.kb.se/ap/20061121145747> rdfs:label "Regeringskansliet" .
 <http://rdf.kb.se/ap/20061121164911> rdfs:label "Justitiedepartementet" .
@@ -43,3 +41,22 @@
 <http://rdf.kb.se/ap/20070812184834> rdfs:label "Utbildnings- och kulturdepartementet" .
 <http://rdf.kb.se/ap/20070812184835> rdfs:label "Utbildningsdepartementet" .
 <http://rdf.kb.se/ap/20070812184836> rdfs:label "Utrikesdepartementet" .
+
+<http://rdf.kb.se/ap/20080315191400> rdfs:label "Domstolsverket" .
+<http://rdf.kb.se/ap/20080315191300> rdfs:label "Marknadsdomstolen" .
+<http://rdf.kb.se/ap/20080315191301> rdfs:label "Hovrätten för Övre Norrland" . 
+<http://rdf.kb.se/ap/20080315191302> rdfs:label "Hovrätten för Nedre Norrland" .
+<http://rdf.kb.se/ap/20080315191303> rdfs:label "Hovrätten över Skåne och Blekinge" .
+<http://rdf.kb.se/ap/20080315191304> rdfs:label "Svea hovrätt" .
+<http://rdf.kb.se/ap/20080315191305> rdfs:label "Hovrätten för Västra Sverige" .
+<http://rdf.kb.se/ap/20080315191306> rdfs:label "Göta hovrätt" .
+<http://rdf.kb.se/ap/20080315191307> rdfs:label "Kammarrätten i Göteborg" .
+<http://rdf.kb.se/ap/20080315191308> rdfs:label "Kammarrätten i Jönköping" .
+<http://rdf.kb.se/ap/20080315191309> rdfs:label "Kammarrätten i Stockholm" .
+<http://rdf.kb.se/ap/20080315191310> rdfs:label "Kammarrätten i Sundsvall" .
+<http://rdf.kb.se/ap/20080315191311> rdfs:label "Arbetsdomstolen" .
+<http://rdf.kb.se/ap/20080315191312> rdfs:label "Högsta domstolen" .
+<http://rdf.kb.se/ap/20080315191313> rdfs:label "Regeringsrätten" .
+<http://rdf.kb.se/ap/20080315191314> rdfs:label "Patentbesvärsrätten" .
+<http://rdf.kb.se/ap/20080315191315> rdfs:label "Rättshjälpsnämnden" .
+<http://rdf.kb.se/ap/20080315191316> rdfs:label "Miljööverdomstolen" .

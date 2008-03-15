@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 import os,sys,re,inspect
 
 class DispatchMixin:
@@ -12,7 +13,10 @@ Note that your class cannot have a method called `Dispatch`.
     """
 
     def Dispatch(self,argv):
-        myargs = argv
+        # FIXME: there are bound to be cases when argv isn't
+        # iso-8859-1-coded. Can we in some reliable way find out what
+        # encoding argv uses?
+        myargs = [arg.decode('iso-8859-1') for arg in argv]
         if len(myargs) < 2:
             print "No command argument given"
             self.__printValidCommands()

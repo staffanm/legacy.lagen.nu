@@ -12,6 +12,8 @@ import logging
 import BeautifulSoup
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
+from rdflib.Graph import Graph
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own code
 import Util
@@ -101,7 +103,7 @@ class Parser:
     re_NormalizeSpace  = re.compile(r'\s+',).sub
 
     def __init__(self):
-        pass
+        self.authority_rec = self.load_authority_rec("etc/authrec.n3")
     
     def Parse(self):
         raise NotImplementedError
@@ -119,9 +121,30 @@ class Parser:
         if 'class="warning"' in res:
             start = res.index('class="warning">')
             end = res.index('</',start+16)
-            msg = Util.normalizeSpace(res[start+16:end]).decode('utf-8')
+            msg = Util.normalizeSpace(res[start+16:end].decode('utf-8'))
             log.warning(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
         return res
+
+    def load_authority_rec(self, file):
+        """Ladda in en RDF-graf som innehåller auktoritetsposter i n3-format"""
+        graph = Graph()
+        graph.load(file, format='n3')
+        d = {}
+        for uri, label in graph.subject_objects(RDFS.label):
+            d[unicode(label)] = str(uri)
+        return d
+
+    def find_authority_rec(self, label):
+        """Givet en textsträng som refererar till någon typ av
+        organisation, person el. dyl (exv 'Justitiedepartementet
+        Gransk', returnerar en URI som är auktoritetspost för denna."""
+        for (key, value) in self.authority_rec.items():
+            if label.startswith(key):
+                return self.storage_uri_value(value)
+        raise KeyError(label)
+
+    def storage_uri_value(self, value):
+        return value.replace(" ", '_')
 
 class Manager:
     def __init__(self,baseDir,moduleDir):

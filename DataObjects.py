@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
+"""Several base datatypes that inherit from native types
+(unicode,list,dict, etc) or python defined types (datetime), but adds
+support for general properties. Once a class has been instansiated,
+you cannot add any more properties."""
 
+import datetime
 import xml.etree.cElementTree as ET
-import sys
-from datetime import datetime
 
 class AbstractStructure(object):
 
@@ -54,9 +57,34 @@ class UnicodeStructure(AbstractStructure,unicode):
         object.__setattr__(obj,'__initialized',False) 
         return obj
         
-#    def __init__(self, *args, **kwargs):
-#        super(UnicodeStructure,self).__init__(*args, **kwargs)
+    #def __init__(self, *args, **kwargs):
+    #    print "UnicodeStructure.__init__ called"
+    #    super(UnicodeStructure,self).__init__(*args, **kwargs)
 
+class IntStructure(AbstractStructure,int):
+    """En IntStructure är en int som även kan ha andra egenskaper
+    (ordningsnummer, ikraftträdandedatum etc)."""
+
+    # immutable objects must provide a __new__ method
+    def __new__(cls,arg=0, *args, **kwargs):
+        if not isinstance(arg,int):
+               raise TypeError("%r is not int" % arg)
+        obj = int.__new__(cls, arg)
+        object.__setattr__(obj,'__initialized',False) 
+        return obj
+        
+class DateStructure(AbstractStructure,datetime.date):
+    """En DateStructure är ett datetime.date som även kan ha andra
+    egenskaper (ordningsnummer, ikraftträdandedatum etc)."""
+
+    # immutable objects must provide a __new__ method
+    def __new__(cls,arg=datetime.date.today(), *args, **kwargs):
+        if not isinstance(arg,datetime.date):
+               raise TypeError("%r is not datetime.date" % arg)
+        obj = datetime.date.__new__(cls, arg.year, arg.month, arg.day)
+        object.__setattr__(obj,'__initialized',False) 
+        return obj
+        
 class CompoundStructure(AbstractStructure,list):
     """En CompoundStructure fungerar som en lista av andra Structureobjekt. 
     Den kan också  ha egna egenskaper (kapitelrubrik, paragrafnummer etc)"""
@@ -87,7 +115,7 @@ class MapStructure(AbstractStructure,dict):
 # Abstrakta klasser avsedda att användas vid multipelt arv, som
 # lägger till vanliga egenskaper
 
-class TemporalStructure():
+class TemporalStructure(object):
     """En TemporalStructure har ett antal olika tidsegenskaper
     (ikraftträder, upphör, meddelas) som anger de tidsmässiga ramarna
     för vad det nu är frågan om"""
@@ -97,11 +125,11 @@ class TemporalStructure():
 
     def in_effect(self,date=None):
         if not date:
-            date = datetime.datetime.now()
+            date = datetime.date.today()
         return (date >= self.entryintoforce) and (date <= self.expires)
 
 
-class OrdinalStructure():
+class OrdinalStructure(object):
     """En OrdinalStructure har ett explicit
     ordningsnummer. Ordningsnumret behöver inte vara strikt numeriskt,
     utan kan även vara exv '6 a', när lagstiftaren tyckt sig behöva en
@@ -127,6 +155,27 @@ class OrdinalStructure():
 
     def __ge__(self,other):
         return self.ordinal == other.ordinal
+
+
+class PredicateType(object):
+    """Inheriting from this gives the subclass a predicate attribute,
+    which describes the RDF predicate to which the class is the RDF
+    subject (eg. if you want to model the title of a document, you
+    would inherit from UnicodeStructure and this, and then set
+    .predicate to
+    rdflib.URIRef('http://purl.org/dc/elements/1.1/title')"""
+    
+    def __init__(self, *args, **kwargs):
+        if 'predicate' in kwargs:
+            self.predicate = kwargs['predicate']
+        else:
+            # From the RDF Schema spec: 'This is the class of
+            # everything. All other classes are subclasses of this
+            # class.'
+            from rdflib import RDFS
+            self.predicate = RDFS.Resource 
+        super(PredicateType,self).__init__(*args, **kwargs)
+
 
 def serialize(root):
     t = __serializeNode(root)
@@ -217,40 +266,66 @@ class DerivedUnicode(UnicodeStructure, EvenMixin):
             del kwargs['keyword']
         super(DerivedUnicode,self).__init__(*args, **kwargs)
 
-    #def __repr__(self):
-    #    return u'%s(\'%s\',keyword=%s)'%(self.__class__.__name__,self,self.keyword)
+class DerivedList(CompoundStructure, EvenMixin): pass
 
-class DerivedList(CompoundStructure, EvenMixin):
+class DerivedDict(MapStructure, EvenMixin): pass
+
+class DerivedInt(IntStructure, EvenMixin): pass
+
+class DerivedDate(DateStructure, EvenMixin):  pass
+
+class RDFString(PredicateType,UnicodeStructure):
+    # N.B: if we inherit from (UnicodeStructure,PredicateType)
+    # instead, PredicateType.__init__ never gets called! But this way,
+    # AbstractStructure.__init__ never gets called. I think i must
+    # read descrintro again...
     pass
-#    def __init__(self, *args, **kwargs):
-#        super(DerivedList,self).__init__(*args, **kwargs)
-
-class DerivedDict(MapStructure, EvenMixin):
-    pass
-#    def __init__(self, *args, **kwargs):
-#        super(DerivedDict,self).__init__(*args, **kwargs)
-
+    
 
 if __name__ == '__main__':
 
     print "Testing DerivedUnicode"
-    u = DerivedUnicode(u'blahonga', keyword='myunicode')
+    u = DerivedUnicode(u'blahonga', keyword=u'myunicode')
     print "\trepr(u): %s"   % repr(u)
     print "\tu[1:4]: %r"    % u[1:4]
     print "\tu.keyword: %r" % u.keyword
     print "\tu.iseven: %r"  % u.iseven()
 
     print "Testing DerivedList"
-    l = DerivedList(['x','y','z'], keyword='mylist')
+    l = DerivedList(['x','y','z'], keyword=u'mylist')
     print "\tl[1]: %r"      % l[1]
     print "\tl.keyword: %r" % l.keyword
     print "\tl.iseven: %r"  % l.iseven()
 
     print "Testing DerivedDict"
-    d = DerivedDict({'a':'foo','b':'bar'}, keyword='mydict')
+    d = DerivedDict({'a':'foo','b':'bar'}, keyword=u'mydict')
     print "\td['a']: %r"    % d['a']
     print "\td.keyword: %r" % d.keyword
     print "\td.iseven: %r"  % d.iseven()
 
-    c = DerivedList([u,l,d])
+    print "Testing DerivedInt"
+    i = DerivedInt(42, keyword=u'myint')
+    print "\ti: %r"    % i
+    print "\ti+5: %r"  % (i+5)
+    print "\ti.keyword: %r" % d.keyword
+    print "\ti.iseven: %r"  % d.iseven()
+
+    print "Testing DerivedDate"
+    nativedate = datetime.date(2008,3,15)
+    dt = DerivedDate(nativedate, keyword=u'mydate')
+    print "\tdt: %r"    % dt
+    print "\tdt.keyword: %r" % dt.keyword
+    print "\tdt.iseven: %r"  % dt.iseven()
+
+    print "Testing RDFString"
+    r = RDFString(u'Typisk dokumentrubrik', keyword=u'mysubject')
+    print "\trepr(r): %s"   % repr(r)
+    print "\tr[1:4]: %r"    % r[1:4]
+    print "\tr.keyword: %r" % r.keyword
+    print "\tr.predicate: %r" % r.predicate
+    from rdflib import URIRef
+    r.predicate = URIRef('http://purl.org/dc/terms/title')
+    print "\tr.predicate: %r" % r.predicate
+
+    c = DerivedList([u,l,d,i,dt,r])
     print serialize(c)

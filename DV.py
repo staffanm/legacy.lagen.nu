@@ -10,6 +10,7 @@ import pprint
 import types
 import codecs
 from time import time
+from datetime import datetime
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
 import zipfile
@@ -28,7 +29,8 @@ from LegalRef import SFSRefParser,PreparatoryRefParser,DVRefParser,ParseError,Li
 import Util
 from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, CompoundStructure, \
-     MapStructure, TemporalStructure, OrdinalStructure, serialize
+     MapStructure, IntStructure, DateStructure, PredicateType, \
+     serialize
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -38,31 +40,46 @@ log = logging.getLogger(__moduledir__)
 
 # Objektmodellen för rättsfall:
 # 
-# Referat (list)
-#   Metadata (map)
-#       'Domstol': Link (AP-uri)
-#       'Referatnummer': unicode
-#       'Målnummer': unicode
-#       'Domsnummer': unicode
-#       'Avgörandedatum': date
-#       'Rubrik': unicode
+# Referat(list)
+#   Metadata(map)
+#       'Domstol':                 LinkSubject(u'Högsta Domstolen',predicate='dc:creator',uri='http://[AP-uri]')
+#       'Referatnummer':           UnicodeSubject(u'NJA 1987 s 187', predicate='dc:identifier')
+#       '[rattsfallspublikation]': UnicodeSubject(u'NJA,predicate='rinfo:rattsfallspublikation')
+#       '[publikationsordinal]':   UnicodeSubject(u'1987:39',predicate='rinfo:publikationsordinal')
+#       '[arsutgava]':             DateSubject(1987,predicate='rinfo:arsutgava')
+#       '[sidnummer]':             IntSubject(187, predicate='rinfo:sidnummer')
+#       'Målnummer':               UnicodeSubject(u'B 123-86',predicate='rinfo:malnummer')
+#       'Domsnummer'               UnicodeSubject(u'',predicate='rinfo:domsnummer')
+#       'Diarienummer':            UnicodeSubject(u'',predicate='rinfo:diarienummer')
+#       'Avgörandedatum'           DateSubject(date(1987,3,14),predicate='rinfo:avgorandedatum')
+#       'Rubrik'                   UnicodeSubject(u'',predicate='dc:description')
 #       'Lagrum': list
 #           Lagrum(list)
-#              unicode/Link
+#              unicode/LinkSubject(u'4 kap. 13 § rättegångsbalken',uri='http://...',predicate='rinfo:lagrum')
 #       'Rättsfall': list
 #           Rattsfall(list)
-#               unicode/Link
+#               unicode/LinkSubject(u'RÅ 1980 2:68',
+#                                   uri='http://...',
+#                                   predicate='rinfo:rattsfallshanvisning')
 #       'Sökord': list
-#           unicode
+#           UnicodeSubject(u'Förhandsbesked',predicate='dc:subject')
 #       'Litteratur': list
-#           unicode (på sikt även Link)
-#   Referatstext (list)
-#       Stycke (list)
+#           UnicodeSubject(u'Grosskopf, Skattenytt 1988, s. 182-183.', predicate='dct:relation') 
+#   Referatstext(list)
+#       Stycke(list)
 #           unicode/Link
 
 class Referat(CompoundStructure): pass
 
 class Metadata(MapStructure): pass
+
+class UnicodeSubject(PredicateType,UnicodeStructure): pass
+
+class IntSubject(PredicateType,IntStructure): pass
+
+class DateSubject(PredicateType, DateStructure): pass
+
+class LinkSubject(PredicateType, Link): pass
 
 class Lagrum(CompoundStructure): pass
 
@@ -72,7 +89,7 @@ class Referatstext(CompoundStructure): pass
 
 class Stycke(CompoundStructure): pass
 
-    
+
 
 # NB: You can't use this class unless you have an account on
 # domstolsverkets FTP-server, and unfortunately I'm not at liberty to
@@ -80,14 +97,18 @@ class Stycke(CompoundStructure): pass
 class DVDownloader(LegalSource.Downloader):
     def __init__(self,baseDir="data"):
         self.dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
-        self.intermediate_dir = baseDir + os.path.sep + __moduledir__ + 'word'
+        self.intermediate_dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'word'
         if not os.path.exists(self.dir): 
             Util.mkdir(self.dir)
         inifile = self.dir + os.path.sep + __moduledir__ + ".ini"
         log.info(u'Laddar inställningar från %s' % inifile)
         self.config = ConfigObj(inifile)
-        # Why does this say "super() argument 1 must be type, not classobj"?
+        # Why does this say "super() argument 1 must be type, not
+        # classobj"? Because LegalSource.Downloader is an oldstyle
+        # class. Change it to inherit from object, or replace the
+        # super call with LegalSource.Downloader.__init__(self)
         # super(DVDownloader,self).__init__()
+        
         self.browser = Browser()
 
     def DownloadAll(self):
@@ -101,9 +122,12 @@ class DVDownloader(LegalSource.Downloader):
         # ftplib to play nice w/ domstolsverkets ftp server
         url = 'ftp://ftp.dom.se/%s' % dirname
         log.info(u'Listar innehåll i %s' % url)
-        out = os.popen("ncftpls -m -u %s -p %s %s" % (self.config['ftp_user'], self.config['ftp_pass'], url))
-        lines = out.readlines()
-        for line in lines:
+        cmd = "ncftpls -m -u %s -p %s %s" % (self.config['ftp_user'], self.config['ftp_pass'], url)
+        (ret, stdout, stderr) = Util.runcmd(cmd)
+        if ret != 0:
+            raise Util.ExternalCommandError(stderr)
+
+        for line in stdout.split("\n"):
             parts = line.split(";")
             filename = parts[-1].strip()
             if line.startswith('type=dir') and recurse:
@@ -136,9 +160,9 @@ class DVDownloader(LegalSource.Downloader):
             if m:
                 (court, malnr, referatnr) = (m.group(1), m.group(2), m.group(3))
                 if referatnr:
-                    outfilename = os.path.sep.join([self.dir, 'unzipped', court, "%s_%s.doc" % (malnr,referatnr)])
+                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s_%s.doc" % (malnr,referatnr)])
                 else:
-                    outfilename = os.path.sep.join([self.dir, 'unzipped', court, "%s.doc" % (malnr)])
+                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s.doc" % (malnr)])
 
                 if "_notis_" in name:
                     continue
@@ -166,7 +190,7 @@ class DVDownloader(LegalSource.Downloader):
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
 
 
-DC = Namespace("http://purl.org/dc/elements/1.1/")
+DCT = Namespace("http://dublincore.org/documents/dcmi-terms/")
 XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
 RINFO = Namespace("http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
 class DVParser(LegalSource.Parser):
@@ -188,30 +212,25 @@ class DVParser(LegalSource.Parser):
     # publikationsordinal ('1987:39'), arsutgava (1987) och sidnummer
     # (187). Alternativt kan publikationsordinal/arsutgava/sidnummer
     # ersättas med publikationsplatsangivelse.
-    labels = {u'Rubrik':DC['title'],
-              u'Domstol':DC['creator'], # konvertera till auktoritetspost
-              u'Målnummer':RINFO['malnummer'], 
-              u'Domsnummer':RINFO['domsnummer'],
-              u'Diarienummer':RINFO['diarienummer'],
-              u'Avdelning':RINFO['domstolsavdelning'],
-              u'Referat':None, 
+    labels = {u'Rubrik'        :DCT['description'],
+              u'Domstol'       :DCT['creator'], # konvertera till auktoritetspost
+              u'Målnummer'     :RINFO['malnummer'], 
+              u'Domsnummer'    :RINFO['domsnummer'],
+              u'Diarienummer'  :RINFO['diarienummer'],
+              u'Avdelning'     :RINFO['domstolsavdelning'],
+              u'Referat'       :DCT['identifier'], 
               u'Avgörandedatum':RINFO['avgorandedatum'], # konvertera till xsd:date
               }
 
     # Metadata som kan innehålla noll eller flera poster.
     # Litteratur/sökord har ingen motsvarighet i RINFO-vokabulären
-    multilabels = {u'Lagrum':RINFO['lagrum'],
-                   u'Rättsfall':RINFO['rattsfallshanvisning'],
-                   u'Litteratur':None,
-                   u'Sökord':None}
+    multilabels = {u'Lagrum'    :RINFO['lagrum'],
+                   u'Rättsfall' :RINFO['rattsfallshanvisning'],
+                   u'Litteratur':DCT['relation'], # dct:references vore bättre, men sådana ska inte ha literalvärden
+                   u'Sökord'    :DCT['subject']
+                   }
 
-    #def __init__(self,id,files,baseDir):
-        #self.id = id
-        #self.dir = baseDir + "/dv/parsed"
-        #if not os.path.exists(self.dir):
-            #Util.mkdir(self.dir)
-        #self.files = files
-
+        
     def Parse(self,id,docfile):
         import codecs
         self.id = id
@@ -241,22 +260,29 @@ class DVParser(LegalSource.Parser):
             node = soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt").findParent('td')
         else:
             raise AssertionError(u"Kunde inte hitta domstolsnamnet i %s" % htmlfile)
-        head[u'Domstol'] = Util.elementText(node)
+        txt = Util.elementText(node)
+        authrec = self.find_authority_rec(txt),
+        head[u'Domstol'] = LinkSubject(txt,
+                                       uri=unicode(authrec[0]),
+                                       predicate=self.labels[u'Domstol'])
 
         # Det som står till höger om domstolsnamnet är referatnumret
         # (exv "NJA 1987 s. 113")
         node = node.findNextSibling('td')
-        head[u'Referatnummer'] = Util.elementText(node)
-        if not head[u'Referatnummer']:
+        head[u'Referat'] = UnicodeSubject(Util.elementText(node),
+                                          predicate=self.labels[u'Referat'])
+        if not head[u'Referat']:
             # För specialdomstolarna kan man lista ut referatnumret
             # från målnumret - det borde vi försöka göra här
-            raise AssertionError(u"Kunde inte hitta referatnumret i %s" % htmlfile)
+            raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % htmlfile)
 
         # Hitta övriga enkla metadatafält i sidhuvudet
         for key in self.labels.keys():
             node = soup.firstText(key+u':')
             if node:
-                head[key] = Util.elementText(node.findParent('td').findNextSibling('td'))
+                txt = Util.elementText(node.findParent('td').findNextSibling('td'))
+                if txt: # skippa fält med tomma strängen-värden
+                    head[key] = UnicodeSubject(txt, predicate=self.labels[key])
 
         # Hitta sammansatta metadata i sidhuvudet
         for key in [u"Lagrum", u"Rättsfall"]:
@@ -272,9 +298,29 @@ class DVParser(LegalSource.Parser):
                         items = [Util.normalizeSpace(x) for x in self.re_delimSplit(txt)]
                 if items != ['']:
                     if key == u'Lagrum':
-                        head[key] = [Lagrum([lagrum_parser.parse(i)]) for i in items]
+                        containercls = Lagrum
+                        parsefunc = lagrum_parser.parse
                     elif key == u'Rättsfall':
-                        head[key] = [Rattsfall([rattsfall_parser.parse(i)]) for i in items]
+                        containercls = Rattsfall
+                        parsefunc = rattsfall_parser.parse
+
+                    head[key] = []
+                    for i in items:
+                        l = containercls()
+                        # Modify the result of parsing for references
+                        # and change all Link objects to LinkSubject
+                        # objects with an extra RDF predicate
+                        # property. Maybe the link class should be
+                        # changed to do this instead?
+                        for node in parsefunc(i):
+                            if isinstance(node,Link):
+                                l.append(LinkSubject(unicode(node),
+                                                     uri=unicode(node.uri),
+                                                     predicate=self.multilabels[key]))
+                            else:
+                                l.append(node)
+
+                        head[key].append(l)
 
         # Hitta själva referatstexten... här kan man göra betydligt
         # mer, exv hitta avsnitten för de olika instanserna, hitta
@@ -286,48 +332,81 @@ class DVParser(LegalSource.Parser):
 
         # Hitta sammansatta metadata i sidfoten
         txt = Util.elementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
-        head[u'Sökord'] = [Util.normalizeSpace(x) for x in self.re_delimSplit(txt)]
-            
+        head[u'Sökord'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Sökord'])
+                           for x in self.re_delimSplit(txt)]
+        
         if soup.firstText(u'Litteratur:'):
             txt = Util.elementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
-            head[u'Litteratur'] = [Util.normalizeSpace(x) for x in txt.split(";")]
+            head[u'Litteratur'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Litteratur'])
+                                   for x in txt.split(";")]
 
+        # Putsa upp metadatan på olika sätt
+        #
+        # Lägg till utgivare
+        authrec = self.find_authority_rec(u'Domstolsverket'),
+        head[u'Utgivare'] = LinkSubject(u'Domstolsverket',
+                                       uri=unicode(authrec[0]),
+                                       predicate=DCT['publisher'])
 
-        # Formulera om delar av metadatan till en RDF-graf
+        # I RINFO-vokabulären motsvaras en referatsbeteckning (exv
+        # "NJA 1987 s 187 (NJA 1987:39)") av upp till fyra separata
+        # properties
+        if u'Referat' in head:
+            txt = unicode(head[u'Referat'])
+            for (pred,regex) in {u'rattsfallspublikation':r'([^ ]+)',
+                                 u'publikationsordinal'  :r'(\d{4}:\d+)',
+                                 u'arsutgava'            :r'(\d{4})',
+                                 u'sidnummer'            :r's.? ?(\d+)'}.items():
+                m = re.search(regex,txt)
+                # print "Trying to match %s with %s" % (regex, txt)
+                if m:
+                    # print "success"
+                    # FIXME: arsutgava should be typed as DateSubject
+                    head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
+
+        # Putsa till avgörandedatum - det är ett date, inte en string
+        head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
+                                              predicate=self.labels[u'Avgörandedatum'])
+        # OK, färdigputsat!
+
+        # Formulera om metadatan till en RDF-graf
         docuri = URIRef(u'http://lagen.nu/%s' % self.id)
         graph = Graph()
-        graph.bind("dc", "http://purl.org/dc/elements/1.1/")
+        graph.bind("dct", "http://dublincore.org/documents/dcmi-terms/")
         graph.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
         graph.bind("rinfo", "http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
         graph.add((docuri, RDF.type, RINFO['VagledandeDomstolsavgorande']))
-
-        for (key,val) in self.labels.items():
-            if key in head and val:
-                graph.add((docuri, val, Literal(head[key].encode('utf-8'))))
-                #graph.add((docuri, val, Literal(u'blahonga')))
-
-        for (key,val) in self.multilabels.items():
-            if key in head and val:
-                # bara sådana lagrums/rättsfallshänvisningar vi
-                # faktiskt lyckats uttyda är intressanta att ha med
-                for item in val:
-                    if isinstance(item,Link):
-                        #pass
-                        graph.add((docuri, RINFO['lagrum'],URIRef(item.uri)))
-
+        self.add_to_graph(docuri,graph,head.values())
         # tyvärr funkar inte graph.query på windows, så vi kan inte
-        # göra så mycket mer med grafen än att serialisera den...
+        # söka i den direkt från templaterendreringen. Vi kan i stort
+        # sett bara serialisera den
         #
-        # print graph.serialize(format="n3").decode('utf-8')
+        # print graph.serialize(format="nt").decode('utf-8')
         # 
         # nsmap = {u'rdf':RDF.RDFNS,
         #          u'rinfo':RINFO,
-        #          u'dc':DC}
+        #          u'dct':DCT}
         # print graph.query(u'SELECT ?subj WHERE { ?obj dc:subject ?subj }', nsmap)
 
+        
         xhtml = self.generate_xhtml(head,body,__moduledir__,globals())
         return xhtml
+
     
+    def add_to_graph(self,objecturi,graph,nodes):
+        for item in nodes:
+            if isinstance(item,list):
+                self.add_to_graph(objecturi,graph,item)
+            elif isinstance(item,PredicateType):
+                if isinstance(item,Link):
+                    # print "adding %s as %s (URIRef)" % (item.uri,item.predicate)
+                    graph.add((objecturi,item.predicate,URIRef(item.uri)))
+                else:
+                    # print "adding %s as %s (Literal)" % (item,item.predicate)
+                    graph.add((objecturi,item.predicate,Literal(item)))
+            else:
+                # probably just a unicode object used for presentation
+                pass
 
     def __createUrn(self,data):
         domstolar = {
@@ -382,6 +461,17 @@ class DVManager(LegalSource.Manager):
     ####################################################################
     
     
+    def __doAll(self,dir,suffix,method):
+        from sets import Set
+        basefiles = Set()
+        # find all IDs based on existing files
+        for f in Util.listDirs(dir, suffix):
+            # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
+            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            basefiles.add(basefile)
+        for basefile in sorted(basefiles,Util.numcmp):
+            method(basefile)
+
     def __doAllParsed(self,method,max=None):
         cnt = 0
         for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
@@ -459,9 +549,9 @@ class DVManager(LegalSource.Manager):
             # loggging-modulen inte klarar av när källkoden
             # (iso-8859-1-kodad) innehåller svenska tecken
             formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-            log.error(u'%s: %s:\nMyTraceback (most recent call last):\n%s%s: %s' %
+            log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s %s' %
                       (basefile,
-                       sys.exc_info()[0].__name__,
+                       sys.exc_info()[0].__name__, 
                        u''.join(formatted_tb),
                        sys.exc_info()[0].__name__,
                        sys.exc_info()[1]))
@@ -469,13 +559,12 @@ class DVManager(LegalSource.Manager):
 
 
     def ParseAll(self):
-        # print "DV: ParseAll temporarily disabled"
-        # return
+        self.__doAll(os.path.sep.join([self.baseDir, 'dv', 'intermediate','word']), '.doc',self.Parse)
+
         downloadDir = os.path.sep.join([os.getcwd(),self.baseDir, 'dv', 'intermediate','word'])
         for f in Util.listDirs(downloadDir,".doc"):
             basefile = f[len(downloadDir)+1:-4]
-            print "Dping %s( %s)" % (basefile,f)
-            # self.Parse(basefile)
+            self.Parse(basefile)
 
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.w3.org/2002/06/xhtml2/ http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/"
+      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+      xml:base="${meta['xml:base']}"
+      xml:lang="sv"
+      xmlns:py="http://genshi.edgewall.org/"
+      >
+    <head>
+      <title property="${meta[u'Referat'].predicate}" py:content="meta[u'Referat']">Referatnummer</title>
+      <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#VagledandeDomstolsavgorande"/>
+      <!-- !publisher = auktoritetspost för DV -->
+      <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/>
+      <!-- !creator = auktoritetspost för aktuell domstol -->
+      <link rel="dc:creator" href="${meta[u'Domstol'].uri}"/>
+    </head>
+
+    <p py:def="render_stycke(stycke)">
+      <py:for each="part in stycke" py:choose="">
+	<div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div>
+	<div py:when="isinstance(part, unicode)" py:strip="">${part}</div>
+	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div>
+      </py:for>
+    </p>
+    
+    <a py:def="render_link(link)" property="${link.predicate}" href="${link.uri}">${link}</a>
+
+    <div py:def="render_listvalue(item)" py:strip="">
+      <py:for each="part in item" py:choose="">
+	<div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div>
+	<div py:when="isinstance(part, unicode)" py:strip="">${part}</div>
+	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_listvalue</div>
+      </py:for>
+    </div>
+	 
+    
+    <div py:def="render_listvalues(items)" py:strip="" py:choose="">
+      <py:for each="item in items" py:choose="">
+	<dd py:when="isinstance(item,list)">${render_listvalue(item)}</dd>
+	<dd py:otherwise =""
+	    py:content="item"
+	    property="${item.predicate}">Värde</dd>
+      </py:for>
+    </div>
+
+    <body>
+      <section id="metadata">
+	<dl>
+	  <py:for each="(key,val) in meta.items()" py:choose="">
+	    <dt py:content="key">Nyckel</dt>
+	    <div py:when="isinstance(val,list)" py:strip="">
+	      ${render_listvalues(val)}
+	    </div>
+	    <dd py:when="isinstance(val,Link)"
+		py:content="val"
+		property="${val.predicate}"
+		resource="${val.uri}'">Värde</dd>
+	    <dd py:otherwise=""
+		py:content="val"
+		property="${val.predicate}">Värde</dd>
+	  </py:for>
+	</dl>
+      </section>
+      <section id="referatstext">
+	<py:for each="part in body" py:choose="">
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
+	</py:for>
+      </section>
+    </body>
+</html>

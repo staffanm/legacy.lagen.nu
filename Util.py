@@ -168,8 +168,18 @@ def uniqueList(*lists):
     return slots.keys();
 
 def runcmd(cmdline):
-    # print "runcmd: %s" % cmdline
+    # print "runcmd: %r" % cmdline
+    if isinstance(cmdline,unicode):
+        # FIXME: How do we detect the proper encoding?
+        cmdline = cmdline.encode('iso-8859-1')
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    chunk = p.stdout.read(8192)
+    stdout = ""
+    while not chunk == '':
+        #print "reading stdout chunk"
+        stdout += chunk
+        chunk = p.stdout.read(8192)
+    
     chunk = p.stderr.read(8192)
     stderr = ""
     while not chunk == '':
@@ -177,19 +187,13 @@ def runcmd(cmdline):
         stderr += chunk
         chunk = p.stderr.read(8192)
 
-    stdout = ""
-    chunk = p.stderr.read(8192)
-    while not chunk == '':
-        #print "reading stdout chunk"
-        stderr += chunk
-        chunk = p.stderr.read(8192)
     #stderr = p.stderr.read()
     #stdout = p.stdout.read()
-    ret = p.wait()
+    ret = p.wait()    
     return (ret,stdout,stderr)
 
 def normalizeSpace(string):
-    return " ".join(string.split())
+    return u' '.join(string.split())
 
 def listDirs(dir,suffix=None):
     """A generator that works much like os.listdir, only recursively (and only returns files, not directories)"""
@@ -217,7 +221,7 @@ def loadSoup(filename,encoding='iso-8859-1'):
 def elementText(element):
     """finds the plaintext contained in a BeautifulSoup element"""
     return normalizeSpace(
-        ''.join(
+        u''.join(
         [e for e in element.recursiveChildGenerator() 
          if (isinstance(e,unicode) and 
              not isinstance(e,BeautifulSoup.Comment))]))
