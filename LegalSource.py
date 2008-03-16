@@ -139,7 +139,7 @@ class Parser:
         organisation, person el. dyl (exv 'Justitiedepartementet
         Gransk', returnerar en URI som är auktoritetspost för denna."""
         for (key, value) in self.authority_rec.items():
-            if label.startswith(key):
+            if label.lower().startswith(key.lower()):
                 return self.storage_uri_value(value)
         raise KeyError(label)
 
@@ -498,9 +498,9 @@ class Manager:
         """check to see if the outfile is newer than all ingoing files"""
         if not os.path.exists(outfile): return False
         outfileMTime = os.stat(outfile).st_mtime
-        newer = False
+        newer = True
         for f in infiles:
-            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = True
+            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
         return newer
     
     ####################################################################

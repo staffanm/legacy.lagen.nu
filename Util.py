@@ -198,6 +198,8 @@ def normalizeSpace(string):
 def listDirs(dir,suffix=None):
     """A generator that works much like os.listdir, only recursively (and only returns files, not directories)"""
     # inspired by http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/161542
+    if isinstance(dir,str):
+        print "WARNING: listDirs was called with str. Use unicode instead, plz"
     directories = [dir]
     while directories:
         dir = directories.pop()

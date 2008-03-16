@@ -1675,8 +1675,10 @@ class SFSManager(LegalSource.Manager):
             p = SFSParser()
             p.verbose = verbose
             if quiet:
+                log.setLevel(logging.CRITICAL)
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
+                    
             p.references.verbose = verbose
             p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
             p.reader.autostrip=True

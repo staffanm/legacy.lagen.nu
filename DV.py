@@ -246,6 +246,10 @@ class DVParser(LegalSource.Parser):
         # Worddokumenten är bara mestadels standardiserade...  En
         # alternativ fallbackmetod vore att söka efter tabellceller
         # vars enda text är något av de kända domstolsnamnen
+        #
+        # Ibland saknas domstolsnamnet helt eller är felskrivet
+        # (".Högsta Domstolen"). Där borde vi kunna falla tillbaks på
+        # första delen av basename/id
         if soup.first('span', 'riDomstolsRubrik'):
             node = soup.first('span', 'riDomstolsRubrik').findParent('td')
         elif soup.first('td', 'ritop1'):
@@ -265,6 +269,9 @@ class DVParser(LegalSource.Parser):
         head[u'Domstol'] = LinkSubject(txt,
                                        uri=unicode(authrec[0]),
                                        predicate=self.labels[u'Domstol'])
+        
+            
+        
 
         # Det som står till höger om domstolsnamnet är referatnumret
         # (exv "NJA 1987 s. 113")
@@ -561,11 +568,6 @@ class DVManager(LegalSource.Manager):
     def ParseAll(self):
         self.__doAll(os.path.sep.join([self.baseDir, 'dv', 'intermediate','word']), '.doc',self.Parse)
 
-        downloadDir = os.path.sep.join([os.getcwd(),self.baseDir, 'dv', 'intermediate','word'])
-        for f in Util.listDirs(downloadDir,".doc"):
-            basefile = f[len(downloadDir)+1:-4]
-            self.Parse(basefile)
-
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
@@ -668,5 +670,5 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     DVManager.__bases__ += (DispatchMixin,)
-    mgr = DVManager("testdata", __moduledir__)
+    mgr = DVManager(u'testdata', __moduledir__)
     mgr.Dispatch(sys.argv)

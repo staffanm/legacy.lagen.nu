@@ -42,7 +42,6 @@
 <http://rdf.kb.se/ap/20070812184835> rdfs:label "Utbildningsdepartementet" .
 <http://rdf.kb.se/ap/20070812184836> rdfs:label "Utrikesdepartementet" .
 
-<http://rdf.kb.se/ap/20080315191400> rdfs:label "Domstolsverket" .
 <http://rdf.kb.se/ap/20080315191300> rdfs:label "Marknadsdomstolen" .
 <http://rdf.kb.se/ap/20080315191301> rdfs:label "Hovrätten för Övre Norrland" . 
 <http://rdf.kb.se/ap/20080315191302> rdfs:label "Hovrätten för Nedre Norrland" .
@@ -60,3 +59,5 @@
 <http://rdf.kb.se/ap/20080315191314> rdfs:label "Patentbesvärsrätten" .
 <http://rdf.kb.se/ap/20080315191315> rdfs:label "Rättshjälpsnämnden" .
 <http://rdf.kb.se/ap/20080315191316> rdfs:label "Miljööverdomstolen" .
+<http://rdf.kb.se/ap/20080315191317> rdfs:label "Migrationsöverdomstolen" .
+<http://rdf.kb.se/ap/20080315191400> rdfs:label "Domstolsverket" .
