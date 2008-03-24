@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+# Mappningar mellan rättsinformationsdokumentobjekt (URI:er) och dess
+# titlar/förkortningar
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct: <http://dublincore.org/documents/dcmi-terms/> .
+
+<http://lagen.nu/1736:0123_1>	rdfs:label "byggningabalken";		dct:alternate "BB" .
+<http://lagen.nu/1736:0123_2>	rdfs:label "handelsbalken";		dct:alternate "HB" .
+<http://lagen.nu/1920:405>	rdfs:label "giftermålsbalken";		dct:alternate "GB" .
+<http://lagen.nu/1942:740>	rdfs:label "rättegångsbalken";		dct:alternate "RB" .
+<http://lagen.nu/1949:381>	rdfs:label "föräldrabalken";		dct:alternate "FB" .
+<http://lagen.nu/1958:637>	rdfs:label "ärvdabalken";		dct:alternate "ÄB" .
+<http://lagen.nu/1962:700>	rdfs:label "brottsbalken";		dct:alternate "BrB" .
+<http://lagen.nu/1970:994>	rdfs:label "jordabalken";		dct:alternate "JB" .
+<http://lagen.nu/1981:774>	rdfs:label "utsökningsbalken";		dct:alternate "UB" .
+<http://lagen.nu/1987:230>	rdfs:label "äktenskapsbalken";		dct:alternate "ÄktB" .
+<http://lagen.nu/1998:808>	rdfs:label "miljöbalken";		dct:alternate "MB" .
+<http://lagen.nu/1949:105>	rdfs:label "tryckfrihetsförordningen";	dct:alternate "TF" .
+<http://lagen.nu/1991:1469>	rdfs:label "yttrandefrihetsgrundlagen";	dct:alternate "YGL" .
+<http://lagen.nu/1810:0926>	rdfs:label "successionsordningen";	dct:alternate "SO" .
+<http://lagen.nu/1974:152>	rdfs:label "regeringsformen";		dct:alternate "RF" .
+<http://lagen.nu/1974:153>	rdfs:label "riksdagsordningen";		dct:alternate "RO" .
+<http://lagen.nu/1960:729>	rdfs:label "upphovsrättslagen";		dct:alternate "URL,UppL" .
+<http://lagen.nu/1915:218>	rdfs:label "avtalslagen";		dct:alternate "AvtL" .
+<http://lagen.nu/2000:274>	rdfs:label "distansavtalslagen" .
+<http://lagen.nu/1936:83>	rdfs:label "gåvolagen" .
+<http://lagen.nu/2005:551>	rdfs:label "aktiebolagslagen";		dct:alternate "ABL" .
+<http://lagen.nu/1845:50_s._1>	rdfs:label "lösöresköpslagen" .
+<http://lagen.nu/1988:254>	rdfs:label "knivlagen" .
+<http://lagen.nu/1982:80>	rdfs:label "anställningsskyddslagen";	dct:alternate "LAS" .
+<http://lagen.nu/2006:304>	rdfs:label "rättsprövningslagen";	dct:alternate "RpL" .
+<http://lagen.nu/1998:980>	rdfs:label "körkortsförordningen" .

@@ -26,7 +26,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
 import LegalSource 
-from LegalRef import SFSRefParser,PreparatoryRefParser,ParseError,Link
+from LegalRef import LegalRef,ParseError,Link
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
@@ -229,7 +229,7 @@ class SFSDownloader(LegalSource.Downloader):
         if not last_sfsnr:
             log.info(u'Letar efter senaste SFS-nr i  %s/sfst" % self.dir')
             last_sfsnr = "1600:1"
-            for f in Util.listDirs("%s/sfst" % self.dir, ".html"):
+            for f in Util.listDirs(u"%s/sfst" % self.dir, ".html"):
 
                 tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.dir)+6:-5]), f)
                 # FIXME: RFS1975:6 > 2008:1
@@ -428,7 +428,7 @@ class SFSParser(LegalSource.Parser):
         self.trace['tabell'].debug(u'Tabelltracern är igång')
                       
         self.verbose = True
-        self.references = SFSRefParser()
+        self.references = LegalRef(LegalRef.LAGRUM)
 
         self.current_section = u'0'
         self.current_chapter = u'0'
@@ -611,13 +611,13 @@ class SFSParser(LegalSource.Parser):
             except KeyError:
                 meta[predicate] = u''
 
-        meta['dc:publisher'] = self._find_authority_rec("Regeringskansliet")
+        meta['dc:publisher'] = self.find_authority_rec("Regeringskansliet")
         try:
-            meta['dc:creator'] = self._find_authority_rec(head["Departement/ myndighet"])
+            meta['dc:creator'] = self.find_authority_rec(head["Departement/ myndighet"])
         except KeyError:
             # Nån sorts vettig default?
-            meta['dc:creator'] = self._find_authority_rec(u'Regeringskansliet')
-        meta['rinfo:konsoliderar'] = self._storage_uri_value(
+            meta['dc:creator'] = self.find_authority_rec(u'Regeringskansliet')
+        meta['rinfo:konsoliderar'] = self.storage_uri_value(
                 "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
         
         return meta
@@ -923,8 +923,6 @@ class SFSParser(LegalSource.Parser):
         # det kan diskuteras om dessa ska ses som en del av den
         # konsoliderade lagtexten öht, men det verkar vara kutym att
         # ha med åtminstone de som kan ha relevans för gällande rätt
-
-        # TODO: hantera detta
         log.debug(u"    Ny Övergångsbestämmelser")
 
         rubrik = self.reader.readparagraph()
@@ -1539,7 +1537,7 @@ class SFSManager(LegalSource.Manager):
         from sets import Set
         basefiles = Set()
         # find all IDs based on existing files
-        for f in Util.listDirs("%s/%s/%s" % (self.baseDir,__moduledir__,dir), ".%s" % suffix):
+        for f in Util.listDirs(u"%s/%s/%s" % (self.baseDir,__moduledir__,dir), ".%s" % suffix):
             if '-' in f: continue
             # this transforms 'foo/bar/baz/1960/729.html' to '1960/729'
             basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
@@ -1632,8 +1630,10 @@ class SFSManager(LegalSource.Manager):
             if (not files['sfst'] and not files['sfsr']):
                 raise LegalSource.IdNotFound("No files found for %s" % basefile)
             filename = self._xmlFileName(basefile)
-            # check to see if the outfile is newer than all ingoing files. If it
-            # is (and force is False), don't parse
+
+            # check to see if the outfile is newer than all ingoing
+            # files. If it is (and force is False), don't parse
+            force = True
             if not force and self._outfileIsNewer(files,filename):
                 return
                     
@@ -1695,7 +1695,10 @@ class SFSManager(LegalSource.Manager):
             diffedlines = [x for x in difflines if x[0] != ' ']
 
             if len(diffedlines) > 0:
-                result = "F"
+                if keylines == []:
+                    result = "N"
+                else:
+                    result = "F"
             else:
                 result = "."
 
@@ -1731,7 +1734,7 @@ class SFSManager(LegalSource.Manager):
     def ParseTestAll(self):
         results = []
         failures = []
-        for f in Util.listDirs("test%sdata%sSFS" % (os.path.sep,os.path.sep), ".txt"):
+        for f in Util.listDirs(u"test%sdata%sSFS" % (os.path.sep,os.path.sep), ".txt"):
             result = self.ParseTest(f,verbose=False,quiet=True)
             if not result:
                 failures.append(f)

@@ -1,0 +1,65 @@
+# ------------ base.ebnf ----------------
+
+# Diverse produktioner som kan vara användbara lite varstans
+And                  ::= 'och'
+Also                 ::= 'samt'
+Or		     ::= 'eller'
+In                   ::= 'i'
+AndOr		     ::= (And/Or/Also)
+WAndOrW		     ::= Whitespace, AndOr, Whitespace
+Comma		     ::= ','
+CommaSpace	     ::= Comma, Whitespace
+Hyphen               ::= [-–] # – = endash, used in 2005:104 at least
+SectionMark	     ::= '§'
+DoubleSectionMark    ::= SectionMark, SectionMark # making the second optional fucks up ~20 test cases...
+Colon                ::= ':'
+LeftParen            ::= '('
+RightParen           ::= ')'
+Pipe		     ::= '|'
+Slash                ::= '/'
+Period               ::= '.'
+Ar                   ::= LangtAr/KortAr
+LangtAr              ::= digit, digit, digit, digit
+KortAr               ::= digit, digit
+
+
+ordinal             ::= "första"/"andra"/"tredje"/"fjärde"/"femte"/"sjätte"/"sjunde"/"åttonde"/"nionde"/[1-9]
+month               ::= "januari"/"februari"/"mars"/"april"/"maj"/"juni"/"juli"/"augusti"/"september"/"oktober"/"november"/"december"
+PieceOrPieces       ::= "st."/"stycket"/"styckena"/"st "
+SentenceOrSentences ::= "meningen"/"meningarna"
+SectionRefChar      ::= [a-n]
+Element	            ::= 'mom.'
+
+
+# GRUNDLÄGGANDE BYGGSTENAR
+plain        ::= (Whitespace/word/number/punctuation)
+Whitespace   ::= [  \t\n\r\f\v]+
+WhitespaceOrPunctuation ::= (Whitespace/punctuation)+
+
+# Bokstäver som hittats i SFST-datat:
+# * œ and Œ are windows-1252-only oe-ligatures (upper- and lowercase)
+# * Š (S-with-caron) occurs in 1994:1720 (where they probably mean 'é') 
+# * ş occurs in 1982:790 (where they probably mean space)
+word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]+
+char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]
+number       ::= [0-9]+
+digit	     ::= [0-9]
+
+
+# Skiljetecken som hittats i SFST-datat:
+# * the – is some wierd windows-1252-hyphen, 
+# * “ and ” are "smart quotes", 
+# * › is larger-than-or-equal, 
+# * ‹ is less-than-or-equal,
+# * ˜ is a superscript-tilde. 
+# * ‡ is a double-dagger, 
+# * • is typography-bullet, 
+# * ‘ and ’ are single-smartquotes. 
+# * \177 is DEL, which is present in 1977:1194, 
+# *  is unmapped, but present in 1993:1199. 
+# * ‰ is unknown to me. 
+# * ¥ is (erronosly?) used in 2005:837. 
+punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–›‹˜‡•‰¥-]
+
+
+# ------------ end of base.ebnf ----------------

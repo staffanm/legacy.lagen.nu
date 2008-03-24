@@ -2,10 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 
-# On what to add here:
-# * only functions that are generally useful in any part of the source code
-# * code only useful for Parsers/Downloaders should go in the LegalSource.* classes
-
 import os, subprocess, codecs
 import BeautifulSoup
 
@@ -173,13 +169,6 @@ def runcmd(cmdline):
         # FIXME: How do we detect the proper encoding?
         cmdline = cmdline.encode('iso-8859-1')
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    chunk = p.stdout.read(8192)
-    stdout = ""
-    while not chunk == '':
-        #print "reading stdout chunk"
-        stdout += chunk
-        chunk = p.stdout.read(8192)
-    
     chunk = p.stderr.read(8192)
     stderr = ""
     while not chunk == '':
@@ -187,6 +176,13 @@ def runcmd(cmdline):
         stderr += chunk
         chunk = p.stderr.read(8192)
 
+    chunk = p.stdout.read(8192)
+    stdout = ""
+    while not chunk == '':
+        #print "reading stdout chunk"
+        stdout += chunk
+        chunk = p.stdout.read(8192)
+    
     #stderr = p.stderr.read()
     #stdout = p.stdout.read()
     ret = p.wait()    

@@ -2,6 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 """This module finds references to legal sources (including individual
 sections, eg 'Upphovsrättslag (1960:729) 49 a §') in plaintext"""
+
 import sys,os,re
 import codecs
 import traceback
@@ -11,6 +12,9 @@ locale.setlocale(locale.LC_ALL,'')
 
 # 3rdparty libs
 from simpleparse.parser import Parser
+from simpleparse.stt.TextTools.TextTools import tag
+from rdflib.Graph import Graph
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
 from DispatchMixin import DispatchMixin
@@ -19,8 +23,8 @@ import Util
 
 # The charset used for the bytestrings that is sent to/from
 # simpleparse (which does not handle unicode)
-
-SP_CHARSET='iso-8859-1'
+# Choosing utf-8 makes § a two-byte character, which does not work well
+SP_CHARSET='iso-8859-1' 
 
 class Link(UnicodeStructure): # just a unicode string with a .uri property
     def __repr__(self):
@@ -36,7 +40,7 @@ class NodeTree:
 
     def __getattr__(self,name):
         if name == "text":
-            return self.data
+            return self.data.decode(SP_CHARSET)
         elif name == "tag":
             return (self.isRoot and 'root' or self.root[0])
         elif name == "nodes":
@@ -55,211 +59,198 @@ class ParseError(Exception):
     def __str__(self):
         return repr(self.value)
 
-class SFSRefParser:
-    """Identifierar referenser till svensk lagtext i löpande text"""
-    attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
-    global_namedlaws = {}
-    global_lawabbr   = {}
+# Lite om hur det hela funkar: Att hitta referenser i löptext är en
+# tvåstegsprocess.
+#
+# I det första steget skapar simpleparse en nodstruktur från indata
+# och en lämplig ebnf-grammatik. Väldigt lite kod i den här modulen
+# hanterar första steget, simpleparse gör det tunga
+# jobbet. Nodstrukturen kommer ha noder med samma namn som de
+# produktioner som definerats i ebnf-grammatiken.
+#
+# I andra steget gås nodstrukturen igenom och omvandlas till en lista
+# av omväxlande unicode- och Link-objekt. Att skapa Link-objekten är
+# det svåra, och det mesta jobbet görs av formatter_dispatch. Den
+# tittar på varje nod och försöker hitta ett lämpligt sätt att
+# formattera den till ett Link-objekt med en uri-property. Eftersom
+# vissa produktioner ska resultera i flera länkar och vissa bara i en
+# kan detta inte göras av en enda formatteringsfunktion. För de enkla
+# fallen räcker den generiska formatteraren format_tokentree till, men
+# för svårare fall skrivs separata formatteringsfunktioner. Dessa har
+# namn som matchar produktionerna (exv motsvaras produktionen
+# ChapterSectionRefs av funktionen format_ChapterSectionRefs).
+#
+# Koden är tänkt att vara generell för all sorts referensigenkänning i
+# juridisk text. Eftersom den växt från kod som bara hanterade rena
+# lagrumsreferenser är det ganska mycket kod som bara är relevant för
+# igenkänning av just svenska lagrumsänvisningar så som de förekommer
+# i SFS. Sådana funktioner/avsnitt är markerat med "SFS-specifik
+# [...]" eller "KOD FÖR LAGRUM"
+
+class LegalRef:
+    # Kanske detta borde vara 1,2,4,8 osv, så att anroparen kan be om
+    # LAGRUM | FORESKRIFTER, och så vi kan definera samlingar av
+    # vanliga kombinationer (exv ALL_LAGSTIFTNING = LAGRUM |
+    # KORTLAGRUM | FORESKRIFTER | EGLAGSTIFTNING)
+    LAGRUM = 1             # hänvisningar till lagrum i SFS
+    KORTLAGRUM = 2         # SFS-hänvisningar på kortform
+    FORESKRIFTER = 3       # hänvisningar till myndigheters författningssamlingar
+    EGLAGSTIFTNING = 4     # EG-fördrag, förordningar och direktiv
+    INTLLAGSTIFTNING = 5   # Fördrag, traktat etc
+    FORARBETEN = 6         # proppar, betänkanden, etc
+    RATTSFALL = 7          # Rättsfall i svenska domstolar
+    MYNDIGHETSBESLUT = 8   # Myndighetsbeslut (JO, ARN, DI...)
+    EGRATTSFALL = 9        # Rättsfall i EG-domstolen/förstainstansrätten 
+    INTLRATTSFALL = 10     # Europadomstolen
+
+    
+    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
     re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?)\b', re.LOCALE)
     re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?)')
-    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
-    
 
-    # the first file contains all numbered laws that
-    # find-named-laws.sh can find. It contains several ID's for the
-    # same law and is generally messy.
-    # for line in open(os.path.dirname(__file__)+'/named-law-references.txt').read().splitlines():
-    #     m = re.match(r'([^ ]+) \((\d+:\d+)\)',line)
-    #     global_namedlaws[m.group(1)] = m.group(2)
+    def __init__(self,*args):
+        # print repr(args)
+        self.graph = Graph()
+        self.graph.load("etc/sfs-extra.n3", format="n3")
+        self.roots = []
+        self.uriformatter = {}
+        self.decl = ""
+        self.namedlaws = {}
+        self.load_ebnf("etc/base.ebnf")
 
-    # the second file contains laws that are never numbered --
-    # "balkarna" -- and other hand-fixed laws. It takes predecense
-    # over the first file.
-    for line in open('etc/sfs.extra.txt').read().splitlines():
-        fields = re.split("\t+", line)
-        assert(2 <= len(fields) <= 3)
-        name = fields[0]
-        id = fields[1]
-        global_namedlaws[name] = id
-        if len(fields) == 3:
-            for abbr in fields[2].split(","):
-                # we need to go by unicode to get lower() to work
-                # regardless of current locale
-                # abbr = unicode(abbr,SP_CHARSET).lower().encode(SP_CHARSET)
-                # print "mapping %s to %s" % (abbr,id)
-                global_lawabbr[abbr] = id
+        if self.LAGRUM in args:
+            productions = self.load_ebnf("etc/lagrum.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.sfs_format_uri
+            self.namedlaws.update(self.get_relations(RDFS.label))
+            self.roots.append("sfsrefs")
+            self.roots.append("sfsref")
 
-    decl = open('etc/sfs.ebnf').read()
-    decl += "LawAbbreviation ::= ('%s')" % "'/'".join(global_lawabbr.keys())
-    #parser = generator.buildParser(decl).parserbyname('root')
-    simpleparser = Parser(decl, "root")
-    
-    # This should really be imported from SFS.py ("from SFS import
-    # SFSidToFilename"), but since that imports LegalRef that doesn't seem to be
-    # possible (circular reference problems?)
-    def SFSidToFilename(sfsid):
-        """converts a SFS id to a filename, sans suffix, eg: '1909:bih. 29
-        s.1' => '1909/bih._29_s.1'. Returns None if passed an invalid SFS
-        id."""
-        if sfsid.find(":") < 0: return None
-        return re.sub(r'([A-Z]*)(\d{4}):',r'\2/\1',sfsid.replace(' ', '_'))
+        if self.KORTLAGRUM in args:
+            # om vi inte redan laddat lagrum.ebnf måste vi göra det
+            # nu, eftersom kortlagrum.ebnf beror på produktioner som
+            # definerats där
+            if not self.LAGRUM in args:
+                self.load_ebnf("etc/lagrum.ebnf")
+                
+            productions = self.load_ebnf("etc/kortlagrum.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.sfs_format_uri
+            DCT = Namespace("http://dublincore.org/documents/dcmi-terms/")
+            d = self.get_relations(DCT['alternate'])
+            self.namedlaws.update(d)
+            self.decl += "LawAbbreviation ::= ('%s')\n" % "'/'".join([x.encode(SP_CHARSET) for x in d.keys()])
+            self.roots.append("kortlagrumref")
 
-    def __init__(self,verbose=False,namedlaws={}):
+        if self.EGLAGSTIFTNING in args:
+            productions = self.load_ebnf("etc/eglag.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.eglag_format_uri
+            self.roots.append("eglagref")
+        if self.FORARBETEN in args:
+            productions = self.load_ebnf("etc/forarbeten.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.forarbete_format_uri
+            self.roots.append("forarbeteref")
+
+        self.decl += "root ::= (%s/plain)+\n" % "/".join(self.roots)
+        # pprint(productions)
+        # print self.decl.decode(SP_CHARSET,'ignore')
+
+        self.parser = Parser(self.decl, "root")
+        self.tagger = self.parser.buildTagger("root")
+        self.verbose        = False
+        self.depth = 0
+
+        # SFS-specifik kod
         self.currentlaw     = None
         self.currentchapter = None
         self.currentsection = None
         self.currentpiece   = None
         self.lastlaw        = None
-        self.verbose = verbose
-        self.depth = 0
-        self.namedlaws = namedlaws
-        # print "__init__: number of namedlaws: %s" % len(namedlaws)
-        # self.currentendidx  = 0
+        self.currentlynamedlaws = {}
         
-    def normalize_sfsid(self,sfsid):
-        # sometimes '1736:0123 2' is given as '1736:0123 s. 2'. This fixes that.
-        return sfsid.replace('s. ','') # more advanced normalizations to come...
+    def load_ebnf(self,file):
+        """Laddar in produktionerna i den angivna filen i den
+        EBNF-deklaration som används, samt returnerar alla
+        *Ref och *RefId-produktioner"""
 
-    def normalize_lawname(self,lawname):
-        lawname=lawname.replace('|','').lower()
-        if lawname.endswith('s'):
-            lawname = lawname[:-1]
-        return lawname
+        f = open(file)
+        content = f.read()
+        self.decl += content
+        f.close()
+        return [x.group(1) for x in re.finditer(r'(\w+(Ref|RefID))\s*::=', content)]
+
+    def get_relations(self, predicate):
+        d = {}
+        for obj, subj in self.graph.subject_objects(predicate):
+            d[unicode(subj)] = unicode(obj)
+        return d
+
+
+    def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9"):
+        if indata == "": return indata # this actually triggered a bug...
+        m = self.re_urisegments.match(baseuri)
+        self.baseuri_attributes = {'baseuri':m.group(1),
+                                   'law':m.group(2),
+                                   'chapter':m.group(6),
+                                   'section':m.group(8),
+                                   'piece':m.group(10),
+                                   'item':m.group(12)}
+        # Det är svårt att få EBNF-grammatiken att känna igen
+        # godtyckliga ord som slutar på ett givet suffix (exv
+        # 'bokföringslagen' med suffixet 'lagen'). Därför förbehandlar
+        # vi indatasträngen och stoppar in ett '|'-tecken innan vissa
+        # suffix
+        fixedindata = self.re_escape.sub(r'|\1', indata)
         
-    def namedlaw_to_sfsid(self,text):
-        text = self.normalize_lawname(text)
-        
-        nolaw = ['aktieslagen',
-                 'anslagen',
-                 'avslagen',
-                 'bolagen',
-                 'bergslagen',
-                 'emballagen',
-                 'ersättningsslagen',
-                 'fissionsvederlagen',
-                 'föreslagen',
-                 'förslagen',
-                 'försäkringsbolagen',
-                 'inkomstslagen',
-                 'klockslagen',
-                 'kapitalunderlagen',
-                 'omslagen',
-                 'ordalagen',
-                 'slagen',
-                 'tillslagen',
-                 'trädslagen',
-                 'varuslagen'
-                 ]
-        if text in nolaw:
-            return None
+        # SimpleParse har inget stöd för unicodesträngar, så vi
+        # konverterar intdatat till en bytesträng
+        if isinstance(fixedindata,unicode):
+            fixedindata = fixedindata.encode(SP_CHARSET)
+        # Det är är inte det enklaste sättet att göra det, men om man
+        # gör enligt Simpleparse-dokumentationen byggs taggertabellen
+        # om för varje anrop till parse
+        taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
 
-        if self.namedlaws.has_key(text):
-            return self.namedlaws[text]
-        elif self.global_namedlaws.has_key(text):
-            return self.global_namedlaws[text]
-        else:
-            if self.verbose:
-                print u"WARNING: I don't know the ID of named law '%s'" % text.decode(SP_CHARSET)
-            return None
+        result = []
 
-    def lawabbr_to_sfsid(self,abbr):
-        # abbr = unicode(abbr,SP_CHARSET).lower().encode(SP_CHARSET)
-        return self.global_lawabbr[abbr] 
-
-    def clear_state(self):
-        self.currentlaw     = None
-        self.currentchapter = None
-        self.currentsection = None
-        self.currentpiece   = None
-    
-    def format_attributes(self,attributes):
-        piecemappings = {'första' :'1',
-                         'andra'  :'2',
-                         'tredje' :'3',
-                         'fjärde' :'4',
-                         'femte'  :'5',
-                         'sjätte' :'6',
-                         'sjunde' :'7',
-                         'åttonde':'8',
-                         'nionde' :'9'}
-        res = ""
-        for key in self.attributeorder:
-            if attributes.has_key(key):
-                val = attributes[key]
-                # if key == 'chapter':
-                #    self.currentchapter = attributes[key]
-                if ((key == 'piece') or (key == 'sentence')) and not val.isdigit():
-                    res += ' %s="%s"' % (key,piecemappings[val.lower()])
-                else:
-                    if key == 'law':
-                        val = self.normalize_sfsid(val)
-                        val = val.replace(" ", "_")
-                    else:
-                        val = val.replace(" ", "")
-                        val = val.replace("\n", "")
-                        val = val.replace("\r", "")
-                        
-                    res += ' %s="%s"' % (key,val)
-        return res
-
-    def format_uri(self,attributes):
-        piecemappings = {'första' :'1',
-                         'andra'  :'2',
-                         'tredje' :'3',
-                         'fjärde' :'4',
-                         'femte'  :'5',
-                         'sjätte' :'6',
-                         'sjunde' :'7',
-                         'åttonde':'8',
-                         'nionde' :'9'}
-        keymapping = {'lawref':'L',
-                      'chapter':'K',
-                      'section':'P',
-                      'piece':'S',
-                      'item':'N',
-                      'element':'O',
-                      'sentence':'M', # is this ever used?
-                      }
-
-        # res = u'http://lagen.nu/sfs/'
-        res = self.baseuri_attributes['baseuri']
-        resolvetobase = True
-        addfragment = False
-        justincase = None
-        for key in self.attributeorder:
-            if attributes.has_key(key):
-                resolvetobase = False
-                val = attributes[key]
-            elif (resolvetobase and self.baseuri_attributes.has_key(key)):
-                val = self.baseuri_attributes[key]
+        root = NodeTree(taglist,fixedindata)
+        for part in root.nodes:
+            if part.tag != 'plain' and self.verbose:
+                sys.stdout.write(self.prettyprint(part))
+            if part.tag in self.roots:
+                self.clear_state()
+                result.extend(self.formatter_dispatch(part))
             else:
-                val = None
+                assert part.tag == 'plain',"Tag is %s" % part.tag
+                result.append(part.text)
+                
+            # clear state
+            if self.currentlaw != None: self.lastlaw = self.currentlaw
+            self.currentlaw = None
 
-            if val:
-                if addfragment:
-                    res += '#'
-                    addfragment = False
-                if (key in ['piece', 'sentence'] and not val.isdigit()):
-                    res += '%s%s' % (keymapping[key],piecemappings[val.lower()])
-                else:
-                    if key == 'law':
-                        val = self.normalize_sfsid(val)
-                        val = val.replace(" ", "_")
-                        res += val
-                        addfragment = True
-                    else:
-                        if justincase:
-                            res += justincase
-                            justincase = None
-                        val = val.replace(" ", "")
-                        val = val.replace("\n", "")
-                        val = val.replace("\r", "")
-                        res += '%s%s' % (keymapping[key],val)
+        if taglist[-1] != len(fixedindata):
+            print u"Problem (%d:%d) with %s / %s" % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata)
+            raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
+
+        # "Normalize" the result, i.e concatenate adjacent text nodes
+        normres = []
+        for i in range(len(result)):
+            text = self.re_descape.sub(r'\1',result[i])
+            if isinstance(result[i], Link):
+                normres.append(Link(text, uri=result[i].uri))
             else:
-                if key == 'piece':
-                    justincase = "S1" 
-        return res
-        
+                if len(normres) > 0 and not isinstance(normres[-1],Link):
+                    # print "concatenating %r" % text
+                    if isinstance(text,unicode):
+                        normres[-1] += text
+                    else:
+                        normres[-1] += text
+                else:
+                    normres.append(text)
+        return normres
+
 
     def find_attributes(self,parts,extra={}):
         """recurses through a parse tree and creates a dictionary of
@@ -268,9 +259,7 @@ class SFSRefParser:
         
         self.depth += 1
         if self.verbose: print ". "*self.depth+"find_attributes: starting with %s"%d
-        # if self.verbose: print ". "*self.depth+"find_attributes: currentchapter: %s" % self.currentchapter
         if extra:
-            # print ". "*self.depth+"find_attributes: updating with extra attributes %s" % extra
             d.update(extra)
             
         for part in parts:
@@ -279,13 +268,6 @@ class SFSRefParser:
                 if ((current_part_tag == 'singlesectionrefid') or
                     (current_part_tag == 'lastsectionrefid')):
                     current_part_tag = 'sectionrefid'
-                #elif current_part_tag == 'lawrefid':
-                #    filename = "generated/text/%s.txt" % self.SFSidToFilename(self.normalize_sfsid(part.text))
-                #    if not os.path.exists(filename):
-                #        current_part_tag = 'lawrefrefid' # not my cleanest..
-                    
-                # strip away ending "refid"
-                # if self.verbose: print ". "*self.depth+"find_attributes: setting %s to %r" % (current_part_tag[:-5],part.text.strip())
                 d[current_part_tag[:-5]] = part.text.strip()
                 if self.verbose: print ". "*self.depth+"find_attributes: d is now %s" % d
                 
@@ -337,11 +319,194 @@ class SFSRefParser:
         for subpart in part.nodes:
             l.extend(self.flatten_tokentree(subpart,suffix))
         return l
-                   
+
+    def formatter_dispatch(self,part):
+        self.depth += 1
+        # Finns det en skräddarsydd formatterare?
+        if "format_"+part.tag in dir(self): 
+            formatter = getattr(self,"format_"+part.tag)
+            if self.verbose: print (". "*self.depth)+ "formatter_dispatch: format_%s defined, calling it" % part.tag
+            res = formatter(part)
+            assert res != None, "Custom formatter for %s didn't return anything" % part.tag
+        else:
+            if self.verbose: print (". "*self.depth)+ "formatter_dispatch: no format_%s, using format_tokentree" % part.tag
+            res = self.format_tokentree(part)
+
+        if res == None: print (". "*self.depth)+ "something wrong with this:\n" + self.prettyprint(part)
+        self.depth -= 1
+        return res
+        
+    def format_tokentree(self,part):
+        # This is the default formatter. It converts every token that
+        # ends with a RefID into a Link object. For grammar
+        # productions like SectionPieceRefs, which contain
+        # subproductions that also end in RefID, this is not a good
+        # function to use - use a custom formatter instead.
+
+        res = []
+
+        if self.verbose: print (". "*self.depth)+ "format_tokentree: called for %s" % part.tag
+        # this is like the bottom case, or something
+        if (not part.nodes) and (not part.tag.endswith("RefID")):
+            res.append(part.text)
+        else:
+            if part.tag.endswith("RefID"):
+                res.append(self.format_generic_link(part))
+            if part.tag.endswith("Ref"):
+                res.append(self.format_generic_link(part))
+            else:
+                for subpart in part.nodes:
+                    if self.verbose and part.tag == 'LawRef':
+                        print (". "*self.depth) + "format_tokentree: part '%s' is a %s" % (subpart.text, subpart.tag)
+                    res.extend(self.formatter_dispatch(subpart))
+        if self.verbose: print (". "*self.depth)+ "format_tokentree: returning '%s' for %s" % (res,part.tag)
+        return res
+    
+
+    def prettyprint(self,root,indent=0):
+        res = u"%s'%s': '%s'\n" % ("    "*indent,root.tag,re.sub(r'\s+', ' ',root.text))
+        if root.nodes != None:
+            for subpart in root.nodes:
+                res += self.prettyprint(subpart,indent+1)
+            return res
+        else: return u""
+
+    def format_generic_link(self,part,uriformatter=None):
+        try:
+            uri = self.uriformatter[part.tag](self.find_attributes([part]))
+        except KeyError:
+            if uriformatter:
+                uri = uriformatter(self.find_attributes([part]))
+            else:
+                uri = self.sfs_format_uri(self.find_attributes([part]))
+        if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
+        return Link(part.text, uri=uri)
+
+    def format_custom_link(self, attributes, text, production):
+        try:
+            uri = self.uriformatter[production](attributes)
+        except KeyError:
+            uri = self.sfs_format_uri(attributes)
+        return Link(text,uri=uri)
+
+    ################################################################
+    # KOD FÖR LAGRUM
+    def clear_state(self):
+        self.currentlaw     = None
+        self.currentchapter = None
+        self.currentsection = None
+        self.currentpiece   = None
+
+    def normalize_sfsid(self,sfsid):
+        # sometimes '1736:0123 2' is given as '1736:0123 s. 2'. This fixes that.
+        return sfsid.replace('s. ','') # more advanced normalizations to come...
+
+    def normalize_lawname(self,lawname):
+        lawname=lawname.replace('|','').lower()
+        if lawname.endswith('s'):
+            lawname = lawname[:-1]
+        return lawname
+        
+    def namedlaw_to_sfsid(self,text,normalize=True):
+        if normalize:
+            text = self.normalize_lawname(text)
+        
+        nolaw = [u'aktieslagen',
+                 u'anslagen',
+                 u'avslagen',
+                 u'bolagen',
+                 u'bergslagen',
+                 u'emballagen',
+                 u'ersättningsslagen',
+                 u'fissionsvederlagen',
+                 u'föreslagen',
+                 u'förslagen',
+                 u'försäkringsbolagen',
+                 u'inkomstslagen',
+                 u'klockslagen',
+                 u'kapitalunderlagen',
+                 u'omslagen',
+                 u'ordalagen',
+                 u'slagen',
+                 u'tillslagen',
+                 u'trädslagen',
+                 u'varuslagen'
+                 ]
+        if text in nolaw:
+            return None
+
+        if self.currentlynamedlaws.has_key(text):
+            return self.currentlynamedlaws[text]
+        elif self.namedlaws.has_key(text):
+            return self.namedlaws[text]
+        else:
+            if self.verbose:
+                print u"WARNING: I don't know the ID of named law '%s'" % text
+            return None
+
+    def sfs_format_uri(self,attributes):
+        piecemappings = {u'första' :'1',
+                         u'andra'  :'2',
+                         u'tredje' :'3',
+                         u'fjärde' :'4',
+                         u'femte'  :'5',
+                         u'sjätte' :'6',
+                         u'sjunde' :'7',
+                         u'åttonde':'8',
+                         u'nionde' :'9'}
+        keymapping = {'lawref'  :'L',
+                      'chapter' :'K',
+                      'section' :'P',
+                      'piece'   :'S',
+                      'item'    :'N',
+                      'element' :'O',
+                      'sentence':'M', # is this ever used?
+                      }
+        attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
+
+        if 'law' in attributes and attributes['law'].startswith('http://'):
+            res = ''
+        else:
+            res = self.baseuri_attributes['baseuri']
+        resolvetobase = True
+        addfragment = False
+        justincase = None
+        for key in attributeorder:
+            if attributes.has_key(key):
+                resolvetobase = False
+                val = attributes[key]
+            elif (resolvetobase and self.baseuri_attributes.has_key(key)):
+                val = self.baseuri_attributes[key]
+            else:
+                val = None
+
+            if val:
+                if addfragment:
+                    res += '#'
+                    addfragment = False
+                if (key in ['piece', 'sentence'] and not val.isdigit()):
+                    res += '%s%s' % (keymapping[key],piecemappings[val.lower()])
+                else:
+                    if key == 'law':
+                        val = self.normalize_sfsid(val)
+                        val = val.replace(" ", "_")
+                        res += val
+                        addfragment = True
+                    else:
+                        if justincase:
+                            res += justincase
+                            justincase = None
+                        val = val.replace(" ", "")
+                        val = val.replace("\n", "")
+                        val = val.replace("\r", "")
+                        res += '%s%s' % (keymapping[key],val)
+            else:
+                if key == 'piece':
+                    justincase = "S1" 
+        return res
+        
     def format_ChapterSectionRefs(self,root):
         assert(root.tag == 'ChapterSectionRefs')
-        #print (". "*self.depth)+ len(root.nodes)
-        #print (". "*self.depth)+ self.prettyprint(root)
         assert(len(root.nodes) == 3) # ChapterRef, wc, SectionRefs
         
         part = root.nodes[0]
@@ -350,10 +515,12 @@ class SFSRefParser:
         if self.currentlaw:
             res = [self.format_custom_link({'law':self.currentlaw,
                                             'chapter':self.currentchapter},
-                                           part.text)]
+                                           part.text,
+                                           part.tag)]
         else:
             res = [self.format_custom_link({'chapter':self.currentchapter},
-                                           part.text)]
+                                           part.text,
+                                           part.tag)]
 
         res.extend(self.formatter_dispatch(root.nodes[1]))
         res.extend(self.formatter_dispatch(root.nodes[2]))
@@ -372,7 +539,6 @@ class SFSRefParser:
         # the last section ref is a bit different, since we want the
         # ending double section mark to be part of the link text
         assert(root.tag == 'LastSectionRef')
-        #print (". "*self.depth)+ len(root.nodes)
         assert(len(root.nodes) == 3) # LastSectionRefID, wc, DoubleSectionMark
         sectionrefid = root.nodes[0]
         sectionid = sectionrefid.text
@@ -382,17 +548,13 @@ class SFSRefParser:
 
     def format_SectionPieceRefs(self, root):
         assert(root.tag == 'SectionPieceRefs')
-        # assert(len(root.nodes) >= 7) # SectionRef, wc, (PieceRef, Comma, wc)*, PieceRef, wc, AndOr, wc, PieceRef
         self.currentsection = root.nodes[0].nodes[0].text.strip()
 
         res = [self.format_custom_link(self.find_attributes([root.nodes[2]]),
-                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text))]
+                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text),
+                                       root.tag)]
         for node in root.nodes[3:]:
-            #if self.verbose:
-            #    print (". "*self.depth)+ "format_SectionPieceRefs: calling formatter_dispatch for '%s'" % node.tag
             res.extend(self.formatter_dispatch(node))
-            #if self.verbose:
-            #    print (". "*self.depth)+ "format_SectionPieceRefs: called formatter_dispatch for '%s'" % node.tag
             
         self.currentsection = None
         return res
@@ -403,14 +565,11 @@ class SFSRefParser:
         self.currentpiece = root.nodes[2].nodes[0].text.strip()
 
         res = [self.format_custom_link(self.find_attributes([root.nodes[2]]),
-                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text))]
+                                       "%s %s" % (root.nodes[0].text, root.nodes[2].text),
+                                       root.tag)]
 
         for node in root.nodes[3:]:
-            #if self.verbose:
-            #    print (". "*self.depth)+ "format_SectionPieceRefs: calling formatter_dispatch for '%s'" % node.tag
             res.extend(self.formatter_dispatch(node))
-            #if self.verbose:
-            #    print (". "*self.depth)+ "format_SectionPieceRefs: called formatter_dispatch for '%s'" % node.tag
             
         self.currentsection = None
         self.currentpiece =  None
@@ -447,13 +606,13 @@ class SFSRefParser:
                     # bail out rather than resolving chapter/paragraph
                     # references relative to baseuri (which is almost
                     # certainly wrong)
-                    return [root.text.decode(SP_CHARSET)]
+                    return [root.text]
         else:
             self.currentlaw = lawrefid_node.text
             if self.find_node(root,'NamedLaw'):
                 namedlaw = self.normalize_lawname(self.find_node(root,'NamedLaw').text)
                 # print "remember that %s is %s!" % (namedlaw, self.currentlaw)
-                self.namedlaws[namedlaw] = self.currentlaw
+                self.currentlynamedlaws[namedlaw] = self.currentlaw
 
         #print "DEBUG: middle of format_ExternalRefs; self.currentlaw is %s" % self.currentlaw
         if self.lastlaw is None:
@@ -462,111 +621,86 @@ class SFSRefParser:
 
         # if the node tree only contains a single reference, it looks
         # better if the entire expression, not just the
-        # chapter/section part, is linked
+        # chapter/section part, is linked. But not if it's a
+        # "anonymous" law ('1 § i lagen (1234:234) om blahonga')
         if (len(self.find_nodes(root,'GenericRefs')) == 1 and
-            len(self.find_nodes(root,'SectionRefID')) == 1):
+            len(self.find_nodes(root,'SectionRefID')) == 1 and
+            len(self.find_nodes(root,'AnonymousExternalLaw')) == 0):
             res = [self.format_generic_link(root)]
         else:
             res = self.format_tokentree(root)
 
-        # print "DEBUG: about to return from format_ExternalRefs; self.currentlaw is %s" % self.currentlaw
-        # self.currentlaw = None
         return res
 
     def format_SectionItemRefs(self,root):
-
-        # if self.verbose: print "DEBUG: format_SectionItemRefs called"
         assert(root.nodes[0].nodes[0].tag == 'SectionRefID')
         self.currentsection = root.nodes[0].nodes[0].text.strip()
-        # if self.verbose: print "DEBUG: self: %s" % dir(self)
-        try:
-            res = self.formatter_dispatch(root.nodes[0]) # was formatter_dispatch(self.root)
-            # print ". "*self.depth+"format_SectionItemRefs: self.currentsection: %s" % self.currentsection
-            self.currentsection = None
-            # print ". "*self.depth+"format_SectionItemRefs: self.currentsection: %s" % self.currentsection
-        except AttributeError:
-            print "DEBUG: wow, got a AttributeError in format_SectionItemRefs, that can't be good"
+        res = self.formatter_dispatch(root.nodes[0]) # was formatter_dispatch(self.root)
+        self.currentsection = None
         return res
 
     def format_PieceItemRefs(self,root):
         self.currentpiece = root.nodes[0].nodes[0].text.strip()
         res = [self.format_custom_link(self.find_attributes([root.nodes[2].nodes[0]]),
-                                       "%s %s" % (root.nodes[0].text, root.nodes[2].nodes[0].text))]
+                                       "%s %s" % (root.nodes[0].text, root.nodes[2].nodes[0].text),
+                                       root.tag)]
         for node in root.nodes[2].nodes[1:]:
             res.extend(self.formatter_dispatch(node))
         
         self.currentpiece = None
         return res
 
-    def format_PieceRef(self,root):
-        assert(root.tag == 'PieceRef')
-        assert(len(root.nodes) == 3 or len(root.nodes) == 5) #PieceRefID, wc, PieceOrPieces (Whitespace, ItemRef)
-        return [self.format_generic_link(root)]
-        
-    
-    def format_ChapterRef(self,root):
-        return [self.format_generic_link(root)]
-
     def format_ChapterSectionRef(self,root):
         assert(root.nodes[0].nodes[0].tag == 'ChapterRefID')
         self.currentchapter = root.nodes[0].nodes[0].text.strip()
         return [self.format_generic_link(root)]
 
-    def format_ExternalLawRef(self,root):
+    def format_ExternalLaw(self,root):
         self.currentchapter = None
         return self.formatter_dispatch(root.nodes[0])
 
     def format_ChangeRef(self,root):
         id = self.find_node(root,'LawRefID').data
         return [self.format_custom_link({'lawref':id},
-                                        root.text)]
+                                        root.text,
+                                        root.tag)]
     
-    # you know, there's a bunch of refactorings that could be done here...
-    def format_ChapterSectionPieceRef(self,root):
-        return [self.format_generic_link(root)]
+    def format_NamedExternalLawRef(self,root):
+        resetcurrentlaw = False
+        if self.currentlaw == None:
+            resetcurrentlaw = True
+            lawrefid_node = self.find_node(root,'LawRefID')
+            if lawrefid_node == None:
+                self.currentlaw = self.namedlaw_to_sfsid(root.text)
+            else:
+                self.currentlaw = lawrefid_node.text
+                namedlaw = self.normalize_lawname(self.find_node(root,'NamedLaw').text)
+                # print "remember that %s is %s!" % (namedlaw, self.currentlaw)
+                self.currentlynamedlaws[namedlaw] = self.currentlaw
 
-    def format_ChapterSectionItemRef(self,root):
-        return [self.format_generic_link(root)]
+        if self.currentlaw == None: # if we can't find a ID for this law, better not <link> it
+            res = [root.text]
+        else:
+            res = [self.format_generic_link(root)]
+        if resetcurrentlaw:
+            if self.currentlaw != None: self.lastlaw = self.currentlaw
+            self.currentlaw = None
+        return res
 
-    def format_ChapterSectionPieceItemRef(self,root):
-        return [self.format_generic_link(root)]
-        
-    def format_SectionRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_SectionPieceRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_SectionPieceItemRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_ExternalRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_SectionSentenceRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_SectionElementRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_SectionItemRef(self,root):
-        return [self.format_generic_link(root)]
-
-    def format_PieceItemRef(self,root):
-        return [self.format_generic_link(root)]
-
+    ################################################################
+    # KOD FÖR KORTLAGRUM
     def format_AbbrevLawNormalRef(self,root):
         lawabbr_node = self.find_node(root,'LawAbbreviation')
-        self.currentlaw = self.lawabbr_to_sfsid(lawabbr_node.text)
+        self.currentlaw = self.namedlaw_to_sfsid(lawabbr_node.text,normalize=False)
         res = [self.format_generic_link(root)]
         if self.currentlaw != None: self.lastlaw = self.currentlaw
         self.currentlaw = None
         return res
-    
+
     def format_AbbrevLawShortRef(self,root):
         assert(root.nodes[0].tag == 'LawAbbreviation')
         assert(root.nodes[2].tag == 'ShortChapterSectionRef')
-        self.currentlaw = self.lawabbr_to_sfsid(root.nodes[0].text)
+        self.currentlaw = self.namedlaw_to_sfsid(root.nodes[0].text,normalize=False)
         shortsection_node = root.nodes[2]
         assert(shortsection_node.nodes[0].tag == 'ShortChapterRefID')
         assert(shortsection_node.nodes[2].tag == 'ShortSectionRefID')
@@ -580,183 +714,10 @@ class SFSRefParser:
         self.currentlaw     = None
         return res
 
-    def format_NamedExternalLawRef(self,root):
-        resetcurrentlaw = False
-        if self.currentlaw == None:
-            resetcurrentlaw = True
-            lawrefid_node = self.find_node(root,'LawRefID')
-            if lawrefid_node == None:
-                self.currentlaw = self.namedlaw_to_sfsid(root.text)
-            else:
-                self.currentlaw = lawrefid_node.text
-                namedlaw = self.normalize_lawname(self.find_node(root,'NamedLaw').text)
-                # print "remember that %s is %s!" % (namedlaw, self.currentlaw)
-                self.namedlaws[namedlaw] = self.currentlaw
-
-        if self.currentlaw == None: # if we can't find a ID for this law, better not <link> it
-            res = [root.text]
-        else:
-            res = [self.format_generic_link(root)]
-        if resetcurrentlaw:
-            if self.currentlaw != None: self.lastlaw = self.currentlaw
-            self.currentlaw = None
-        return res
     
-    def formatter_dispatch(self,part):
-        self.depth += 1
-        # do I have a method named format_(part.tag) ?
-        if "format_"+part.tag in dir(self): 
-            formatter = getattr(self,"format_"+part.tag)
-            if self.verbose: print (". "*self.depth)+ "formatter_dispatch: format_%s defined, calling it" % part.tag
-            res = formatter(part)
-            assert res != None, "Custom formatter for %s didn't return anything" % part.tag
-        else:
-            if self.verbose: print (". "*self.depth)+ "formatter_dispatch: no format_%s, using format_tokentree" % part.tag
-            res = self.format_tokentree(part)
-
-        if res == None: print (". "*self.depth)+ "something wrong with this:\n" + self.prettyprint(part)
-        self.depth -= 1
-        return res
-        
-    def format_tokentree(self,part):
-        # i'm not sure I understand this code, but basically we
-        # recurse the token tree, and every token that ends with a
-        # RefID gets converted into a <link>, which fixes the
-        # interval case (each sectionref get turned into a
-        # link). However, for a grammar production like
-        # SectionPieceRefs, which contain subproductions that also end
-        # in RefID, this is not a good function to use, you must use a
-        # custom formatter instead.
-
-        res = []
-
-        if self.verbose: print (". "*self.depth)+ "format_tokentree: called for %s" % part.tag
-        # this is like the bottom case, or something
-        if (not part.nodes) and (not part.tag.endswith("RefID")):
-            res.append(part.text.decode(SP_CHARSET))
-        else:
-            if part.tag.endswith("RefID"):
-                res.append(self.format_generic_link(part))
-            else:
-                for subpart in part.nodes:
-                    if self.verbose and part.tag == 'LawRef':
-                        print (". "*self.depth) + "format_tokentree: part '%s' is a %s" % (subpart.text, subpart.tag)
-                    res.extend(self.formatter_dispatch(subpart))
-        #if self.verbose: print (". "*self.depth)+ "format_tokentree: returning '%s' for %s" % (res,part.tag)
-        if self.verbose: print (". "*self.depth)+ "format_tokentree: returning '%s' for %s" % (res,part.tag)
-        return res
-    
-
-    def prettyprint(self,root,indent=0):
-        res = u"%s'%s': '%s'\n" % ("    "*indent,root.tag,re.sub(r'\s+', ' ',root.text.decode(SP_CHARSET)))
-        if root.nodes != None:
-            for subpart in root.nodes:
-                res += self.prettyprint(subpart,indent+1)
-            return res
-        else: return u""
-
-    def format_generic_link(self,part):
-        # if self.verbose: print (". "*self.depth)+ "format_generic_link: %s" % self.find_attributes([part])
-        uri = self.format_uri(self.find_attributes([part]))
-        if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
-        if isinstance(part.text, str):
-            return Link(part.text.decode(SP_CHARSET), uri=uri)
-        else:
-            return Link(part.text, uri=uri)
-
-    def format_custom_link(self, attributes, text):
-        uri = self.format_uri(attributes)
-        if isinstance(text,str):
-            return Link(text.decode(SP_CHARSET),uri=uri)
-        else:
-            return Link(text,uri=uri)
-    
-    
-    def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9"):
-        if indata == "": return indata # this actually triggered a bug...
-        # print "matching %s" % baseuri
-        m = self.re_urisegments.match(baseuri)
-        self.baseuri_attributes = {'baseuri':m.group(1),
-                                   'law':m.group(2),
-                                   'chapter':m.group(6),
-                                   'section':m.group(8),
-                                   'piece':m.group(10),
-                                   'item':m.group(12)}
-        # there's one thing I can't get the EBNF grammar to do:
-        # recognizing words that ends in a given substring, eg for the
-        # substring 'lagen', recognize 'bokföringslagen'. Since any
-        # such word can start with any number of characters (matched
-        # by the 'word' production), which all of them could be
-        # present in the word 'lagen', the greedyness of the parser
-        # causes the entire word to be matched by the 'word'
-        # production. Therefore, for words with those substrings, we
-        # put in a '|' sign just before the substring (and then we
-        # remove the pipe just before returning the marked-up string)
-        # Assume proper locale has been set elsewhere
-        # print repr(indata)
-        fixedindata = self.re_escape.sub(r'|\1', indata)
-        
-        # SimpleParse has no unicode support... It might be possible
-        # to convert to utf-8 if we convert sfs.ebnf
-        if isinstance(fixedindata,unicode):
-            fixedindata = fixedindata.encode(SP_CHARSET)
-        #taglist = TextTools.tag(fixedindata, self.parser)
-
-        taglist = self.simpleparser.parse(fixedindata)
-
-        result = []
-        #print "Calling w %s" % fixedindata
-        root = NodeTree(taglist,fixedindata)
-        #        print "rootnode: %s" % r.tag
-        #        for n in r.nodes:
-        #            print "subnode: %s: %s" % (n.tag,n.text)
-        #            if n.tag == 'refs':
-        #                for sn in n.nodes:
-        #                    print "    subnode: %s: %s" % (sn.tag,sn.text)
-        for part in root.nodes:
-            if part.tag != 'plain' and self.verbose:
-                sys.stdout.write(self.prettyprint(part))
-            if part.tag in ['ref', 'refs', 'preprefs', 'shortref']:
-                self.clear_state()
-                result.extend(self.formatter_dispatch(part))
-            else:
-                assert part.tag == 'plain',"Tag is %s" % part.tag
-                result.append(part.text.decode(SP_CHARSET))
-                
-            # clear state
-            if self.currentlaw != None: self.lastlaw = self.currentlaw
-            self.currentlaw = None
-
-
-        if taglist[-1] != len(fixedindata):
-            print u"Problem (%d:%d) with %s / %s" % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata)
-            raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
-
-        normres = []
-        for i in range(len(result)):
-            text = self.re_descape.sub(r'\1',result[i])
-            if isinstance(result[i], Link):
-                normres.append(Link(text, uri=result[i].uri))
-            else:
-                if len(normres) > 0 and not isinstance(normres[-1],Link):
-                    # print "concatenating %r" % text
-                    if isinstance(text,unicode):
-                        normres[-1] += text
-                    else:
-                        normres[-1] += text.decode(SP_CHARSET)
-                else:
-                    normres.append(text)
-        return normres
-
-class PreparatoryRefParser(SFSRefParser):
-    """Subclass of SFSRefParser, but handles things like references to
-    preparatory works, like propositions etc"""
-
-    decl = open('etc/sfs.ebnf').read()
-    decl += "LawAbbreviation ::= 'blahonga'" # How to define a production that matches nothing?
-    simpleparser = Parser(decl,'extroot')
-
-    def format_uri(self,attributes):
+    ################################################################
+    # KOD FÖR FORARBETEN
+    def forarbete_format_uri(self,attributes):
         res = self.baseuri_attributes['baseuri']
         resolvetobase = True
         addfragment = False
@@ -764,50 +725,67 @@ class PreparatoryRefParser(SFSRefParser):
         for key,val in attributes.items():
             if key == 'prop':
                 res += "prop/%s" % val
-            elif key == 'consid':
+            elif key == 'bet':
                 res += "bet/%s" % val
             elif key == 'skrivelse':
                 res += "rskr/%s" % val
             elif key == 'celex':
                 res += "celex/%s" % val
         return res
-        
 
-#    def format_generic_link(self,part):
-#        attr = self.find_attributes([part])
-#        assert(len(attr.values()) == 1)
-#        docid = attr.values()[0]
-#        tagattr = {'type': 'docref',
-#                   'doctype': attr.keys()[0],
-#                   'docid'  : docid }
-#        return "<link%s>%s</link>" % (self.format_attributes(tagattr), part.text)
+    ################################################################
+    # KOD FÖR EGLAGSTIFTNING
+    def eglag_format_uri(self,attributes):
+        res = self.baseuri_attributes['baseuri']
+        # Om hur CELEX-nummer konstrueras
+        # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celn.htm
+        # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celf.htm
+        # Om hur länkning till EURLEX ska se ut:
+        # http://eur-lex.europa.eu/sv/tools/help_syntax.htm
 
-class ShortenedRefParser(SFSRefParser):
-    """Subclass of SFSRefParser, but uses a different root production to
-    handle shortened references like '15 § AvtL' or 'JB 22:2'"""
-    simpleparser = Parser(SFSRefParser.decl,'shortrefroot')
+        # Absolut URI?
+        if 'ar' in attributes and 'lopnummer' in attributes:
+            sektor = '3'
+            rattslig_form = {u'direktiv':'L',
+                             u'förordning':'R'}
+                
+            if len(attributes['ar']) == 2:
+                attributes['ar'] = '19'+attributes['ar']
+            res += "%s%s%s%04d" % (sektor,attributes['ar'],
+                                   rattslig_form[attributes['akttyp']],
+                                   int(attributes['lopnummer']))
+        if 'artikel' in attributes:
+            res += "#%s" % attributes['artikel']
+            if 'underartikel' in attributes:
+                res += ".%s" % attributes['underartikel']
 
-
-class DVRefParser(SFSRefParser):
-    """Subclass of SFSRefParser, but handles references to verdicts/cases"""
-    # FIXME: Implement (sensibly)
-    pass
+        return res
 
 class TestLegalRef:
+
+    
     def ParseTest(self,testfile,verbose=False,quiet=False):
         if not quiet:
             print("Running test %s\n------------------------------" % testfile)
         try:
             namedlaws = {}
             if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
-                p = SFSRefParser(verbose,namedlaws)
+                # p = SFSRefParser(verbose,namedlaws)
+                p = LegalRef(LegalRef.LAGRUM)
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
-                p = ShortenedRefParser(verbose,namedlaws)
+                # p = ShortenedRefParser(verbose,namedlaws)
+                p = LegalRef(LegalRef.KORTLAGRUM)
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
-                p = PreparatoryRefParser(verbose,namedlaws)
+                # p = PreparatoryRefParser(verbose,namedlaws)
+                p = LegalRef(LegalRef.FORARBETEN)
+            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','eglag-'])):
+                p = LegalRef(LegalRef.EGLAGSTIFTNING)
             else:
                 print u'WARNING: Har ingen aning om hur %s ska testas' % testfile
                 return False
+            
+            p.verbose = verbose
+            p.currentlynamedlaws = namedlaws
             
             testdata = codecs.open(testfile,encoding=SP_CHARSET).read()
             paragraphs = re.split('\r?\n\r?\n',testdata,1)
@@ -826,7 +804,8 @@ class TestLegalRef:
 
             for i in range(len(testparas)):
                 if testparas[i].startswith("RESET:"):
-                    namedlaws.clear()
+                    # namedlaws.clear()
+                    p.currentlynamedlaws.clear()
                 resparas.append(serialize(p.parse(testparas[i],u'http://lagen.nu/1:2#')))
 
             res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
@@ -871,26 +850,14 @@ class TestLegalRef:
 
         
     def ParseTestString(self,s, verbose=True):
-        p = SFSRefParser(verbose)
+        p = LegalRef(LegalRef.LAGRUM)
+        p.verbose = verbose
         print serialize(p.parse(s, u'http://lagen.nu/1:2#'))
-
-#    def ParseTestAll(self,quiet=False):
-#        res = []
-#        for f in os.listdir("test/data/LegalRef"):
-#            if not f.endswith(".txt"): continue
-#            # print "trying %s..." % f
-#
-#            res.append(self.ParseTest('test/data/LegalRef/%s'%f, quiet=quiet))
-#        succeeded = len([r for r in res if r])
-#        all       = len(res)
-#                        
-#        print "%s/%s" % (succeeded,all)
-#        return(succeeded,all)
 
     def ParseTestAll(self):
         results = []
         failures = []
-        for f in Util.listDirs("test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
+        for f in Util.listDirs(u"test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
             result = self.ParseTest(f,verbose=False,quiet=True)
             if not result:
                 failures.append(f)
@@ -901,6 +868,14 @@ class TestLegalRef:
         print "\n%s/%s" % (succeeded,all)
         if failures:
             print "\n".join(failures)
+
+
+    def NewAPI(self):
+        p = LegalRef(LegalRef.LAGRUM, LegalRef.FORARBETEN,\
+                     LegalRef.RATTSFALL, LegalRef.EGLAGSTIFTNING,\
+                     LegalRef.KORTLAGRUM)
+
+        print serialize(p.parse(u'Enligt Prop. 1998/99:123 ska 4 § och MB 14:7 tolkas i ljuset av artikel 4 i direktiv 1996/13/EG, vilket bekrftades i NJA 1992 s. 12.'))
 
 if __name__ == "__main__":
     if sys.platform == 'win32':
@@ -916,27 +891,21 @@ if __name__ == "__main__":
     sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
     sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
-    # Resultat för ParseTestAll just nu
+    # Resultat för ParseTestAll just nu:
     #
-    # ........NN.........................................N.N.......F..
-    # 59/64
+    # ............NN.........F...............................N.N.......F..
+    # 62/68
     # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
     # test\data\LegalRef\sfs-basic-kungorelse.txt
+    # test\data\LegalRef\sfs-basic-punktlista.txt
     # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
     # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test\data\LegalRef\sfs-tricky-vvfs.txt
+    # test\data\LegalRef\sfs-tricky-vvfs.txt    
+    #
+    # (sfs-basic-punktlista gick igenom förut, men slutade funka när
+    # jag rationaliserade bort de flesta format_*-funktionerna). Den
+    # funkar om man pillar på ItemRef-produktionen, men då slutar
+    # sfs-tricky-punkt att funka. Svårt problem.)
     TestLegalRef.__bases__ += (DispatchMixin,)
     t = TestLegalRef()
     t.Dispatch(sys.argv)
-    
-    # FIXME: såhär *borde* API:t se ut:
-    #
-    # p = LegalRef(LegalRef.LAGRUM, LegalRef.FORARBETEN,\
-    #              LegalRef.RATTSFALL, LegalRef.EGLAGSTIFTNING,\
-    #              LegalRef.KORTLAGRUM)
-    #
-    # p.parse("""Enligt Prop. 1998/99:123 ska 4 § och MB 14:7 tolkas i
-    #            ljuset av artikel 4 i direktiv 1996/13/EG
-    #            (32002L0019), vilket bekräftades i NJA 1992 s. 12.""")
-
-    

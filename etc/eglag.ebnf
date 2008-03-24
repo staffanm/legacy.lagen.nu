@@ -1,0 +1,36 @@
+# -*- coding: iso-8859-1 -*-
+# ------------ eglag.ebnf ----------------
+
+# EG-LAGSTIFTNING - Rättsakter som direktiv, förordningar och själva fördraget
+eglagref ::= (ArtikelRattsaktRef/RattsaktRef/ArtikelRef)+
+
+
+# "artikel 25.6"
+ArtikelRef     ::= 'artikel',Whitespace,ArtikelRefID, (Period, UnderartikelRefID)?
+ArtikelRefID   ::= number
+UnderartikelRefID ::= number
+
+# "artikel 25.6 i rådets direktiv 96/46/EG"
+ArtikelRattsaktRef ::= ArtikelRef, Whitespace, 'i', Whitespace, RattsaktRef
+
+
+# "rådets direktiv 85/611/EG"
+# "rådets förordning (EEG) nr 2092/91"
+RattsaktRef     ::= Instutition, Whitespace, AkttypRefId, Whitespace,
+                    DirektivRef/ForordningRef, (Whitespace,
+                    AvDatum)?
+Instutition     ::= ('rådets'/('Europaparlamentets', Whitespace, 'och',
+                     Whitespace, 'rådets'))
+#Instutition    ::= 'rådets'
+AkttypRefId     ::= ('direktiv'/'förordning')
+DirektivRef     ::= ArRefID, Slash, LopnummerRefID, Slash, SamarbeteRefID
+ForordningRef   ::= LeftParen, SamarbeteRefID, RightParen, ' nr ', LopnummerRefID, Slash, ArRefID
+ArRefID         ::= Ar
+LopnummerRefID  ::= Lopnummer
+Lopnummer       ::= number
+SamarbeteRefID  ::= Samarbete
+Samarbete       ::= 'EG'/'EEG'
+AvDatum		::= 'av', Whitespace, 'den', Whitespace, Datum
+Datum           ::=  number, Whitespace, month, Whitespace, LangtAr
+# ------------ end of eglag.ebnf ----------------
+

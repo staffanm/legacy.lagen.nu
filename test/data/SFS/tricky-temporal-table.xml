@@ -1,5 +1,5 @@
 <Forfattning>
-  <Paragraf id="P6" inaktuell="True" ordinal="6" upphor="datetime.date(2007, 7, 1)">
+  <Paragraf id="P6" ordinal="6" upphor="datetime.datetime(2007, 7, 1, 0, 0)">
     <Stycke id="P6S1">
       <unicode>Den som anges nedan ansvarar för att sådana anordningar och
 tecken för anvisning för trafiken som avses i </unicode>
@@ -9,7 +9,7 @@ tas bort, underhålls, och utförs i den omfattning som anges för
 respektive plats.</unicode>
     </Stycke>
   </Paragraf>
-  <Paragraf id="P6" ikrafttrader="datetime.date(2007, 7, 1)" ordinal="6">
+  <Paragraf id="P6" ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)" ordinal="6">
     <Stycke id="P6S1">
       <unicode>Den som anges nedan ansvarar för att sådana anordningar och
 tecken för anvisning för trafiken som avses i </unicode>
@@ -26,7 +26,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Ansvaret gäller</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad upphor="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad upphor="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode>1. Kommunen</unicode>
           </Tabellcell><Tabellcell>
@@ -34,7 +34,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>I andra fall än enligt 2 a, 2 c och 7-10.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad upphor="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad upphor="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -42,7 +42,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Hastighetsbegränsningar, föreskrifter enligt 41 § väglagen (1971:948) samt trafiksignaler och andra anordningar för att reglera trafiken och tillgodose trafiksäkerheten när det behövs för att tillgodose ett allmänt behov.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad upphor="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad upphor="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -50,7 +50,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Särskilda trafikregler enligt sådana föreskrifter som avses i 10 kap. 14 § trafikförordningen (1998:1276) och som meddelats av kommunen.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad upphor="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad upphor="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -58,7 +58,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Förbud, påbud eller andra anvisningar för att reglera trafiken och tillgodose trafiksäkerheten.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad ikrafttrader="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode>1. Kommunen</unicode>
           </Tabellcell><Tabellcell>
@@ -66,7 +66,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>I andra fall än enligt 2 a, 2 c och 7-10.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad ikrafttrader="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -74,7 +74,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Hastighetsbegränsningar, föreskrifter enligt 41 § väglagen (1971:948), andra lokala trafikföreskrifter enligt 10 kap. 1 § trafikförordningen (1998:1276) än sådana som endast får meddelas efter medgivande av vägens ägare samt trafiksignaler och andra anordningar för att reglera trafiken och tillgodose trafiksäkerheten när det behövs för att tillgodose ett allmänt behov.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad ikrafttrader="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -82,7 +82,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Särskilda trafikregler enligt sådana föreskrifter som avses i 10 kap. 14 § trafikförordningen och som meddelats av kommunen.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad ikrafttrader="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -98,7 +98,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>I andra fall än enligt 7-10.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad upphor="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad upphor="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>
@@ -106,7 +106,7 @@ respektive plats.</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Hastighetsbegränsningar, föreskrifter enligt 41 § väglagen samt trafiksignaler och andra anvisningar för att reglera trafiken och tillgodose trafiksäkerheten där det behövs för att tillgodose ett allmänt behov.</unicode>
           </Tabellcell>
-        </Tabellrad><Tabellrad ikrafttrader="datetime.date(2007, 7, 1)">
+        </Tabellrad><Tabellrad ikrafttrader="datetime.datetime(2007, 7, 1, 0, 0)">
           <Tabellcell>
             <unicode />
           </Tabellcell><Tabellcell>

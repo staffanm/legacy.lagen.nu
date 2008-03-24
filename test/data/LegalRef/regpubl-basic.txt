@@ -1,12 +1,11 @@
 Prop. 1996/97:85, bet. 1996/97:NU11, rskr. 1996/97:266
 
 <list>
-  <unicode>Prop. </unicode>
-  <Link uri="http://lagen.nu/prop/1996/97:85">1996/97:85</Link>
-  <unicode>, bet. </unicode>
-  <Link uri="http://lagen.nu/bet/1996/97:NU11">1996/97:NU11</Link>
-  <unicode>, rskr. </unicode>
-  <Link uri="http://lagen.nu/rskr/1996/97:266">1996/97:266</Link>
+  <Link uri="http://lagen.nu/prop/1996/97:85">Prop. 1996/97:85</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/bet/1996/97:NU11">bet. 1996/97:NU11</Link>
+  <unicode>, </unicode>
+  <Link uri="http://lagen.nu/rskr/1996/97:266">rskr. 1996/97:266</Link>
 </list>
 
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-"""Hanterar domslut (detaljer och referat) från Domstolsverket, www.rattsinfosok.dom.se
+"""Hanterar domslut (detaljer och referat) från Domstolsverket. Data
+hämtas från DV:s (ickepublika) FTP-server"""
 
-Modulen hanterar omvandlande av domslutsdetaljer och -referat till XML
-"""
 # system libraries
 import sys, os, re
 import pprint
@@ -25,8 +24,8 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
 import LegalSource
-from LegalRef import SFSRefParser,PreparatoryRefParser,DVRefParser,ParseError,Link
 import Util
+from LegalRef import LegalRef,ParseError,Link
 from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, IntStructure, DateStructure, PredicateType, \
@@ -237,8 +236,8 @@ class DVParser(LegalSource.Parser):
         htmlfile = docfile.replace('word','html').replace('.doc','.html')
         Util.word_to_html(docfile,htmlfile)
 
-        lagrum_parser = SFSRefParser()
-        rattsfall_parser = DVRefParser()
+        lagrum_parser = LegalRef(LegalRef.LAGRUM)
+        rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
 
         # Basic parsing
         soup = Util.loadSoup(htmlfile)
