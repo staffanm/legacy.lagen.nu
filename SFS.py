@@ -1661,7 +1661,7 @@ class SFSManager(LegalSource.Manager):
                        sys.exc_info()[0].__name__,
                        u''.join(formatted_tb),
                        sys.exc_info()[0].__name__,
-                       sys.exc_info()[1]))
+                       unicode(str(sys.exc_info()[1]), 'iso-8859-1')))
             # raise
                      
     def ParseAll(self):

@@ -1,0 +1,14 @@
+# -*- coding: iso-8859-1 -*-
+# ------------ rattsfall.ebnf ----------------
+
+rattsfallref   ::= RattsfallRefID
+RattsfallRefID ::= DomstolRefID, Whitespace, ArRefID, Separator, LopnrRefID
+DomstolRefID   ::= 'NJA'/'RÅ'/'AD'/'RH'/'MÖD'/'MIG'/'MD'
+ArRefID        ::= LangtAr
+Separator      ::= (Whitespace, 's'/'ref'/'nr', Period?, Whitespace)/Colon
+LopnrRefID     ::= number
+
+
+
+# ------------ end of rattsfall.ebnf ----------------
+

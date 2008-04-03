@@ -152,6 +152,11 @@ class LegalRef:
             for p in productions:
                 self.uriformatter[p] = self.forarbete_format_uri
             self.roots.append("forarbeteref")
+        if self.RATTSFALL in args:
+            productions = self.load_ebnf("etc/rattsfall.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.rattsfall_format_uri
+            self.roots.append("rattsfallref")
 
         self.decl += "root ::= (%s/plain)+\n" % "/".join(self.roots)
         # pprint(productions)
@@ -352,7 +357,7 @@ class LegalRef:
         else:
             if part.tag.endswith("RefID"):
                 res.append(self.format_generic_link(part))
-            if part.tag.endswith("Ref"):
+            elif part.tag.endswith("Ref"):
                 res.append(self.format_generic_link(part))
             else:
                 for subpart in part.nodes:
@@ -415,7 +420,7 @@ class LegalRef:
                  u'anslagen',
                  u'avslagen',
                  u'bolagen',
-                 u'bergslagen',
+                 u'bergslagen', 
                  u'emballagen',
                  u'ersättningsslagen',
                  u'fissionsvederlagen',
@@ -761,6 +766,22 @@ class LegalRef:
 
         return res
 
+
+    ################################################################
+    # KOD FÖR RATTFALL
+    def rattsfall_format_uri(self,attributes):
+        res = self.baseuri_attributes['baseuri']
+        if attributes['domstol'] == u'NJA':
+            res += u'NJA_%s_s_%s' % (attributes['ar'], attributes['lopnr'])
+        elif attributes['domstol'] == u'RÅ':
+            res += u'RÅ_%s_ref_%s' % (attributes['ar'], attributes['lopnr'])
+        elif attributes['domstol'] == u'AD':
+            res += u'AD_%s_nr_%s' % (attributes['ar'], attributes['lopnr'])
+        else:
+            res += u'%s_%s:%s' % (attributes['domstol'], attributes['ar'], attributes['lopnr'])
+        return res
+
+
 class TestLegalRef:
 
     
@@ -780,6 +801,8 @@ class TestLegalRef:
                 p = LegalRef(LegalRef.FORARBETEN)
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','eglag-'])):
                 p = LegalRef(LegalRef.EGLAGSTIFTNING)
+            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','dv-'])):
+                p = LegalRef(LegalRef.RATTSFALL)
             else:
                 print u'WARNING: Har ingen aning om hur %s ska testas' % testfile
                 return False
@@ -892,15 +915,14 @@ if __name__ == "__main__":
     sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
     # Resultat för ParseTestAll just nu:
-    #
-    # ............NN.........F...............................N.N.......F..
-    # 62/68
+    # ................NN.........F...............................N.N.......F..
+    # 66/72
     # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
     # test\data\LegalRef\sfs-basic-kungorelse.txt
     # test\data\LegalRef\sfs-basic-punktlista.txt
     # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
     # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test\data\LegalRef\sfs-tricky-vvfs.txt    
+    # test\data\LegalRef\sfs-tricky-vvfs.txt
     #
     # (sfs-basic-punktlista gick igenom förut, men slutade funka när
     # jag rationaliserade bort de flesta format_*-funktionerna). Den

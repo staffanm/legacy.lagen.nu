@@ -169,24 +169,10 @@ def runcmd(cmdline):
         # FIXME: How do we detect the proper encoding?
         cmdline = cmdline.encode('iso-8859-1')
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    chunk = p.stderr.read(8192)
-    stderr = ""
-    while not chunk == '':
-        #print "reading stderr chunk"
-        stderr += chunk
-        chunk = p.stderr.read(8192)
-
-    chunk = p.stdout.read(8192)
-    stdout = ""
-    while not chunk == '':
-        #print "reading stdout chunk"
-        stdout += chunk
-        chunk = p.stdout.read(8192)
-    
-    #stderr = p.stderr.read()
-    #stdout = p.stdout.read()
-    ret = p.wait()    
-    return (ret,stdout,stderr)
+    (stdout, stderr) = p.communicate()
+    ret = p.returncode
+    # print "runcmd '%s...': %s, '%s...', '%s...'" % (cmdline[:15], ret, stdout[:15], stderr[:15])
+    return (p.returncode,stdout,stderr)
 
 def normalizeSpace(string):
     return u' '.join(string.split())

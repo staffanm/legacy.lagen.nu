@@ -370,13 +370,21 @@ class DVParser(LegalSource.Parser):
                     # FIXME: arsutgava should be typed as DateSubject
                     head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
 
+        # Hitta rätt URI till det här referatet
+        if u'Referat' in head:
+            docuri = rattsfall_parser.parse(head[u'Referat'])[0].uri
+        else:
+            docuri = URIRef(u'http://lagen.nu/%s' % self.id)
+        head['xml:base'] = docuri
+
         # Putsa till avgörandedatum - det är ett date, inte en string
         head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
                                               predicate=self.labels[u'Avgörandedatum'])
+
+        
         # OK, färdigputsat!
 
         # Formulera om metadatan till en RDF-graf
-        docuri = URIRef(u'http://lagen.nu/%s' % self.id)
         graph = Graph()
         graph.bind("dct", "http://dublincore.org/documents/dcmi-terms/")
         graph.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
@@ -537,7 +545,8 @@ class DVManager(LegalSource.Manager):
 
             # check to see if the outfile is newer than all ingoing
             # files. If it is, don't parse
-            if self._outfileIsNewer([infile],outfile):
+            force = True
+            if not force and self._outfileIsNewer([infile],outfile):
                 return
 
             p = self.__parserClass()
@@ -560,7 +569,7 @@ class DVManager(LegalSource.Manager):
                        sys.exc_info()[0].__name__, 
                        u''.join(formatted_tb),
                        sys.exc_info()[0].__name__,
-                       sys.exc_info()[1]))
+                       unicode(str(sys.exc_info()[1]), 'iso-8859-1')))
             # raise
 
 
@@ -596,71 +605,69 @@ class DVManager(LegalSource.Manager):
         sd.DownloadNew()
 
     def IndexAll(self):
-        # print "DV: IndexAll temporarily disabled"
-        # return
         self.indexroot = ET.Element("documents")
         self.__doAllParsed(self.Index)
         tree = ET.ElementTree(self.indexroot)
         tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
         
         
-    def Relate(self,basefile):
-        start = time()
-        sys.stdout.write("Relate: %s" % basefile)
-        xmlFileName = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,basefile)
-        root = ET.ElementTree(file=xmlFileName).getroot()
-        urn = root.get('urn') # or root.attribs['urn'] ?
-        displayid = self._findDisplayId(root,basefile)
-        targetUrns = []  # keeps track of other legal sources that this verdict references, so we can create Reference objects for them
-
-        # delete all previous relations where this document is the object --
-        # maybe that won't be needed if the typical GenerateAll scenario
-        # begins with wiping the Relation table? It still is useful 
-        # in the normal development scenario, though
-        Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()
-
-        self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
-        
-        desc = root.findtext('Metadata/Rubrik')
-        self._createRelation(urn,Predicate.DESCRIPTION, desc,allowDuplicates=False)
-        
-        for e in root.findall(u'Metadata/Sökord'):
-            if e.text:
-                self._createRelation(urn,Predicate.SUBJECT,e.text)
-        for e in root.findall(u'Metadata/Rättsfall'):
-            try:
-                targetUrn = self._displayIdToURN(e.text,u'urn:x-dv')
-                self._createRelation(urn,Predicate.REFERENCES,targetUrn)
-                targetUrns.append(targetUrn)
-            except LegalSource.IdNotFound:
-                pass
-        for e in root.findall(u'Metadata/Lagrum/link'):
-            if 'law' in e.attrib:
-                try:
-                    targetUrn = self._createSFSUrn(e)
-                    self._createRelation(urn,Predicate.REQUIRES,targetUrn)
-                    targetUrns.append(targetUrn)
-                except LegalSource.IdNotFound:
-                    pass
-        
-        sys.stdout.write("\tcreating %s references\t" % len(targetUrns))
-        for targetUrn in targetUrns:
-            self._createReference(basefile = self._UrnToBasefile(targetUrn),
-                                  targetUrn = targetUrn, 
-                                  sourceUrn = urn,
-                                  refLabel = u'Rättsfall',
-                                  displayid = displayid,
-                                  alternative = None, # this will be filled in later through some other means
-                                  desc = desc)
-        sys.stdout.write(" %s sec\n" % (time() - start))
-        self._flushReferenceCache()
-        
-    def RelateAll(self):
-        # print "DV: RelateAll temporarily disabled"
-        # return
-        start = time()
-        cnt = self.__doAllParsed(self.Relate)
-        sys.stdout.write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
+#     def Relate(self,basefile):
+#         start = time()
+#         sys.stdout.write("Relate: %s" % basefile)
+#         xmlFileName = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,basefile)
+#         root = ET.ElementTree(file=xmlFileName).getroot()
+#         urn = root.get('urn') # or root.attribs['urn'] ?
+#         displayid = self._findDisplayId(root,basefile)
+#         targetUrns = []  # keeps track of other legal sources that this verdict references, so we can create Reference objects for them
+# 
+#         # delete all previous relations where this document is the object --
+#         # maybe that won't be needed if the typical GenerateAll scenario
+#         # begins with wiping the Relation table? It still is useful 
+#         # in the normal development scenario, though
+#         Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()
+# 
+#         self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
+#         
+#         desc = root.findtext('Metadata/Rubrik')
+#         self._createRelation(urn,Predicate.DESCRIPTION, desc,allowDuplicates=False)
+#         
+#         for e in root.findall(u'Metadata/Sökord'):
+#             if e.text:
+#                 self._createRelation(urn,Predicate.SUBJECT,e.text)
+#         for e in root.findall(u'Metadata/Rättsfall'):
+#             try:
+#                 targetUrn = self._displayIdToURN(e.text,u'urn:x-dv')
+#                 self._createRelation(urn,Predicate.REFERENCES,targetUrn)
+#                 targetUrns.append(targetUrn)
+#             except LegalSource.IdNotFound:
+#                 pass
+#         for e in root.findall(u'Metadata/Lagrum/link'):
+#             if 'law' in e.attrib:
+#                 try:
+#                     targetUrn = self._createSFSUrn(e)
+#                     self._createRelation(urn,Predicate.REQUIRES,targetUrn)
+#                     targetUrns.append(targetUrn)
+#                 except LegalSource.IdNotFound:
+#                     pass
+#         
+#         sys.stdout.write("\tcreating %s references\t" % len(targetUrns))
+#         for targetUrn in targetUrns:
+#             self._createReference(basefile = self._UrnToBasefile(targetUrn),
+#                                   targetUrn = targetUrn, 
+#                                   sourceUrn = urn,
+#                                   refLabel = u'Rättsfall',
+#                                   displayid = displayid,
+#                                   alternative = None, # this will be filled in later through some other means
+#                                   desc = desc)
+#         sys.stdout.write(" %s sec\n" % (time() - start))
+#         self._flushReferenceCache()
+#         
+#     def RelateAll(self):
+#         # print "DV: RelateAll temporarily disabled"
+#         # return
+#         start = time()
+#         cnt = self.__doAllParsed(self.Relate)
+#         sys.stdout.write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
 
 if __name__ == "__main__":
     #if not '__file__' in dir():
