@@ -25,7 +25,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 # my libs
 import LegalSource
 import Util
-from LegalRef import LegalRef,ParseError,Link
+from LegalRef import LegalRef,ParseError,Link,LinkSubject
 from DispatchMixin import DispatchMixin
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, IntStructure, DateStructure, PredicateType, \
@@ -77,8 +77,6 @@ class UnicodeSubject(PredicateType,UnicodeStructure): pass
 class IntSubject(PredicateType,IntStructure): pass
 
 class DateSubject(PredicateType, DateStructure): pass
-
-class LinkSubject(PredicateType, Link): pass
 
 class Lagrum(CompoundStructure): pass
 
@@ -189,9 +187,10 @@ class DVDownloader(LegalSource.Downloader):
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
 
 
-DCT = Namespace("http://dublincore.org/documents/dcmi-terms/")
-XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
-RINFO = Namespace("http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
+DCT = Namespace(Util.ns['dct'])
+XSD = Namespace(Util.ns['xsd'])
+RINFO = Namespace(Util.ns['rinfo'])
+RINFOEX = Namespace(Util.ns['rinfoex'])
 class DVParser(LegalSource.Parser):
     re_NJAref = re.compile(r'(NJA \d{4} s\. \d+) \(alt. (NJA \d{4}:\d+)\)')
     re_delimSplit = re.compile("[:;,] ?").split

@@ -18,7 +18,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
 from DispatchMixin import DispatchMixin
-from DataObjects import UnicodeStructure, serialize
+from DataObjects import UnicodeStructure, PredicateType, serialize
 import Util
 
 # The charset used for the bytestrings that is sent to/from
@@ -29,6 +29,10 @@ SP_CHARSET='iso-8859-1'
 class Link(UnicodeStructure): # just a unicode string with a .uri property
     def __repr__(self):
         return u'Link(\'%s\',uri=%r)' % (unicode.__repr__(self),self.uri)
+
+class LinkSubject(PredicateType, Link): pass # A RDFish link
+
+
 
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""

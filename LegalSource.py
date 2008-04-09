@@ -37,7 +37,7 @@ else:
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
-log = logging.getLogger(u'legalsource')
+log = logging.getLogger(u'ls')
 
 
 class ParseError(Exception):
@@ -163,6 +163,17 @@ class Manager:
         for f in infiles:
             if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
         return newer
+
+    def _htmlFileName(self,basefile): 
+        # will typically never be overridden 
+        """Returns the full path of the GENERATED HTML fragment that represents a legal document""" 
+        return "%s/%s/generated/%s.html" % (self.baseDir, self.moduleDir,basefile)         
+ 
+    def _xmlFileName(self,basefile): 
+        # will typically never be overridden 
+        """Returns the full path of the XHTML2/RDFa doc that represents the parsed legal document""" 
+        return "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir,basefile)     
+
     ####################################################################
     # Manager INTERFACE DEFINITION
     ####################################################################
@@ -211,20 +222,25 @@ class Manager:
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
 
-    def Relate(self):
+    def Relate(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan och bygger en stor RDF-graf"""
         c = 0
         g = Graph()
-        for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
-            c += 1
-            #if c > 10:
-            #    break
-            print "Relating %r" % f
-            # g = Graph()
-            g.load(f, publicID="http://lagen.nu/%s" % f, format="rdfa")
-        f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-        f.write(g.serialize(format="pretty-xml", encoding="utf-8"))
-        f.close()
+        if file:
+            g.load(file, format="rdfa")
+            print unicode(g.serialize(format="nt", encoding="utf-8"), "utf-8")
+        else:
+            for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
+                c += 1
+                g.load(f, format="rdfa")
+                #if c > 100:
+                #    break
+                if c % 100 == 0:
+                    log.info("Related %d documents" % c)
+                # g = Graph()
+            f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
+            f.write(g.serialize(format="pretty-xml"))
+            f.close()
         
 
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')

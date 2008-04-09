@@ -31,6 +31,13 @@ def mkdir(newdir):
 
 # the rest of the code is my fault
 
+# Set up common namespaces and suitable prefixes for them
+ns = {'dct':'http://dublincore.org/documents/dcmi-terms/',
+      'rdf':'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+      'rinfo':'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#',
+      'rinfoex':'http://lagen.nu/terms#',
+      'xsd':'http://www.w3.org/2001/XMLSchema#'}
+
 class ValidationError(Exception):
     def __init__(self, value):
         self.value = value
@@ -245,7 +252,33 @@ def word_to_html(indoc,outhtml):
         errlog = open(outhtml+".err.log","w")
         errlog.write("%s:\n%s" % (indoc,e))
 
+def indent_et(elem, level=0):
+    i = "\r\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for e in elem:
+            indent_node(e, level+1)
+            if not e.tail or not e.tail.strip():
+                e.tail = i + "  "
+        if not e.tail or not e.tail.strip():
+            e.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
 
+def indent_node(elem, level=0):
+    i = "\r\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for elem in elem:
+            indent_node(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
 
 #print "indenting"
 #indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')

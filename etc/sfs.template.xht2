@@ -13,7 +13,7 @@
       xml:lang="sv"
       xmlns:py="http://genshi.edgewall.org/"
       >
-    <head>
+    <head about="${meta['xml:base']}">
       <title property="dc:title" py:content="meta['dc:title']">Författningsrubrik</title>
 
       <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>

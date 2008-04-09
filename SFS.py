@@ -14,9 +14,12 @@ import codecs
 import htmlentitydefs
 import traceback
 import logging
-import xml.etree.cElementTree as ET
 from pprint import pprint
 from time import time
+# python 2.5 required
+from collections import defaultdict
+import xml.etree.cElementTree as ET
+import xml.etree.ElementTree as PET
 
 # 3rdparty libs
 from configobj import ConfigObj
@@ -32,7 +35,8 @@ from DispatchMixin import DispatchMixin
 from TextReader import TextReader
 
 from DataObjects import UnicodeStructure, CompoundStructure, \
-     MapStructure, TemporalStructure, OrdinalStructure, serialize
+     MapStructure, TemporalStructure, OrdinalStructure, \
+     PredicateType, serialize
 
 
 __version__   = (0,1)
@@ -172,6 +176,8 @@ class Registerpost(MapStructure):
 
 class Forfattningsinfo(MapStructure):
     pass
+
+class UnicodeSubject(PredicateType,UnicodeStructure): pass
 
 # module global utility functions
 def SFSnrToFilename(sfsnr):
@@ -379,6 +385,10 @@ class SFSDownloader(LegalSource.Downloader):
         c.update(data)
         return c.hexdigest()
 
+DCT = Namespace(Util.ns['dct'])
+XSD = Namespace(Util.ns['xsd'])
+RINFO = Namespace(Util.ns['rinfo'])
+RINFOEX = Namespace(Util.ns['rinfoex'])
 class SFSParser(LegalSource.Parser):
     re_SimpleSfsId     = re.compile(r'^\d{4}:\d+\s*$').match
     re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
@@ -473,8 +483,9 @@ class SFSParser(LegalSource.Parser):
             body = Forfattning()
             s = Stycke([u'(Lagtext saknas)'])
             body.append(s)
-            meta = self.__makeMetadata(head,body)
-            meta,body
+            # FIXME: __makeMetadata är borttagen och införd i
+            # makeHeader - kompensera på något vis. Kanske vi bara kan
+            # skapa en Forfattningsinfo härifrån?
             
         if self.verbose:
             # print serialize(data[1])
@@ -483,6 +494,28 @@ class SFSParser(LegalSource.Parser):
         xhtml = self.generate_xhtml(meta,body,__moduledir__,globals())
         return xhtml
 
+    # metadatafält (kan förekomma i både SFST-header och SFSR-datat)
+    # som bara har ett enda värde
+    labels = {u'SFS-nummer':             RINFO['fsNummer'],
+              u'SFS nr':                 RINFO['fsNummer'],
+              u'Ansvarig myndighet':     DCT['creator'],
+              u'Departement/ myndighet': DCT['creator'],
+              u'Rubrik':                 DCT['title'],
+              u'Utfärdad':               RINFO['utfardandedatum'],
+              u'Ikraft':                 RINFO['ikrafttradandedatum'],
+              u'Observera':              RDFS.comment, # FIXME: hitta bättre predikat
+              u'Tidsbegränsad':          RINFOEX['tidsbegransad'],
+              u'Omtryck':                RINFOEX['omtryck'], # subtype av RINFO['fsNummer']
+              }
+
+    # metadatafält som kan ha flera värden (kommer representeras som
+    # en lista av unicodeobjekt och LinkSubject-objekt)
+    multilabels = {u'Förarbeten':        RINFO['forarbete'],
+                   u'CELEX-nr':          RINFO['forarbete'],
+                   u'Omfattning':        RINFO['andrar'], # också RINFO['ersatter'], RINFO['upphaver'], RINFO['inforsI']
+                   }
+
+              
     def _parseSFSR(self,files):
         """Parsear ut det SFSR-registret som innehåller alla ändringar
         i lagtexten från HTML-filer"""
@@ -501,27 +534,37 @@ class SFSParser(LegalSource.Parser):
                     val = Util.elementText(row('td')[1]).replace(u'\xa0',' ') # no nbsp's, please
                     if val != "":
                         if key == u'SFS-nummer':
-                            p['sfsnr'] = val
+                            p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ansvarig myndighet':
-                            p['ansvarigmyndighet'] = val
+                            # p['ansvarigmyndighet'] = val
+                            authrec = self.find_authority_rec(text)
+                            p[key] = LinkSubject(val, uri=unicode(authrec[0]),
+                                                 predicate=self.labels[key])
                         elif key == u'Rubrik':
-                            p['rubrik'] = val
+                            # p['rubrik'] = val
+                            p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Observera':
-                            p['observera'] = val
+                            # p['observera'] = val
+                            p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ikraft':
-                            p['ikraft'] = datetime.strptime(val[:10], '%Y-%m-%d')
-                            p['overgangsbestammelse'] = (val.find(u'\xf6verg.best.') != -1)
+                            # p['ikraft'] = datetime.strptime(val[:10], '%Y-%m-%d')
+                            p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+                            p[u'Övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
                         elif key == u'Omfattning':
-                            # FIXME: run this through LegalRef
-                            p['omfattning'] = val 
+                            # FIXME: Det här skapar vanliga
+                            # Link-objekt. Vi vill egentligen ha
+                            # LinkSubject-objekt med lämpligt predikat
+                            # för att ange om det är införda, ändrade
+                            # eller upphävda bestämmelser
+                            p[key] = self.references.parse(val) 
                         elif key == u'F\xf6rarbeten':
-                            # FIXME: run this through LegalRef
-                            p['forarbeten'] = val
+                            # FIXME: Link -> LinkSubject
+                            p[key] = self.forarbete_parser.parse(val)
                         elif key == u'CELEX-nr':
-                            # FIXME: run this through LegalRef
-                            p['celexnr'] = val
+                            # FIXME: Link -> LinkSubject
+                            p[key] = self.forarbete_parser.parse(val)
                         elif key == u'Tidsbegränsad':
-                            p['tidsbegransad'] = datetime.strptime(val[:10], '%Y-%m-%d')
+                            p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                         else:
                             log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
                 r.append(p)
@@ -592,35 +635,10 @@ class SFSParser(LegalSource.Parser):
         self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
         self.reader.autostrip = True
 
-        head = self.makeHeader()
+        meta = self.makeHeader() 
         body = self.makeForfattning()
-        meta = self.__makeMetadata(head,body)
-        return meta,body
-
-    def __makeMetadata(self,head,body):
         self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)))
-        meta = {}
-        
-        # FIXME: Hantera esoteriska headers som Tidsbegränsad, Omtryck, m.m.
-        for key, predicate in ((u'Rubrik','dc:title'),
-                               (u'SFS nr','rinfo:fsNummer'),
-                               (u'Utfärdad','rinfo:utfardandedatum')):
-
-            try:
-                meta[predicate] = head[key]
-            except KeyError:
-                meta[predicate] = u''
-
-        meta['dc:publisher'] = self.find_authority_rec("Regeringskansliet")
-        try:
-            meta['dc:creator'] = self.find_authority_rec(head["Departement/ myndighet"])
-        except KeyError:
-            # Nån sorts vettig default?
-            meta['dc:creator'] = self.find_authority_rec(u'Regeringskansliet')
-        meta['rinfo:konsoliderar'] = self.storage_uri_value(
-                "http://rinfo.lagrummet.se/data/sfs/%s" % head['SFS nr'])
-        
-        return meta
+        return meta,body
 
     def _swedish_ordinal(self,s):
         sl = s.lower()
@@ -646,17 +664,30 @@ class SFSParser(LegalSource.Parser):
 
     def makeHeader(self):
         subreader = self.reader.getreader(self.reader.readchunk, self.reader.linesep * 3)
-        # FIXME: consider using a MapStructure subclass
-        i = Forfattningsinfo()
+        meta = Forfattningsinfo()
 
         for line in subreader.getiterator(subreader.readparagraph):
             if ":" in line:
-                (key,value) = [Util.normalizeSpace(x) for x in line.split(":",1)]
-                i[key] = value
+                (key,val) = [Util.normalizeSpace(x) for x in line.split(":",1)]
+            if key == u'Rubrik':
+                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+            elif key == u'SFS nr':
+                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+            elif key == u'Utfärdad':
+                meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+            elif key == u'Departement/ myndighet':
+                authrec = self.find_authority_rec(text)
+                p[key] = LinkSubject(val, uri=unicode(authrec[0]),
+                                     predicate=self.labels[key])
+            elif key == u'Ändring införd':
+                # FIXME: plocka ut själva SFS-numret (skippa 't.o.m.')
+                p[key] = UnicodeSubject(val,predicate=self.labels[key])
+            else:
+                log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
+            
+        meta[u'Utgivare'] = self.find_authority_rec("Regeringskansliet")
+        return meta
         
-        return i
-
-
     def makeForfattning(self):
         while self.reader.peekline() == "":
             self.reader.readline()
@@ -1547,40 +1578,6 @@ class SFSManager(LegalSource.Manager):
         for basefile in sorted(basefiles,Util.numcmp,reverse=True):
             method(basefile)
   
-    def __resolveFragment(self,
-                          element,
-                          context,
-                          restartingSectionNumbering):
-        """Given a link element and the context in which it was found, resolve
-        to a full uri including fragment (eg 'urn:x-sfs:1960:729#K1P2S3N4')"""
-        
-        # fill a copy of the element structure with required context, then 
-        # reuse _createSFSUrn
-        if element is None:
-            e = ET.Element("link")
-        else:
-            import copy
-            e = copy.deepcopy(element)
-
-        if 'law' in e.attrib: # this is an 'absolute' reference, no context needed
-            return self._createSFSUrn(e)
-        e.attrib['law'] = context['sfsnr']
-        if restartingSectionNumbering:
-            if 'chapter' not in e.attrib:
-                if context['chapter']:
-                    e.attrib['chapter'] = context['chapter']
-                else:
-                    # due to incorrect parsing, some link elements have no
-                    # chapter data even though they should
-                    raise LegalSource.IdNotFound("No chapter found")
-        if context['section'] and 'section' not in e.attrib:
-            e.attrib['section'] = context['section']
-        if context['piece'] and 'piece' not in e.attrib:
-            e.attrib['piece'] = str(context['piece'])
-        if context['item'] and 'item' not in e.attrib:
-            e.attrib['item'] = str(context['item'])
-        
-        return self._createSFSUrn(e)
         
     ####################################################################
     # OVERRIDES OF Manager METHODS
@@ -1717,6 +1714,10 @@ class SFSManager(LegalSource.Manager):
                 sys.stdout.write("FAIL %s\n" % testfile)
                 sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
                 return False
+            elif result == 'N':
+                sys.stdout.write("NOT IMPLEMENTED %s\n" % testfile)
+                sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
+                return False
             elif result == 'E':
                 # Traceback-informationen i sys.exc_info()[2] är
                 # str-objekt med samma teckenkodning som
@@ -1746,23 +1747,6 @@ class SFSManager(LegalSource.Manager):
         if failures:
             print "\n".join(failures)
 
-#    def FullTest(self,testname):
-#        p = Parser()
-#        parsed = Parser.Parse({'sfst':os.path.sep.join('test','data','SFS-full')+testname+"-sfst.html",
-#                               'sfsr':os.path.sep.join('test','data','SFS-full')+testname+"-sfsr.html"})
-#        xht2file = "tmp.xht2"
-#        xhtmlfile = "tmp.html"
-#        out = file("tmp.xht2", "w")
-#        out.write(parsed)
-#        out.close()
-#        
-#        Util.transform("xsl/sfs.xsl",
-#                       xht2file,
-#                       xhtmlfile,
-#                       {'lawid': '1960:728',
-#                        'today':datetime.today().strftime("%Y-%m-%d")},
-#                       validate=False)
-
     def IndexAll(self):
         # print "SFS: IndexAll temporarily disabled"
         # return
@@ -1770,7 +1754,89 @@ class SFSManager(LegalSource.Manager):
         self.__doAll('parsed', 'xml',self.Index)
         tree = ET.ElementTree(self.indexroot)
         tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+
+    # processes dv/parsed/rdf.xml to get a new xml file suitable for
+    # inclusion by sfs.xslt (something we should be able to do using
+    # SPARQL or maybe XSLT, but...)
+    def IndexDV(self):
+        g = Graph()
+        log.info("Start RDF loading")
+        start = time()
+        rdffile = "%s/dv/parsed/rdf.xml"%self.baseDir
+        g.load(rdffile)
+        log.info("RDF loaded (%.3f sec)", time()-start)
+        start = time()
+        triples = defaultdict(list)
+        lagrum  = defaultdict(list)
+        cnt = 0
+        for triple in g:
+            cnt += 1
+            if cnt % 100 == 0:
+                sys.stdout.write(".")
+            (obj, pred, subj) = triple
+            triples[obj].append(triple)
+            if pred == RINFO['lagrum']:
+                lagrum[subj].append(obj)
+        sys.stdout.write("\n")
+
+        # Spara ned RDF-datat "för hand" med xml.etree istf rdflib, så
+        # att vi kan se till att det serialiserade datat är lätt för
+        # en XSLT-transformation att gräva i (varje rättsfalls
+        # information dupliceras, en gång för varje lagrum det
+        # hänvisas till - detta gör det enkelt att hitta rättsfall
+        # utifrån ett visst lagrum).
         
+        # create a etree with rdf:RDF as root node (and register
+        # namespaces for rdf, dct, possibly rinfo...)
+        root_node = PET.Element("rdf:RDF")
+        for prefix in Util.ns:
+            # PET._namespace_map[Util.ns[prefix]] = prefix
+            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+
+        for l in sorted(lagrum, cmp=Util.numcmp):
+            # FIXME: Gör sanitychecks så att vi inte får med trasiga
+            # lagnummer-URI:er i stil med "1 §", "1949:105" eller
+            # "http://lagen.nu/9999:999#K1"
+            lagrum_node = PET.SubElement(root_node,"rdf:Description")
+            lagrum_node.set("rdf:about",l)
+            for r in lagrum[l]:
+                isref_node = PET.SubElement(lagrum_node, "dct:isReferencedBy")
+                rattsfall_node = PET.SubElement(isref_node, "rdf:Description")
+                rattsfall_node.set("rdf:about", r)
+                for triple in triples[r]:
+                    (subj,pred,obj) = triple
+                    if pred in (DCT['description'], DCT['identifier']):
+                        nodename = pred.replace(Util.ns['dct'],'dct:')
+                        triple_node = PET.SubElement(rattsfall_node, nodename)
+                        triple_node.text = Util.normalizeSpace(obj)
+
+        log.info("RDF processed (%.3f sec)", time()-start)
+        Util.indent_et(root_node)
+        tree = PET.ElementTree(root_node)
+        outrdffile = "%s/%s/parsed/dv-rdf.xml" % (self.baseDir,__moduledir__) 
+        tree.write(outrdffile, encoding="utf-8")
+        log.info("New RDF file created")
+        
+        # open the RDF graph
+        # loop through all triples (g.items())
+        #    triples[object].append([object, predicate, subject])
+        #    if predicate = rinfo:lagrum then refs[subject].append(object)
+        # loop through lagrum in refs.keys() - sort by Util.numcmp
+        #    dump refs[lagrum], triples[refs[lagrum]] like so:
+        #
+        # <rdf:RDF xmlns...>
+        #     <rdf:Description rdf:about="http://lagen.nu/1972:207#K1P3">
+        #         <dct:isReferencedBy> 
+        #             <rdf:Description rdf:about="http://lagen.nu/NJA_1989_s_374">
+        #                 <dct:identifier>NJA 1989 s. 374 (NJA 1989:62)</dct:identifier>
+        #                 ...
+        #             </rdf:Description>
+        #         </dct:isReferencedBy>
+        #        ...
+        #     </rdf:Description>
+        # </rdf:RDF>
+        
+
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
@@ -1783,128 +1849,9 @@ class SFSManager(LegalSource.Manager):
                        {'lawid': sanitized_sfsnr,
                         'today':datetime.today().strftime("%Y-%m-%d")},
                        validate=False)
-        #ad = AnnotatedDoc(outfile)
-        #ad.Prepare()
-        
 
     def GenerateAll(self):
         self.__doAll('parsed','xml',self.Generate)
-
-    def Relate(self,basefile):
-        start = time()
-        sys.stdout.write("Relate %s" % basefile)
-        xmlFileName = self._xmlFileName(basefile)
-        root = ET.ElementTree(file=xmlFileName).getroot()
-        urn = root.get('urn')
-        displayid = self._findDisplayId(root,basefile)
-        # delete all previous relations where this document is the object --
-        # maybe that won't be needed if the typical GenerateAll scenario
-        # begins with wiping the Relation table? It still is useful 
-        # in the normal development scenario, though
-        Relation.objects.filter(object__startswith=urn.encode('utf-8')).delete()
-
-        self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
-        title = root.findtext(u'preamble/title') or ''
-        self._createRelation(urn,Predicate.TITLE,title)
-
-        # Find out wheter § numbering is continous for the whole law text
-        # (like URL) or restarts for each chapter:
-        seenSectionOne = False
-        restartingSectionNumbering = False 
-        for e in root.getiterator():
-            if e.tag == u'section' and e.get('id') == '1':
-                if seenSectionOne:
-                    restartingSectionNumbering = True
-                    break
-                else:
-                    seenSectionOne = True
-        # this second call to root.getiterator() could possibly be merged 
-        # with the first one, if I understood how it worked...
-        parent_map = dict((c, p) for p in root.getiterator() for c in p)
-        context = {'sfsnr':     displayid,
-                   'changeid':  None, # not really sure it belongs
-                   'chapter':   None,
-                   'section':   None,
-                   'piece':     None,
-                   'item':      None}
-        referenceCount = 0
-        inChangesSection = False
-        for e in root.getiterator():
-            if e.tag == u'chapter':
-                # sys.stdout.write("c")
-                context['chapter'] = e.get('id')
-                context['section'] = None
-                context['piece'] = None
-                context['item'] = None
-            elif e.tag == u'section':
-                # sys.stdout.write("s")
-                context['section'] = e.get('id')
-                context['piece'] = None
-                context['item'] = None
-            elif e.tag == u'p':
-                # sys.stdout.write("p")
-                if context['piece']:
-                    context['piece'] += 1
-                else:
-                    context['piece'] = 1
-                context['item'] = None
-            elif e.tag == u'li':
-                # sys.stdout.write("l")
-                if context['item']:
-                    context['item'] += 1
-                else:
-                    context['item'] = 1
-            elif e.tag == u'changes':
-                # sys.stdout.write("|")
-                inChangesSection = True
-            elif e.tag == u'change':
-                # sys.stdout.write("C")
-                context['changeid'] = e.get('id')
-                context['chapter'] = None                
-                context['section'] = None                
-                context['piece'] = None                
-                context['item'] = None                
-            elif e.tag == u'link':
-                # sys.stdout.write("L")
-                if 'type' in e.attrib and e.get('type') == 'docref':
-                    # sys.stdout.write("-")
-                    pass
-                elif inChangesSection:
-                    # sys.stdout.write("!")
-                    try:
-                        # urn will be on the form "urn:x-sfs:2005:360" -- should
-                        # it be "urn:x-sfs:1960:729#2005:360" instead?
-                        sourceUrn = "urn:x-sfs:%s" % context['changeid']
-                        # the urn to the changed paragraph (or similar)
-                        targetUrn = self.__resolveFragment(e, context,restartingSectionNumbering)
-                                               
-                        # i'd really like a MODIFIES predicate, but no such thing in DCMI
-                        self._createRelation(sourceUrn,Predicate.REFERENCES,targetUrn)
-                        self._createReference(basefile,targetUrn,sourceUrn,u'Ändringar', context['changeid'])
-                        referenceCount += 1
-                    except IdNotFound:
-                        # sys.stdout.write("?")
-                        pass
-                else:
-                    # this code, which creates reference entries for every
-                    # reference in the lawtext, is disabled for now (there are
-                    # 100's or 1000's of such references in a typical law)
-                    #try:
-                    #    sourceUrn = self.__resolveFragment(None,context,restartingSectionNumbering)
-                    #    targetUrn = self.__resolveFragment(e,context,restartingSectionNumbering)
-                    #    self._createRelation(sourceUrn,Predicate.REFERENCES,targetUrn)
-                    #    # we need to use __formatFragmentId to get a good displayid here
-                    #    self._createReference(basefile,targetUrn,sourceUrn,u'Hänvisningar', 'source')
-                    #    referenceCount += 1
-                    #except IdNotFound:
-                    #    pass
-                    # sys.stdout.write(".")
-                    pass
-        sys.stdout.write("\tcreated %s references\tin %s seconds\n" % (referenceCount,(time()-start)))
-        self._flushReferenceCache()
-    
-    def RelateAll(self):
-        self.__doAll('parsed','xml',self.Relate)
 
     def Download(self,id):
         sd = SFSDownloader(self.baseDir)
@@ -1917,8 +1864,6 @@ class SFSManager(LegalSource.Manager):
     def DownloadNew(self):
         sd = SFSDownloader(self.baseDir)
         sd.DownloadNew()
-    
-    
 
 
 if __name__ == "__main__":
