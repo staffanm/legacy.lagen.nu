@@ -64,7 +64,7 @@
       </div>
 
       <section py:def="render_avdelning(avdelning)"
-	       xml:id="${avdelning.id}"
+	       id="${avdelning.id}"
 	       instanceof="rinfo:Avdelning"
 	       rel="rinfo:avdelning">
 	<h py:content="avdelning.rubrik">Avdelningsrubrik</h>
@@ -87,7 +87,7 @@
       </section>
 
       <section py:def="render_kapitel(kapitel)"
-	       xml:id="${kapitel.id}"
+	       id="${kapitel.id}"
 	       instanceof="rinfo:Kapitel"
 	       rel="rinfo:kapitel"
 	       property="rinfo:kapitelnummer"
@@ -112,7 +112,7 @@
 	       ${paragraf}
       </section>
       
-      <section py:def="render_paragraf(paragraf)" xml:id="${paragraf.id}"
+      <section py:def="render_paragraf(paragraf)" id="${paragraf.id}"
                instanceof="rinfo:Paragraf"
 	       rel="rinfo:paragraf"
 	       property="rinfo:paragrafnummer"
@@ -133,7 +133,7 @@
       
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
 	 instanceof="rinfo:Stycke"
-	 xml:id="${stycke.id}"
+	 id="${stycke.id}"
 	 property="rinfo:styckenummer"
 	 content="${stycke.ordinal}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
@@ -156,28 +156,28 @@
       that have ten items labeled 1, 2, 3, 4, 4 a, 5, 6, 6 a, 7, and 8.
       Because of this we use <ul> instead of <ol> even for numbered lists.
       -->
-      <ul class="numreradlista" py:def="render_numreradlista(lista)" xml:id="${lista.id}">
+      <ul class="numreradlista" py:def="render_numreradlista(lista)" id="${lista.id}">
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_numreradlista</div>
         </py:for>
       </ul>
 
-      <ul class="strecksatslista" py:def="render_strecksatslista(lista)" xml:id="${lista.id}">
+      <ul class="strecksatslista" py:def="render_strecksatslista(lista)" id="${lista.id}">
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_strecksatslista</div>
         </py:for>
       </ul>
 
-      <ul class="bokstavslista" py:def="render_bokstavslista(lista)" xml:id="${lista.id}">
+      <ul class="bokstavslista" py:def="render_bokstavslista(lista)" id="${lista.id}">
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bokstavslista</div>
         </py:for>
       </ul>
 
-      <li py:def="render_listelement(listelement)" xml:id="${listelement.id}">
+      <li py:def="render_listelement(listelement)" id="${listelement.id}">
       <!--! for nested lists -->
       <py:for each="part in listelement" py:choose="">
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
@@ -216,7 +216,7 @@
 
       <section py:def="render_overgangsbestammelse(ob)"
 	       instanceof="rinfo:Overgangsbestammelse"
-	       xml:id="${ob.id}">
+	       id="${ob.id}">
 	<p py:content="ob.sfsnr">sfsnr</p>
         <py:for each="part in ob" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>

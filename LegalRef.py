@@ -217,9 +217,11 @@ class LegalRef:
         # konverterar intdatat till en bytesträng
         if isinstance(fixedindata,unicode):
             fixedindata = fixedindata.encode(SP_CHARSET)
-        # Det är är inte det enklaste sättet att göra det, men om man
-        # gör enligt Simpleparse-dokumentationen byggs taggertabellen
-        # om för varje anrop till parse
+
+        # Parsea texten med TextTools.tag - inte det enklaste sättet
+        # att göra det, men om man gör enligt
+        # Simpleparse-dokumentationen byggs taggertabellen om för
+        # varje anrop till parse()
         taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
 
         result = []
@@ -881,6 +883,20 @@ class TestLegalRef:
         p.verbose = verbose
         print serialize(p.parse(s, u'http://lagen.nu/1:2#'))
 
+    # Resultat för ParseTestAll just nu:
+    # ................NN.........F...............................N.N.......F..
+    # 66/72
+    # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
+    # test\data\LegalRef\sfs-basic-kungorelse.txt
+    # test\data\LegalRef\sfs-basic-punktlista.txt
+    # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
+    # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
+    # test\data\LegalRef\sfs-tricky-vvfs.txt
+    #
+    # (sfs-basic-punktlista gick igenom förut, men slutade funka när
+    # jag rationaliserade bort de flesta format_*-funktionerna). Den
+    # funkar om man pillar på ItemRef-produktionen, men då slutar
+    # sfs-tricky-punkt att funka. Svårt problem.)
     def ParseTestAll(self):
         results = []
         failures = []
@@ -896,14 +912,6 @@ class TestLegalRef:
         if failures:
             print "\n".join(failures)
 
-
-    def NewAPI(self):
-        p = LegalRef(LegalRef.LAGRUM, LegalRef.FORARBETEN,\
-                     LegalRef.RATTSFALL, LegalRef.EGLAGSTIFTNING,\
-                     LegalRef.KORTLAGRUM)
-
-        print serialize(p.parse(u'Enligt Prop. 1998/99:123 ska 4 § och MB 14:7 tolkas i ljuset av artikel 4 i direktiv 1996/13/EG, vilket bekrftades i NJA 1992 s. 12.'))
-
 if __name__ == "__main__":
     if sys.platform == 'win32':
         if sys.stdout.encoding:
@@ -918,20 +926,6 @@ if __name__ == "__main__":
     sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
     sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
-    # Resultat för ParseTestAll just nu:
-    # ................NN.........F...............................N.N.......F..
-    # 66/72
-    # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
-    # test\data\LegalRef\sfs-basic-kungorelse.txt
-    # test\data\LegalRef\sfs-basic-punktlista.txt
-    # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
-    # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test\data\LegalRef\sfs-tricky-vvfs.txt
-    #
-    # (sfs-basic-punktlista gick igenom förut, men slutade funka när
-    # jag rationaliserade bort de flesta format_*-funktionerna). Den
-    # funkar om man pillar på ItemRef-produktionen, men då slutar
-    # sfs-tricky-punkt att funka. Svårt problem.)
     TestLegalRef.__bases__ += (DispatchMixin,)
     t = TestLegalRef()
     t.Dispatch(sys.argv)

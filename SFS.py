@@ -29,14 +29,14 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
 import LegalSource 
-from LegalRef import LegalRef,ParseError,Link
+from LegalRef import LegalRef,ParseError,Link,LinkSubject
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
 
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, TemporalStructure, OrdinalStructure, \
-     PredicateType, serialize
+     PredicateType, DateStructure, serialize
 
 
 __version__   = (0,1)
@@ -178,6 +178,8 @@ class Forfattningsinfo(MapStructure):
     pass
 
 class UnicodeSubject(PredicateType,UnicodeStructure): pass
+
+class DateSubject(PredicateType,DateStructure): pass
 
 # module global utility functions
 def SFSnrToFilename(sfsnr):
@@ -438,7 +440,9 @@ class SFSParser(LegalSource.Parser):
         self.trace['tabell'].debug(u'Tabelltracern är igång')
                       
         self.verbose = True
-        self.references = LegalRef(LegalRef.LAGRUM)
+        self.lagrum_parser = LegalRef(LegalRef.LAGRUM,
+                                      LegalRef.EGLAGSTIFTNING)
+        self.forarbete_parser = LegalRef(LegalRef.FORARBETEN)
 
         self.current_section = u'0'
         self.current_chapter = u'0'
@@ -506,6 +510,7 @@ class SFSParser(LegalSource.Parser):
               u'Observera':              RDFS.comment, # FIXME: hitta bättre predikat
               u'Tidsbegränsad':          RINFOEX['tidsbegransad'],
               u'Omtryck':                RINFOEX['omtryck'], # subtype av RINFO['fsNummer']
+              u'Ändring införd':         RINFO['konsoliteringsunderlag']
               }
 
     # metadatafält som kan ha flera värden (kommer representeras som
@@ -537,7 +542,7 @@ class SFSParser(LegalSource.Parser):
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ansvarig myndighet':
                             # p['ansvarigmyndighet'] = val
-                            authrec = self.find_authority_rec(text)
+                            authrec = self.find_authority_rec(val)
                             p[key] = LinkSubject(val, uri=unicode(authrec[0]),
                                                  predicate=self.labels[key])
                         elif key == u'Rubrik':
@@ -556,7 +561,7 @@ class SFSParser(LegalSource.Parser):
                             # LinkSubject-objekt med lämpligt predikat
                             # för att ange om det är införda, ändrade
                             # eller upphävda bestämmelser
-                            p[key] = self.references.parse(val) 
+                            p[key] = self.lagrum_parser.parse(val) 
                         elif key == u'F\xf6rarbeten':
                             # FIXME: Link -> LinkSubject
                             p[key] = self.forarbete_parser.parse(val)
@@ -626,7 +631,7 @@ class SFSParser(LegalSource.Parser):
                                   # if the Stycke has a NumreradLista
                                   # or similar
                     if isinstance(p,unicode): # look for stuff
-                        nodes.extend(self.references.parse(p,baseuri+prefix))
+                        nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix))
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
 
@@ -676,12 +681,12 @@ class SFSParser(LegalSource.Parser):
             elif key == u'Utfärdad':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
             elif key == u'Departement/ myndighet':
-                authrec = self.find_authority_rec(text)
-                p[key] = LinkSubject(val, uri=unicode(authrec[0]),
+                authrec = self.find_authority_rec(val)
+                meta[key] = LinkSubject(val, uri=unicode(authrec[0]),
                                      predicate=self.labels[key])
             elif key == u'Ändring införd':
                 # FIXME: plocka ut själva SFS-numret (skippa 't.o.m.')
-                p[key] = UnicodeSubject(val,predicate=self.labels[key])
+                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
             else:
                 log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
             
@@ -1676,7 +1681,7 @@ class SFSManager(LegalSource.Manager):
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
                     
-            p.references.verbose = verbose
+            p.lagrum_parser.verbose = verbose
             p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
             p.reader.autostrip=True
             b = p.makeForfattning()
@@ -1732,6 +1737,20 @@ class SFSManager(LegalSource.Manager):
                        sys.exc_info()[0].__name__,
                        sys.exc_info()[1]))
 
+    # Resultat för ParseTestAll just nu:
+    # ..........N.......N.......N..N..........N..NN.NF.N....N.
+    # 45/56
+    # test\data\SFS\extra-overgangsbestammelse-med-rubriker.txt
+    # test\data\SFS\regression-avdelning-overgangsbestammelser.txt
+    # test\data\SFS\regression-stycke-inte-rubrik.txt
+    # test\data\SFS\regression-tabell-tva-korta-vansterceller.txt
+    # test\data\SFS\temporal-kapitelrubriker.txt
+    # test\data\SFS\temporal-rubriker.txt
+    # test\data\SFS\tricky-felstavade-overgangsbestammelser.txt
+    # test\data\SFS\tricky-lopande-numrering.txt
+    # test\data\SFS\tricky-nastlade-listor.txt
+    # test\data\SFS\tricky-okand-aldre-lag.txt
+    # test\data\SFS\tricky-tabell-sju-kolumner.txt
     def ParseTestAll(self):
         results = []
         failures = []
@@ -1816,25 +1835,6 @@ class SFSManager(LegalSource.Manager):
         outrdffile = "%s/%s/parsed/dv-rdf.xml" % (self.baseDir,__moduledir__) 
         tree.write(outrdffile, encoding="utf-8")
         log.info("New RDF file created")
-        
-        # open the RDF graph
-        # loop through all triples (g.items())
-        #    triples[object].append([object, predicate, subject])
-        #    if predicate = rinfo:lagrum then refs[subject].append(object)
-        # loop through lagrum in refs.keys() - sort by Util.numcmp
-        #    dump refs[lagrum], triples[refs[lagrum]] like so:
-        #
-        # <rdf:RDF xmlns...>
-        #     <rdf:Description rdf:about="http://lagen.nu/1972:207#K1P3">
-        #         <dct:isReferencedBy> 
-        #             <rdf:Description rdf:about="http://lagen.nu/NJA_1989_s_374">
-        #                 <dct:identifier>NJA 1989 s. 374 (NJA 1989:62)</dct:identifier>
-        #                 ...
-        #             </rdf:Description>
-        #         </dct:isReferencedBy>
-        #        ...
-        #     </rdf:Description>
-        # </rdf:RDF>
         
 
     def Generate(self,basefile):
