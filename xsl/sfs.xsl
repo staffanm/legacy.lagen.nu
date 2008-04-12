@@ -20,10 +20,41 @@
 
   <xsl:template match="xht2:body">
     <body>
-      <xsl:apply-templates/>
+      <div id="vinjett">
+	<b>Vinjett text:</b> Lorem ipsum dolor sit amet, consectetuer
+	adipiscing elit. Morbi ipsum nulla, tincidunt eu, varius in,
+	sodales at, ipsum. Donec scelerisque. Integer congue
+	adipiscing nisi. Suspendisse ligula magna, venenatis eu,
+	condimentum et, viverra sed, est. Praesent nibh risus, euismod
+	ut, ullamcorper ut, porta at, urna.
+      </div>
+      <div id="wrapper_extra">
+	<div id="wrapper">
+	  <div id="lagtext">
+	    <xsl:apply-templates/>
+	  </div>
+	  <div id="kommentarer">
+	    <div class="sidoruta">
+	      &#160;
+	    </div>
+	  </div>
+	  <div id="referenser">
+	    <div class="sidoruta">
+	      <p>Om dokumentet</p>
+	      <xsl:apply-templates mode="refs"/>
+	    </div>
+	  </div>
+	</div>
+	<div id="sidfot">
+	  <b>Lagen.nu:</b> Mauris non risus a nisi posuere
+	  gravida. Morbi ut lacus. Nulla faucibus pulvinar ligula. Proin
+	  mattis. Maecenas sagittis venenatis lorem. Praesent facilisis
+	  posuere pede.
+	</div>
+      </div>
     </body>
   </xsl:template>
-
+  
   <xsl:template match="xht2:h">
     <h2><xsl:value-of select="."/></h2>
   </xsl:template>
@@ -31,10 +62,13 @@
   <xsl:template match="xht2:section">
     <div><xsl:apply-templates/></div>
   </xsl:template>
+
+  <xsl:template match="xht2:dl[@class='metadata']">
+    <!-- emit nothing -->
+  </xsl:template>
+
   
   <xsl:template match="*">
-    <!-- xsl:copy är inte rätt - vi måste översätta från xht2 till
-         xhtml-namespace på alla element -->
     <xsl:element name="{name()}">
       <xsl:apply-templates select="@*|node()"/>
     </xsl:element>
@@ -44,4 +78,25 @@
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
+  <xsl:template match="xht2:dl[@class='metadata']" mode="refs">
+    <!-- Den stora metadata-definitionslistan innehåller en massa som
+         inte är intressant att visa för slutanvändaren. Filtrera ut
+         de intressanta bitarna -->
+    <dl>
+      <dt>Departement</dt>
+      <dd><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
+      <dt>Utfärdad</dt>
+      <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#utfardandedatum']"/></dd>
+      <dt>Ändring införd t.o.m.</dt>
+      <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#konsolideringsunderlag']"/></dd>
+      <dt>Källa</dt>
+      <dd><a href="">Regeringskansliets rättsdatabaser</a></dd>
+      <dt>Senast hämtad</dt>
+      <dd>...måste in i xht2-datan</dd>
+    </dl>
+  </xsl:template>
+
+  <xsl:template match="*|@*" mode="refs">
+    <!-- emit nothing -->
+  </xsl:template>
 </xsl:stylesheet>

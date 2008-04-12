@@ -491,11 +491,47 @@ class SFSParser(LegalSource.Parser):
             # makeHeader - kompensera på något vis. Kanske vi bara kan
             # skapa en Forfattningsinfo härifrån?
             
-        if self.verbose:
-            # print serialize(data[1])
-            print serialize(registry)
+        # Lägg till information om konsolideringsunderlag och
+        # förarbeten från SFSR-datat
+        meta[u'Konsolideringsunderlag'] = []
+        meta[u'Förarbeten'] = []
+        for rp in registry:
+            uri = self.lagrum_parser.parse(rp['SFS-nummer'])[0].uri
             
-        xhtml = self.generate_xhtml(meta,body,__moduledir__,globals())
+            meta[u'Konsolideringsunderlag'].append(uri)
+            if u'Förarbeten' in rp:
+                for node in rp[u'Förarbeten']:
+                    if isinstance(node,Link):
+                        meta[u'Förarbeten'].append(node.uri)
+
+        # Plocka ut övergångsbestämmelserna och stoppa in varje
+        # övergångsbestämmelse på rätt plats i registerdatat.
+        obs = None
+        for p in body:
+            if isinstance(p, Overgangsbestammelser):
+                obs = p
+                break
+        if obs:
+            for ob in obs:
+                found = False
+                # Det skulle vara vackrare om Register-objektet hade
+                # nycklar eller index eller något, så vi kunde slippa
+                # att hitta rätt registerpost genom nedanstående
+                # iteration:
+                for rp in registry:
+                    if rp[u'SFS-nummer'] == ob.sfsnr:
+                        rp[u'Övergångsbestämmelse'] = ob
+                        found = True
+                        break
+                if not found:
+                    log.warning(u'%s: Övergångsbestämmelse för %s saknar motsvarande registerpost' % (self.id, ob.sfsnr))
+                    rp = Registerpost()
+                    rp[u'SFS-nummer'] = ob.sfsnr
+                    rp[u'Övergångsbestämmelse'] = ob
+                    
+            
+        
+        xhtml = self.generate_xhtml(meta,body,registry,__moduledir__,globals())
         return xhtml
 
     # metadatafält (kan förekomma i både SFST-header och SFSR-datat)
@@ -504,13 +540,14 @@ class SFSParser(LegalSource.Parser):
               u'SFS nr':                 RINFO['fsNummer'],
               u'Ansvarig myndighet':     DCT['creator'],
               u'Departement/ myndighet': DCT['creator'],
+              u'Utgivare':               DCT['publisher'],
               u'Rubrik':                 DCT['title'],
               u'Utfärdad':               RINFO['utfardandedatum'],
               u'Ikraft':                 RINFO['ikrafttradandedatum'],
               u'Observera':              RDFS.comment, # FIXME: hitta bättre predikat
               u'Tidsbegränsad':          RINFOEX['tidsbegransad'],
               u'Omtryck':                RINFOEX['omtryck'], # subtype av RINFO['fsNummer']
-              u'Ändring införd':         RINFO['konsoliteringsunderlag']
+              u'Ändring införd':         RINFO['konsolideringsunderlag']
               }
 
     # metadatafält som kan ha flera värden (kommer representeras som
@@ -539,6 +576,8 @@ class SFSParser(LegalSource.Parser):
                     val = Util.elementText(row('td')[1]).replace(u'\xa0',' ') # no nbsp's, please
                     if val != "":
                         if key == u'SFS-nummer':
+                            if len(r) == 0:
+                                docuri = self.lagrum_parser.parse(val)[0].uri
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ansvarig myndighet':
                             # p['ansvarigmyndighet'] = val
@@ -554,20 +593,34 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Ikraft':
                             # p['ikraft'] = datetime.strptime(val[:10], '%Y-%m-%d')
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
-                            p[u'Övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
+                            p[u'Har övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
                         elif key == u'Omfattning':
                             # FIXME: Det här skapar vanliga
                             # Link-objekt. Vi vill egentligen ha
                             # LinkSubject-objekt med lämpligt predikat
                             # för att ange om det är införda, ändrade
                             # eller upphävda bestämmelser
-                            p[key] = self.lagrum_parser.parse(val) 
+                            p[key] = self.lagrum_parser.parse(val)
+                            p[key] = []
+                            for changecat in val.split(u'; '):
+                                if changecat.startswith(u'ändr.'):
+                                    pred = RINFO['ersatter']
+                                elif changecat.startswith(u'upph.'):
+                                    pred = RINFO['upphaver']
+                                elif (changecat.startswith(u'ny') or
+                                      changecat.startswith(u'ikrafttr.') or
+                                      changecat.startswith(u'tillägg')):
+                                    pred = RINFO['inforsI']
+                                else:
+                                    log.warning(u"%s: Okänd omfattningstyp '%s'" % (self.id, changecat))
+                                    pred = None
+                                p[key].extend(self.lagrum_parser.parse(val,docuri,pred))
+                                p[key].append(u';')
+                            p[key] = p[key][:-1] # chop of trailing ';'
                         elif key == u'F\xf6rarbeten':
-                            # FIXME: Link -> LinkSubject
-                            p[key] = self.forarbete_parser.parse(val)
+                            p[key] = self.forarbete_parser.parse(val,docuri,RINFO['forarbete'])
                         elif key == u'CELEX-nr':
-                            # FIXME: Link -> LinkSubject
-                            p[key] = self.forarbete_parser.parse(val)
+                            p[key] = self.forarbete_parser.parse(val,docuri,RINFO['forarbete'])
                         elif key == u'Tidsbegränsad':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                         else:
@@ -682,15 +735,25 @@ class SFSParser(LegalSource.Parser):
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
             elif key == u'Departement/ myndighet':
                 authrec = self.find_authority_rec(val)
-                meta[key] = LinkSubject(val, uri=unicode(authrec[0]),
+                meta[key] = LinkSubject(val, uri=unicode(authrec),
                                      predicate=self.labels[key])
             elif key == u'Ändring införd':
-                # FIXME: plocka ut själva SFS-numret (skippa 't.o.m.')
-                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+                # återanvänd URI-strategin från LegalRef
+                val = val.replace(u't.o.m. SFS ','')
+                uri = self.lagrum_parser.parse(val)[0].uri
+                meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+                                       
             else:
                 log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
             
-        meta[u'Utgivare'] = self.find_authority_rec("Regeringskansliet")
+            meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
+                                            uri=self.find_authority_rec("Regeringskansliet"),
+                                            predicate=self.labels[u'Utgivare'])
+
+        
+        docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
+        meta[u'xml:base'] = docuri
+
         return meta
         
     def makeForfattning(self):
@@ -1651,7 +1714,7 @@ class SFSManager(LegalSource.Manager):
             out = file(filename, "w")
             out.write(parsed)
             out.close()
-            Util.indentXmlFile(filename)
+            # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except Exception:
             # Vi hanterar traceback-loggning själva eftersom

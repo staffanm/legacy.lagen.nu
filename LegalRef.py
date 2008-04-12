@@ -32,8 +32,6 @@ class Link(UnicodeStructure): # just a unicode string with a .uri property
 
 class LinkSubject(PredicateType, Link): pass # A RDFish link
 
-
-
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""
     def __init__(self,root,data,offset=0,isRoot=True):
@@ -197,8 +195,9 @@ class LegalRef:
         return d
 
 
-    def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9"):
+    def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9",predicate=None):
         if indata == "": return indata # this actually triggered a bug...
+        self.predicate = predicate
         m = self.re_urisegments.match(baseuri)
         self.baseuri_attributes = {'baseuri':m.group(1),
                                    'law':m.group(2),
@@ -245,21 +244,33 @@ class LegalRef:
             print u"Problem (%d:%d) with %s / %s" % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata)
             raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
 
-        # "Normalize" the result, i.e concatenate adjacent text nodes
+        # Normalisera resultatet, dvs konkatenera intilliggande
+        # textnoder, och ta bort ev '|'-tecken som vi stoppat in
+        # tidigare.
         normres = []
         for i in range(len(result)):
-            text = self.re_descape.sub(r'\1',result[i])
-            if isinstance(result[i], Link):
-                normres.append(Link(text, uri=result[i].uri))
+            # print "Doing a %s %s" % (result[i].__class__.__name__, result[i])
+            if not self.re_descape.search(result[i]):
+                node = result[i]
             else:
-                if len(normres) > 0 and not isinstance(normres[-1],Link):
-                    # print "concatenating %r" % text
-                    if isinstance(text,unicode):
-                        normres[-1] += text
+                text = self.re_descape.sub(r'\1',result[i])
+                if isinstance(result[i], Link):
+                    # Eftersom Link-objekt är immutable måste vi skapa
+                    # ett nytt och kopiera dess attribut
+                    if 'predicate' in result[i]:
+                        node = LinkSubject(text, predicate=result[i].predicate,
+                                           uri=result[i].uri)
                     else:
-                        normres[-1] += text
+                        node = Link(text,uri=result[i].uri)
                 else:
-                    normres.append(text)
+                    node = text
+            if (len(normres) > 0
+                and not isinstance(normres[-1],Link) 
+                and not isinstance(node,Link)):
+                normres[-1] += node
+            else:
+                
+                normres.append(node)
         return normres
 
 
@@ -391,14 +402,23 @@ class LegalRef:
             else:
                 uri = self.sfs_format_uri(self.find_attributes([part]))
         if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
-        return Link(part.text, uri=uri)
+        if self.predicate:
+            return LinkSubject(part.text, uri=uri, predicate=self.predicate)
+        else:
+            return Link(part.text, uri=uri)
+        
 
     def format_custom_link(self, attributes, text, production):
         try:
             uri = self.uriformatter[production](attributes)
         except KeyError:
             uri = self.sfs_format_uri(attributes)
-        return Link(text,uri=uri)
+
+        if self.predicate:
+            return LinkSubject(text, uri=uri, predicate=self.predicate)
+        else:
+            return Link(text, uri=uri)
+
 
     ################################################################
     # KOD FÖR LAGRUM
@@ -885,7 +905,7 @@ class TestLegalRef:
 
     # Resultat för ParseTestAll just nu:
     # ................NN.........F...............................N.N.......F..
-    # 66/72
+    # 67/73
     # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
     # test\data\LegalRef\sfs-basic-kungorelse.txt
     # test\data\LegalRef\sfs-basic-punktlista.txt

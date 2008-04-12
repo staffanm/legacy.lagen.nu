@@ -155,7 +155,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
     # tidyHtmlFile(outfile)
-    indentXmlFile(outfile)
+    #indentXmlFile(outfile)
 
     if validate:
         cmdline = "xmllint --noout --nonet --nowarning --dtdvalid %s/dtd/xhtml1-strict.dtd %s" % (basepath,outfile)

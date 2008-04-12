@@ -108,11 +108,11 @@ class Parser:
     def Parse(self):
         raise NotImplementedError
 
-    def generate_xhtml(self,meta,body,module,globals):
+    def generate_xhtml(self,meta,body,registry,module,globals):
         """Skapa en XHTML2-representation av ett rättsinformationsdokument"""
         loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
         tmpl = loader.load("etc/%s.template.xht2"%module)
-        stream = tmpl.generate(meta=meta, body=body, **globals)
+        stream = tmpl.generate(meta=meta, body=body, registry=registry, **globals)
         try:
             res = stream.render()
         except Exception, e:
@@ -131,7 +131,7 @@ class Parser:
         graph.load(file, format='n3')
         d = {}
         for uri, label in graph.subject_objects(RDFS.label):
-            d[unicode(label)] = str(uri)
+            d[unicode(label)] = unicode(uri)
         return d
 
     def find_authority_rec(self, label):

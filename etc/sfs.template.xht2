@@ -1,63 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/2002/06/xhtml2/"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
       xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.w3.org/2002/06/xhtml2/ http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd"
-      xmlns:dc="http://purl.org/dc/elements/1.1/"
-      xmlns:foaf="http://xmlns.com/foaf/0.1/"
-      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
       xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:base="${meta['xml:base']}"
       xml:lang="sv"
       xmlns:py="http://genshi.edgewall.org/"
       >
+  <xi:include href="base.template.xht2"/>
     <head about="${meta['xml:base']}">
-      <title property="dc:title" py:content="meta['dc:title']">Författningsrubrik</title>
+      <!-- ! consider adding 'property="${meta[u'Referat'].predicate}"' -->
+      <title py:content="meta[u'Rubrik']">Författningsrubrik</title>
 
       <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
-
-      <meta property="rinfo:fsNummer" content="${meta['rinfo:fsNummer']}" xml:lang=""/>
-
-      <link rel="dc:publisher" href="${meta['dc:publisher']}"/>
-      <link rel="dc:creator" href="${meta['dc:creator']}"/>
+      <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
+      <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/>
+      <link rel="dc:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
       <meta property="rinfo:utfardandedatum"
-            content="${meta['rinfo:utfardandedatum']}" datatype="xsd:date"/>
-
-      <py:if test="meta['rinfo:upphaver']">
-        <link rel="rinfo:upphaver" href="${meta['rinfo:upphaver']}"/>
-      </py:if>
-
-      <!--! Kan den här egenskapen utläsas ur SFST/SFSR-datat? -->
-      <py:if test="meta['rinfo:ikrafttradandedatum']">
+            content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
+      <py:if test="meta[u'Ikraft']">
         <meta property="rinfo:ikrafttradandedatum"
-              content="${meta['rinfo:ikrafttradandedatum']}" datatype="xsd:date"/>
+              content="${meta[u'Ikraft']}" datatype="xsd:date"/>
       </py:if>
-
-      <py:for each="forarbete in meta.forarbeten">
-        <link rel="rinfo:forarbete" href="http://rinfo.lagrummet.se/data/ds/1998:10"/>
+      <link rel="rinfo:konsoliderar" href="${meta['xml:base']}"/>
+      <!--! FIXME: det vore snyggare med RDF-listor istället för
+	     oordnade högar med triples -->
+      <py:for each="uri in meta[u'Konsolideringsunderlag']">
+	<link rel="rinfo:konsolideringsunderlag" href="${uri}"/> 
+      </py:for>
+      <py:for each="uri in meta[u'Förarbeten']">
+        <link rel="rinfo:forarbete" href="${uri}"/>
       </py:for>
 
-      <link rel="rinfo:konsoliderar" href="${meta['rinfo:konsoliderar']}"/>
-
-      <!--! FIXME: Hur konstruera en länkad lista RDF-påståenden från
-           en vanlig lista (SFSR-posterna) med Genshi?
-      <link rel="rinfo:konsolideringsUnderlag">
-          <link rel="rdf:type" href="http://www.w3.org/1999/02/22-rdf-syntax-ns#Collection"/>
-          <link rel="rdf:first" href="http://rinfo.lagrummet.se/data/sfs/1999:175/kons_grf-n1"/>
-          <link rel="rdf:rest">
-              <link rel="rdf:first" href="http://rinfo.lagrummet.se/data/sfs/2006:87"/>
-              <link rel="rdf:rest" href="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
-          </link>
-      </link>
-      -->
     </head>
     <body>
-
       <!--! macro definitions -->
-
       <div py:def="render_rubrik(rubrik)" py:strip="" py:choose="">
 	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" class="underrubrik">Underrubrik</h>
 	<h py:otherwise="" py:content="rubrik">Huvudrubrik</h>
@@ -77,20 +59,20 @@
 	</py:for>
       </section>
       
+      <!--! lägg till property="rinfo:kapitelnummer" -->
       <section py:def="render_upphavtkapitel(paragraf)"
                instanceof="rinfo:Kapitel"
 	       rel="rinfo:kapitel"
 	       class="upphavd"
-	       property="rinfo:kapitelnummer"
 	       content="${paragraf.ordinal}">
 	       ${paragraf}
       </section>
 
+      <!--! lägg till property="rinfo:kapitelnummer" -->
       <section py:def="render_kapitel(kapitel)"
 	       id="${kapitel.id}"
 	       instanceof="rinfo:Kapitel"
 	       rel="rinfo:kapitel"
-	       property="rinfo:kapitelnummer"
 	       content="${kapitel.ordinal}">
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
@@ -103,19 +85,19 @@
       </section>
       
       
+      <!--! lägg till property="rinfo:paragrafnummer" -->
       <section py:def="render_upphavdparagraf(paragraf)"
                instanceof="rinfo:Paragraf"
 	       rel="rinfo:paragraf"
 	       class="upphavd"
-	       property="rinfo:paragrafnummer"
 	       content="${paragraf.ordinal}">
 	       ${paragraf}
       </section>
-      
+
+      <!--! lägg till property="rinfo:paragrafnummer" -->
       <section py:def="render_paragraf(paragraf)" id="${paragraf.id}"
                instanceof="rinfo:Paragraf"
 	       rel="rinfo:paragraf"
-	       property="rinfo:paragrafnummer"
 	       content="${paragraf.ordinal}"
 	       >
 	<!--! första stycket måste rendreras tillsammans med
@@ -130,11 +112,10 @@
         </py:for>
       </section>
             
-      
+      <!-- ! lägg till property="rinfo:styckenummer" någonstans -->
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
 	 instanceof="rinfo:Stycke"
 	 id="${stycke.id}"
-	 property="rinfo:styckenummer"
 	 content="${stycke.ordinal}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
         <py:for each="part in stycke" py:choose="">
@@ -147,8 +128,6 @@
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div>
         </py:for>
       </p>
-
-      <a py:def="render_link(link)" href="${link.uri}">${link}</a>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict
       to be compatible with how numbered lists are used in swedish law -
@@ -217,7 +196,6 @@
       <section py:def="render_overgangsbestammelse(ob)"
 	       instanceof="rinfo:Overgangsbestammelse"
 	       id="${ob.id}">
-	<p py:content="ob.sfsnr">sfsnr</p>
         <py:for each="part in ob" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
@@ -237,11 +215,27 @@
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bilaga</div>
         </py:for>
       </section>
-      
+
+      <section py:def="render_registerpost(rp)" id="${rp.id}">
+	<dl>
+	  <py:for each="(key,val) in rp.items()" py:choose="">
+	    <dt py:content="key">Nyckel</dt>
+	    <dd py:when="key == u'Övergångsbestämmelse'">
+	      ${render_overgangsbestammelse(val)}
+	    </dd>
+	    <div py:when="isinstance(val,list)" py:strip="">
+	      ${render_listvalue(val)}
+	    </div>
+	    <dd py:otherwise="" py:content="val">Värde</dd>
+	  </py:for>
+	</dl>
+      </section>
+
       <!--! main body -->
-      <h property="dc:title" py:content="meta['dc:title']">Författningsrubrik</h>
+      <h property="dc:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
+      ${render_metadata(meta)}
       <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
-      <section>
+      <section class="forfattningstext">
       <py:for each="part in body" py:choose="">
 	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>
 	<div py:when="isinstance(part, UpphavtKapitel)"  py:strip="">${render_upphavtkapitel(part)}</div>
@@ -252,10 +246,16 @@
 	<div py:when="isinstance(part, Stycke)"          py:strip="">${render_stycke(part)}</div>
 	<div py:when="isinstance(part, NumreradLista)"   py:strip="">${render_numreradlista(part)}</div>
 	<div py:when="isinstance(part, Tabell)"          py:strip="">${render_tabell(part)}</div>
-	<div py:when="isinstance(part, Overgangsbestammelser)" py:strip="">${render_overgangsbestammelser(part)}</div>
+	<div py:when="isinstance(part, Overgangsbestammelser)" py:strip=""><!--!${render_overgangsbestammelser(part)}--></div>
 	<div py:when="isinstance(part, Bilaga)"          py:strip="">${render_bilaga(part)}</div>
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
+      </section>
+      <section class="register">
+	<h1>Ändringar och övergångsbestämmelser</h1>
+	<py:for each="rp in registry">
+	  ${render_registerpost(rp)}
+	</py:for>
       </section>
     </body>
 </html>

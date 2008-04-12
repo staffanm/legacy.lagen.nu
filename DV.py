@@ -402,7 +402,7 @@ class DVParser(LegalSource.Parser):
         # print graph.query(u'SELECT ?subj WHERE { ?obj dc:subject ?subj }', nsmap)
 
         
-        xhtml = self.generate_xhtml(head,body,__moduledir__,globals())
+        xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
         return xhtml
 
     
