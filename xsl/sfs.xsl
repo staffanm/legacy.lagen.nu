@@ -4,57 +4,38 @@
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:dc="http://purl.org/dc/elements/1.1/">
-		<!-- fixme: change dc to dct -->
-  <xsl:template match="xht2:html">
-    <html><xsl:apply-templates/></html>
-  </xsl:template>  
-
-  <xsl:template match="xht2:head">
-    <head>
-      <title>[lagnamn] ([alternativform]) | Lagen.nu</title>
-      <link rel="shortcut icon" href="http://lagen.nu/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" type="text/css" href="file://C|/Users/staffan/wds/ferenda.lagen.nu/css/default.css" />
-      <xsl:comment>all övrig metadata</xsl:comment>
-    </head>
-  </xsl:template>
-
-  <xsl:template match="xht2:body">
-    <body>
-      <div id="vinjett">
-	<b>Vinjett text:</b> Lorem ipsum dolor sit amet, consectetuer
-	adipiscing elit. Morbi ipsum nulla, tincidunt eu, varius in,
-	sodales at, ipsum. Donec scelerisque. Integer congue
-	adipiscing nisi. Suspendisse ligula magna, venenatis eu,
-	condimentum et, viverra sed, est. Praesent nibh risus, euismod
-	ut, ullamcorper ut, porta at, urna.
-      </div>
-      <div id="wrapper_extra">
-	<div id="wrapper">
-	  <div id="lagtext">
-	    <xsl:apply-templates/>
-	  </div>
-	  <div id="kommentarer">
-	    <div class="sidoruta">
-	      &#160;
-	    </div>
-	  </div>
-	  <div id="referenser">
-	    <div class="sidoruta">
-	      <p>Om dokumentet</p>
-	      <xsl:apply-templates mode="refs"/>
-	    </div>
-	  </div>
-	</div>
-	<div id="sidfot">
-	  <b>Lagen.nu:</b> Mauris non risus a nisi posuere
-	  gravida. Morbi ut lacus. Nulla faucibus pulvinar ligula. Proin
-	  mattis. Maecenas sagittis venenatis lorem. Praesent facilisis
-	  posuere pede.
-	</div>
-      </div>
-    </body>
-  </xsl:template>
+  <!-- FIXME: ändra dc till dct -->
   
+  <xsl:include href="base.xsl"/>
+
+  <!-- Implementationer av templates som anropas från base.xsl -->
+  <xsl:template name="headtitle">
+    <title>[lagnamn] ([alternativform]) | Lagen.nu</title>
+  </xsl:template>
+
+  <!-- FIXME: anpassa till xht2-datat -->
+  <xsl:template name="metarobots">
+    <xsl:if test="preamble/revoked">
+      <xsl:if test="number(translate($today,'-','')) > number(translate(/preamble/revoked,'-',''))">
+	<meta name="robots" content="noindex,follow"/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- FIXME: anpassa till xht2-datat -->
+  <xsl:template name="linkalternate">
+    <link rel="alternate" type="text/plain" title="Plain text">
+      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.txt</xsl:attribute>
+    </link>
+    <link rel="alternate" type="application/xml" title="XML">
+      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.xml</xsl:attribute>
+    </link>
+  </xsl:template>
+
+  <xsl:template name="headmetadata">
+      <xsl:comment>all övrig metadata</xsl:comment>
+  </xsl:template>
+
   <xsl:template match="xht2:h">
     <h2><xsl:value-of select="."/></h2>
   </xsl:template>
@@ -99,4 +80,5 @@
   <xsl:template match="*|@*" mode="refs">
     <!-- emit nothing -->
   </xsl:template>
+  
 </xsl:stylesheet>
