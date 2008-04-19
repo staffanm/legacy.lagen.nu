@@ -6,6 +6,10 @@
 		xmlns:dc="http://purl.org/dc/elements/1.1/">
   <!-- fixme: change dc to dct -->
 
+  <xsl:output method="xml"
+  	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"  	    />
+  
   <xsl:template match="/">
     <xsl:message>Root rule</xsl:message>
       <xsl:apply-templates/>

@@ -15,7 +15,7 @@ import md5
 import datetime
 import urllib
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
-
+import logging 
 # 3rd party modules
 import BeautifulSoup
 
@@ -28,6 +28,7 @@ __version__   = (0,1)
 __author__    = "Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Beslut från JO"
 __moduledir__ = "jo"
+log = logging.getLogger(__moduledir__)
 
 class JODownloader(LegalSource.Downloader):
     
@@ -68,11 +69,11 @@ class JODownloader(LegalSource.Downloader):
                 resource = LegalSource.DownloadedResource(id)
                 resource.url = url
                 resource.localFile = filename
-                print "Storing %s as %s" % (url,filename)
+                log.info(u'Storing %s as %s' % (url,filename))
                 Robot.Store(url, None, self.dir + "/" + id.replace('/','-') + ".html")
                 resource.fetched = time.localtime()
                 if id in self.ids:
-                    print "WARNING: replacing URL of id '%s' to '%s' (was '%s')" % (id, url, self.ids[id].url)
+                    log.warn(u'replacing URL of id %s to %s (was %s)' % (id, url, self.ids[id].url))
                 self.ids[id] = resource
 
 class JOParser(LegalSource.Parser):
@@ -83,7 +84,7 @@ class JOParser(LegalSource.Parser):
         if not os.path.exists(self.dir):
             Util.mkdir(self.dir)
         self.file = file
-        print "Loading file %s" % file
+        log.info(u'Loading file %s' % file)
 
     def Parse(self):
         import codecs
@@ -121,20 +122,23 @@ class JOManager(LegalSource.Manager):
     def _getModuleDir(self):
         return __moduledir__
     
+    def DownloadNew(self):
+        log.info(u'DownloadNew not implemented')
+
     def ParseAll(self):
-        print "JO: ParseAll not implemented"
+        log.info(u'ParseAll not implemented')
         return
 
     def IndexAll(self):
-        print "JO: IndexAll not implemented"
+        log.info(u'JO: IndexAll not implemented')
         return
     
     def GenerateAll(self):
-        print "JO: GenerateAll not implemented"
+        log.info(u'JO: GenerateAll not implemented')
         return
 
     def RelateAll(self):
-        print "JO: ParseAll not implemented"
+        log.info(u'JO: RelateAll not implemented')
         return
 
     
@@ -155,5 +159,7 @@ class TestJOCollection(unittest.TestCase):
         
 if __name__ == "__main__":
     # unittest.main()
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
     suite = unittest.defaultTestLoader.loadTestsFromName("JO.TestJOCollection.testDownloadAll")
     unittest.TextTestRunner(verbosity=2).run(suite)

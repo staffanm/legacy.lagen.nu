@@ -30,7 +30,19 @@
     }
     td {
 	border: solid 1px black;
+        vertical-align: top;
     }
+    body {
+	font: 12pt Palatino;
+    }
+    h2 {
+	font: bold 12pt Palatino;
+    }
+    h3 {
+	font: italic 12pt Palatino;
+    }
+    /* */
+    
     /* Grundläggande boxlayout - från
     http://www.positioniseverything.net/articles/onetruelayout */
 

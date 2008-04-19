@@ -15,6 +15,7 @@ import md5
 import datetime
 import urllib
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
+import logging
 
 # 3rd party
 import BeautifulSoup
@@ -27,6 +28,7 @@ __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Referat från ARN"
 __moduledir__ = "arn"
+log = logging.getLogger(__moduledir__)
 
 class ARNDownloader(LegalSource.Downloader):
     
@@ -76,7 +78,7 @@ class ARNDownloader(LegalSource.Downloader):
                 Robot.Store(url, None, self.dir + "/" + id + ".html")
                 resource.fetched = time.localtime()
                 if id in self.ids:
-                    print "WARNING: replacing URL of id '%s' to '%s' (was '%s')" % (id, url, self.ids[id].url)
+                    log.warning(u'replacing URL of id %s to %s (was %s)' % (id, url, self.ids[id].url))
                 self.ids[id] = resource
 
 class ARNParser(LegalSource.Parser):
@@ -87,7 +89,7 @@ class ARNParser(LegalSource.Parser):
         if not os.path.exists(self.dir):
             Util.mkdir(self.dir)
         self.file = file
-        print "Loading file %s" % file
+        log.info('Loading file %s' % file)
 
     def Parse(self):
         import codecs
@@ -122,22 +124,25 @@ class ARNParser(LegalSource.Parser):
 
 class ARNManager(LegalSource.Manager):
     def DownloadAll(self,id):
-        print "ARN: DownloadAll not implemented"
+        log.info('DownloadAll not implemented')
         
+    def DownloadNew(self):
+        log.info('DownloadNew not implemented')
+
     def ParseAll(self):
-        print "ARN: ParseAll not implemented"
+        log.info('ParseAll not implemented')
         return
 
     def IndexAll(self):
-        print "ARN: IndexAll not implemented"
+        log.info('IndexAll not implemented')
         return
     
     def GenerateAll(self):
-        print "ARN: GenerateAll not implemented"
+        log.info('GenerateAll not implemented')
         return
 
     def RelateAll(self):
-        print "ARN: ParseAll not implemented"
+        log.info('ParseAll not implemented')
         return
         
 
@@ -155,6 +160,8 @@ class TestARNCollection(unittest.TestCase):
         # resulting XML file to a known good file)
         
 if __name__ == "__main__":
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
     # unittest.main()
     suite = unittest.defaultTestLoader.loadTestsFromName("ARN.TestARNCollection.testParse")
     unittest.TextTestRunner(verbosity=2).run(suite)

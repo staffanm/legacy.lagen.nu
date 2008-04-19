@@ -288,7 +288,7 @@ class SFSDownloader(LegalSource.Downloader):
             return "%s:%s" % (year,nr)             
 
         # Sen efter ändringsförfattning
-        log.info(u'    Hittade ingen grundförfattning, letar efter ändringsförfattning')
+        log.info(u'    Letar efter ändringsförfattning')
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
         self.browser.retrieve(url, "sfs.tmp")
         # maybe this is better done through mechanize?
@@ -1730,6 +1730,8 @@ class SFSManager(LegalSource.Manager):
             # raise
                      
     def ParseAll(self):
+        #log.info("ParseAll temporarily disabled")
+        #return
         self.__doAll('downloaded/sfst','html',self.Parse)
 
     def ParseTest(self,testfile,verbose=False, quiet=False):
@@ -1913,9 +1915,19 @@ class SFSManager(LegalSource.Manager):
                         'today':datetime.today().strftime("%Y-%m-%d")},
                        validate=False)
 
-    def GenerateAll(self):
-        self.__doAll('parsed','xml',self.Generate)
 
+    def GenerateAll(self):
+        #log.info("GenerateAll temporary disabled")
+        self.__doAll('parsed','xht2',self.Generate)
+
+    def ParseGen(self,basefile):
+        self.Parse(basefile)
+        self.Generate(basefile)
+
+    def ParseGenAll(self):
+        # self.__doAll('parsed','xml',self.ParseGen)
+        self.__doAll('downloaded/sfst','html',self.ParseGen)
+        
     def Download(self,id):
         sd = SFSDownloader(self.baseDir)
         sd._downloadSingle(id)

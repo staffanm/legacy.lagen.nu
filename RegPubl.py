@@ -14,6 +14,7 @@ import unittest
 import pprint
 import types
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
+import logging
 
 # 3rd party modules
 from genshi.template import TemplateLoader
@@ -31,6 +32,7 @@ __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Förarbeten (SOU/Ds/Prop)"
 __moduledir__ = "regpubl"
+log = logging.getLogger(__moduledir__)
 
 class RegPublDownloader(LegalSource.Downloader):
     
@@ -49,16 +51,16 @@ class RegPublDownloader(LegalSource.Downloader):
         # available documents since we can't get the POST/cookie based
         # search to work.
         doctype = '160'
-        print "Selecting documents of type %s" % doctype
+        log.info(u'Selecting documents of type %s' % doctype)
         self.browser.open("http://www.regeringen.se/sb/d/108/action/browse/c/%s" % doctype)
-        print "Posting search form"
+        log.info(u'Posting search form')
         self.browser.select_form(nr=1)
         self.browser.submit()
 
         pagecnt = 1
         done = False
         while not done:
-            print "Result page #%s" % pagecnt
+            log.info(u'Result page #%s' % pagecnt)
             for l in self.browser.links(url_regex=r'/sb/d/108/a/\d+'):
                 self._downloadSingle(l.absolute_url)
                 self.browser.back()
@@ -66,7 +68,7 @@ class RegPublDownloader(LegalSource.Downloader):
                 self.browser.find_link(text='N\xe4sta sida')
                 self.browser.follow_link(text='N\xe4sta sida')
             except LinkNotFoundError:
-                print "No next page link found, this was the last page"
+                log.info(u'No next page link found, this was the last page')
                 done = True
             pagecnt += 1
         self.config['last_updated'] = datetime.date.today()    
@@ -89,7 +91,7 @@ class RegPublDownloader(LegalSource.Downloader):
         docid = re.match(r'http://www.regeringen.se/sb/d/108/a/(\d+)', url).group(1)
 
         fname = "%s/%s/index.html" % (self.dir, docid)
-        print "    Loading docidx %s" % url
+        log.info(u'    Loading docidx %s' % url)
         self.browser.open(url)
         if not os.path.exists(fname):
             Util.ensureDir(fname)
@@ -108,10 +110,10 @@ class RegPublDownloader(LegalSource.Downloader):
             
             df = "%s/%s/%s" % (self.dir,docid, filename)
             if not os.path.exists(df):
-                print "        Downloading %s" % (fileurl)
+                log.info(u'        Downloading %s' % (fileurl))
                 self.browser.retrieve(fileurl, df)
             else:
-                print "        Already downloaded %s" % (fileurl)
+                log.info(u'        Already downloaded %s' % (fileurl))
 
             
 class RegPublParser(LegalSource.Parser):
@@ -176,11 +178,10 @@ class RegPublParser(LegalSource.Parser):
             if not os.path.exists(outfile):
                 Util.ensureDir(outfile)
                 cmd = "pdftotext -layout %s %s" % (f, outfile)
-                print "Running %s" % cmd
+                log.info(u'Running %s' % cmd)
                 (ret,stdout,stderr) = Util.runcmd(cmd)
                 if (ret != 0):
-                    print "ERROR"
-                    print stderr
+                    log.error(stderr)
             text += open(outfile).read()
         if len(files['pdf']) > 1:
             fulltextfile = os.path.dirname(files['pdf'][0]).replace("downloaded","intermediate") + "/fulltext.txt"
@@ -193,7 +194,7 @@ class RegPublParser(LegalSource.Parser):
         from time import time
         start = time()
         self.reader = TextReader(fulltextfile)
-        print ("\tLoaded %s in %s seconds\n" % (fulltextfile, time()-start))
+        log.info(u'Loaded %s in %s seconds\n' % (fulltextfile, time()-start))
 
         # FIXME: Anropa rätt konstruktor beroende på prop eller sou/ds
         body = makeProp()
@@ -228,6 +229,9 @@ class RegPublManager(LegalSource.Manager):
         rd = RegPublDownloader(self.baseDir)
         rd.DownloadAll()
 
+    def DownloadNew(self):
+        log.info(u'RegPubl: DownloadNew not implemented') 
+
     def __listfiles(self,basefile,suffix):
         d = "%s/%s/downloaded/%s" % (self.baseDir,__moduledir__,basefile)
         return Util.listDirs(d, suffix)
@@ -246,26 +250,26 @@ class RegPublManager(LegalSource.Manager):
             pdfname = re.match(r'/download/(\w+\.pdf).*',l['href']).group(1)
             pdfs.append(d + "/"+ pdfname)
                           
-        print "pdfs: %r" % pdfs
+        log.info(u'pdfs: %r' % pdfs)
         files = {'html':indexfiles,
                  'pdf':pdfs}
         rp = RegPublParser()
         rp.Parse(basefile,files)
     
     def ParseAll(self):
-        print "RegPubl: ParseAll not implemented"
+        log.info(u'RegPubl: ParseAll not implemented')
         return
 
     def IndexAll(self):
-        print "RegPubl: IndexAll not implemented"
+        log.info(u'RegPubl: IndexAll not implemented')
         return
     
     def GenerateAll(self):
-        print "RegPubl: GenerateAll not implemented"
+        log.info(u'RegPubl: GenerateAll not implemented')
         return
 
     def RelateAll(self):
-        print "RegPubl: ParseAll not implemented"
+        log.info(u'RegPubl: ParseAll not implemented')
         return
         
 
@@ -277,6 +281,8 @@ class TestRegPublCollection(unittest.TestCase):
                 
 if __name__ == "__main__":
     # unittest.main()
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
     RegPublManager.__bases__ += (DispatchMixin,)
     mgr = RegPublManager("testdata",__moduledir__)
     mgr.Dispatch(sys.argv)

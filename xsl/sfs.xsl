@@ -10,7 +10,7 @@
 
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
-    <title>[lagnamn] ([alternativform]) | Lagen.nu</title>
+    [lagnamn] ([alternativform]) | Lagen.nu
   </xsl:template>
 
   <!-- FIXME: anpassa till xht2-datat -->

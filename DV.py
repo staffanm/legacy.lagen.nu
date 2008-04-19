@@ -487,11 +487,11 @@ class DVManager(LegalSource.Manager):
 
     def __doAllParsed(self,method,max=None):
         cnt = 0
-        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xml'):
+        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xht2'):
             if max and (max <= cnt):
                 return cnt
             cnt += 1
-            basefile = os.path.splitext(os.path.basename(f))[0]
+            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
             method(basefile)
         return cnt
     
@@ -573,13 +573,15 @@ class DVManager(LegalSource.Manager):
 
 
     def ParseAll(self):
-        self.__doAll(os.path.sep.join([self.baseDir, 'dv', 'intermediate','word']), '.doc',self.Parse)
+        #log.info("ParseAll temporarily disabled")
+        #return
+        self.__doAll(os.path.sep.join([self.baseDir, u'dv', 'intermediate','word']), '.doc',self.Parse)
 
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
         Util.mkdir(os.path.dirname(outfile))
-        print "Generating %s" % outfile
+        log.info(u'Transformerar %s > %s' % (infile,outfile))
         Util.transform("xsl/dv.xsl",
                        infile,
                        outfile,
@@ -590,8 +592,8 @@ class DVManager(LegalSource.Manager):
         # ad.Prepare()
 
     def GenerateAll(self):
-        # print "DV: GenerateAll temporarily disabled"
-        # return
+        #log.info("DV: GenerateAll temporarily disabled")
+        #return
         self.__doAllParsed(self.Generate)
         
 

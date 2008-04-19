@@ -222,7 +222,7 @@ class Manager:
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
 
-    def Relate(self,file=None):
+    def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan och bygger en stor RDF-graf"""
         c = 0
         g = Graph()

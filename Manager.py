@@ -5,18 +5,13 @@ and Generators (Renderers?) to create the static HTML files and other stuff"""
 
 import os,sys
 import inspect
-from time import time
+import time
+import logging
 # my libs
 from DispatchMixin import DispatchMixin
 import LegalSource
-#class ParseManager:
-    #"""Given a directory prepared by a Downlader, iterates and calls
-    #the appropriate Parser for each downloaded LegalSource"""
-    #def __init__(self,dir,parserClass,baseDir):
-        #self.indexTree = ET.ElementTree(file=dir+"/index.xml")
-        #for node in self.indexTree.getroot():
-            #parser = parserClass(node.get("id"), dir + "/" + node.get("localFile"),baseDir)
-            #parser.parse()
+
+log = logging.getLogger('manager')
 
 class Manager:
     def __init__(self,baseDir):
@@ -50,7 +45,8 @@ class Manager:
         import LegalSource
         classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
         for classname in classes.keys():
-            if LegalSource.Manager in inspect.getmro(classes[classname]):
+            if (LegalSource.Manager in inspect.getmro(classes[classname])
+                and str(classes[classname]).startswith(module.__name__)):
                 return classes[classname]
 
     def _doAction(self,action,module):
@@ -59,7 +55,8 @@ class Manager:
         else:
             modules = (module,)
         for m in modules:
-            start = time()
+            # print "doing %s" % m
+            start = time.time()
             mod = __import__(m, globals(), locals(), [])
             mgrClass = self._findManager(mod)
             if mgrClass:
@@ -68,14 +65,14 @@ class Manager:
                 else:
                     mgr = mgrClass(self.baseDir)                
                 if hasattr(mgr,action):
-                    print "%s: calling %s" % (m,action)
+                    log.info(u'%s: calling %s' % (m,action))
                     method = getattr(mgr,action)
                     method()
                 else:
                     print "Module %s's manager has no %s action" % (m,action)
             else:
                 print "Module %s has no Manager class" % m
-            print "%s: %s finished in %s seconds" % (m,action,time()-start)
+            log.info(u'%s: %s finished in %s seconds' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
             
     ACTIONS = {'download': 'download everything',
                'update'  : 'download updates',
@@ -115,18 +112,29 @@ class Manager:
     def RelateAll(self,module):
         self._doAction('RelateAll',module)
 
-    def Publish(self, module):
-        self._doAction('Publish',module)
+    def GenerateSite(self):
+        log.info("Creating some main html pages here")
+    
+    def Publish(self):
+        cmd = "tar czf - %s | ssh staffan@vps.tomtebo.org \"cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s\"" % (self.baseDir, self.baseDir)
+        #print "executing %s" % cmd
+        #os.system(cmd)
+        log.info("doing some scp:ing here")
     
     def DoAll(self,module):
-        start = time()
+        start = time.time()
+        self._doAction('DownloadNew',module)
         self._doAction('ParseAll',module)
-        self._doAction('IndexAll',module)
-        self._doAction('GenerateAll',module)
+        # self._doAction('IndexAll',module)
         self._doAction('RelateAll',module)
-        print "DoAll finished in %s seconds" % time() - start
+        self._doAction('GenerateAll',module)
+        self.GenerateSite()
+        self.Publish()
+        log.info(u'DoAll finished in %s seconds' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
 if __name__ == "__main__":
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
     Manager.__bases__ += (DispatchMixin,)
     mgr = Manager('testdata')
     mgr.Dispatch(sys.argv)
