@@ -22,7 +22,6 @@ import Util
 # Do required codec/locale magic right away, since this is included by
 # all runnable scripts
 locale.setlocale(locale.LC_ALL,'') 
-
 if sys.platform == 'win32':
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding

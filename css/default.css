@@ -28,6 +28,7 @@
       text-align: right;
       padding-bottom: 18px;
     }
+    
     td {
 	border: solid 1px black;
         vertical-align: top;
@@ -41,7 +42,9 @@
     h3 {
 	font: italic 12pt Palatino;
     }
-    /* */
+    .paragrafbeteckning {
+	font-weight: bold;
+    }
     
     /* Grundläggande boxlayout - från
     http://www.positioniseverything.net/articles/onetruelayout */

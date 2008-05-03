@@ -3,7 +3,8 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dc="http://purl.org/dc/elements/1.1/">
+		xmlns:dc="http://purl.org/dc/elements/1.1/"
+		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#">
   <!-- FIXME: ändra dc till dct -->
   
   <xsl:include href="base.xsl"/>
@@ -77,8 +78,13 @@
     </dl>
   </xsl:template>
 
+  <xsl:template match="xht2:section[@instanceof='rinfo:Paragraf']" mode="refs">
+    <xsl:message>P <xsl:value-of select="@instanceof"/>:<xsl:value-of select="@id"/>: in refs mode</xsl:message>
+    <p>Paragraf <xsl:value-of select="@id"/></p>
+  </xsl:template>
+  
   <xsl:template match="*|@*" mode="refs">
-    <!-- emit nothing -->
+    <xsl:apply-templates mode="refs"/>
   </xsl:template>
   
 </xsl:stylesheet>

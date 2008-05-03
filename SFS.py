@@ -684,6 +684,7 @@ class SFSParser(LegalSource.Parser):
                                   # if the Stycke has a NumreradLista
                                   # or similar
                     if isinstance(p,unicode): # look for stuff
+                        
                         nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix))
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
