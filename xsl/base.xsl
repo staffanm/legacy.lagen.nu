@@ -27,7 +27,7 @@
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="base.js"></script>
       <link rel="shortcut icon" href="http://lagen.nu/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" type="text/css" href="file://C|/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
+      <link rel="stylesheet" type="text/css" href="file:///host/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
@@ -41,8 +41,8 @@
 	  <div class="navigation">
 	    <a href="/">Lagen.nu</a> -
 	    <a href="/nyheter">Nyheter</a> - 
-	    <a href="/index">Författningar</a> -
-	    <a href="/dom">Domslut</a> -
+	    <a href="/index/sfs">Författningar</a> -
+	    <a href="/index/dv">Domslut</a> -
 	    <a href="/om">Om</a> -
 	    <u>S</u>ök:
 	    <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>

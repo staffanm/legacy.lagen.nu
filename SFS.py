@@ -611,6 +611,12 @@ class SFSParser(LegalSource.Parser):
                                       changecat.startswith(u'ikrafttr.') or
                                       changecat.startswith(u'tillägg')):
                                     pred = RINFO['inforsI']
+                                elif (changecat.startswith(u'nuvarande') or
+                                      changecat == 'omtryck' or
+                                      changecat == 'forts. giltighet'):
+                                    # FIXME: Is there something smart
+                                    # we could do with these?
+                                    pass
                                 else:
                                     log.warning(u"%s: Okänd omfattningstyp '%s'" % (self.id, changecat))
                                     pred = None
@@ -745,7 +751,7 @@ class SFSParser(LegalSource.Parser):
                 meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
                                        
             else:
-                log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
+                log.warning(u'%s: Obekant nyckel \'%s\'' % (self.id, key))
             
             meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
                                             uri=self.find_authority_rec("Regeringskansliet"),
