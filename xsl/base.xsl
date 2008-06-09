@@ -11,30 +11,30 @@
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"  	    />
   
   <xsl:template match="/">
-    <xsl:message>Root rule</xsl:message>
-      <xsl:apply-templates/>
+    <!--<xsl:message>Root rule</xsl:message>-->
+    <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="xht2:html">
-    <xsl:message>base/root</xsl:message>
+    <!--<xsl:message>base/root</xsl:message>-->
     <html><xsl:apply-templates/></html>
   </xsl:template>
     
   <xsl:template match="xht2:head">
-    <xsl:message>base/head</xsl:message>
+    <!--<xsl:message>base/head</xsl:message>-->
     <head>
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="base.js"></script>
       <link rel="shortcut icon" href="http://lagen.nu/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" type="text/css" href="file:///host/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
+      <link rel="stylesheet" type="text/css" href="file:///home/staffan/wds/svn.lagen.nu/css/default.css"/>
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
   </xsl:template>
 
   <xsl:template match="xht2:body">
-    <xsl:message>base/body</xsl:message>
+    <!--<xsl:message>base/body</xsl:message>-->
     <body>
       <div id="vinjett">
 	<form method="get" action="http://www.google.com/custom" style="display:inline;">

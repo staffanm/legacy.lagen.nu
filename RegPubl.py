@@ -204,7 +204,7 @@ class RegPublParser(LegalSource.Parser):
 
 
 
-    # En propositions struktur (jfr även PDF-bookmarkshiearkin
+    # En propositions struktur (jfr även PDF-bookmarkshiearkin)
     #
     # Rubrik / Överlämnande / Propositionens huvudsakliga innnehåll
     # Innehållsförteckning

@@ -34,13 +34,13 @@
         vertical-align: top;
     }
     body {
-	font: 12pt Palatino;
+	font: 10pt Palatino;
     }
     h2 {
-	font: bold 12pt Palatino;
+	font: bold 10pt Palatino;
     }
     h3 {
-	font: italic 12pt Palatino;
+	font: italic 10pt Palatino;
     }
     .paragrafbeteckning {
 	font-weight: bold;

@@ -19,8 +19,8 @@
       <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
       <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
-      <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/>
-      <link rel="dc:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
+      <link rel="dct:publisher" href="${meta[u'Utgivare'].uri}"/>
+      <link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
       <meta property="rinfo:utfardandedatum"
             content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
       <py:if test="meta[u'Ikraft']">
@@ -38,7 +38,7 @@
       </py:for>
 
     </head>
-    <body>
+    <body about="${meta['xml:base']}">
       <!--! macro definitions -->
       <div py:def="render_rubrik(rubrik)" py:strip="" py:choose="">
 	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" class="underrubrik">Underrubrik</h>
@@ -116,7 +116,8 @@
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
 	 instanceof="rinfo:Stycke"
 	 id="${stycke.id}"
-	 content="${stycke.ordinal}">
+	 property="rinfo:styckenummer"
+	 content="${stycke.id.split('S')[-1]}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
         <py:for each="part in stycke" py:choose="">
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
@@ -232,7 +233,7 @@
       </section>
 
       <!--! main body -->
-      <h property="dc:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
+      <h property="dct:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
       ${render_metadata(meta)}
       <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
       <section class="forfattningstext">

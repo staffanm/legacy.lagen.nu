@@ -32,8 +32,8 @@
       </div>
       <dd py:when="isinstance(val,Link)"
 	  py:content="val"
-	  property="${val.predicate}"
-	  resource="${val.uri}'">Värde</dd>
+	  rel="${val.predicate}"
+	  href="${val.uri}'">Värde</dd>
       <dd py:otherwise=""
 	  py:content="val"
 	  property="${val.predicate}">Värde</dd>

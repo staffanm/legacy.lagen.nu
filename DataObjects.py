@@ -157,6 +157,7 @@ class OrdinalStructure(object):
         return self.ordinal == other.ordinal
 
 
+import Util
 class PredicateType(object):
     """Inheriting from this gives the subclass a predicate attribute,
     which describes the RDF predicate to which the class is the RDF
@@ -164,10 +165,16 @@ class PredicateType(object):
     would inherit from UnicodeStructure and this, and then set
     .predicate to
     rdflib.URIRef('http://purl.org/dc/elements/1.1/title')"""
-    
     def __init__(self, *args, **kwargs):
         if 'predicate' in kwargs:
             self.predicate = kwargs['predicate']
+            # switch the full uriref
+            # (http://rinfo.lagrummet...#paragraf) to one using a
+            # namespace prefix, if we know of one:
+            for (prefix, ns) in Util.ns.items():
+                if kwargs['predicate'].startswith(ns):
+                    self.predicate = kwargs['predicate'].replace(ns, prefix+":")
+                    # print "set predicate to shortened ver: %s" % self.predicate
         else:
             # From the RDF Schema spec: 'This is the class of
             # everything. All other classes are subclasses of this

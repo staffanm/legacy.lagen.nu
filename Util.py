@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 
-import os, subprocess, codecs
+import os, subprocess, codecs, shutil
 import BeautifulSoup
 
 # other peoples code
@@ -64,6 +64,7 @@ def ensureDir(filename):
 def robustRename(old,new):
     """Rename old to new no matter what (if the file exists, it's
     removed, if the target dir doesn't exist, it's created"""
+    # print "robustRename: %s -> %s" % (old,new)
     ensureDir(new)
     if os.path.exists(new):
         try:
@@ -73,8 +74,9 @@ def robustRename(old,new):
             import time
             time.sleep(1)
             os.unlink(new)
-    os.rename(old, new)
-    
+    # os.rename may fail across file systems
+    shutil.move(old, new)
+   
 
 def numcmp(x,y):
     return cmp(split_numalpha(x),split_numalpha(y))
@@ -152,6 +154,8 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
+    if stderr:
+        print stderr
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
     # tidyHtmlFile(outfile)

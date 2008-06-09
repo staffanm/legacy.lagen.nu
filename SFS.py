@@ -663,14 +663,14 @@ class SFSParser(LegalSource.Parser):
     # (kapitel, paragrafer, stycken, punkter) * konstruera xml:id's
     # för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2
     # § 3 st. 4 p)
-    def _construct_ids(self, element, prefix, baseuri):
-        counters = {}
+    def _construct_ids(self, element, prefix, baseuri, skipfragments=[]):
+        counters = defaultdict(int)
         if isinstance(element, CompoundStructure):
             for p in element:
-                if type(p) in counters:
-                    counters[type(p)] += 1
-                else:
-                    counters[type(p)] = 1
+                #if type(p) in counters:
+                counters[type(p)] += 1
+                #else:
+                #    counters[type(p)] = 1
                 if hasattr(p, 'fragment_label'):
                     elementtype = p.fragment_label
                     if hasattr(p, 'ordinal'):
@@ -683,7 +683,11 @@ class SFSParser(LegalSource.Parser):
                     p.id = fragment
                 else:
                     fragment = prefix
-                self._construct_ids(p,fragment,baseuri)
+                if ((hasattr(p, 'fragment_label') and
+                     p.fragment_label in skipfragments)):
+                    self._construct_ids(p,prefix,baseuri, skipfragments)
+                else:
+                    self._construct_ids(p,fragment,baseuri, skipfragments)
             if isinstance(element, Stycke) or isinstance(element, Listelement):
                 nodes = []
                 for p in element: # normally only one, but can be more
@@ -695,6 +699,20 @@ class SFSParser(LegalSource.Parser):
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
 
+    def _count_elements(self, element):
+        counters = defaultdict(int)
+        if isinstance(element, CompoundStructure):
+            for p in element:
+                if hasattr(p, 'fragment_label'):
+                    counters[p.fragment_label] += 1
+                    if hasattr(p, 'ordinal'):
+                        counters[p.fragment_label+p.ordinal] += 1
+                    subcounters = self._count_elements(p)
+                    for k in subcounters:
+                        counters[k] += subcounters[k]
+        return counters
+                
+
     def _parseSFST(self, lawtextfile, registry):
         # self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
         self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
@@ -702,7 +720,14 @@ class SFSParser(LegalSource.Parser):
 
         meta = self.makeHeader() 
         body = self.makeForfattning()
-        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)))
+        elements = self._count_elements(body)
+        # print elements
+        if 'K' in elements and elements['P1'] < 2:
+            # print "Activating special ignore-the-chapters code"
+            skipfragments = ['K']
+        else:
+            skipfragments = []
+        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
         return meta,body
 
     def _swedish_ordinal(self,s):

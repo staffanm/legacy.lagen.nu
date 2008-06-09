@@ -3,12 +3,21 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:dc="http://purl.org/dc/elements/1.1/"
+		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#">
   <!-- FIXME: ändra dc till dct -->
-  
+
+
   <xsl:include href="base.xsl"/>
 
+
+  
+  <xsl:variable name="alla_rattsfall"
+		select="document('../testdata/sfs/parsed/dv-rdf.xml')"/>
+  <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
+  
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
     [lagnamn] ([alternativform]) | Lagen.nu
@@ -64,6 +73,7 @@
     <!-- Den stora metadata-definitionslistan innehåller en massa som
          inte är intressant att visa för slutanvändaren. Filtrera ut
          de intressanta bitarna -->
+    <p>URI: <xsl:value-of select="$dokumenturi"/></p>
     <dl>
       <dt>Departement</dt>
       <dd><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
@@ -79,10 +89,24 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@instanceof='rinfo:Paragraf']" mode="refs">
-    <xsl:message>P <xsl:value-of select="@instanceof"/>:<xsl:value-of select="@id"/>: in refs mode</xsl:message>
-    <p>Paragraf <xsl:value-of select="@id"/></p>
+    <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
+    <xsl:variable name="rattsfall" select="document('../testdata/sfs/parsed/dv-rdf.xml')/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
+    <!-- <p>Paragraf <xsl:value-of select="@content"/> -->
+    <p><xsl:value-of select="$paragrafuri"/></p>
+    <xsl:for-each select="$rattsfall">
+      <p>Rättsfall: <xsl:value-of select="@rdf:about"/></p>
+    </xsl:for-each>
+    
   </xsl:template>
   
+  <xsl:template match="xht2:h" mode="refs">
+    <!-- emit nothing -->
+  </xsl:template>
+
+  <xsl:template match="xht2:section[@class='register']" mode="refs">
+    <!-- emit nothing -->
+  </xsl:template>
+
   <xsl:template match="*|@*" mode="refs">
     <xsl:apply-templates mode="refs"/>
   </xsl:template>
