@@ -102,8 +102,7 @@ def indentXmlFile(filename):
     cmdline = "xmllint --format %s > %s" % (filename,tmpfile)
     (ret,stdout,stderr) = runcmd(cmdline)
     if (not ret):
-        os.remove(filename)
-        os.rename(tmpfile,filename)
+        robustRename(tmpfile,filename)
     else:
         raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
     # The tidy invocation is for wrapping long lines for easier
@@ -137,8 +136,7 @@ def tidyHtmlFile(filename):
     #    raise TidyError(stderr)
     
     # os.system("xmllint --format %s > tmp.xml" % filename)
-    os.remove(filename)
-    os.rename("tmp.xml",filename)
+    robustRename("tmp.xml", filename)
 
 def transform(stylesheet,infile,outfile,parameters={},validate=True):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
@@ -222,12 +220,11 @@ def elementText(element):
              not isinstance(e,BeautifulSoup.Comment))]))
 
 def word_to_html(indoc,outhtml):
-    indoc = os.path.join(os.getcwd(),indoc.replace("/","\\"))
-    outhtml = os.path.join(os.getcwd(),outhtml.replace("/","\\"))
-    from win32com.client import Dispatch
-    import pywintypes
-    display_indoc = indoc[len(os.getcwd()):].replace("\\","/")
-    display_outhtml = outhtml[len(os.getcwd()):].replace("\\","/")
+    indoc = os.path.join(os.getcwd(),indoc.replace("/",os.path.sep))
+    outhtml = os.path.join(os.getcwd(),outhtml.replace("/",os.path.sep))
+    display_indoc = indoc[len(os.getcwd()):].replace(os.path.sep,"/")
+    display_outhtml = outhtml[len(os.getcwd()):].replace(os.path.sep,"/")
+    print "Ensuring dir for %r" % outhtml
     ensureDir(outhtml)
     if not os.path.exists(indoc):
         print "indoc %s does not exists (seriously)" % indoc
@@ -237,6 +234,8 @@ def word_to_html(indoc,outhtml):
     #if os.path.exists(outhtml + ".err.log"):
     #    print "Word->HTML conversion for local file %s has failed, not re-trying"% display_outhtml
     #    return
+    from win32com.client import Dispatch
+    import pywintypes
     wordapp = Dispatch("Word.Application")
     if wordapp == None:
         print "Couldn't start word"

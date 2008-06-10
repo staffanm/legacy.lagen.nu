@@ -369,9 +369,13 @@ class DVParser(LegalSource.Parser):
                     # FIXME: arsutgava should be typed as DateSubject
                     head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
 
-        # Hitta rätt URI till det här referatet
+        # Hitta rätt URI till det här referatet.
         if u'Referat' in head:
-            docuri = rattsfall_parser.parse(head[u'Referat'])[0].uri
+            res = rattsfall_parser.parse(head[u'Referat'])
+            if hasattr(res[0], 'uri'):
+                docuri = res[0].uri
+            else:
+                docuri = URIRef(u'http://lagen.nu/%s' % self.id)
         else:
             docuri = URIRef(u'http://lagen.nu/%s' % self.id)
         head['xml:base'] = docuri
@@ -538,10 +542,10 @@ class DVManager(LegalSource.Manager):
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
             start = time()
-
+            print "Basefile: %s" % basefile
             infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
             outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-
+            print "infile: %s" % infile
             # check to see if the outfile is newer than all ingoing
             # files. If it is, don't parse
             force = True
