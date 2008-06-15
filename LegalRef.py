@@ -257,7 +257,7 @@ class LegalRef:
                 if isinstance(result[i], Link):
                     # Eftersom Link-objekt är immutable måste vi skapa
                     # ett nytt och kopiera dess attribut
-                    if 'predicate' in result[i]:
+                    if hasattr(result[i],'predicate'):
                         node = LinkSubject(text, predicate=result[i].predicate,
                                            uri=result[i].uri)
                     else:
@@ -830,9 +830,10 @@ class TestLegalRef:
             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','dv-'])):
                 p = LegalRef(LegalRef.RATTSFALL)
             else:
-                print u'WARNING: Har ingen aning om hur %s ska testas' % testfile
-                return False
-            
+                print u'WARNING: Har ingen aning om hur %s ska testas, provar med LegalRef.LAGRUM' % testfile
+                # return False
+                p = LegalRef(LegalRef.LAGRUM)
+                
             p.verbose = verbose
             p.currentlynamedlaws = namedlaws
             
@@ -855,7 +856,10 @@ class TestLegalRef:
                 if testparas[i].startswith("RESET:"):
                     # namedlaws.clear()
                     p.currentlynamedlaws.clear()
-                resparas.append(serialize(p.parse(testparas[i],u'http://lagen.nu/1:2#')))
+                nodes = p.parse(testparas[i],u'http://lagen.nu/1:2#')
+                #nodes = p.parse(testparas[i],u'http://lagen.nu/1:2#',
+                #                URIRef('http://some.ns/term'))
+                resparas.append(serialize(nodes))
 
             res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
             if key:
@@ -899,7 +903,8 @@ class TestLegalRef:
 
         
     def ParseTestString(self,s, verbose=True):
-        p = LegalRef(LegalRef.LAGRUM)
+        p = LegalRef(LegalRef.RATTSFALL)
+        #p = LegalRef(LegalRef.LAGRUM)
         p.verbose = verbose
         print serialize(p.parse(s, u'http://lagen.nu/1:2#'))
 

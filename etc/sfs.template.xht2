@@ -9,6 +9,7 @@
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:base="${meta['xml:base']}"
       xml:lang="sv"
+      about="${meta['xml:base']}"
       xmlns:py="http://genshi.edgewall.org/"
       >
   <xi:include href="base.template.xht2"/>
@@ -38,7 +39,7 @@
       </py:for>
 
     </head>
-    <body about="${meta['xml:base']}">
+    <body>
       <!--! macro definitions -->
       <div py:def="render_rubrik(rubrik)" py:strip="" py:choose="">
 	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" class="underrubrik">Underrubrik</h>
@@ -59,20 +60,20 @@
 	</py:for>
       </section>
       
-      <!--! lägg till property="rinfo:kapitelnummer" -->
       <section py:def="render_upphavtkapitel(paragraf)"
                instanceof="rinfo:Kapitel"
 	       rel="rinfo:kapitel"
 	       class="upphavd"
+	       property="rinfo:kapitelnummer"
 	       content="${paragraf.ordinal}">
 	       ${paragraf}
       </section>
 
-      <!--! lägg till property="rinfo:kapitelnummer" -->
       <section py:def="render_kapitel(kapitel)"
 	       id="${kapitel.id}"
 	       instanceof="rinfo:Kapitel"
 	       rel="rinfo:kapitel"
+	       property="rinfo:kapitelnummer"
 	       content="${kapitel.ordinal}">
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
@@ -85,19 +86,19 @@
       </section>
       
       
-      <!--! lägg till property="rinfo:paragrafnummer" -->
       <section py:def="render_upphavdparagraf(paragraf)"
                instanceof="rinfo:Paragraf"
 	       rel="rinfo:paragraf"
 	       class="upphavd"
+	       property="rinfo:paragrafnummer"
 	       content="${paragraf.ordinal}">
 	       ${paragraf}
       </section>
 
-      <!--! lägg till property="rinfo:paragrafnummer" -->
       <section py:def="render_paragraf(paragraf)" id="${paragraf.id}"
                instanceof="rinfo:Paragraf"
 	       rel="rinfo:paragraf"
+	       property="rinfo:paragrafnummer"
 	       content="${paragraf.ordinal}"
 	       >
 	<!--! första stycket måste rendreras tillsammans med
@@ -112,22 +113,13 @@
         </py:for>
       </section>
             
-      <!-- ! lägg till property="rinfo:styckenummer" någonstans -->
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
 	 instanceof="rinfo:Stycke"
 	 id="${stycke.id}"
 	 property="rinfo:styckenummer"
 	 content="${stycke.id.split('S')[-1]}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
-        <py:for each="part in stycke" py:choose="">
-	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div>
-	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
-	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
-	  <div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div>
-	  <div py:when="isinstance(part, unicode)" py:strip="">${part}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div>
-        </py:for>
+        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div></py:for>
       </p>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict
@@ -195,8 +187,7 @@
       </section>
 
       <section py:def="render_overgangsbestammelse(ob)"
-	       instanceof="rinfo:Overgangsbestammelse"
-	       id="${ob.id}">
+	       instanceof="rinfo:Overgangsbestammelse">
         <py:for each="part in ob" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
@@ -217,7 +208,7 @@
         </py:for>
       </section>
 
-      <section py:def="render_registerpost(rp)" id="${rp.id}">
+      <section py:def="render_registerpost(rp)" id="${rp.id}" about="${rp.uri}">
 	<dl>
 	  <py:for each="(key,val) in rp.items()" py:choose="">
 	    <dt py:content="key">Nyckel</dt>

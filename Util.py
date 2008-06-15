@@ -98,13 +98,13 @@ def split_numalpha(s):
 
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
-    tmpfile = "tmp.%s.xml" % os.getpid()
-    cmdline = "xmllint --format %s > %s" % (filename,tmpfile)
-    (ret,stdout,stderr) = runcmd(cmdline)
-    if (not ret):
-        robustRename(tmpfile,filename)
-    else:
-        raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
+    #tmpfile = "tmp.%s.xml" % os.getpid()
+    #cmdline = "xmllint --format %s > %s" % (filename,tmpfile)
+    #(ret,stdout,stderr) = runcmd(cmdline)
+    #if (not ret):
+    #    robustRename(tmpfile,filename)
+    #else:
+    #    raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
     # The tidy invocation is for wrapping long lines for easier
     # readability (something that xmllint won't do for us) -- however,
     # it seems that Tidy, even though -raw is used, mangles tag names
@@ -115,7 +115,8 @@ def indentXmlFile(filename):
     #
     # Also, tidy will hang (due to excessive stderr messages?) for 1992:1226 -- we should
     # try to get runcmd handle this
-    (ret,stdout,stderr) = runcmd("tidy -xml -raw -i -m -w 80 %s" % (filename))
+
+    (ret,stdout,stderr) = runcmd("tidy -xml -utf8 -i -m -w 0 %s" % (filename))
     if (ret != 0):
         raise TransformError(stderr)
     # This fails occasionally - why?
@@ -224,7 +225,7 @@ def word_to_html(indoc,outhtml):
     outhtml = os.path.join(os.getcwd(),outhtml.replace("/",os.path.sep))
     display_indoc = indoc[len(os.getcwd()):].replace(os.path.sep,"/")
     display_outhtml = outhtml[len(os.getcwd()):].replace(os.path.sep,"/")
-    print "Ensuring dir for %r" % outhtml
+    # print "Ensuring dir for %r" % outhtml
     ensureDir(outhtml)
     if not os.path.exists(indoc):
         print "indoc %s does not exists (seriously)" % indoc

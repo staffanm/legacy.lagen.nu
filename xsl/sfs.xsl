@@ -1,24 +1,19 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns:dc="http://purl.org/dc/elements/1.1/"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#">
-  <!-- FIXME: ändra dc till dct -->
-
 
   <xsl:include href="base.xsl"/>
-
-
   
   <xsl:variable name="alla_rattsfall"
 		select="document('../testdata/sfs/parsed/dv-rdf.xml')"/>
   <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
   
-  <!-- Implementationer av templates som anropas från base.xsl -->
+  <!-- Implementationer av templates som anropas frÃ¥n base.xsl -->
   <xsl:template name="headtitle">
     [lagnamn] ([alternativform]) | Lagen.nu
   </xsl:template>
@@ -43,7 +38,7 @@
   </xsl:template>
 
   <xsl:template name="headmetadata">
-      <xsl:comment>all övrig metadata</xsl:comment>
+      <xsl:comment>all Ã¶vrig metadata</xsl:comment>
   </xsl:template>
 
   <xsl:template match="xht2:h">
@@ -70,21 +65,21 @@
   </xsl:template>
 
   <xsl:template match="xht2:dl[@class='metadata']" mode="refs">
-    <!-- Den stora metadata-definitionslistan innehåller en massa som
-         inte är intressant att visa för slutanvändaren. Filtrera ut
+    <!-- Den stora metadata-definitionslistan innehÃ¥ller en massa som
+         inte Ã¤r intressant att visa fÃ¶r slutanvÃ¤ndaren. Filtrera ut
          de intressanta bitarna -->
     <p>URI: <xsl:value-of select="$dokumenturi"/></p>
     <dl>
       <dt>Departement</dt>
       <dd><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
-      <dt>Utfärdad</dt>
+      <dt>UtfÃ¤rdad</dt>
       <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#utfardandedatum']"/></dd>
-      <dt>Ändring införd t.o.m.</dt>
+      <dt>Ã„ndring infÃ¶rd t.o.m.</dt>
       <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#konsolideringsunderlag']"/></dd>
-      <dt>Källa</dt>
-      <dd><a href="">Regeringskansliets rättsdatabaser</a></dd>
-      <dt>Senast hämtad</dt>
-      <dd>...måste in i xht2-datan</dd>
+      <dt>KÃ¤lla</dt>
+      <dd><a href="">Regeringskansliets rÃ¤ttsdatabaser</a></dd>
+      <dt>Senast hÃ¤mtad</dt>
+      <dd>...mÃ¥ste in i xht2-datan</dd>
     </dl>
   </xsl:template>
 
@@ -94,7 +89,7 @@
     <!-- <p>Paragraf <xsl:value-of select="@content"/> -->
     <p><xsl:value-of select="$paragrafuri"/></p>
     <xsl:for-each select="$rattsfall">
-      <p>Rättsfall: <xsl:value-of select="@rdf:about"/></p>
+      <p>RÃ¤ttsfall: <xsl:value-of select="@rdf:about"/></p>
     </xsl:for-each>
     
   </xsl:template>

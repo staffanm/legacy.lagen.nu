@@ -542,10 +542,10 @@ class DVManager(LegalSource.Manager):
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
             start = time()
-            print "Basefile: %s" % basefile
+            # print "Basefile: %s" % basefile
             infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
             outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-            print "infile: %s" % infile
+            # print "infile: %s" % infile
             # check to see if the outfile is newer than all ingoing
             # files. If it is, don't parse
             force = True

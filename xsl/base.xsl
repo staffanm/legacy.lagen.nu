@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -27,7 +27,9 @@
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="base.js"></script>
       <link rel="shortcut icon" href="http://lagen.nu/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" type="text/css" href="file:///home/staffan/wds/svn.lagen.nu/css/default.css"/>
+      <!-- <link rel="stylesheet" type="text/css" href="file:///home/staffan/wds/svn.lagen.nu/css/default.css"/> -->
+      <link rel="stylesheet" type="text/css" href="file:///C:/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
+      
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
@@ -41,10 +43,10 @@
 	  <div class="navigation">
 	    <a href="/">Lagen.nu</a> -
 	    <a href="/nyheter">Nyheter</a> - 
-	    <a href="/index/sfs">Författningar</a> -
+	    <a href="/index/sfs">FÃ¶rfattningar</a> -
 	    <a href="/index/dv">Domslut</a> -
 	    <a href="/om">Om</a> -
-	    <u>S</u>ök:
+	    <u>S</u>Ã¶k:
 	    <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>
 	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
 	    <input type="hidden" name="domains" value="lagen.nu"/><br/>
@@ -82,7 +84,7 @@
   <!-- defaultimplementationer av de templates som anropas -->
   <!--
   <xsl:template name="headtitle">
-    Lagen.nu - Alla Sveriges lagar på webben
+    Lagen.nu - Alla Sveriges lagar pÃ¥ webben
   </xsl:template>
   <xsl:template name="linkrss"/>
   <xsl:template name="linkalternate"/>

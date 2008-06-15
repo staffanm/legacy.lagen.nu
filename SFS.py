@@ -525,7 +525,9 @@ class SFSParser(LegalSource.Parser):
                         break
                 if not found:
                     log.warning(u'%s: Övergångsbestämmelse för %s saknar motsvarande registerpost' % (self.id, ob.sfsnr))
-                    rp = Registerpost()
+                    kwargs = {id:u'L'+ob.sfsnr,
+                              uri:u'http://lagen.nu/'+ob.sfsnr}
+                    rp = Registerpost(**kwargs)
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
                     
@@ -568,7 +570,9 @@ class SFSParser(LegalSource.Parser):
             r.rubrik = Util.elementText(soup.body('table')[2]('tr')[1]('td')[0])
             changes = soup.body('table')[3:-2]
             for table in changes:
-                p = Registerpost()
+                kwargs = {'id': 'undefined',
+                          'uri': u'http://lagen.nu/undefined'}
+                p = Registerpost(**kwargs)
                 for row in table('tr'):
                     key = Util.elementText(row('td')[0])
                     if key.endswith(":"):  key= key[:-1] # trim ending ":"
@@ -579,6 +583,8 @@ class SFSParser(LegalSource.Parser):
                             if len(r) == 0:
                                 docuri = self.lagrum_parser.parse(val)[0].uri
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
+                            p.id = u'L' + val
+                            p.uri = u'http://lagen.nu/' + val
                         elif key == u'Ansvarig myndighet':
                             # p['ansvarigmyndighet'] = val
                             authrec = self.find_authority_rec(val)
@@ -595,12 +601,7 @@ class SFSParser(LegalSource.Parser):
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                             p[u'Har övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
                         elif key == u'Omfattning':
-                            # FIXME: Det här skapar vanliga
-                            # Link-objekt. Vi vill egentligen ha
-                            # LinkSubject-objekt med lämpligt predikat
-                            # för att ange om det är införda, ändrade
-                            # eller upphävda bestämmelser
-                            p[key] = self.lagrum_parser.parse(val)
+                            # p[key] = self.lagrum_parser.parse(val)
                             p[key] = []
                             for changecat in val.split(u'; '):
                                 if changecat.startswith(u'ändr.'):
@@ -694,8 +695,15 @@ class SFSParser(LegalSource.Parser):
                                   # if the Stycke has a NumreradLista
                                   # or similar
                     if isinstance(p,unicode): # look for stuff
+
+                        # Make all links have a dct:references
+                        # predicate -- not that meaningful for the
+                        # XHTML2 code, but needed to make useful RDF
+                        # triples in the RDFa output
                         
-                        nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix))
+                        nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix,DCT["references"]))
+                        # nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix)
+
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
 

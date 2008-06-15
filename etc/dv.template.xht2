@@ -10,10 +10,11 @@
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:base="${meta['xml:base']}"
       xml:lang="sv"
+      about="${meta['xml:base']}"
       xmlns:py="http://genshi.edgewall.org/"
       >
   <xi:include href="base.template.xht2"/>
-    <head about="${meta['xml:base']}">
+    <head>
       <!-- ! consider adding 'property="${meta[u'Referat'].predicate}"' -->
       <title py:content="meta[u'Referat']">Referatnummer</title>
       <!-- <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#VagledandeDomstolsavgorande"/> -->
@@ -32,7 +33,7 @@
     </p>
     
 
-    <body about="${meta['xml:base']}">
+    <body>
       ${render_metadata(meta)}
       <section class="doctext">
 	<py:for each="part in body" py:choose="">

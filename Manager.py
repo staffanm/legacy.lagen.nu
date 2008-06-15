@@ -74,26 +74,6 @@ class Manager:
                 print "Module %s has no Manager class" % m
             log.info(u'%s: %s finished in %s seconds' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
             
-    ACTIONS = {'download': 'download everything',
-               'update'  : 'download updates',
-               'parse'   : 'parse all downloaded (generate XML)',
-               'index'   : 'create initial data about documents',
-               'generate': 'generate HTML and create data about relations',
-               'loaddb'  : 'refresh DB content',
-               'test'    : 'do internal regression tests',
-               'all'     : 'do everything in a sensible order'}
-    
-    def PrintUsage(self):
-        print "Syntax: %s [action] [module]"
-        print "action can be one of:"
-        for a in self.ACTIONS.keys():
-            print "  * %s: %s" % (a,self.ACTIONS[a])
-        print "modules can be one of:"
-        modules = self._findModules()
-        for m in modules.keys():
-            print u"  * %r: %r" % (m,modules[m])
-        print "  or `all' to do it to all modules"
-
     def DownloadAll(self, module):
         self._doAction('DownloadAll',module)
 

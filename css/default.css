@@ -36,6 +36,9 @@
     body {
 	font: 10pt Palatino;
     }
+    p {
+	padding-bottom: 0.5em;
+    }
     h2 {
 	font: bold 10pt Palatino;
     }
@@ -152,7 +155,10 @@
       overflow: hidden;
     }
     /* end easy clearing */
+
+    /* huh? 
     h2, p {
       margin: 0;
       padding: 0;
     }
+    */

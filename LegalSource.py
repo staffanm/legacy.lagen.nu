@@ -14,6 +14,7 @@ from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
 from rdflib.Graph import Graph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
+# from rdflib.syntax import NamespaceManager
 
 # my own code
 import Util
@@ -52,7 +53,21 @@ class IdNotFound(Exception):
     def __str__(self):
         return repr(self.value)
 
-
+# class CustomNamespaceManager(NamespaceManager):
+#     def __init__(self, graph):
+#         super(CustomNamespaceManager, self).__init__(graph)
+# 
+#     def compute_qname(self, uri):
+#         if not uri in self.__cache:
+#             namespace, name = split_uri(uri)
+#             namespace = URIRef(namespace)
+#             prefix = self.store.prefix(namespace)
+#             if prefix is None:
+#                 raise Exception("Prefix for %s not bound" % namespace)
+#             self.__cache[uri] = (prefix, namespace, name)
+#         return self.__cache[uri]
+    
+    
 class Downloader:
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
     """Abstract base class for downloading legal source documents
@@ -220,26 +235,42 @@ class Manager:
     ####################################################################
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
+    def DumpTriples(self, filename):
+        g = Graph()
+        g.load(filename, format="rdfa")
+        self.__tidygraph(g)
+        from pprint import pprint
+        pprint (list(g.namespaces()))
+        # g._set_namespace_manager(CustomNamespaceManager(g))
+        print unicode(g.serialize(format="turtle", encoding="utf-8"), "utf-8")
+
+    def __tidygraph(self,graph):
+        # remove unneccesary whitespace and xmlliteral typing
+        for tup in graph:
+            (o,p,s) = tup
+            if (isinstance(s,Literal) and
+                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
+                graph.remove(tup)
+                l = Literal(u' '.join(s.split()))
+                graph.add((o,p,l))
+        
 
     def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan och bygger en stor RDF-graf"""
         c = 0
         g = Graph()
-        if file:
-            g.load(file, format="rdfa")
-            print unicode(g.serialize(format="nt", encoding="utf-8"), "utf-8")
-        else:
-            for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
-                c += 1
-                g.load(f, format="rdfa")
-                #if c > 100:
-                #    break
-                if c % 100 == 0:
-                    log.info("Related %d documents" % c)
-                # g = Graph()
-            f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-            f.write(g.serialize(format="pretty-xml"))
-            f.close()
+        for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
+            c += 1
+            g.load(f, format="rdfa")
+            #if c > 100:
+            #    break
+            if c % 100 == 0:
+                log.info("Related %d documents" % c)
+            # g = Graph()
+        self.__tidygraph(g)
+        f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
+        f.write(g.serialize(format="pretty-xml"))
+        f.close()
         
 
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
