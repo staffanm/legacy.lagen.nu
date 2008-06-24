@@ -24,7 +24,7 @@
       <link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
       <meta property="rinfo:utfardandedatum"
             content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
-      <py:if test="meta[u'Ikraft']">
+      <py:if test="u'Ikraft' in meta">
         <meta property="rinfo:ikrafttradandedatum"
               content="${meta[u'Ikraft']}" datatype="xsd:date"/>
       </py:if>
@@ -155,6 +155,7 @@
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
 	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
 	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div>
+	  <div py:when="isinstance(node, Link)" py:strip="">${render_link(node)}</div>
 	  <div py:when="isinstance(part, unicode)" py:strip="">${part}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_listelement</div>
       </py:for>

@@ -12,7 +12,7 @@ import logging
 import BeautifulSoup
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
-from rdflib.Graph import Graph
+from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 # from rdflib.syntax import NamespaceManager
 
@@ -124,7 +124,8 @@ class Parser:
 
     def generate_xhtml(self,meta,body,registry,module,globals):
         """Skapa en XHTML2-representation av ett rättsinformationsdokument"""
-        loader = TemplateLoader(['.' , os.path.dirname(__file__)]) # only look in cwd and this file's directory
+        loader = TemplateLoader(['.' , os.path.dirname(__file__)], # only look in cwd and this file's directory
+                                variable_lookup='lenient') 
         tmpl = loader.load("etc/%s.template.xht2"%module)
         stream = tmpl.generate(meta=meta, body=body, registry=registry, **globals)
         try:
@@ -178,15 +179,19 @@ class Manager:
             if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
         return newer
 
-    def _htmlFileName(self,basefile): 
+    def _htmlFileName(self,basefile):
+        if not isinstance(basefile, unicode):
+            raise Exception("WARNING: _htmlFileName called with non-unicode name")
         # will typically never be overridden 
         """Returns the full path of the GENERATED HTML fragment that represents a legal document""" 
-        return "%s/%s/generated/%s.html" % (self.baseDir, self.moduleDir,basefile)         
+        return u'%s/%s/generated/%s.html' % (self.baseDir, self.moduleDir,basefile)         
  
     def _xmlFileName(self,basefile): 
+        if not isinstance(basefile, unicode):
+            raise Exception("WARNING: _xmlFileName called with non-unicode name")
         # will typically never be overridden 
         """Returns the full path of the XHTML2/RDFa doc that represents the parsed legal document""" 
-        return "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir,basefile)     
+        return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
     ####################################################################
     # Manager INTERFACE DEFINITION
@@ -236,11 +241,18 @@ class Manager:
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
     def DumpTriples(self, filename):
-        g = Graph()
-        g.load(filename, format="rdfa")
+        # g = Graph()
+        # g  = ConjunctiveGraph()
+        # g.load(filename, publicID=URIRef("http://xyzzy.org/"), format="rdfa")
+        import xml.dom.minidom
+        import pyRdfa
+        dom  = xml.dom.minidom.parse(filename)
+        o = pyRdfa.Options()
+        o.warning_graph = None
+        g = pyRdfa.parseRDFa(dom, 'http://xyzzy.org', options=o)
         self.__tidygraph(g)
-        from pprint import pprint
-        pprint (list(g.namespaces()))
+        # from pprint import pprint
+        # pprint (list(g.namespaces()))
         # g._set_namespace_manager(CustomNamespaceManager(g))
         print unicode(g.serialize(format="turtle", encoding="utf-8"), "utf-8")
 

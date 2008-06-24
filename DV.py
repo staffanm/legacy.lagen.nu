@@ -491,7 +491,7 @@ class DVManager(LegalSource.Manager):
 
     def __doAllParsed(self,method,max=None):
         cnt = 0
-        for f in Util.listDirs(self.baseDir+"/dv/parsed",'xht2'):
+        for f in Util.listDirs(self.baseDir+u'/dv/parsed',u'xht2'):
             if max and (max <= cnt):
                 return cnt
             cnt += 1

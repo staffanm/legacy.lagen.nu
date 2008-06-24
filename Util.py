@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 
-import os, subprocess, codecs, shutil
+import os, sys, subprocess, codecs, shutil
 import BeautifulSoup
 
 # other peoples code
@@ -154,7 +154,10 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
     if (ret != 0):
         raise TransformError(stderr)
     if stderr:
+        #if isinstance(stderr, unicode):
         print stderr
+        #else:
+        #    print stderr.decode('iso-8859-1')
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
     # tidyHtmlFile(outfile)
@@ -176,12 +179,19 @@ def uniqueList(*lists):
 def runcmd(cmdline):
     # print "runcmd: %r" % cmdline
     if isinstance(cmdline,unicode):
-        # FIXME: How do we detect the proper encoding?
+        # FIXME: How do we detect the proper encoding? Using
+        # sys.stdout.encoding gives 'cp850' on windows, which is not
+        # what xsltproc expects
         cmdline = cmdline.encode('iso-8859-1')
+
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
     ret = p.returncode
     # print "runcmd '%s...': %s, '%s...', '%s...'" % (cmdline[:15], ret, stdout[:15], stderr[:15])
+    if not isinstance(stdout, unicode):
+        stdout = stdout.decode(sys.stdout.encoding)
+    if not isinstance(stderr, unicode):
+        stderr = stderr.decode(sys.stdout.encoding)
     return (p.returncode,stdout,stderr)
 
 def normalizeSpace(string):

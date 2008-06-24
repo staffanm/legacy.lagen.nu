@@ -72,27 +72,28 @@ class Manager:
                     print "Module %s's manager has no %s action" % (m,action)
             else:
                 print "Module %s has no Manager class" % m
-            log.info(u'%s: %s finished in %s seconds' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
+            log.info(u'%s: %s finished in %s' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
             
     def DownloadAll(self, module):
         self._doAction('DownloadAll',module)
 
     def DownloadNew(self, module):
         self._doAction('DownloadNew', module)
-        
+
     def ParseAll(self,module):
         self._doAction('ParseAll',module)
 
-    def IndexAll(self,module):
-        self._doAction('IndexAll',module)
+    def RelateAll(self,module):
+        self._doAction('RelateAll',module)
 
     def GenerateAll(self,module):
         self._doAction('GenerateAll',module)
     
-    def RelateAll(self,module):
-        self._doAction('RelateAll',module)
+    def Test(self, module):
+        self._doAction('Test',module)
 
     def GenerateSite(self):
+        self._doAction('Indexpages', 'all')
         log.info("Creating some main html pages here")
     
     def Publish(self):
@@ -110,7 +111,7 @@ class Manager:
         self._doAction('GenerateAll',module)
         self.GenerateSite()
         self.Publish()
-        log.info(u'DoAll finished in %s seconds' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
+        log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
 if __name__ == "__main__":
     import logging.config

@@ -583,6 +583,16 @@ class SFSParser(LegalSource.Parser):
                             if len(r) == 0:
                                 docuri = self.lagrum_parser.parse(val)[0].uri
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
+                            # FIXME: Eftersom det här sen går in i ett
+                            # id-fält, id-värden måste vara NCNames,
+                            # och NCNames inte får innehålla kolon
+                            # måste vi hitta på någon annan
+                            # delimiterare, typ bindestreck eller punkt
+                            # http://www.w3.org/TR/REC-xml-names/#NT-NCName
+                            # http://www.w3.org/TR/REC-xml/#NT-Name
+                            #
+                            # (börjar med 'L' eftersom NCNames måste
+                            # börja med ett Letter)
                             p.id = u'L' + val
                             p.uri = u'http://lagen.nu/' + val
                         elif key == u'Ansvarig myndighet':
@@ -1871,13 +1881,16 @@ class SFSManager(LegalSource.Manager):
         if failures:
             print "\n".join(failures)
 
-    def IndexAll(self):
-        # print "SFS: IndexAll temporarily disabled"
-        # return
-        self.indexroot = ET.Element("documents")
-        self.__doAll('parsed', 'xml',self.Index)
-        tree = ET.ElementTree(self.indexroot)
-        tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+    def Indexpages(self):
+        # * öppna rdf-grafen
+        # * lista alla som börjar på 'a' (kräver ev nya
+        #   rdf-statements, rinfoex:sorterinsgtitel), 'b' etc
+        # * skapa en enkel xht2 med genshi eller tom elementtree
+        # * transformera till html mha static.xslt
+        # * gör samma för alla som har SFS-nummer som börjar på 1600-1700 etc
+        # * porta nyckelbegreppskoden
+        pass
+        
 
     # processes dv/parsed/rdf.xml to get a new xml file suitable for
     # inclusion by sfs.xslt (something we should be able to do using

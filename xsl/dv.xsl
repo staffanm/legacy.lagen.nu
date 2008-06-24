@@ -55,7 +55,7 @@
   <xsl:template match="xht2:dl[@class='metadata']" mode="refs">
     <dl>
       <dt>Domstol</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
+      <dd><xsl:value-of select="xht2:dd[@rel='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
       <dt>Avgörandedatum</dt>
       <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#avgorandedatum']"/></dd>
       <dt>Målnummer</dt>
@@ -64,14 +64,22 @@
     <p>Hänvisningar</p>
     <dl>
       <dt>Lagrum</dt>
+      <xsl:for-each select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#lagrum']">
+	<dd><xsl:value-of select="."/></dd>
+      </xsl:for-each>
       <dt>Rättsfall</dt>
-      <xsl:for-each select=
+      <xsl:for-each select="xht2:dd[a[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#rattsfallshanvisning']]">
+	<dd><xsl:value-of select="."/></dd>
+      </xsl:for-each>
       <dt>Litteratur</dt>
+      <xsl:for-each select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/relation']">
+	<dd><xsl:value-of select="."/></dd>
+      </xsl:for-each>
     </dl>
   </xsl:template>
 
   <xsl:template match="*|@*" mode="refs">
-    <xsl:apply-templates mode="refs"/>
+    <!-- emit nothing -->
   </xsl:template>
 
   
