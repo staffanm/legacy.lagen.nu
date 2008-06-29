@@ -387,6 +387,14 @@ class SFSDownloader(LegalSource.Downloader):
         c.update(data)
         return c.hexdigest()
 
+class UpphavdForfattning(Exception):
+    """Slängs när en upphävd författning parseas"""
+    pass
+
+class IckeSFS(Exception):
+    """Slängs när en författning som inte är en egentlig SFS-författning parseas"""
+    pass
+
 DCT = Namespace(Util.ns['dct'])
 XSD = Namespace(Util.ns['xsd'])
 RINFO = Namespace(Util.ns['rinfo'])
@@ -547,9 +555,14 @@ class SFSParser(LegalSource.Parser):
               u'Utfärdad':               RINFO['utfardandedatum'],
               u'Ikraft':                 RINFO['ikrafttradandedatum'],
               u'Observera':              RDFS.comment, # FIXME: hitta bättre predikat
+              u'Övrigt':                 RDFS.comment, # FIXME: hitta bättre predikat
               u'Tidsbegränsad':          RINFOEX['tidsbegransad'],
               u'Omtryck':                RINFOEX['omtryck'], # subtype av RINFO['fsNummer']
-              u'Ändring införd':         RINFO['konsolideringsunderlag']
+              u'Ändring införd':         RINFO['konsolideringsunderlag'],
+              u'Författningen har upphävts genom':
+                                         RINFOEX['upphavdAv'], # ska vara owl:inverseOf
+                                                               # rinfo:upphaver
+              u'Upphävd':                RINFOEX['upphavandedatum']
               }
 
     # metadatafält som kan ha flera värden (kommer representeras som
@@ -580,6 +593,8 @@ class SFSParser(LegalSource.Parser):
                     val = Util.elementText(row('td')[1]).replace(u'\xa0',' ') # no nbsp's, please
                     if val != "":
                         if key == u'SFS-nummer':
+                            if val.startswith('N'):
+                                raise IckeSFS()
                             if len(r) == 0:
                                 docuri = self.lagrum_parser.parse(val)[0].uri
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
@@ -711,9 +726,10 @@ class SFSParser(LegalSource.Parser):
                         # XHTML2 code, but needed to make useful RDF
                         # triples in the RDFa output
                         
-                        nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix,DCT["references"]))
-                        # nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix)
-
+                        nodes.extend(self.lagrum_parser.parse(" ".join(p.split()),
+                                                              baseuri+prefix,
+                                                              "dct:references"))
+                        # nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix,DCT["references"]))
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
 
@@ -779,10 +795,16 @@ class SFSParser(LegalSource.Parser):
                 (key,val) = [Util.normalizeSpace(x) for x in line.split(":",1)]
             if key == u'Rubrik':
                 meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+            elif key == u'Övrigt':
+                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
             elif key == u'SFS nr':
                 meta[key] = UnicodeSubject(val,predicate=self.labels[key])
             elif key == u'Utfärdad':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+            elif key == u'Upphävd':
+                meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+                if meta[key] < datetime.today():
+                    raise UpphavdForfattning()
             elif key == u'Departement/ myndighet':
                 authrec = self.find_authority_rec(val)
                 meta[key] = LinkSubject(val, uri=unicode(authrec),
@@ -792,7 +814,15 @@ class SFSParser(LegalSource.Parser):
                 val = val.replace(u't.o.m. SFS ','')
                 uri = self.lagrum_parser.parse(val)[0].uri
                 meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
-                                       
+
+            elif key == u'Författningen har upphävts genom':
+                val = val.replace(u'SFS ','')
+                val = val.replace(u'SFS','')
+                uri = self.lagrum_parser.parse(val)[0].uri
+                meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+
+            elif key == u'Tidsbegränsad':
+                meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
             else:
                 log.warning(u'%s: Obekant nyckel \'%s\'' % (self.id, key))
             
@@ -1760,12 +1790,18 @@ class SFSManager(LegalSource.Manager):
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
             parsed = p.Parse(basefile,files)
-            Util.mkdir(os.path.dirname(filename))
+            Util.ensureDir(filename)
             out = file(filename, "w")
             out.write(parsed)
             out.close()
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        except UpphavdForfattning:
+            log.info(u'%s: Upphävd', basefile)
+            Util.robust_remove(filename)
+        except IckeSFS:
+            log.info(u'%s: Ingen SFS', basefile)
+            Util.robust_remove(filename)
         except Exception:
             # Vi hanterar traceback-loggning själva eftersom
             # loggging-modulen inte klarar av när källkoden

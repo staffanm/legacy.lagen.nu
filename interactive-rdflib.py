@@ -9,7 +9,7 @@ import sys, time
 
 def clearstore():
     store.destroy(configString)
-    store.open(create=True)
+    store.open(configString, create=True)
 
 def normalizeSpace(string):
     return u' '.join(string.split())
@@ -22,7 +22,7 @@ def timeit(callable, *args, **kwargs):
 
 def query(sparql):
     args = [sparql]
-    kwargs = {'initNs':dict(rinfo=rinfo_ns, dct=dct_ns, foaf=foaf_ns)}
+    kwargs = {'initNs':dict(rinfo=rinfo_ns, dct=dct_ns, dc=dc_ns, foaf=foaf_ns)}
     
     (elapsed, res) = timeit(graph.query, *args, **kwargs)
     print "%s results in %.3f sec" % (len(res), elapsed)
@@ -35,6 +35,7 @@ if __name__ == "__main__":
     configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
     lagen_ns = Namespace('http://lagen.nu/')
     rinfo_ns = Namespace('http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#')
+    dc_ns   = Namespace('http://dublincore.org/documents/dcmi-terms/')
     dct_ns   = Namespace('http://dublincore.org/documents/dcmi-terms/')
     foaf_ns  = Namespace('http://xmlns.com/foaf/0.1/')
     default_graph_uri = "http://lagen.nu/rdfstore"

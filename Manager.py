@@ -74,6 +74,17 @@ class Manager:
                 print "Module %s has no Manager class" % m
             log.info(u'%s: %s finished in %s' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
             
+    def InitializeDB(self):
+        from rdflib.store import Store
+        from rdflib import plugin
+
+        configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
+        store = plugin.get('MySQL', Store)('rdfstore')
+        store.destroy(configString)
+        store.open(configString, create=True)
+        print "MySQL DB store initialized"
+
+            
     def DownloadAll(self, module):
         self._doAction('DownloadAll',module)
 

@@ -171,10 +171,14 @@ class PredicateType(object):
             # switch the full uriref
             # (http://rinfo.lagrummet...#paragraf) to one using a
             # namespace prefix, if we know of one:
+            shorten = False
             for (prefix, ns) in Util.ns.items():
                 if kwargs['predicate'].startswith(ns):
                     self.predicate = kwargs['predicate'].replace(ns, prefix+":")
-                    # print "set predicate to shortened ver: %s" % self.predicate
+                    # print "Shorten predicate %s to: %s" % (kwargs['predicate'], self.predicate)
+                    shorten = True
+            #if not shorten:
+            #   print "Couldn't shorten predicate: %s" % self.predicate
         else:
             # From the RDF Schema spec: 'This is the class of
             # everything. All other classes are subclasses of this
@@ -188,6 +192,13 @@ def serialize(root):
     t = __serializeNode(root)
     __indentTree(t)
     return ET.tostring(t,'utf-8').decode('utf-8')
+
+def deserialize(xmlstr):
+    t = ET.fromstring(xmlstr)
+    for e in t:
+        print "element %r" % e.tag
+
+        
 
 # http://infix.se/2007/02/06/gentlemen-indent-your-xml
 def __indentTree(elem, level=0):
@@ -291,48 +302,49 @@ class RDFString(PredicateType,UnicodeStructure):
 
 if __name__ == '__main__':
 
-    print "Testing DerivedUnicode"
+    # print "Testing DerivedUnicode"
     u = DerivedUnicode(u'blahonga', keyword=u'myunicode')
-    print "\trepr(u): %s"   % repr(u)
-    print "\tu[1:4]: %r"    % u[1:4]
-    print "\tu.keyword: %r" % u.keyword
-    print "\tu.iseven: %r"  % u.iseven()
+    # print "\trepr(u): %s"   % repr(u)
+    # print "\tu[1:4]: %r"    % u[1:4]
+    # print "\tu.keyword: %r" % u.keyword
+    # print "\tu.iseven: %r"  % u.iseven()
 
-    print "Testing DerivedList"
+    # print "Testing DerivedList"
     l = DerivedList(['x','y','z'], keyword=u'mylist')
-    print "\tl[1]: %r"      % l[1]
-    print "\tl.keyword: %r" % l.keyword
-    print "\tl.iseven: %r"  % l.iseven()
+    # print "\tl[1]: %r"      % l[1]
+    # print "\tl.keyword: %r" % l.keyword
+    # print "\tl.iseven: %r"  % l.iseven()
 
-    print "Testing DerivedDict"
+    # print "Testing DerivedDict"
     d = DerivedDict({'a':'foo','b':'bar'}, keyword=u'mydict')
-    print "\td['a']: %r"    % d['a']
-    print "\td.keyword: %r" % d.keyword
-    print "\td.iseven: %r"  % d.iseven()
+    # print "\td['a']: %r"    % d['a']
+    # print "\td.keyword: %r" % d.keyword
+    # print "\td.iseven: %r"  % d.iseven()
 
-    print "Testing DerivedInt"
+    # print "Testing DerivedInt"
     i = DerivedInt(42, keyword=u'myint')
-    print "\ti: %r"    % i
-    print "\ti+5: %r"  % (i+5)
-    print "\ti.keyword: %r" % d.keyword
-    print "\ti.iseven: %r"  % d.iseven()
+    # print "\ti: %r"    % i
+    # print "\ti+5: %r"  % (i+5)
+    # print "\ti.keyword: %r" % d.keyword
+    # print "\ti.iseven: %r"  % d.iseven()
 
-    print "Testing DerivedDate"
+    # print "Testing DerivedDate"
     nativedate = datetime.date(2008,3,15)
     dt = DerivedDate(nativedate, keyword=u'mydate')
-    print "\tdt: %r"    % dt
-    print "\tdt.keyword: %r" % dt.keyword
-    print "\tdt.iseven: %r"  % dt.iseven()
+    # print "\tdt: %r"    % dt
+    # print "\tdt.keyword: %r" % dt.keyword
+    # print "\tdt.iseven: %r"  % dt.iseven()
 
-    print "Testing RDFString"
+    # print "Testing RDFString"
     r = RDFString(u'Typisk dokumentrubrik', keyword=u'mysubject')
-    print "\trepr(r): %s"   % repr(r)
-    print "\tr[1:4]: %r"    % r[1:4]
-    print "\tr.keyword: %r" % r.keyword
-    print "\tr.predicate: %r" % r.predicate
+    # print "\trepr(r): %s"   % repr(r)
+    # print "\tr[1:4]: %r"    % r[1:4]
+    # print "\tr.keyword: %r" % r.keyword
+    # print "\tr.predicate: %r" % r.predicate
     from rdflib import URIRef
     r.predicate = URIRef('http://purl.org/dc/terms/title')
-    print "\tr.predicate: %r" % r.predicate
+    # print "\tr.predicate: %r" % r.predicate
 
     c = DerivedList([u,l,d,i,dt,r])
-    print serialize(c)
+    x = serialize(c)
+    deserialize(x)

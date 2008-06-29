@@ -12,8 +12,10 @@ import logging
 import BeautifulSoup
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
-from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
+from rdflib import plugin
+from rdflib.Graph import Graph, ConjunctiveGraph
+from rdflib.store import Store
 # from rdflib.syntax import NamespaceManager
 
 # my own code
@@ -193,6 +195,28 @@ class Manager:
         """Returns the full path of the XHTML2/RDFa doc that represents the parsed legal document""" 
         return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
+    def __tidy_graph(self,graph):
+        # remove unneccesary whitespace and xmlliteral typing
+        for tup in graph:
+            (o,p,s) = tup
+            if (isinstance(s,Literal) and
+                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
+                graph.remove(tup)
+                l = Literal(u' '.join(s.split()))
+                graph.add((o,p,l))
+
+    def __get_default_graph(self):
+        configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
+        store = plugin.get('MySQL', Store)('rdfstore')
+        # rt = store.open(configString,create=True)
+        rt = store.open(configString,create=False)
+        print "MySQL triple store opened: %s" % rt
+        graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
+        for key, value in Util.ns.items():
+            graph.bind(key,  Namespace(value));
+        return graph
+
+
     ####################################################################
     # Manager INTERFACE DEFINITION
     ####################################################################
@@ -241,49 +265,42 @@ class Manager:
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
     def DumpTriples(self, filename):
-        # g = Graph()
-        # g  = ConjunctiveGraph()
-        # g.load(filename, publicID=URIRef("http://xyzzy.org/"), format="rdfa")
+        g = self.__load_rdfa(filename)
+        print unicode(g.serialize(format="turtle", encoding="utf-8"), "utf-8")
+
+    def __load_rdfa(self, filename, graph=None):
         import xml.dom.minidom
         import pyRdfa
         dom  = xml.dom.minidom.parse(filename)
         o = pyRdfa.Options()
         o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, 'http://xyzzy.org', options=o)
-        self.__tidygraph(g)
-        # from pprint import pprint
-        # pprint (list(g.namespaces()))
-        # g._set_namespace_manager(CustomNamespaceManager(g))
-        print unicode(g.serialize(format="turtle", encoding="utf-8"), "utf-8")
-
-    def __tidygraph(self,graph):
-        # remove unneccesary whitespace and xmlliteral typing
-        for tup in graph:
-            (o,p,s) = tup
-            if (isinstance(s,Literal) and
-                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
-                graph.remove(tup)
-                l = Literal(u' '.join(s.split()))
-                graph.add((o,p,l))
-        
+        g = pyRdfa.parseRDFa(dom, None, options=o)
+        self.__tidy_graph(g)
+        if not graph is None:
+            graph += g
+            #print "Adding to graph, now %d triples" % len(graph)
+        else:
+            graph = g
+            #print "New graph, %d triples" % len(g)
+        return graph
 
     def RelateAll(self,file=None):
-        """Sammanställer all metadata för alla dokument i rättskällan och bygger en stor RDF-graf"""
+        """Sammanställer all metadata för alla dokument i rättskällan
+        och bygger en stor RDF-graf. """
         c = 0
-        g = Graph()
+        graph = self.__get_default_graph()
+        
         for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
             c += 1
-            g.load(f, format="rdfa")
-            #if c > 100:
-            #    break
+            self.__load_rdfa(f,graph)
+            graph.commit()
             if c % 100 == 0:
-                log.info("Related %d documents" % c)
-            # g = Graph()
-        self.__tidygraph(g)
+                log.info("Related %d documents (%d triples total)" % (c, len(graph)))
+
+
         f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-        f.write(g.serialize(format="pretty-xml"))
+        f.write(graph.serialize(format="pretty-xml"))
         f.close()
-        
 
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
             
