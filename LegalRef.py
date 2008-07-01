@@ -30,7 +30,7 @@ class Link(UnicodeStructure): # just a unicode string with a .uri property
     def __repr__(self):
         return u'Link(\'%s\',uri=%r)' % (unicode.__repr__(self),self.uri)
 
-class LinkSubject(Link, PredicateType): pass # A RDFish link
+class LinkSubject(PredicateType, Link): pass # A RDFish link
 
 class NodeTree:
     """Encapsuates the node structure from mx.TextTools in a tree oriented interface"""

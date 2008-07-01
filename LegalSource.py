@@ -206,12 +206,15 @@ class Manager:
                 graph.add((o,p,l))
 
     def __get_default_graph(self):
-        configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
-        store = plugin.get('MySQL', Store)('rdfstore')
-        # rt = store.open(configString,create=True)
-        rt = store.open(configString,create=False)
-        print "MySQL triple store opened: %s" % rt
-        graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
+        use_mysql_store = False
+        if (use_mysql_store):
+            configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
+            store = plugin.get('MySQL', Store)('rdfstore')
+            rt = store.open(configString,create=False)
+            print "MySQL triple store opened: %s" % rt
+            graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
+        else: 
+            graph = Graph(identifier = URIRef("http://lagen.nu/rdfstore"))
         for key, value in Util.ns.items():
             graph.bind(key,  Namespace(value));
         return graph
@@ -296,7 +299,6 @@ class Manager:
             graph.commit()
             if c % 100 == 0:
                 log.info("Related %d documents (%d triples total)" % (c, len(graph)))
-
 
         f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
         f.write(graph.serialize(format="pretty-xml"))

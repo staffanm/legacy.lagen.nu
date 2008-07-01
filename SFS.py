@@ -714,7 +714,9 @@ class SFSParser(LegalSource.Parser):
                     self._construct_ids(p,prefix,baseuri, skipfragments)
                 else:
                     self._construct_ids(p,fragment,baseuri, skipfragments)
-            if isinstance(element, Stycke) or isinstance(element, Listelement):
+            if (isinstance(element, Stycke)
+                or isinstance(element, Listelement)
+                or isinstance(element, Tabellcell)):
                 nodes = []
                 for p in element: # normally only one, but can be more
                                   # if the Stycke has a NumreradLista

@@ -174,8 +174,9 @@ class PredicateType(object):
             shorten = False
             for (prefix, ns) in Util.ns.items():
                 if kwargs['predicate'].startswith(ns):
-                    self.predicate = kwargs['predicate'].replace(ns, prefix+":")
-                    # print "Shorten predicate %s to: %s" % (kwargs['predicate'], self.predicate)
+                    predicateuri = kwargs['predicate']
+                    kwargs['predicate'] = kwargs['predicate'].replace(ns, prefix+":")
+                    # print "Shorten predicate %s to: %s" % (predicateuri, kwargs['predicate'])
                     shorten = True
             #if not shorten:
             #   print "Couldn't shorten predicate: %s" % self.predicate

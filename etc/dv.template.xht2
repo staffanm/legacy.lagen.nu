@@ -17,6 +17,10 @@
     <head>
       <!-- ! consider adding 'property="${meta[u'Referat'].predicate}"' -->
       <title py:content="meta[u'Referat']">Referatnummer</title>
+      <!-- base is not valid in xhtml2 - but we need it to set the
+      base context for RDFa parsing. Fix this later through pyRDFa
+      transforms -->
+      <base href="${meta['xml:base']}"/>
       <!-- <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#VagledandeDomstolsavgorande"/> -->
       <!-- !publisher = auktoritetspost för DV -->
       <!--  <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/> -->

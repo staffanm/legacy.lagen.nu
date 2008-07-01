@@ -1,5 +1,4 @@
-1 § I denna lag används följande beteckningar med nedan angiven
-betydelse.
+1 § I denna lag används följande beteckningar med nedan angiven betydelse.
 
 Beteckning              Betydelse
 
@@ -9,3 +8,4 @@ Biobank                 Biologiskt material från en eller flera
 Huvudman för en
 biobank                 Vårdgivare, forskningsinstitution eller annan
                         som innehar en biobank.
+

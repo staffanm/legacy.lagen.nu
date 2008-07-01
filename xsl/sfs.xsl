@@ -98,6 +98,10 @@
     <!-- emit nothing -->
   </xsl:template>
 
+  <xsl:template match="xht2:section" mode="refs">
+    <!-- emit nothing -->
+  </xsl:template>
+
   <xsl:template match="xht2:section[@class='register']" mode="refs">
     <!-- emit nothing -->
   </xsl:template>

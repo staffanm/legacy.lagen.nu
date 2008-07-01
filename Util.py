@@ -32,7 +32,8 @@ def mkdir(newdir):
 # the rest of the code is my fault
 
 # Set up common namespaces and suitable prefixes for them
-ns = {'dct':'http://dublincore.org/documents/dcmi-terms/',
+ns = {'dc':'http://purl.org/dc/elements/1.1/',
+      'dct':'http://dublincore.org/documents/dcmi-terms/',
       'rdf':'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       'rinfo':'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#',
       'rinfoex':'http://lagen.nu/terms#',

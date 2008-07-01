@@ -387,25 +387,7 @@ class DVParser(LegalSource.Parser):
         
         # OK, färdigputsat!
 
-        # Formulera om metadatan till en RDF-graf
-        graph = Graph()
-        graph.bind("dct", "http://dublincore.org/documents/dcmi-terms/")
-        graph.bind("xsd", "http://www.w3.org/2001/XMLSchema#")
-        graph.bind("rinfo", "http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#")
-        graph.add((docuri, RDF.type, RINFO['VagledandeDomstolsavgorande']))
-        self.add_to_graph(docuri,graph,head.values())
-        # tyvärr funkar inte graph.query på windows, så vi kan inte
-        # söka i den direkt från templaterendreringen. Vi kan i stort
-        # sett bara serialisera den
-        #
-        # print graph.serialize(format="nt").decode('utf-8')
-        # 
-        # nsmap = {u'rdf':RDF.RDFNS,
-        #          u'rinfo':RINFO,
-        #          u'dct':DCT}
-        # print graph.query(u'SELECT ?subj WHERE { ?obj dc:subject ?subj }', nsmap)
-
-        
+        # print serialize(head)
         xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
         return xhtml
 

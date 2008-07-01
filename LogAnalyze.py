@@ -4,8 +4,25 @@
 vad som gått bra och dåligt (en övergripande vy och en sida per
 modul/operation)"""
 
-import re,sys,codecs
-re_logline = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (\w+) \(([^\)]*)\) (\w+): ([^:]+)(: ([^\r]*)|)').match
+import re,sys,codecs,locale
+
+locale.setlocale(locale.LC_ALL,'') 
+if sys.platform == 'win32':
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+    else:
+        defaultencoding = 'cp850'
+else:
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+    else:
+        defaultencoding = locale.getpreferredencoding()
+# print "setting sys.stdout to a '%s' writer" % defaultencoding
+sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+
+
+re_logline = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (\w+) +\(([a-zA-Z0-9_, ]*)\) (\w+): ([^:]+)(: ([^\r]*)|)').match
 re_tbframe = re.compile(r'  File "([^"]+)", line (\d+), in (\w+)').match
 re_msg = re.compile(r'')
 def analyse(logfile):
@@ -40,7 +57,8 @@ def analyse(logfile):
                         errloc = "%s:%s" % (fb_match.group(1), fb_match.group(2))
                     else:
                         errcode = line
-                errloc += "(%s)" % line.split(":")[0]
+                #errloc += "(%s)" % line.split(":")[0]
+                errloc += "(%s)" % line[:-2]
                 errlocs[errloc] = errlocs.get(errloc,0) + 1
 
             elif level == 'WARNING':
@@ -67,7 +85,7 @@ def printdict(d):
     items = [(k, v) for (v, k) in items]
 
     for k,v in items:
-        print "    %s: %s occurrences" % (k,v)
+        print u"    %s: %s occurrences" % (k,v)
     
 
 if __name__ == "__main__":
