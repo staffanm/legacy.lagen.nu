@@ -6,6 +6,7 @@ sections, eg 'Upphovsrättslag (1960:729) 49 a §') in plaintext"""
 import sys,os,re
 import codecs
 import traceback
+from StringIO import StringIO
 from pprint import pprint
 import locale
 locale.setlocale(locale.LC_ALL,'') 
@@ -14,6 +15,7 @@ locale.setlocale(locale.LC_ALL,'')
 from simpleparse.parser import Parser
 from simpleparse.stt.TextTools.TextTools import tag
 from rdflib.Graph import Graph
+from rdflib.BNode import BNode
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
@@ -195,7 +197,7 @@ class LegalRef:
         return d
 
 
-    def parse(self, indata, baseuri="http://lagen.nu/9999:999#K9P9S9P9",predicate=None):
+    def parse(self, indata, baseuri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9",predicate=None):
         if indata == "": return indata # this actually triggered a bug...
         self.predicate = predicate
         m = self.re_urisegments.match(baseuri)
@@ -273,6 +275,10 @@ class LegalRef:
                 normres.append(node)
         return normres
 
+    def make_uri(self,node, graph):
+        """Given a node and a RDF graph containing said node"""
+        # find out what the blan
+        return "http://blahonga.org/"
 
     def find_attributes(self,parts,extra={}):
         """recurses through a parse tree and creates a dictionary of
@@ -794,7 +800,7 @@ class LegalRef:
 
 
     ################################################################
-    # KOD FÖR RATTFALL
+    # KOD FÖR RATTSFALL
     def rattsfall_format_uri(self,attributes):
         res = self.baseuri_attributes['baseuri']
         if attributes['domstol'] == u'NJA':
@@ -807,106 +813,157 @@ class LegalRef:
             res += u'%s_%s:%s' % (attributes['domstol'], attributes['ar'], attributes['lopnr'])
         return res
 
+from FilebasedTester import FilebasedTester
+class TestLegalRef(FilebasedTester):
 
-class TestLegalRef:
+    testparams = {'URI': {'dir': u'test/data/LegalRef/URI',
+                          'testext':'.n3'},
+                  'ParseLagrum': {'dir': u'test/data/LegalRef/SFS',
+                                  'testext':'.txt'},
+                  'ParseKortlagrum': {'dir': u'test/data/LegalRef/Short',
+                                      'testext':'.txt'},
+                  'ParseForarbeten': {'dir': u'test/data/LegalRef/Regpubl',
+                                      'testext':'.txt'},
+                  'ParseEGLagstiftning': {'dir': u'test/data/LegalRef/EGLag',
+                                          'testext':'.txt'},
+                  'ParseRattsfall': {'dir': u'test/data/LegalRef/DV',
+                                     'testext':'.txt'},
+                  }
 
-    
-    def ParseTest(self,testfile,verbose=False,quiet=False):
-        if not quiet:
-            print("Running test %s\n------------------------------" % testfile)
-        try:
-            namedlaws = {}
-            if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
-                # p = SFSRefParser(verbose,namedlaws)
-                p = LegalRef(LegalRef.LAGRUM)
-            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
-                # p = ShortenedRefParser(verbose,namedlaws)
-                p = LegalRef(LegalRef.KORTLAGRUM)
-            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
-                # p = PreparatoryRefParser(verbose,namedlaws)
-                p = LegalRef(LegalRef.FORARBETEN)
-            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','eglag-'])):
-                p = LegalRef(LegalRef.EGLAGSTIFTNING)
-            elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','dv-'])):
-                p = LegalRef(LegalRef.RATTSFALL)
-            else:
-                print u'WARNING: Har ingen aning om hur %s ska testas, provar med LegalRef.LAGRUM' % testfile
-                # return False
-                p = LegalRef(LegalRef.LAGRUM)
+    def TestURI(self,data):
+        g = Graph()
+        g.parse(StringIO(data),format="n3")
+        # find the bnode that has a RDF.type predicate
+        bnode = None
+        p = LegalRef(LegalRef.LAGRUM)
+        res = p.make_uri(bnode,g)
+        return res
+        
+    def TestParseLagrum(self,data):
+        p = LegalRef(LegalRef.LAGRUM)
+        return self.__test_parser(data,p)
+
+    def TestParseKortlagrum(self,data):
+        p = LegalRef(LegalRef.KORTLAGRUM)
+        return self.__test_parser(data,p)
+
+    def TestParseForarbeten(self,data):
+        p = LegalRef(LegalRef.FORARBETEN)
+        return self.__test_parser(data,p)
+
+    def TestParseEGLagstiftning(self,data):
+        p = LegalRef(LegalRef.EGLAGSTIFTNING)
+        return self.__test_parser(data,p)
+
+    def TestParseRattsfall(self,data):
+        p = LegalRef(LegalRef.RATTSFALL)
+        return self.__test_parser(data,p)
+
+    def __test_parser(self,data,p):
+        p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
+        p.currentlynamedlaws = {}
+        paras = re.split('\r?\n---\r?\n',data)
+        resparas = []
+        for i in range(len(paras)):
+            if paras[i].startswith("RESET:"):
+                p.currentlynamedlaws.clear()
+            nodes = p.parse(paras[i],u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
+            resparas.append(serialize(nodes))
+        res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
+        return res
                 
-            p.verbose = verbose
-            p.currentlynamedlaws = namedlaws
-            
-            testdata = codecs.open(testfile,encoding=SP_CHARSET).read()
-            paragraphs = re.split('\r?\n\r?\n',testdata,1)
-            if len(paragraphs) == 1:
-                (test, key) = (testdata,None)
-            elif len(paragraphs) == 2:
-                (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding=SP_CHARSET).read(),1)
-            else:
-                print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
-                return false
-
-            testparas = re.split('\r?\n---\r?\n',test)
-            if key:
-                keyparas = re.split('\r?\n---\r?\n',key)
-            resparas = []
-
-            for i in range(len(testparas)):
-                if testparas[i].startswith("RESET:"):
-                    # namedlaws.clear()
-                    p.currentlynamedlaws.clear()
-                nodes = p.parse(testparas[i],u'http://lagen.nu/1:2#')
-                #nodes = p.parse(testparas[i],u'http://lagen.nu/1:2#',
-                #                URIRef('http://some.ns/term'))
-                resparas.append(serialize(nodes))
-
-            res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
-            if key:
-                key = "\n---\n".join(keyparas).replace("\r\n","\n").strip()
-                if res.strip() == key.strip():
-                    result = "."
-                else:
-                    result = "F"
-            else:
-                result = "N"
-
-        except Exception:
-            result = "E"
-
-        if quiet:
-            sys.stdout.write(result)
-        else:
-            if result == '.':
-                sys.stdout.write("OK %s" % testfile)
-            elif result == 'F':
-                sys.stdout.write("FAIL %s" % testfile)
-                from difflib import Differ
-                difflines = list(Differ().compare(key.split('\n'),res.split('\n')))
-                print "----------------------------------------"
-                sys.stdout.write(u'\n'.join(difflines))
-                print "----------------------------------------"
-            elif result == 'N':
-                print "NOT IMPLEMENTED: %s" % testfile
-                print "----------------------------------------"
-                print "GOT:"
-                print res
-                print "----------------------------------------"
-            elif result == 'E':
-                tb = sys.exc_info()[2]
-                formatted_tb = traceback.format_tb(sys.exc_info()[2])
-                print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
-                       (sys.exc_info()[0],
-                        sys.exc_info()[1],
-                        u''.join(formatted_tb)))
-        return result == '.'
-
+    
+#     def ParseTest(self,testfile,verbose=False,quiet=False):
+#         if not quiet:
+#             print("Running test %s\n------------------------------" % testfile)
+#         try:
+#             namedlaws = {}
+#             if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
+#                 p = LegalRef(LegalRef.LAGRUM)
+#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
+#                 p = LegalRef(LegalRef.KORTLAGRUM)
+#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
+#                 p = LegalRef(LegalRef.FORARBETEN)
+#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','eglag-'])):
+#                 p = LegalRef(LegalRef.EGLAGSTIFTNING)
+#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','dv-'])):
+#                 p = LegalRef(LegalRef.RATTSFALL)
+#             else:
+#                 print u'WARNING: Har ingen aning om hur %s ska testas, provar med LegalRef.LAGRUM' % testfile
+#                 # return False
+#                 p = LegalRef(LegalRef.LAGRUM)
+#                 
+#             p.verbose = verbose
+#             p.currentlynamedlaws = namedlaws
+#             
+#             testdata = codecs.open(testfile,encoding=SP_CHARSET).read()
+#             paragraphs = re.split('\r?\n\r?\n',testdata,1)
+#             if len(paragraphs) == 1:
+#                 (test, key) = (testdata,None)
+#             elif len(paragraphs) == 2:
+#                 (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding=SP_CHARSET).read(),1)
+#             else:
+#                 print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
+#                 return false
+# 
+#             testparas = re.split('\r?\n---\r?\n',test)
+#             if key:
+#                 keyparas = re.split('\r?\n---\r?\n',key)
+#             resparas = []
+# 
+#             for i in range(len(testparas)):
+#                 if testparas[i].startswith("RESET:"):
+#                     # namedlaws.clear()
+#                     p.currentlynamedlaws.clear()
+#                 nodes = p.parse(testparas[i],u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9')
+#                 resparas.append(serialize(nodes))
+# 
+#             res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
+#             if key:
+#                 key = "\n---\n".join(keyparas).replace("\r\n","\n").strip()
+#                 if res.strip() == key.strip():
+#                     result = "."
+#                 else:
+#                     result = "F"
+#             else:
+#                 result = "N"
+# 
+#         except Exception:
+#             result = "E"
+# 
+#         if quiet:
+#             sys.stdout.write(result)
+#         else:
+#             if result == '.':
+#                 sys.stdout.write("OK %s" % testfile)
+#             elif result == 'F':
+#                 sys.stdout.write("FAIL %s" % testfile)
+#                 from difflib import Differ
+#                 difflines = list(Differ().compare(key.split('\n'),res.split('\n')))
+#                 print "----------------------------------------"
+#                 sys.stdout.write(u'\n'.join(difflines))
+#                 print "----------------------------------------"
+#             elif result == 'N':
+#                 print "NOT IMPLEMENTED: %s" % testfile
+#                 print "----------------------------------------"
+#                 print "GOT:"
+#                 print res
+#                 print "----------------------------------------"
+#             elif result == 'E':
+#                 tb = sys.exc_info()[2]
+#                 formatted_tb = traceback.format_tb(sys.exc_info()[2])
+#                 print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
+#                        (sys.exc_info()[0],
+#                         sys.exc_info()[1],
+#                         u''.join(formatted_tb)))
+#         return result == '.'
+# 
         
     def ParseTestString(self,s, verbose=True):
         p = LegalRef(LegalRef.RATTSFALL)
         #p = LegalRef(LegalRef.LAGRUM)
         p.verbose = verbose
-        print serialize(p.parse(s, u'http://lagen.nu/1:2#'))
+        print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
 
     # Resultat för ParseTestAll just nu:
     # ................NN.........F...............................N.N.......F..
@@ -922,20 +979,20 @@ class TestLegalRef:
     # jag rationaliserade bort de flesta format_*-funktionerna). Den
     # funkar om man pillar på ItemRef-produktionen, men då slutar
     # sfs-tricky-punkt att funka. Svårt problem.)
-    def ParseTestAll(self):
-        results = []
-        failures = []
-        for f in Util.listDirs(u"test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
-            result = self.ParseTest(f,verbose=False,quiet=True)
-            if not result:
-                failures.append(f)
-            results.append(result)
-
-        succeeded = len([r for r in results if r])
-        all       = len(results)
-        print "\n%s/%s" % (succeeded,all)
-        if failures:
-            print "\n".join(failures)
+#    def ParseTestAll(self):
+#        results = []
+#        failures = []
+#        for f in Util.listDirs(u"test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
+#            result = self.ParseTest(f,verbose=False,quiet=True)
+#            if not result:
+#                failures.append(f)
+#            results.append(result)
+#
+#        succeeded = len([r for r in results if r])
+#        all       = len(results)
+#        print "\n%s/%s" % (succeeded,all)
+#        if failures:
+#            print "\n".join(failures)
 
 if __name__ == "__main__":
     if sys.platform == 'win32':

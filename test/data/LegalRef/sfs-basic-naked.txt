@@ -1,5 +1,0 @@
-1998:204
-
-<list>
-  <Link uri="http://lagen.nu/1998:204">1998:204</Link>
-</list>  

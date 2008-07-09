@@ -1,0 +1,63 @@
+Bestämmelserna i 2 § andra och tredje styckena, 3, 7--9 och 11 §§,
+12 § första stycket, 13, 15, 16, 18--20 och 23 §§, 24 § första
+stycket, 25--26 b, 26 d -- 26 f, 26 i -- 28, 31--38, 41, 42 och
+50--52 §§ skall tillämpas på bilder som avses i denna paragraf.
+
+<list>
+  <unicode>Bestämmelserna i </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S2">2 § andra</Link>
+  <unicode> och </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S3">tredje styckena</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P3">3</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P7">7</Link>
+  <unicode>--</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P9">9</Link>
+  <unicode> och </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P11">11 §§</Link>
+  <unicode>,
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P12S1">12 § första stycket</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P13">13</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P15">15</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P16">16</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P18">18</Link>
+  <unicode>--</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P20">20</Link>
+  <unicode> och </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P23">23 §§</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P24S1">24 § första
+stycket</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P25">25</Link>
+  <unicode>--</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P26b">26 b</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P26d">26 d</Link>
+  <unicode> -- </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P26f">26 f</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P26i">26 i</Link>
+  <unicode> -- </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P28">28</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P31">31</Link>
+  <unicode>--</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P38">38</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P41">41</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P42">42</Link>
+  <unicode> och
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P50">50</Link>
+  <unicode>--</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P52">52 §§</Link>
+  <unicode> skall tillämpas på bilder som avses i denna paragraf.</unicode>
+</list>

@@ -1,7 +1,0 @@
-föreligger enligt tredje stycket 2 i denna paragraf
-
-<list>
-  <unicode>föreligger enligt </unicode>
-  <Link uri="http://lagen.nu/1:2#S3N2">tredje stycket 2</Link>
-  <unicode> i denna paragraf</unicode>
-</list>

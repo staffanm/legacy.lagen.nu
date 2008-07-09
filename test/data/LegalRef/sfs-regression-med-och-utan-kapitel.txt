@@ -1,8 +1,0 @@
-5 kap. 4 § blahonga. 3 § blahonga
-
-<list>
-  <Link uri="http://lagen.nu/1:2#K5P4">5 kap. 4 §</Link>
-  <unicode> blahonga. </unicode>
-  <Link uri="http://lagen.nu/1:2#P3">3 §</Link>
-  <unicode> blahonga</unicode>
-</list>

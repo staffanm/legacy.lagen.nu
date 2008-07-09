@@ -1,9 +1,0 @@
-En hänvisning till 1
-a §.
-
-<list>
-  <unicode>En hänvisning till </unicode>
-  <Link uri="http://lagen.nu/1:2#P1a">1
-a §</Link>
-  <unicode>.</unicode>
-</list>

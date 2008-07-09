@@ -228,6 +228,28 @@ class DVParser(LegalSource.Parser):
                    u'Sökord'    :DCT['subject']
                    }
 
+    # Listan härledd från containers.n3/rattsfallsforteckningar.n3 i
+    # rinfoprojektets källkod - en ambitiösare lösning vore att läsa
+    # in de faktiska N3-filerna i en rdflib-graf.
+    publikationsuri = {u'NJA': 'http://rinfo.lagrummet.se/ref/rff/nja',
+                       u'RH': 'http://rinfo.lagrummet.se/ref/rff/rh',
+                       u'MÖD': 'http://rinfo.lagrummet.se/ref/rff/mod',
+                       u'RÅ': 'http://rinfo.lagrummet.se/ref/rff/ra',
+                       u'MIG': 'http://rinfo.lagrummet.se/ref/rff/mig',
+                       u'AD': 'http://rinfo.lagrummet.se/ref/rff/ad',
+                       u'MD': 'http://rinfo.lagrummet.se/ref/rff/md',
+                       u'FÖD': 'http://rinfo.lagrummet.se/ref/rff/fod'}
+                       
+    containerid = {'http://rinfo.lagrummet.se/ref/rff/nja': '/publ/rattsfall/nja/',
+                   'http://rinfo.lagrummet.se/ref/rff/rh': '/publ/rattsfall/rh/',
+                   'http://rinfo.lagrummet.se/ref/rff/mod': '/publ/rattsfall/mod/',
+                   'http://rinfo.lagrummet.se/ref/rff/ra': '/publ/rattsfall/ra/',
+                   'http://rinfo.lagrummet.se/ref/rff/mig': '/publ/rattsfall/mig/',
+                   'http://rinfo.lagrummet.se/ref/rff/ad': '/publ/rattsfall/ad/',
+                   'http://rinfo.lagrummet.se/ref/rff/md': '/publ/rattsfall/md/',
+                   'http://rinfo.lagrummet.se/ref/rff/fod': '/publ/rattsfall/fod/'}
+
+                   
         
     def Parse(self,id,docfile):
         import codecs
@@ -367,18 +389,30 @@ class DVParser(LegalSource.Parser):
                 if m:
                     # print "success"
                     # FIXME: arsutgava should be typed as DateSubject
-                    head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
+                    if pred == 'rattsfallspublikation':
+                        head[u'[%s]'%pred] = self.publikationsuri[m.group(1)]
+                    else:
+                        head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
+            if not '[publikationsordinal]' in head: # Workaround för AD-domar
+                m = re.search(r'(\d{4}) nr (\d+)', txt)
+                if m:
+                    head['[publikationsordinal]'] = m.group(1) + ":" + m.group(2)
+                
 
         # Hitta rätt URI till det här referatet.
-        if u'Referat' in head:
-            res = rattsfall_parser.parse(head[u'Referat'])
-            if hasattr(res[0], 'uri'):
-                docuri = res[0].uri
-            else:
-                docuri = URIRef(u'http://lagen.nu/%s' % self.id)
-        else:
-            docuri = URIRef(u'http://lagen.nu/%s' % self.id)
-        head['xml:base'] = docuri
+        #if u'Referat' in head:
+        #    res = rattsfall_parser.parse(head[u'Referat'])
+        #    if hasattr(res[0], 'uri'):
+        #        docuri = res[0].uri
+        #    else:
+        #        docuri = URIRef(u'http://lagen.nu/%s' % self.id)
+        #else:
+        #    docuri = URIRef(u'http://lagen.nu/%s' % self.id)
+        #pprint.pprint(head)
+        assert '[rattsfallspublikation]' in head, "missing rinfo:rattsfallspublikation"
+        assert '[publikationsordinal]' in head, "missing rinfo:publikationsordinal"
+        
+        head['xml:base'] = "http://rinfo.lagrummet.se%s%s" % (self.containerid[head['[rattsfallspublikation]']], head['[publikationsordinal]'])
 
         # Putsa till avgörandedatum - det är ett date, inte en string
         head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
@@ -459,7 +493,7 @@ class DVManager(LegalSource.Manager):
     # CLASS-SPECIFIC HELPER FUNCTIONS
     ####################################################################
     
-    
+    # FIXME: This could and should be done in LegalSource
     def __doAll(self,dir,suffix,method):
         from sets import Set
         basefiles = Set()
@@ -573,16 +607,10 @@ class DVManager(LegalSource.Manager):
                        outfile,
                        {},
                        validate=False)
-        # print "Generating index for %s" % outfile
-        # ad = AnnotatedDoc(outfile)
-        # ad.Prepare()
 
     def GenerateAll(self):
-        #log.info("DV: GenerateAll temporarily disabled")
-        #return
         self.__doAllParsed(self.Generate)
         
-
     def DownloadAll(self):
         sd = DVDownloader(self.baseDir)
         sd.DownloadAll()
@@ -596,65 +624,7 @@ class DVManager(LegalSource.Manager):
         self.__doAllParsed(self.Index)
         tree = ET.ElementTree(self.indexroot)
         tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
-        
-        
-#     def Relate(self,basefile):
-#         start = time()
-#         sys.stdout.write("Relate: %s" % basefile)
-#         xmlFileName = "%s/%s/parsed/%s.xml" % (self.baseDir, __moduledir__,basefile)
-#         root = ET.ElementTree(file=xmlFileName).getroot()
-#         urn = root.get('urn') # or root.attribs['urn'] ?
-#         displayid = self._findDisplayId(root,basefile)
-#         targetUrns = []  # keeps track of other legal sources that this verdict references, so we can create Reference objects for them
-# 
-#         # delete all previous relations where this document is the object --
-#         # maybe that won't be needed if the typical GenerateAll scenario
-#         # begins with wiping the Relation table? It still is useful 
-#         # in the normal development scenario, though
-#         Relation.objects.filter(object__exact=urn.encode('utf-8')).delete()
-# 
-#         self._createRelation(urn,Predicate.IDENTIFIER,displayid,allowDuplicates=False)
-#         
-#         desc = root.findtext('Metadata/Rubrik')
-#         self._createRelation(urn,Predicate.DESCRIPTION, desc,allowDuplicates=False)
-#         
-#         for e in root.findall(u'Metadata/Sökord'):
-#             if e.text:
-#                 self._createRelation(urn,Predicate.SUBJECT,e.text)
-#         for e in root.findall(u'Metadata/Rättsfall'):
-#             try:
-#                 targetUrn = self._displayIdToURN(e.text,u'urn:x-dv')
-#                 self._createRelation(urn,Predicate.REFERENCES,targetUrn)
-#                 targetUrns.append(targetUrn)
-#             except LegalSource.IdNotFound:
-#                 pass
-#         for e in root.findall(u'Metadata/Lagrum/link'):
-#             if 'law' in e.attrib:
-#                 try:
-#                     targetUrn = self._createSFSUrn(e)
-#                     self._createRelation(urn,Predicate.REQUIRES,targetUrn)
-#                     targetUrns.append(targetUrn)
-#                 except LegalSource.IdNotFound:
-#                     pass
-#         
-#         sys.stdout.write("\tcreating %s references\t" % len(targetUrns))
-#         for targetUrn in targetUrns:
-#             self._createReference(basefile = self._UrnToBasefile(targetUrn),
-#                                   targetUrn = targetUrn, 
-#                                   sourceUrn = urn,
-#                                   refLabel = u'Rättsfall',
-#                                   displayid = displayid,
-#                                   alternative = None, # this will be filled in later through some other means
-#                                   desc = desc)
-#         sys.stdout.write(" %s sec\n" % (time() - start))
-#         self._flushReferenceCache()
-#         
-#     def RelateAll(self):
-#         # print "DV: RelateAll temporarily disabled"
-#         # return
-#         start = time()
-#         cnt = self.__doAllParsed(self.Relate)
-#         sys.stdout.write("RelateAll: %s documents handled in %s seconds" % (cnt,(time()-start)))
+
 
 if __name__ == "__main__":
     #if not '__file__' in dir():

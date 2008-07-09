@@ -267,9 +267,9 @@ class Manager:
     ####################################################################
     # GENERIC DIRECTLY-CALLABLE METHODS
     ####################################################################
-    def DumpTriples(self, filename):
+    def DumpTriples(self, filename, format="turtle"):
         g = self.__load_rdfa(filename)
-        print unicode(g.serialize(format="turtle", encoding="utf-8"), "utf-8")
+        print unicode(g.serialize(format=format, encoding="utf-8"), "utf-8")
 
     def __load_rdfa(self, filename, graph=None):
         import xml.dom.minidom

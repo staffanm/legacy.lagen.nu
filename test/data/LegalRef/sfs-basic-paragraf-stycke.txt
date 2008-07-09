@@ -1,9 +1,0 @@
-Om teckningen av aktier innebär att någon som inte har prövats
-enligt 3 § fjärde stycket 2 kommer [...]
-
-<list>
-  <unicode>Om teckningen av aktier innebär att någon som inte har prövats
-enligt </unicode>
-  <Link uri="http://lagen.nu/1:2#P3S4N2">3 § fjärde stycket 2</Link>
-  <unicode> kommer [...]</unicode>
-</list>

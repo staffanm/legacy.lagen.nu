@@ -1,9 +1,0 @@
-JB 22:2. RB 5:1 2 st.
-
-<list>
-  <Link uri="http://lagen.nu/1970:994#K22P2">JB 22:2</Link>
-  <unicode>. </unicode>
-  <Link uri="http://lagen.nu/1942:740#K5P1S2">RB 5:1 2 st.</Link>
-</list>
-
-
