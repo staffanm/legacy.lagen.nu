@@ -10,6 +10,7 @@ import logging
 # my libs
 from DispatchMixin import DispatchMixin
 import LegalSource
+import Util
 
 log = logging.getLogger('manager')
 
@@ -108,10 +109,30 @@ class Manager:
         log.info("Creating some main html pages here")
     
     def Publish(self):
-        cmd = "tar czf - %s | ssh staffan@vps.tomtebo.org \"cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s\"" % (self.baseDir, self.baseDir)
+        log.info("Creating zip file")
+        from zipfile import ZipFile, ZIP_DEFLATED
+        basepath = os.path.sep.join([self.baseDir,'sfs'])
+        zipname = basepath+os.path.sep+'all.zip'
+        z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
+        for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
+            zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')
+            print "adding %s to zip" % f
+            z.write(f, zipf)
+        z.close()
+        
+        #cmd = "tar czf - %s | ssh staffan@vps.tomtebo.org \"cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s\"" % (self.baseDir, self.baseDir)
         #print "executing %s" % cmd
         #os.system(cmd)
-        log.info("doing some scp:ing here")
+        log.info("Copying to target server")
+        cmd = "scp -B %s staffan@vps.tomtebo.org:/www/staffan/ferenda.lagen.nu" % zipname.replace(os.path.sep, "/")
+        (ret, stdout, stderr) = Util.runcmd(cmd)
+        if (ret == 0):
+            log.info("Fixing permissions and such")
+            cmd = "ssh staffan@vps.tomtebo.org 'chmod -R a+r /www/staffan/ferenda.lagen.nu/all.zip'"
+            Util.runcmd(cmd)
+            log.info("Published and done!")
+        else:
+            log.info("scp failed with error code %s (%s)" % (ret, stderr))
     
     def DoAll(self,module):
         start = time.time()
