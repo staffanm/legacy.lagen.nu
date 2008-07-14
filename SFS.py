@@ -8,14 +8,16 @@ rättsdatabaser.
 # import types
 # from cStringIO import StringIO
 # import pickle
-import sys, os, re
-from datetime import datetime
+import sys
+import os
+import re
 import codecs
 import htmlentitydefs
 import traceback
 import logging
 from pprint import pprint
 from time import time
+from datetime import datetime
 # python 2.5 required
 from collections import defaultdict
 import xml.etree.cElementTree as ET
@@ -28,8 +30,8 @@ from rdflib.Graph import Graph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries
-import LegalSource 
-from LegalRef import LegalRef,ParseError,Link,LinkSubject
+import LegalSource
+from LegalRef import LegalRef, ParseError, Link, LinkSubject
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
@@ -39,8 +41,8 @@ from DataObjects import UnicodeStructure, CompoundStructure, \
      PredicateType, DateStructure, serialize
 
 
-__version__   = (0,1)
-__author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
+__version__ = (0, 1)
+__author__ = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Författningar i SFS"
 __moduledir__ = "sfs"
 log = logging.getLogger(__moduledir__)
@@ -62,7 +64,9 @@ log = logging.getLogger(__moduledir__)
 # enskilda stycken) och/eller OrdinalStructure om det är ett objekt
 # som har nån sorts löpnummer, dvs kan sorteras på ett meningsfullt
 # sätt (exv kapitel och paragrafer, men inte rubriker).
-class Forfattning(CompoundStructure,TemporalStructure):
+
+
+class Forfattning(CompoundStructure, TemporalStructure):
     """Grundklass för en konsoliderad författningstext. Metadatan
     (SFS-numret, ansvarigt departement, 'uppdaterat t.o.m.' m.fl. fält
     lagras inte här, utan i en separat Forfattningsinfo-instans"""
@@ -72,6 +76,8 @@ class Forfattning(CompoundStructure,TemporalStructure):
 # något annat (det förekommer "aldrig" en hänvisning i en
 # rubriktext). Den ärver alltså från UnicodeStructure, inte
 # CompoundStructure.
+
+
 class Rubrik(UnicodeStructure,TemporalStructure):
     """En rubrik av något slag - kan vara en huvud- eller underrubrik
     i löptexten, en kapitelrubrik, eller något annat"""
@@ -539,8 +545,6 @@ class SFSParser(LegalSource.Parser):
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
                     
-            
-        
         xhtml = self.generate_xhtml(meta,body,registry,__moduledir__,globals())
         return xhtml
 
