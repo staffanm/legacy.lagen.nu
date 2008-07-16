@@ -240,17 +240,6 @@ class DVParser(LegalSource.Parser):
                        u'MD': 'http://rinfo.lagrummet.se/ref/rff/md',
                        u'FÖD': 'http://rinfo.lagrummet.se/ref/rff/fod'}
                        
-    containerid = {'http://rinfo.lagrummet.se/ref/rff/nja': '/publ/rattsfall/nja/',
-                   'http://rinfo.lagrummet.se/ref/rff/rh': '/publ/rattsfall/rh/',
-                   'http://rinfo.lagrummet.se/ref/rff/mod': '/publ/rattsfall/mod/',
-                   'http://rinfo.lagrummet.se/ref/rff/ra': '/publ/rattsfall/ra/',
-                   'http://rinfo.lagrummet.se/ref/rff/mig': '/publ/rattsfall/mig/',
-                   'http://rinfo.lagrummet.se/ref/rff/ad': '/publ/rattsfall/ad/',
-                   'http://rinfo.lagrummet.se/ref/rff/md': '/publ/rattsfall/md/',
-                   'http://rinfo.lagrummet.se/ref/rff/fod': '/publ/rattsfall/fod/'}
-
-                   
-        
     def Parse(self,id,docfile):
         import codecs
         self.id = id
@@ -390,6 +379,7 @@ class DVParser(LegalSource.Parser):
                     # print "success"
                     # FIXME: arsutgava should be typed as DateSubject
                     if pred == 'rattsfallspublikation':
+                        tmp_publikationsid = m.group(1)
                         head[u'[%s]'%pred] = self.publikationsuri[m.group(1)]
                     else:
                         head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
@@ -399,20 +389,23 @@ class DVParser(LegalSource.Parser):
                     head['[publikationsordinal]'] = m.group(1) + ":" + m.group(2)
                 
 
-        # Hitta rätt URI till det här referatet.
-        #if u'Referat' in head:
-        #    res = rattsfall_parser.parse(head[u'Referat'])
-        #    if hasattr(res[0], 'uri'):
-        #        docuri = res[0].uri
-        #    else:
-        #        docuri = URIRef(u'http://lagen.nu/%s' % self.id)
-        #else:
-        #    docuri = URIRef(u'http://lagen.nu/%s' % self.id)
-        #pprint.pprint(head)
+        # Find out correct URI for this case, preferably by leveraging
+        # the URI formatting code in LegalRef
         assert '[rattsfallspublikation]' in head, "missing rinfo:rattsfallspublikation"
         assert '[publikationsordinal]' in head, "missing rinfo:publikationsordinal"
+        head['xml:base'] = None
+        if u'Referat' in head:
+            res = rattsfall_parser.parse(head[u'Referat'])
+            if hasattr(res[0], 'uri'):
+                head['xml:base'] = res[0].uri
+
+        if not head['xml:base']:
+            log.warning(log.warning(u'%s: Could not find out URI for this doc automatically' % self.id))
+            attrs = {'domstol':tmp_publikationsid,
+                     'lopnr':head['publikationsordinal']}
+            head['xml:base'] = rattsfall_parser.make_uri(attrs)
         
-        head['xml:base'] = "http://rinfo.lagrummet.se%s%s" % (self.containerid[head['[rattsfallspublikation]']], head['[publikationsordinal]'])
+        # head['xml:base'] = "http://rinfo.lagrummet.se%s%s" % (self.containerid[head['[rattsfallspublikation]']], head['[publikationsordinal]'])
 
         # Putsa till avgörandedatum - det är ett date, inte en string
         head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),

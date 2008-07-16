@@ -24,7 +24,7 @@
     </py:for>
   </div>
 
-  <dl py:def="render_metadata(meta)" class="metadata">
+  <dl py:def="render_metadata(meta)" role="contentinfo">
     <py:for each="(key,val) in meta.items()" py:choose="">
       <dt py:content="key">Nyckel</dt>
       <div py:when="isinstance(val,list)" py:strip="">

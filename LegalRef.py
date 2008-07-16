@@ -275,10 +275,39 @@ class LegalRef:
                 normres.append(node)
         return normres
 
+    # Experimental stuff - modelled after URIMinter in
+    # rinfosystem. The idea is to submit a rdf graph centered around a
+    # BNode, and create the canonical URI for that BNode by leveraging
+    # the existing *_format_uri methods, which operates on a much
+    # simpler dictionary.
     def make_uri(self,node, graph):
-        """Given a node and a RDF graph containing said node"""
-        # find out what the blan
-        return "http://blahonga.org/"
+        """Given a node and a RDF graph containing said node, construct a URI for the node"""
+        rinfo = Namespace(Utils.ns['rinfo'])
+        pred_to_attrib = {
+            rinfo['rattsfallspublikation']: 'domstol',
+            rinfo['artal']: 'ar',
+            rinfo['sidnummer']: 'sidnr',
+            rinfo['publikationsordinal']: 'lopnr'
+            }
+        type_to_method = {
+            rinfo['KonsolideradGrundforfattning']:sfs_format_uri,
+            rinfo['VagledandeDomstolsavgorande']:rattsfall_format_uri
+            }
+        attribs = {}
+        print "node: %s (%s)" % (node, type(node))
+        # We SHOULD be able to just get the type by calling
+        # graph.subjects(node, RDF.type), but that call does not
+        # return any nodes for some reason
+        for (o,p,s) in graph:
+            print "Node %s %s %s" % (o,p,s)
+            if o == node and p == RDF.type:
+                method = type_to_method[s]
+                print "setting method to %s" % method
+            else:
+                attribs[pred_to_attrib[p]] = str(s)
+                print "setting attrib %s to %s" % (pred_to_attrib[p], s)
+        uri = method(attribs)
+        return uri
 
     def find_attributes(self,parts,extra={}):
         """recurses through a parse tree and creates a dictionary of
@@ -802,15 +831,33 @@ class LegalRef:
     ################################################################
     # KOD FÖR RATTSFALL
     def rattsfall_format_uri(self,attributes):
-        res = self.baseuri_attributes['baseuri']
+        # Listan härledd från containers.n3/rattsfallsforteckningar.n3 i
+        # rinfoprojektets källkod - en ambitiösare lösning vore att läsa
+        # in de faktiska N3-filerna i en rdflib-graf.
+        containerid = {u'NJA': '/publ/rattsfall/nja/',
+                       u'RH': '/publ/rattsfall/rh/',
+                       u'MÖD': '/publ/rattsfall/mod/',
+                       u'RÅ': '/publ/rattsfall/ra/',
+                       u'MIG': '/publ/rattsfall/mig/',
+                       u'AD': '/publ/rattsfall/ad/',
+                       u'MD': '/publ/rattsfall/md/',
+                       u'FÖD': '/publ/rattsfall/fod/'}
+
+        # res = self.baseuri_attributes['baseuri']
+        assert 'domstol' in attributes, "No court provided"
+        assert attributes['domstol'] in containerid, "%s is an unknown court" % attributes['domstol']
+        res = "http://rinfo.lagrummet.se"+containerid[attributes['domstol']]
+        if ":" in attributes['lopnr']:
+            (attributes['ar'], attributes['lopnr']) = lopnr.split(":", 1)
+            
         if attributes['domstol'] == u'NJA':
-            res += u'NJA_%s_s_%s' % (attributes['ar'], attributes['lopnr'])
-        elif attributes['domstol'] == u'RÅ':
-            res += u'RÅ_%s_ref_%s' % (attributes['ar'], attributes['lopnr'])
-        elif attributes['domstol'] == u'AD':
-            res += u'AD_%s_nr_%s' % (attributes['ar'], attributes['lopnr'])
+            # FIXME: URIs should be based on publikationsordinal, not
+            # pagenumber (which this in effect is) - but this requires
+            # a big lookup table/database/graph with
+            # pagenumber-to-ordinal-mappings
+            res += '%ss%s' % (attributes['ar'], attributes['lopnr'])
         else:
-            res += u'%s_%s:%s' % (attributes['domstol'], attributes['ar'], attributes['lopnr'])
+            res += '%s:%s' % (attributes['ar'], attributes['lopnr'])
         return res
 
 from FilebasedTester import FilebasedTester
@@ -833,9 +880,14 @@ class TestLegalRef(FilebasedTester):
     def TestURI(self,data):
         g = Graph()
         g.parse(StringIO(data),format="n3")
+        #print "Loaded graph, %s tuples" % len(g)
         # find the bnode that has a RDF.type predicate
-        bnode = None
+        for (o,p,s) in g:
+            if p == RDF.type:
+                bnode = o
+
         p = LegalRef(LegalRef.LAGRUM)
+        #print "calling make_uri"
         res = p.make_uri(bnode,g)
         return res
         

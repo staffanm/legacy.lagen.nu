@@ -39,7 +39,7 @@
 
     <body>
       ${render_metadata(meta)}
-      <section class="doctext">
+      <section role="main">
 	<py:for each="part in body" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>

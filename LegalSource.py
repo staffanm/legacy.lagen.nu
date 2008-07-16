@@ -7,6 +7,7 @@ from time import time
 import locale
 import xml.etree.cElementTree as ET
 import logging
+import difflib
 
 # 3rd party modules
 import BeautifulSoup
@@ -133,8 +134,8 @@ class Parser:
         try:
             res = stream.render()
         except Exception, e:
-            log.error(u'Fel vid templaterendring (%s):%r' % (e.__class__.__name__,sys.exc_info()[1]))
-            raise e
+            log.error(u'%s: Fel vid templaterendring: %r' % (self.id, sys.exc_info()[1]))
+            raise
         if 'class="warning"' in res:
             start = res.index('class="warning">')
             end = res.index('</',start+16)
@@ -155,10 +156,20 @@ class Parser:
         """Givet en textsträng som refererar till någon typ av
         organisation, person el. dyl (exv 'Justitiedepartementet
         Gransk', returnerar en URI som är auktoritetspost för denna."""
+        keys = []
         for (key, value) in self.authority_rec.items():
             if label.lower().startswith(key.lower()):
                 return self.storage_uri_value(value)
-        raise KeyError(label)
+            else:
+                keys.append(key)
+
+        fuzz = difflib.get_close_matches(label, keys, 1, 0.8)
+        if fuzz:
+            log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, label, fuzz[0]))
+            return self.find_authority_rec(fuzz[0])
+        else:
+            log.warning(u"%s: Ingen exakt match för '%s'" % (self.id, label))
+            raise KeyError(label)
 
     def storage_uri_value(self, value):
         return value.replace(" ", '_')

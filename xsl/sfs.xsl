@@ -49,7 +49,7 @@
     <div><xsl:apply-templates/></div>
   </xsl:template>
 
-  <xsl:template match="xht2:dl[@class='metadata']">
+  <xsl:template match="xht2:dl[@role='contentinfo']">
     <!-- emit nothing -->
   </xsl:template>
 
@@ -64,7 +64,7 @@
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
-  <xsl:template match="xht2:dl[@class='metadata']" mode="refs">
+  <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
     <!-- Den stora metadata-definitionslistan innehåller en massa som
          inte är intressant att visa för slutanvändaren. Filtrera ut
          de intressanta bitarna -->
@@ -102,7 +102,7 @@
     <!-- emit nothing -->
   </xsl:template>
 
-  <xsl:template match="xht2:section[@class='register']" mode="refs">
+  <xsl:template match="xht2:section[@role='secondary']" mode="refs">
     <!-- emit nothing -->
   </xsl:template>
 

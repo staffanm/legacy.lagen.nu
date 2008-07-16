@@ -406,7 +406,7 @@ XSD = Namespace(Util.ns['xsd'])
 RINFO = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
 class SFSParser(LegalSource.Parser):
-    re_SimpleSfsId     = re.compile(r'^\d{4}:\d+\s*$').match
+    re_SimpleSfsId     = re.compile(r'(\d{4}:\d+)\s*$')
     re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
     re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
     re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
@@ -487,23 +487,29 @@ class SFSParser(LegalSource.Parser):
             f.close()
             (meta, body) = self._parseSFST(plaintextfile, registry)
         except IOError:
+            log.warning("%s: Fulltext saknas" % self.id)
             # extractSFST misslyckades, då det fanns någon post i
             # SFST-databasen. Fejka ihop vad vi kan utifrån SFSR-datat
             # print serialize(registry)
-            head = Forfattningsinfo()
-            head['Rubrik'] = registry.rubrik
+            meta = Forfattningsinfo()
+            meta['Rubrik'] = registry.rubrik
+            meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
+                                            uri=self.find_authority_rec("Regeringskansliet"),
+                                            predicate=self.labels[u'Utgivare'])
+            meta[u'Departement/ myndighet'] = None
+            dateval = "1970-01-01" # heh
+            meta[u'Utfärdad'] = DateSubject(datetime.strptime(dateval, '%Y-%m-%d'), predicate=self.labels[u'Utfärdad'])
             fldmap = {u'sfsnr' :u'SFS nr',
                       u'rubrik':u'Rubrik',
                       u'ansvarigmyndighet':u'Departement/ myndighet'}
             for k,v in registry[0].items():
                 if k in fldmap:
-                    head[fldmap[k]] = v
+                    meta[fldmap[k]] = v
             body = Forfattning()
-            s = Stycke([u'(Lagtext saknas)'])
+
+            kwargs = {'id':u'S1'}
+            s = Stycke([u'(Lagtext saknas)'], **kwargs)
             body.append(s)
-            # FIXME: __makeMetadata är borttagen och införd i
-            # makeHeader - kompensera på något vis. Kanske vi bara kan
-            # skapa en Forfattningsinfo härifrån?
             
         # Lägg till information om konsolideringsunderlag och
         # förarbeten från SFSR-datat
@@ -539,8 +545,8 @@ class SFSParser(LegalSource.Parser):
                         break
                 if not found:
                     log.warning(u'%s: Övergångsbestämmelse för %s saknar motsvarande registerpost' % (self.id, ob.sfsnr))
-                    kwargs = {id:u'L'+ob.sfsnr,
-                              uri:u'http://lagen.nu/'+ob.sfsnr}
+                    kwargs = {'id':u'L'+ob.sfsnr,
+                              'uri':u'http://lagen.nu/'+ob.sfsnr}
                     rp = Registerpost(**kwargs)
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
@@ -616,9 +622,12 @@ class SFSParser(LegalSource.Parser):
                             p.uri = u'http://lagen.nu/' + val
                         elif key == u'Ansvarig myndighet':
                             # p['ansvarigmyndighet'] = val
-                            authrec = self.find_authority_rec(val)
-                            p[key] = LinkSubject(val, uri=unicode(authrec[0]),
-                                                 predicate=self.labels[key])
+                            try:
+                                authrec = self.find_authority_rec(val)
+                                p[key] = LinkSubject(val, uri=unicode(authrec[0]),
+                                                     predicate=self.labels[key])
+                            except Exception, e:
+                                p[key] = val
                         elif key == u'Rubrik':
                             # p['rubrik'] = val
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
@@ -646,7 +655,7 @@ class SFSParser(LegalSource.Parser):
                                       changecat == 'forts. giltighet'):
                                     # FIXME: Is there something smart
                                     # we could do with these?
-                                    pass
+                                    pred = None
                                 else:
                                     log.warning(u"%s: Okänd omfattningstyp '%s'" % (self.id, changecat))
                                     pred = None
@@ -817,9 +826,13 @@ class SFSParser(LegalSource.Parser):
                                      predicate=self.labels[key])
             elif key == u'Ändring införd':
                 # återanvänd URI-strategin från LegalRef
-                val = val.replace(u't.o.m. SFS ','')
-                uri = self.lagrum_parser.parse(val)[0].uri
-                meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+                m = self.re_SimpleSfsId.search(val)
+                if m:
+                    uri = self.lagrum_parser.parse(m.group(1))[0].uri
+                    # uri = self.lagrum_parser.parse(val)[0].uri
+                    meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+                else:
+                    log.warning(u"%s: Kunde inte tolka SFS-numret för senaste ändring" % self.id)
 
             elif key == u'Författningen har upphävts genom':
                 val = val.replace(u'SFS ','')
@@ -1696,7 +1709,7 @@ class SFSParser(LegalSource.Parser):
                                           u'Ikraftträdande- och övergångsbestämmelser']
 
     def isOvergangsbestammelse(self):
-        return self.re_SimpleSfsId(self.reader.peekline())
+        return self.re_SimpleSfsId.match(self.reader.peekline())
 
 
     def isBilaga(self):

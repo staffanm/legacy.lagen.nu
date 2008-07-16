@@ -24,7 +24,9 @@
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
       <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
       <link rel="dct:publisher" href="${meta[u'Utgivare'].uri}"/>
-      <link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
+      <py:if test="u'uri' in meta[u'Departement/ myndighet']">
+	<link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
+      </py:if>
       <meta property="rinfo:utfardandedatum"
             content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
       <py:if test="u'Ikraft' in meta">
@@ -241,7 +243,7 @@
       <h property="dct:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
       ${render_metadata(meta)}
       <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
-      <section class="forfattningstext">
+      <section role="main">
       <py:for each="part in body" py:choose="">
 	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>
 	<div py:when="isinstance(part, UpphavtKapitel)"  py:strip="">${render_upphavtkapitel(part)}</div>
@@ -257,7 +259,7 @@
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
       </section>
-      <section class="register">
+      <section role="secondary">
 	<h1>Ändringar och övergångsbestämmelser</h1>
 	<py:for each="rp in registry">
 	  ${render_registerpost(rp)}
