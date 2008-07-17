@@ -23,6 +23,7 @@
 #                       'Templ': {'dir': 'test/data/SFSTempl',
 #                                 'testsuffix': '.xml',
 #                                 'answersuffix', '.xht2'}}
+import os
 import sys
 import re
 import traceback
@@ -40,30 +41,31 @@ class FilebasedTester:
     TEST_OK = "."
     def RunTest(self, method=None, file=None):
         if file:
-            self.__run_single_test(method, file)
+            return self.__run_single_test(method, file)
         elif method:
-            self.__run_single_testclass(method)
+            return self.__run_single_testclass(method)
         else:
-            self.__run_all_testclasses()
+            return self.__run_all_testclasses()
 
     def __run_all_testclasses(self):
         all_cnt = 0
         all_fail = 0
         for method in self.testparams.keys():
-            sys.stdout.write("%s:" % method)
+            sys.stdout.write("%s.%s:" % (self.__class__.__name__,method))
             (fail, cnt) = self.__run_single_testclass(method, True)
             all_cnt += cnt
             all_fail += fail
-        sys.stdout.write("%s tests of %s passed\n" % (all_cnt, all_fail))
+        sys.stdout.write("%s: %s tests of %s passed\n" % (self.__class__.__name__,all_cnt-all_fail, all_cnt))
         if cnt > 0 and fail == 0:
             sys.stdout.write("AWESOME!")
+        return (all_fail,all_cnt)
                          
             
     def __run_single_testclass(self, method, quiet=False):
         cnt = 0
         failed = []
-        for file in Util.listDirs(self.testparams[method]['dir'],
-                                  self.testparams[method]['testext']):
+        for file in sorted(list(Util.listDirs(self.testparams[method]['dir'],
+                                              self.testparams[method]['testext']))):
             res = self.__run_single_test(method, file, True)
             cnt += 1
             if res != self.TEST_OK:
@@ -77,14 +79,24 @@ class FilebasedTester:
         return (len(failed), cnt)
 
     def __run_single_test(self, method, testfile, quiet=False):
-        encoding = 'iso-8859-1'
+        if 'testencoding' in self.testparams[method]:
+            encoding=self.testparams[method]['testencoding']
+        else:
+            encoding = 'iso-8859-1'
         if 'answerext' in self.testparams[method]:
-            answerfile = file.replace(self.testparams[method]['testext'],
-                                      self.testparams[method]['answerext'])
+            answerfile = testfile.replace(self.testparams[method]['testext'],
+                                          self.testparams[method]['answerext'])
+            #print "reading %s as %s" % (testfile, encoding)
+            testdata = codecs.open(testfile,encoding=encoding).read()
             if not os.path.exists(answerfile):
                 answer = ""
-            testdata = codecs.open(testfile,encoding=encoding).read()
-            answerdata = codecs.open(answerfile,encoding=encoding).read()
+            else:
+                if 'answerencoding' in self.testparams[method]:
+                    ansenc=self.testparams[method]['answerencoding']
+                else:
+                    ansenc=encoding
+                #print "reading %s as %s" % (testfile, ansenc)
+                answer = codecs.open(answerfile,encoding=ansenc).read()
         else:
             # all = open(testfile).read()
             all = codecs.open(testfile,encoding=encoding).read()

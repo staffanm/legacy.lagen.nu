@@ -35,7 +35,7 @@ from LegalRef import LegalRef, ParseError, Link, LinkSubject
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
-
+import FilebasedTester
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, TemporalStructure, OrdinalStructure, \
      PredicateType, DateStructure, serialize
@@ -1717,7 +1717,7 @@ class SFSParser(LegalSource.Parser):
 
 
         
-class SFSManager(LegalSource.Manager):
+class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
 
     ####################################################################
@@ -1839,102 +1839,6 @@ class SFSManager(LegalSource.Manager):
         #return
         self.__doAll('downloaded/sfst','html',self.Parse)
 
-    def ParseTest(self,testfile,verbose=False, quiet=False):
-        if not quiet:
-            print("Running test %s\n------------------------------" % testfile)
-
-        try:
-            p = SFSParser()
-            p.verbose = verbose
-            if quiet:
-                log.setLevel(logging.CRITICAL)
-                for k in p.trace.keys():
-                    p.trace[k].setLevel(logging.NOTSET)
-                    
-            p.lagrum_parser.verbose = verbose
-            p.reader = TextReader(testfile,encoding='iso-8859-1',linesep=TextReader.DOS)
-            p.reader.autostrip=True
-            b = p.makeForfattning()
-            p._construct_ids(b, u'', u'http://lagen.nu/sfs/1234:567#')
-            testlines = [x.rstrip('\r') for x in serialize(b).split("\n")]
-            keyfile = testfile.replace(".txt",".xml")
-            if os.path.exists(keyfile):
-                keylines = [x.rstrip('\r\n') for x in codecs.open(keyfile,encoding='utf-8').readlines()]
-            else:
-                keylines = []
-            from difflib import Differ
-            difflines = list(Differ().compare(keylines,testlines))
-            diffedlines = [x for x in difflines if x[0] != ' ']
-
-            if len(diffedlines) > 0:
-                if keylines == []:
-                    result = "N"
-                else:
-                    result = "F"
-            else:
-                result = "."
-
-        except Exception:
-            result = "E"
-
-        if quiet:
-            sys.stdout.write(result)
-            return result == '.'
-
-        else:
-            if result == '.':
-                sys.stdout.write("OK %s" % testfile)
-                return True
-            elif result == 'F':
-                sys.stdout.write("FAIL %s\n" % testfile)
-                sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
-                return False
-            elif result == 'N':
-                sys.stdout.write("NOT IMPLEMENTED %s\n" % testfile)
-                sys.stdout.write(u'\n'.join([x.rstrip('\n') for x in difflines]))
-                return False
-            elif result == 'E':
-                # Traceback-informationen i sys.exc_info()[2] är
-                # str-objekt med samma teckenkodning som
-                # källkodsfilen. Vi omvandlar till unicode innan
-                # utskrift eftersom det annars blir Dåligt om svenska
-                # tecken förekommer i källkodsraderna i tracebacken.
-                formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-                print(u'%s: %s:\nTraceback (most recent call last):\n%s%s: %s' %
-                      (testfile,
-                       sys.exc_info()[0].__name__,
-                       u''.join(formatted_tb),
-                       sys.exc_info()[0].__name__,
-                       sys.exc_info()[1]))
-
-    # Resultat för ParseTestAll just nu:
-    # ..........N.......N.......N..N..........N..NN.NF.N....N.
-    # 45/56
-    # test\data\SFS\extra-overgangsbestammelse-med-rubriker.txt
-    # test\data\SFS\regression-avdelning-overgangsbestammelser.txt
-    # test\data\SFS\regression-stycke-inte-rubrik.txt
-    # test\data\SFS\regression-tabell-tva-korta-vansterceller.txt
-    # test\data\SFS\temporal-kapitelrubriker.txt
-    # test\data\SFS\temporal-rubriker.txt
-    # test\data\SFS\tricky-felstavade-overgangsbestammelser.txt
-    # test\data\SFS\tricky-lopande-numrering.txt
-    # test\data\SFS\tricky-nastlade-listor.txt
-    # test\data\SFS\tricky-okand-aldre-lag.txt
-    # test\data\SFS\tricky-tabell-sju-kolumner.txt
-    def ParseTestAll(self):
-        results = []
-        failures = []
-        for f in Util.listDirs(u"test%sdata%sSFS" % (os.path.sep,os.path.sep), ".txt"):
-            result = self.ParseTest(f,verbose=False,quiet=True)
-            if not result:
-                failures.append(f)
-            results.append(result)
-
-        succeeded = len([r for r in results if r])
-        all       = len(results)
-        print "\n%s/%s" % (succeeded,all)
-        if failures:
-            print "\n".join(failures)
 
     def Indexpages(self):
         # * öppna rdf-grafen
@@ -2048,6 +1952,49 @@ class SFSManager(LegalSource.Manager):
         sd = SFSDownloader(self.baseDir)
         sd.DownloadNew()
 
+
+    ################################################################
+    # IMPLEMENTATION OF FilebasedTester interface
+    ################################################################
+    testparams = {'Parse': {'dir': u'test/data/SFS',
+                            'testext':'.txt',
+                            'testencoding':'iso-8859-1',
+                            'answerext':'.xml',
+                            'answerencoding':'utf-8'
+                            }}
+    def TestParse(self,data):
+        # FIXME: Set this from FilebasedTester
+        verbose=False
+        quiet=True
+        p = SFSParser()
+        p.verbose = verbose
+        p.lagrum_parser.verbose = verbose
+        if quiet:
+            log.setLevel(logging.CRITICAL)
+            for k in p.trace.keys():
+                p.trace[k].setLevel(logging.NOTSET)
+
+        p.reader = TextReader(ustring=data,encoding='iso-8859-1',linesep=TextReader.DOS)
+        p.reader.autostrip=True
+        b = p.makeForfattning()
+        p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
+        return serialize(b)            
+
+
+    # Resultat för ParseTestAll just nu:
+    # ..........N.......N.......N..N..........N..NN.NF.N....N.
+    # 45/56
+    # test\data\SFS\extra-overgangsbestammelse-med-rubriker.txt
+    # test\data\SFS\regression-avdelning-overgangsbestammelser.txt
+    # test\data\SFS\regression-stycke-inte-rubrik.txt
+    # test\data\SFS\regression-tabell-tva-korta-vansterceller.txt
+    # test\data\SFS\temporal-kapitelrubriker.txt
+    # test\data\SFS\temporal-rubriker.txt
+    # test\data\SFS\tricky-felstavade-overgangsbestammelser.txt
+    # test\data\SFS\tricky-lopande-numrering.txt
+    # test\data\SFS\tricky-nastlade-listor.txt
+    # test\data\SFS\tricky-okand-aldre-lag.txt
+    # test\data\SFS\tricky-tabell-sju-kolumner.txt
 
 if __name__ == "__main__":
     #if not '__file__' in dir():

@@ -34,8 +34,11 @@ if sys.platform == 'win32':
 else:
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding
+        if defaultencoding == 'ANSI_X3.4-1968': # really?!
+            defaultencoding = 'iso-8859-1'
     else:
         defaultencoding = locale.getpreferredencoding()
+        
 # print "setting sys.stdout to a '%s' writer" % defaultencoding
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
@@ -175,7 +178,7 @@ class Parser:
         return value.replace(" ", '_')
 
 class Manager:
-    def __init__(self,baseDir,moduleDir):
+    def __init__(self,baseDir=None,moduleDir=None):
         """basedir is the top-level directory in which all file-based data is
         stored and handled. moduledir is a sublevel directory that is unique
         for each LegalSource.Manager subclass."""

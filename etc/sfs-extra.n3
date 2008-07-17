@@ -30,3 +30,4 @@
 <http://lagen.nu/1982:80>	rdfs:label "anställningsskyddslagen";	dct:alternate "LAS" .
 <http://lagen.nu/2006:304>	rdfs:label "rättsprövningslagen";	dct:alternate "RpL" .
 <http://lagen.nu/1998:980>	rdfs:label "körkortsförordningen" .
+<http://lagen.nu/1976:19>       rdfs:label "lagföringslagen" .

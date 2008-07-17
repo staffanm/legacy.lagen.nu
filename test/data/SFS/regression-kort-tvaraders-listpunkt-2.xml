@@ -6,20 +6,16 @@
         <Listelement id="P3S1N1" ordinal="1">
           <unicode>1. ändrad postadress,</unicode>
         </Listelement><Listelement id="P3S1N2" ordinal="2">
-          <unicode>2. eget utträde från uppdrag som revisor, revisorssuppleant,
-lekmannarevisor eller suppleant för lekmannarevisor,</unicode>
+          <unicode>2. eget utträde från uppdrag som revisor, revisorssuppleant, lekmannarevisor eller suppleant för lekmannarevisor,</unicode>
         </Listelement><Listelement id="P3S1N3" ordinal="3">
-          <unicode>3. beslut om vinstutdelning enligt lagrumshänvi
-sning i namngivna lagar,</unicode>
+          <unicode>3. beslut om vinstutdelning enligt lagrumshänvi sning i namngivna lagar,</unicode>
         </Listelement><Listelement id="P3S1N4" ordinal="4">
-          <unicode>4. förhållanden som en likvidator ska anmäla, såvida annat inte
-följer av lagrum,</unicode>
+          <unicode>4. förhållanden som en likvidator ska anmäla, såvida annat inte följer av lagrum,</unicode>
         </Listelement><Listelement id="P3S1N5" ordinal="5">
           <unicode>5. en underrättelse från domstol, eller</unicode>
         </Listelement><Listelement id="P3S1N6" ordinal="6">
-          <unicode>6. en underrättelse från en behörig utländsk myndighet enligt
-ett lagrum i en namngiven lag. </unicode>
-          <Link uri="http://lagen.nu/sfs/1234:567#L2008:24">Förordning (2008:24).</Link>
+          <unicode>6. en underrättelse från en behörig utländsk myndighet enligt ett lagrum i en namngiven lag. </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#L2008:24">Förordning (2008:24).</LinkSubject>
         </Listelement>
       </NumreradLista>
     </Stycke>
@@ -27,8 +23,7 @@ ett lagrum i en namngiven lag. </unicode>
   <Rubrik id="R1">Ansökningsärenden</Rubrik>
   <Paragraf id="P4" ordinal="4">
     <Stycke id="P4S1">
-      <unicode>För handläggning och prövning av ansökan enligt skall, i de fall
-som anges i 1-7, avgifter betalas med följande belopp.</unicode>
+      <unicode>För handläggning och prövning av ansökan enligt skall, i de fall som anges i 1-7, avgifter betalas med följande belopp.</unicode>
     </Stycke>
   </Paragraf>
 </Forfattning>

@@ -223,7 +223,7 @@ def __serializeNode(node):
     if hasattr(node,'__dict__'):
         for key in [x for x in node.__dict__.keys() if not x.startswith('__')]:
             val = node.__dict__[key]
-            if isinstance(val,unicode):
+            if (isinstance(val,unicode) or isinstance(val,str)):
                 e.set(key,val)
             else:
                 e.set(key,repr(val))

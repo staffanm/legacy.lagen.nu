@@ -39,7 +39,15 @@ class Manager:
                 else:
                     res[modulename] = '<no description>'
         return res
-    
+
+    def _findTester(self,module):
+        import FilebasedTester
+        classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
+        for classname in classes.keys():
+            if (FilebasedTester.FilebasedTester in inspect.getmro(classes[classname])
+                and str(classes[classname]).startswith(module.__name__)):
+                return classes[classname]
+        
     def _findManager(self,module):
         if module.__name__ == u'LegalSource':
             return # specialcase: LegalSource has a LegalSource.Manager class, but should not be directly instansiated
@@ -50,6 +58,34 @@ class Manager:
                 and str(classes[classname]).startswith(module.__name__)):
                 return classes[classname]
 
+    def _doTest(self,module):
+        action = 'RunTest'
+        all_fail = 0
+        all_cnt = 0
+        if module == 'all':
+            modules = self._findModules().keys()
+            modules.append('LegalRef')
+        else:
+            modules = (module,)
+        for m in modules:
+            mod = __import__(m, globals(), locals(), [])
+            testClass = self._findTester(mod)
+            if testClass:
+                tester = testClass()
+                if hasattr(tester,action):
+                    #log.info(u'%s: calling %s' % (m,action))
+                    method = getattr(tester,action)
+                    (fail,cnt) = method()
+                    all_fail += fail
+                    all_cnt  += cnt
+                else:
+                    log.warning(u"Module %s's tester has no %s action" % (m,action))
+                    # pass
+            else:
+                pass
+                # log.warning(u"Class %s has no test module" % m)
+        print "Total: %s of %s tests succeeded" % (all_cnt-all_fail, all_cnt)
+                            
     def _doAction(self,action,module):
         if module == 'all':
             modules = self._findModules().keys()
@@ -60,6 +96,7 @@ class Manager:
             start = time.time()
             mod = __import__(m, globals(), locals(), [])
             mgrClass = self._findManager(mod)
+                
             if mgrClass:
                 if hasattr(mod,'__moduledir__'):
                     mgr = mgrClass(self.baseDir, mod.__moduledir__)
@@ -70,7 +107,7 @@ class Manager:
                     method = getattr(mgr,action)
                     method()
                 else:
-                    print "Module %s's manager has no %s action" % (m,action)
+                    log.warning(u"Module %s's manager has no %s action" % (m,action))
             else:
                 print "Module %s has no Manager class" % m
             log.info(u'%s: %s finished in %s' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
@@ -101,8 +138,8 @@ class Manager:
     def GenerateAll(self,module):
         self._doAction('GenerateAll',module)
     
-    def Test(self, module):
-        self._doAction('Test',module)
+    def RunTest(self, module):
+        self._doTest(module)
 
     def GenerateSite(self):
         self._doAction('Indexpages', 'all')
