@@ -1,10 +1,7 @@
 <Forfattning>
   <Paragraf id="P1" ordinal="1">
     <Stycke id="P1S1">
-      <unicode>En förenklad version av sekrl sextonde kapitels
-första paragraf utan direkta lagrumshänvisningar, avsedd att testa
-tabellkodens förmåga att hantera tomma högerceller, ojämna
-kolumnplaceringar samt avavstavning</unicode>
+      <unicode>En förenklad version av sekrl sextonde kapitels första paragraf utan direkta lagrumshänvisningar, avsedd att testa tabellkodens förmåga att hantera tomma högerceller, ojämna kolumnplaceringar samt avavstavning</unicode>
       <Tabell>
         <Tabellrad>
           <Tabellcell>

@@ -1,5 +1,5 @@
 NJA 1998 s. 14
 
 <list>
-  <Link uri="http://lagen.nu/NJA_1998_s_14">NJA 1998 s. 14</Link>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/nja/1998s14">NJA 1998 s. 14</Link>
 </list>

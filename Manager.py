@@ -12,7 +12,7 @@ from DispatchMixin import DispatchMixin
 import LegalSource
 import Util
 
-log = logging.getLogger('manager')
+log = logging.getLogger('mgr')
 
 class Manager:
     def __init__(self,baseDir):
@@ -153,7 +153,6 @@ class Manager:
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
         for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
             zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')
-            print "adding %s to zip" % f
             z.write(f, zipf)
         z.close()
         

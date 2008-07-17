@@ -6,16 +6,15 @@
           <unicode>1. Denna lag träder i kraft den 1 april 1994.</unicode>
         </Listelement>
       </NumreradLista><Stycke id="L1993:1617S1">
-        <unicode>Vid ikraftträdandet skall följande författningar upphöra att gälla,
-nämligen</unicode>
+        <unicode>Vid ikraftträdandet skall följande författningar upphöra att gälla, nämligen</unicode>
         <Bokstavslista>
           <Listelement id="L1993:1617S1Na" ordinal="a">
             <unicode>a) lagen (</unicode>
-            <Link uri="http://lagen.nu/sfs/1956:618">1956:618</Link>
+            <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1956:618">1956:618</LinkSubject>
             <unicode>) om allmänna sammankomster,</unicode>
           </Listelement><Listelement id="L1993:1617S1Nb" ordinal="b">
             <unicode>b) allmänna ordningsstadgan (</unicode>
-            <Link uri="http://lagen.nu/sfs/1956:617">1956:617</Link>
+            <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1956:617">1956:617</LinkSubject>
             <unicode>),</unicode>
           </Listelement>
         </Bokstavslista>

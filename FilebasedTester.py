@@ -79,6 +79,7 @@ class FilebasedTester:
         return (len(failed), cnt)
 
     def __run_single_test(self, method, testfile, quiet=False):
+        # quiet = False
         if 'testencoding' in self.testparams[method]:
             encoding=self.testparams[method]['testencoding']
         else:

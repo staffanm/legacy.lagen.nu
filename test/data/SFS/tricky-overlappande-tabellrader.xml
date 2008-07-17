@@ -4,24 +4,33 @@ yttrandefrihetsgrundlagens områden för brott mot
 tystnadsplikt">
     <Paragraf id="K16P1" ordinal="1">
       <Stycke id="K16P1S1">
-        <unicode>Att friheten att meddela och offentliggöra uppgifter i vissa fall
-är begränsad framgår. De fall av uppsåtligt åsidosättande av
-tystnadsplikt, i vilka nämnda frihet i övrigt är begränsad, är de där
-tystnadsplikten följer av</unicode>
+        <unicode>Att friheten att meddela och offentliggöra uppgifter i vissa fall är begränsad framgår. De fall av uppsåtligt åsidosättande av tystnadsplikt, i vilka nämnda frihet i övrigt är begränsad, är de där tystnadsplikten följer av</unicode>
         <Tabell>
           <Tabellrad>
             <Tabellcell>
-              <unicode>1. beslut enligt 10 kap. 7 § tredje stycket andra meningen regeringsformen</unicode>
+              <unicode>1. beslut enligt </unicode>
+              <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K10P7S3">10 kap. 7 § tredje stycket</LinkSubject>
+              <unicode> andra meningen </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1974:152">regeringsformen</LinkSubject>
             </Tabellcell>
           </Tabellrad><Tabellrad>
             <Tabellcell>
-              <unicode>2 kap. 4 § andra stycket riksdagsordningen eller beslut enligt 4 kap. 17 § eller 10 kap. 8 § riksdagsordningen</unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1974:153#K2P4S2">2 kap. 4 § andra stycket riksdagsordningen</LinkSubject>
+              <unicode> eller beslut enligt </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1974:153#K4P17">4 kap. 17 §</LinkSubject>
+              <unicode> eller </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1974:153#K10P8">10 kap. 8 §</LinkSubject>
+              <unicode> </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1974:153">riksdagsordningen</LinkSubject>
             </Tabellcell><Tabellcell>
               <unicode>såvitt avser uppgift vars röjande kan antas sätta rikets säkerhet i fara eller annars skada landet</unicode>
             </Tabellcell>
           </Tabellrad><Tabellrad>
             <Tabellcell>
-              <unicode>2. 3 kap. 3 § tryckfrihetsförordningen eller 2 kap. 3 § yttrandefrihetsgrundlagen</unicode>
+              <unicode>2. </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1949:105#K3P3">3 kap. 3 § tryckfrihetsförordningen</LinkSubject>
+              <unicode> eller </unicode>
+              <LinkSubject predicate="dct:references" uri="http://lagen.nu/1991:1469#K2P3">2 kap. 3 § yttrandefrihetsgrundlagen</LinkSubject>
             </Tabellcell>
           </Tabellrad>
         </Tabell>

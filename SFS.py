@@ -453,7 +453,6 @@ class SFSParser(LegalSource.Parser):
         self.trace['numlist'].debug(u'Numlisttracern är igång')
         self.trace['tabell'].debug(u'Tabelltracern är igång')
                       
-        self.verbose = True
         self.lagrum_parser = LegalRef(LegalRef.LAGRUM,
                                       LegalRef.EGLAGSTIFTNING)
         self.forarbete_parser = LegalRef(LegalRef.FORARBETEN)
@@ -546,7 +545,7 @@ class SFSParser(LegalSource.Parser):
                 if not found:
                     log.warning(u'%s: Övergångsbestämmelse för %s saknar motsvarande registerpost' % (self.id, ob.sfsnr))
                     kwargs = {'id':u'L'+ob.sfsnr,
-                              'uri':u'http://lagen.nu/'+ob.sfsnr}
+                              'uri':u'http://rinfo.lagrummet.nu/publ/sfs/'+ob.sfsnr}
                     rp = Registerpost(**kwargs)
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
@@ -594,7 +593,7 @@ class SFSParser(LegalSource.Parser):
             changes = soup.body('table')[3:-2]
             for table in changes:
                 kwargs = {'id': 'undefined',
-                          'uri': u'http://lagen.nu/undefined'}
+                          'uri': u'http://rinfo.lagrummet.nu/publ/sfs/undefined'}
                 p = Registerpost(**kwargs)
                 for row in table('tr'):
                     key = Util.elementText(row('td')[0])
@@ -619,7 +618,7 @@ class SFSParser(LegalSource.Parser):
                             # (börjar med 'L' eftersom NCNames måste
                             # börja med ett Letter)
                             p.id = u'L' + val
-                            p.uri = u'http://lagen.nu/' + val
+                            p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
                         elif key == u'Ansvarig myndighet':
                             # p['ansvarigmyndighet'] = val
                             try:
@@ -776,7 +775,7 @@ class SFSParser(LegalSource.Parser):
             skipfragments = ['K']
         else:
             skipfragments = []
-        self._construct_ids(body, u'', u'http://lagen.nu/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
+        self._construct_ids(body, u'', u'http://rinfo.lagrummet.nu/publ/sfs/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
         return meta,body
 
     def _swedish_ordinal(self,s):
@@ -1892,7 +1891,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         for l in sorted(lagrum, cmp=Util.numcmp):
             # FIXME: Gör sanitychecks så att vi inte får med trasiga
             # lagnummer-URI:er i stil med "1 §", "1949:105" eller
-            # "http://lagen.nu/9999:999#K1"
+            # "http://rinfo.lagrummet.nu/publ/sfs/9999:999#K1"
             lagrum_node = PET.SubElement(root_node,"rdf:Description")
             lagrum_node.set("rdf:about",l)
             for r in lagrum[l]:
@@ -1962,10 +1961,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                             'answerext':'.xml',
                             'answerencoding':'utf-8'
                             }}
-    def TestParse(self,data):
+    def TestParse(self,data,verbose=None,quiet=None):
         # FIXME: Set this from FilebasedTester
-        verbose=False
-        quiet=True
+        if verbose == None:
+            verbose=False
+        if quiet == None:
+            quiet=True
         p = SFSParser()
         p.verbose = verbose
         p.lagrum_parser.verbose = verbose
@@ -1979,22 +1980,24 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         b = p.makeForfattning()
         p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
         return serialize(b)            
+    # Aktuell teststatus:
+    # ..........N........N.......FN..N.F........N..NN.NF.N..N..N. 45/59
+    # Failed tests:
+    # test/data/SFS\extra-overgangsbestammelse-med-rubriker.txt
+    # test/data/SFS\regression-avdelning-overgangsbestammelser.txt
+    # test/data/SFS\regression-rubrik-inte-vanstercell.txt
+    # test/data/SFS\regression-stycke-inte-rubrik.txt
+    # test/data/SFS\regression-tabell-tva-korta-vansterceller.txt
+    # test/data/SFS\regression-tva-tomma-vansterceller.txt
+    # test/data/SFS\temporal-kapitelrubriker.txt
+    # test/data/SFS\temporal-rubriker.txt
+    # test/data/SFS\tricky-felstavade-overgangsbestammelser.txt
+    # test/data/SFS\tricky-lopande-numrering.txt
+    # test/data/SFS\tricky-nastlade-listor.txt
+    # test/data/SFS\tricky-okand-aldre-lag.txt
+    # test/data/SFS\tricky-paragrafupprakning.txt
+    # test/data/SFS\tricky-tabell-sju-kolumner.txt
 
-
-    # Resultat för ParseTestAll just nu:
-    # ..........N.......N.......N..N..........N..NN.NF.N....N.
-    # 45/56
-    # test\data\SFS\extra-overgangsbestammelse-med-rubriker.txt
-    # test\data\SFS\regression-avdelning-overgangsbestammelser.txt
-    # test\data\SFS\regression-stycke-inte-rubrik.txt
-    # test\data\SFS\regression-tabell-tva-korta-vansterceller.txt
-    # test\data\SFS\temporal-kapitelrubriker.txt
-    # test\data\SFS\temporal-rubriker.txt
-    # test\data\SFS\tricky-felstavade-overgangsbestammelser.txt
-    # test\data\SFS\tricky-lopande-numrering.txt
-    # test\data\SFS\tricky-nastlade-listor.txt
-    # test\data\SFS\tricky-okand-aldre-lag.txt
-    # test\data\SFS\tricky-tabell-sju-kolumner.txt
 
 if __name__ == "__main__":
     #if not '__file__' in dir():

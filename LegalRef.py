@@ -9,6 +9,7 @@ import traceback
 from StringIO import StringIO
 from pprint import pprint
 import locale
+import logging
 locale.setlocale(locale.LC_ALL,'') 
 
 # 3rdparty libs
@@ -27,6 +28,9 @@ import Util
 # simpleparse (which does not handle unicode)
 # Choosing utf-8 makes § a two-byte character, which does not work well
 SP_CHARSET='iso-8859-1' 
+
+log = logging.getLogger(u'lr')
+
 
 class Link(UnicodeStructure): # just a unicode string with a .uri property
     def __repr__(self):
@@ -243,7 +247,8 @@ class LegalRef:
             self.currentlaw = None
 
         if taglist[-1] != len(fixedindata):
-            print u"Problem (%d:%d) with %s / %s" % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata)
+            log.error(u'Problem (%d:%d) with %s / %s' % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata))
+
             raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
 
         # Normalisera resultatet, dvs konkatenera intilliggande
@@ -294,18 +299,18 @@ class LegalRef:
             rinfo['VagledandeDomstolsavgorande']:rattsfall_format_uri
             }
         attribs = {}
-        print "node: %s (%s)" % (node, type(node))
+        # print "node: %s (%s)" % (node, type(node))
         # We SHOULD be able to just get the type by calling
         # graph.subjects(node, RDF.type), but that call does not
         # return any nodes for some reason
         for (o,p,s) in graph:
-            print "Node %s %s %s" % (o,p,s)
+            # print "Node %s %s %s" % (o,p,s)
             if o == node and p == RDF.type:
                 method = type_to_method[s]
-                print "setting method to %s" % method
+                # print "setting method to %s" % method
             else:
                 attribs[pred_to_attrib[p]] = str(s)
-                print "setting attrib %s to %s" % (pred_to_attrib[p], s)
+                # print "setting attrib %s to %s" % (pred_to_attrib[p], s)
         uri = method(attribs)
         return uri
 
@@ -507,7 +512,7 @@ class LegalRef:
             return self.namedlaws[text]
         else:
             if self.verbose:
-                print u"WARNING: I don't know the ID of named law '%s'" % text
+                log.warning("I don't know the ID of named law '%s'" % text)
             return None
 
     def sfs_format_uri(self,attributes):
@@ -661,7 +666,7 @@ class LegalRef:
                 samelaw_node = self.find_node(root, 'SameLaw')
                 assert(samelaw_node != None)
                 if self.lastlaw == None:
-                    print "WARNING: found reference to \"samma lag\", but self.lastlaw is not set"
+                    log.warning("found reference to \"samma lag\", but self.lastlaw is not set")
 
                 self.currentlaw = self.lastlaw
             else:
@@ -784,25 +789,26 @@ class LegalRef:
     ################################################################
     # KOD FÖR FORARBETEN
     def forarbete_format_uri(self,attributes):
-        res = self.baseuri_attributes['baseuri']
+        # res = self.baseuri_attributes['baseuri']
+        res = 'http://rinfo.lagrummet.se/'
         resolvetobase = True
         addfragment = False
         
         for key,val in attributes.items():
             if key == 'prop':
-                res += "prop/%s" % val
+                res += "publ/prop/%s" % val
             elif key == 'bet':
-                res += "bet/%s" % val
+                res += "ext/bet/%s" % val
             elif key == 'skrivelse':
-                res += "rskr/%s" % val
+                res += "ext/rskr/%s" % val
             elif key == 'celex':
-                res += "celex/%s" % val
+                res += "ext/celex/%s" % val
         return res
 
     ################################################################
     # KOD FÖR EGLAGSTIFTNING
     def eglag_format_uri(self,attributes):
-        res = self.baseuri_attributes['baseuri']
+        res = 'http://rinfo.lagrummet.se/ext/celex/'
         # Om hur CELEX-nummer konstrueras
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celn.htm
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celf.htm

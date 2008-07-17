@@ -3,8 +3,7 @@
     <Stycke id="P5S1">
       <unicode>Exempel från 2005 kolon 559, kapitel tre paragraf fem.</unicode>
     </Stycke><Stycke id="P5S2">
-      <unicode>För ansökningsavgiftens storlek m.m. ska följande avgiftsklasser
-tillämpas:</unicode>
+      <unicode>För ansökningsavgiftens storlek m.m. ska följande avgiftsklasser tillämpas:</unicode>
       <Tabell>
         <Tabellrad>
           <Tabellcell>
@@ -31,8 +30,7 @@ tillämpas:</unicode>
   <Rubrik id="R1">När avgiften skall betalas</Rubrik>
   <Paragraf id="P6" ordinal="6">
     <Stycke id="P6S1">
-      <unicode>En avgift enligt lagrum skall betalas när anmälan eller
-ansökan ges in.</unicode>
+      <unicode>En avgift enligt lagrum skall betalas när anmälan eller ansökan ges in.</unicode>
     </Stycke>
   </Paragraf>
 </Forfattning>
