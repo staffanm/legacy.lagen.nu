@@ -143,7 +143,7 @@ class Parser:
             start = res.index('class="warning">')
             end = res.index('</',start+16)
             msg = Util.normalizeSpace(res[start+16:end].decode('utf-8'))
-            log.warning(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
+            log.error(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
         return res
 
     def load_authority_rec(self, file):
@@ -305,18 +305,26 @@ class Manager:
         """Sammanställer all metadata för alla dokument i rättskällan
         och bygger en stor RDF-graf. """
         c = 0
-        graph = self.__get_default_graph()
-        
+        triples = 0
+        # graph = self.__get_default_graph()
+        f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']),'w')
+        f.close()
         for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
             c += 1
+            graph = self.__get_default_graph()
             self.__load_rdfa(f,graph)
-            graph.commit()
+            triples += len(graph)
+            f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']),'a')
+            f.write(graph.serialize(format="nt"))
+            f.close()
+            # graph.commit()
             if c % 100 == 0:
-                log.info("Related %d documents (%d triples total)" % (c, len(graph)))
+                log.info("Related %d documents (%d triples total)" % (c, triples))
 
-        f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-        f.write(graph.serialize(format="pretty-xml"))
-        f.close()
+        log.info("All documents related: %d documents, %d triples" % (c, triples))
+        # f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
+        #f.write(graph.serialize(format="pretty-xml"))
+        #f.close()
 
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
             

@@ -5,7 +5,7 @@
 support for general properties. Once a class has been instansiated,
 you cannot add any more properties."""
 
-import datetime
+import datetime, re
 import xml.etree.cElementTree as ET
 
 class AbstractStructure(object):
@@ -194,12 +194,6 @@ def serialize(root):
     __indentTree(t)
     return ET.tostring(t,'utf-8').decode('utf-8')
 
-def deserialize(xmlstr):
-    t = ET.fromstring(xmlstr)
-    for e in t:
-        print "element %r" % e.tag
-
-        
 
 # http://infix.se/2007/02/06/gentlemen-indent-your-xml
 def __indentTree(elem, level=0):
@@ -250,6 +244,63 @@ def __serializeNode(node):
         e.text = repr(node)
         # raise TypeError("Can't serialize %r (%r)" % (type(node), node))
     return e
+
+def deserialize(xmlstr, caller_globals):
+    """This function is highly insecure -- use only with trusted data"""
+    # print "Caller globals()"
+    # print repr(caller_globals.keys())
+    # print "Callee globals()"
+    # print repr(globals().keys())
+    # print repr(locals().keys())
+    if (isinstance(xmlstr,unicode)):
+        xmlstr = xmlstr.encode('utf-8')
+    t = ET.fromstring(xmlstr)
+    return  __deserializeNode(t,caller_globals)
+        
+        
+def __deserializeNode(elem,caller_globals):
+    # print "element %r, attrs %r" % (elem.tag, elem.attrib)
+    #kwargs = elem.attrib specialcasing first -- classobjects for
+    # these native objects can't be created by the"caller_globals[elem.tag]" call below
+    if elem.tag == 'int':
+        i = 0;
+        classobj = i.__class__
+    elif elem.tag == 'str':
+        i = ''
+        classobj = i.__class__
+    elif elem.tag == 'unicode':
+        i = u''
+        classobj = i.__class__
+    else:
+        # print "creating classobj for %s" % elem.tag
+        classobj = caller_globals[elem.tag]
+
+    testclass = classobj(**elem.attrib)
+    
+    if isinstance(testclass, str):
+        c = classobj(str(elem.text),**elem.attrib)
+    elif isinstance(classobj(**elem.attrib), int):
+        c = classobj(int(elem.text),**elem.attrib)
+
+    elif isinstance(testclass, unicode):
+        c = classobj(unicode(elem.text),**elem.attrib)
+
+    elif isinstance(testclass, datetime.date):
+        m = re.match(r'\w+\((\d+), (\d+), (\d+)\)',elem.text)
+        basedate = datetime.date(int(m.group(1)),int(m.group(2)),int(m.group(3)))
+        c = classobj(basedate,**elem.attrib)
+
+    elif isinstance(testclass, dict):
+        c = classobj(**elem.attrib)
+        # FIXME: implement this
+
+    else:
+        c = classobj(**elem.attrib)
+        for subelem in elem:
+            # print "Recursing"
+            c.append(__deserializeNode(subelem, caller_globals))
+
+    return c
 
 # in-place prettyprint formatter
 
@@ -348,4 +399,8 @@ if __name__ == '__main__':
 
     c = DerivedList([u,l,d,i,dt,r])
     x = serialize(c)
-    deserialize(x)
+    print x
+    print 
+    y = deserialize(x,globals())
+    print serialize(y)
+    

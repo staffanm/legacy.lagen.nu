@@ -139,7 +139,7 @@ class FilebasedTester:
                 return self.TEST_OK
         except Exception:
             tb = sys.exc_info()[2]
-            formatted_tb = traceback.format_tb(sys.exc_info()[2])
+            formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
             if not quiet:
                 sys.stdout.write (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
                        (sys.exc_info()[0],

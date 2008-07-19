@@ -512,7 +512,7 @@ class LegalRef:
             return self.namedlaws[text]
         else:
             if self.verbose:
-                log.warning("I don't know the ID of named law '%s'" % text)
+                log.warning("(unknown): I don't know the ID of named law '%s'" % text)
             return None
 
     def sfs_format_uri(self,attributes):
@@ -666,7 +666,7 @@ class LegalRef:
                 samelaw_node = self.find_node(root, 'SameLaw')
                 assert(samelaw_node != None)
                 if self.lastlaw == None:
-                    log.warning("found reference to \"samma lag\", but self.lastlaw is not set")
+                    log.warning("(unknown): found reference to \"samma lag\", but self.lastlaw is not set")
 
                 self.currentlaw = self.lastlaw
             else:
@@ -1023,15 +1023,38 @@ class TestLegalRef(FilebasedTester):
         p.verbose = verbose
         print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
 
-    # Resultat för ParseTestAll just nu:
-    # ................NN.........F...............................N.N.......F..
-    # 67/73
-    # test\data\LegalRef\sfs-basic-kungorelse-kapitel-paragrafer.txt
-    # test\data\LegalRef\sfs-basic-kungorelse.txt
-    # test\data\LegalRef\sfs-basic-punktlista.txt
-    # test\data\LegalRef\sfs-tricky-overgangsbestammelse.txt
-    # test\data\LegalRef\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test\data\LegalRef\sfs-tricky-vvfs.txt
+    # Resultat för testsviterna just nu:
+    #
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseForarbeten
+    # .. 2/2
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest URI
+    # E 0/1
+    # Failed tests:
+    # test/data/LegalRef/URI\base.n3
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseRattsfall
+    # ....N 4/5
+    # Failed tests:
+    # test/data/LegalRef/DV\dv-tricky-misc.txt
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseEGLagstiftning
+    # .... 4/4
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseKortlagrum
+    # .. 2/2
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseLagrum
+    # ......NN..........F.................N..............N.N....N...F 55/63
+    # Failed tests:
+    # test/data/LegalRef/SFS\sfs-basic-kungorelse-kapitel-paragrafer.txt
+    # test/data/LegalRef/SFS\sfs-basic-kungorelse.txt
+    # test/data/LegalRef/SFS\sfs-basic-punktlista.txt
+    # test/data/LegalRef/SFS\sfs-regression-obestamd-form.txt
+    # test/data/LegalRef/SFS\sfs-tricky-overgangsbestammelse.txt
+    # test/data/LegalRef/SFS\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
+    # test/data/LegalRef/SFS\sfs-tricky-sammalag.txt
+    # test/data/LegalRef/SFS\sfs-tricky-vvfs.txt
     #
     # (sfs-basic-punktlista gick igenom förut, men slutade funka när
     # jag rationaliserade bort de flesta format_*-funktionerna). Den

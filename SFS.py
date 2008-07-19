@@ -15,9 +15,10 @@ import codecs
 import htmlentitydefs
 import traceback
 import logging
+import difflib
 from pprint import pprint
 from time import time
-from datetime import datetime
+from datetime import date, datetime
 # python 2.5 required
 from collections import defaultdict
 import xml.etree.cElementTree as ET
@@ -38,7 +39,7 @@ from TextReader import TextReader
 import FilebasedTester
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, TemporalStructure, OrdinalStructure, \
-     PredicateType, DateStructure, serialize
+     PredicateType, DateStructure, serialize, deserialize
 
 
 __version__ = (0, 1)
@@ -495,7 +496,7 @@ class SFSParser(LegalSource.Parser):
             meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
                                             uri=self.find_authority_rec("Regeringskansliet"),
                                             predicate=self.labels[u'Utgivare'])
-            meta[u'Departement/ myndighet'] = None
+            meta[u'Departement/ myndighet'] = ''
             dateval = "1970-01-01" # heh
             meta[u'Utfärdad'] = DateSubject(datetime.strptime(dateval, '%Y-%m-%d'), predicate=self.labels[u'Utfärdad'])
             fldmap = {u'sfsnr' :u'SFS nr',
@@ -543,13 +544,18 @@ class SFSParser(LegalSource.Parser):
                         found = True
                         break
                 if not found:
-                    log.warning(u'%s: Övergångsbestämmelse för %s saknar motsvarande registerpost' % (self.id, ob.sfsnr))
+                    log.warning(u'%s: Övergångsbestämmelse för [%s] saknar motsvarande registerpost' % (self.id, ob.sfsnr))
                     kwargs = {'id':u'L'+ob.sfsnr,
                               'uri':u'http://rinfo.lagrummet.nu/publ/sfs/'+ob.sfsnr}
                     rp = Registerpost(**kwargs)
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
                     
+        print serialize(meta)
+        print 
+        print serialize(body)
+        print
+        print serialize(registry)
         xhtml = self.generate_xhtml(meta,body,registry,__moduledir__,globals())
         return xhtml
 
@@ -620,7 +626,6 @@ class SFSParser(LegalSource.Parser):
                             p.id = u'L' + val
                             p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
                         elif key == u'Ansvarig myndighet':
-                            # p['ansvarigmyndighet'] = val
                             try:
                                 authrec = self.find_authority_rec(val)
                                 p[key] = LinkSubject(val, uri=unicode(authrec[0]),
@@ -628,35 +633,41 @@ class SFSParser(LegalSource.Parser):
                             except Exception, e:
                                 p[key] = val
                         elif key == u'Rubrik':
-                            # p['rubrik'] = val
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Observera':
-                            # p['observera'] = val
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ikraft':
-                            # p['ikraft'] = datetime.strptime(val[:10], '%Y-%m-%d')
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                             p[u'Har övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
                         elif key == u'Omfattning':
-                            # p[key] = self.lagrum_parser.parse(val)
                             p[key] = []
                             for changecat in val.split(u'; '):
-                                if changecat.startswith(u'ändr.'):
+                                if (changecat.startswith(u'ändr.') or
+                                    changecat.startswith(u'ändr ') or
+                                    changecat.startswith(u'ändring ')):
                                     pred = RINFO['ersatter']
-                                elif changecat.startswith(u'upph.'):
+                                elif (changecat.startswith(u'upph.') or
+                                      changecat.startswith(u'utgår ')):
                                     pred = RINFO['upphaver']
                                 elif (changecat.startswith(u'ny') or
                                       changecat.startswith(u'ikrafttr.') or
+                                      changecat.startswith(u'ikrafftr.') or
+                                      changecat.startswith(u'ikraftr.') or
+                                      changecat.startswith(u'ikraftträd.') or
                                       changecat.startswith(u'tillägg')):
                                     pred = RINFO['inforsI']
                                 elif (changecat.startswith(u'nuvarande') or
+                                      changecat == 'begr. giltighet' or
+                                      changecat == 'Omtryck' or
                                       changecat == 'omtryck' or
-                                      changecat == 'forts. giltighet'):
+                                      changecat == 'forts.giltighet' or
+                                      changecat == 'forts. giltighet' or
+                                      changecat == 'forts. giltighet av vissa best.'):
                                     # FIXME: Is there something smart
                                     # we could do with these?
                                     pred = None
                                 else:
-                                    log.warning(u"%s: Okänd omfattningstyp '%s'" % (self.id, changecat))
+                                    log.warning(u"%s: Okänd omfattningstyp  ['%s']" % (self.id, changecat))
                                     pred = None
                                 p[key].extend(self.lagrum_parser.parse(val,docuri,pred))
                                 p[key].append(u';')
@@ -668,7 +679,7 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Tidsbegränsad':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                         else:
-                            log.warning(u'%s: Obekant nyckel \'%s\'' % self.id, key)
+                            log.warning(u'%s: Obekant nyckel [\'%s\']' % self.id, key)
                 r.append(p)
         return r
 
@@ -833,6 +844,11 @@ class SFSParser(LegalSource.Parser):
                 else:
                     log.warning(u"%s: Kunde inte tolka SFS-numret för senaste ändring" % self.id)
 
+            elif key == u'Omtryck':
+                val = val.replace(u'SFS ','')
+                val = val.replace(u'SFS','')
+                uri = self.lagrum_parser.parse(val)[0].uri
+                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
             elif key == u'Författningen har upphävts genom':
                 val = val.replace(u'SFS ','')
                 val = val.replace(u'SFS','')
@@ -842,7 +858,7 @@ class SFSParser(LegalSource.Parser):
             elif key == u'Tidsbegränsad':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
             else:
-                log.warning(u'%s: Obekant nyckel \'%s\'' % (self.id, key))
+                log.warning(u'%s: Obekant nyckel [\'%s\']' % (self.id, key))
             
             meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
                                             uri=self.find_authority_rec("Regeringskansliet"),
@@ -912,7 +928,7 @@ class SFSParser(LegalSource.Parser):
         para = self.reader.readparagraph()
         (line, upphor, ikrafttrader) = self.andringsDatum(para)
         
-        kwargs = {'rubrik':  line,
+        kwargs = {'rubrik':  Util.normalizeSpace(line),
                   'ordinal': kapitelnummer}
         if upphor: kwargs['upphor'] = upphor
         if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
@@ -1136,7 +1152,7 @@ class SFSParser(LegalSource.Parser):
                     if hasattr(self,'id'):
                         log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer" % self.id)
                     else:
-                        log.warning(u"Övergångsbestämmelsen saknar SFS-nummer")
+                        log.warning(u"(unknown): Övergångsbestämmelsen saknar ett SFS-nummer")
 
                     obs.append(Overgangsbestammelse([res], sfsnr=u'0000:000'))
                 else:
@@ -1702,8 +1718,18 @@ class SFSParser(LegalSource.Parser):
         return None
         
     def isOvergangsbestammelser(self):
-        #p = self.reader.peekline()
-        #log.info("%r == %r: %r" % (u"Övergångsbestämmelser", p[:30], p == u"Övergångsbestämmelser"))
+        separators = [u'Övergångsbestämmelser',
+                      u'Ikraftträdande- och övergångsbestämmelser',
+                      u'Övergångs- och slutbestämmelser']
+        
+        l = self.reader.peekline()
+        if l in separators:
+            return True
+        fuzz = difflib.get_close_matches(l, separators, 1, 0.9)
+        if fuzz:
+            log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, l, fuzz[0]))
+            return True
+        
         return self.reader.peekline() in [u'Övergångsbestämmelser',
                                           u'Ikraftträdande- och övergångsbestämmelser']
 
@@ -1841,6 +1867,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
     def Indexpages(self):
         # * öppna rdf-grafen
+        g = Graph()
+        rdffile = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
+        log.info("Start RDF loading from %s" % rdffile)
+        start = time()
+        g.load(rdffile, format="nt")
+        log.info("RDF loaded (%.3f sec)", time()-start)
+        
         # * lista alla som börjar på 'a' (kräver ev nya
         #   rdf-statements, rinfoex:sorterinsgtitel), 'b' etc
         # * skapa en enkel xht2 med genshi eller tom elementtree
@@ -1959,8 +1992,16 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                             'testext':'.txt',
                             'testencoding':'iso-8859-1',
                             'answerext':'.xml',
-                            'answerencoding':'utf-8'
-                            }}
+                            'answerencoding':'utf-8'},
+                  'Serialize': {'dir': u'test/data/SFS',
+                                'testext':'.xml',
+                                'testencoding':'utf-8',
+                                'answerext':'.xml'},
+                  'Render': {'dir': u'test/data/SFS/Render',
+                             'testext':'.xml',
+                             'testencoding':'utf-8',
+                             'answerext':'.xht2'},
+                  }
     def TestParse(self,data,verbose=None,quiet=None):
         # FIXME: Set this from FilebasedTester
         if verbose == None:
@@ -1969,6 +2010,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             quiet=True
         p = SFSParser()
         p.verbose = verbose
+        p.id = '(test)'
         p.lagrum_parser.verbose = verbose
         if quiet:
             log.setLevel(logging.CRITICAL)
@@ -1980,6 +2022,29 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         b = p.makeForfattning()
         p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
         return serialize(b)            
+
+    def TestSerialize(self, data):
+        # print "Caller globals"
+        # print repr(globals().keys())
+        # print "Caller locals"
+        # print repr(locals().keys())
+        return serialize(deserialize(data,globals()))
+
+    def TestRender(self,data):
+        meta = Forfattningsinfo()
+        #meta[u'Utgivare'] = UnicodeSubject(u'Testutgivare',uri='http://example.org/')
+        #meta[u'Utfärdad'] = date(2008,1,1)
+        #meta[u'Förarbeten'] = []
+        #meta[u'Rubrik'] = u'Lag (2008:1) om adekvata enhetstester' 
+        #meta[u'xml:base'] = u'http://example.org/publ/sfs/9999:999' 
+        body = deserialize(data,globals())
+        registry = Register()
+        p = SFSParser()
+        p.id = '(test)'
+        return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
+
+
+
     # Aktuell teststatus:
     # ..........N........N.......FN..N.F........N..NN.NF.N..N..N. 45/59
     # Failed tests:

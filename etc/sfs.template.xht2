@@ -16,19 +16,24 @@
     <head about="${meta['xml:base']}">
       <!-- ! consider adding 'property="${meta[u'Referat'].predicate}"' -->
       <title py:content="meta[u'Rubrik']">Författningsrubrik</title>
-      <!-- base is not valid in xhtml2 - but we need it to set the
+      <!-- ! base is not valid in xhtml2 - but we need it to set the
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>
       <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
       <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
-      <link rel="dct:publisher" href="${meta[u'Utgivare'].uri}"/>
+      <py:if test="u'uri' in meta[u'Utgivare']">
+	<link rel="dct:publisher" href="${meta[u'Utgivare'].uri}"/>
+      </py:if>
       <py:if test="u'uri' in meta[u'Departement/ myndighet']">
 	<link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
       </py:if>
-      <meta property="rinfo:utfardandedatum"
-            content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
+
+      <py:if test="u'Utfärdad' in meta">
+	<meta property="rinfo:utfardandedatum"
+	      content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
+      </py:if>
       <py:if test="u'Ikraft' in meta">
         <meta property="rinfo:ikrafttradandedatum"
               content="${meta[u'Ikraft']}" datatype="xsd:date"/>
@@ -39,10 +44,12 @@
       <py:for each="uri in meta[u'Konsolideringsunderlag']">
 	<link rel="rinfo:konsolideringsunderlag" href="${uri}"/> 
       </py:for>
-      <py:for each="uri in meta[u'Förarbeten']">
-        <link rel="rinfo:forarbete" href="${uri}"/>
-      </py:for>
-
+      
+      <py:if test="u'Förarbeten' in meta">
+	<py:for each="uri in meta[u'Förarbeten']">
+	  <link rel="rinfo:forarbete" href="${uri}"/>
+	</py:for>
+      </py:if>
     </head>
     <body>
       <!--! macro definitions -->
@@ -52,9 +59,7 @@
       </div>
 
       <section py:def="render_avdelning(avdelning)"
-	       id="${avdelning.id}"
-	       typeof="rinfo:Avdelning"
-	       rel="rinfo:avdelning">
+	       id="${avdelning.id}">
 	<h py:content="avdelning.rubrik">Avdelningsrubrik</h>
 	<h py:if="avdelning.underrubrik" py:content="avdelning.underrubrik" class="underrubrik">Underrubrik</h>
 	<py:for each="part in avdelning" py:choose="">
@@ -66,21 +71,14 @@
       </section>
       
       <section py:def="render_upphavtkapitel(paragraf)"
-               typeof="rinfo:Kapitel"
-	       rel="rinfo:kapitel"
-	       class="upphavd"
-	       property="rinfo:kapitelnummer"
-	       content="${paragraf.ordinal}">
+	       class="upphavd">
 	       ${paragraf}
       </section>
 
       <section py:def="render_kapitel(kapitel)"
 	       id="${kapitel.id}"
-	       about="#${kapitel.id}"
-	       typeof="rinfo:Kapitel"
-	       rel="rinfo:kapitel"
-	       property="rinfo:kapitelnummer"
-	       content="${kapitel.ordinal}">
+	       about="#${kapitel.id}">
+
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
 	<py:for each="part in kapitel" py:choose="">
@@ -93,22 +91,13 @@
       
       
       <section py:def="render_upphavdparagraf(paragraf)"
-               typeof="rinfo:Paragraf"
-	       rel="rinfo:paragraf"
-	       class="upphavd"
-	       property="rinfo:paragrafnummer"
-	       content="${paragraf.ordinal}">
+	       class="upphavd">
 	       ${paragraf}
       </section>
 
       <section py:def="render_paragraf(paragraf)"
 	       id="${paragraf.id}"
-	       about="#${paragraf.id}"
-               typeof="rinfo:Paragraf"
-	       rel="rinfo:paragraf"
-	       property="rinfo:paragrafnummer"
-	       content="${paragraf.ordinal}"
-	       >
+	       about="#${paragraf.id}">
 	<!--! första stycket måste rendreras tillsammans med
 	     paragrafbeteckningen (inuti samma p-element) -->
 	
@@ -122,11 +111,8 @@
       </section>
             
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
-	 typeof="rinfo:Stycke"
 	 id="${stycke.id}"
-	 about="#${stycke.id}"
-	 property="rinfo:styckenummer"
-	 content="${stycke.id.split('S')[-1]}">
+	 about="#${stycke.id}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
         <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div></py:for>
       </p>
@@ -200,8 +186,7 @@
         </py:for>
       </section>
 
-      <section py:def="render_overgangsbestammelse(ob)"
-	       typeof="rinfo:Overgangsbestammelse">
+      <section py:def="render_overgangsbestammelse(ob)">
         <py:for each="part in ob" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
