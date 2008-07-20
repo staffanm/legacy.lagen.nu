@@ -77,7 +77,7 @@ LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordninge
 # 'ref' construct above
 
 
-ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,'.'?
+ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,'.'
 
 ExternalRef          ::= GenericRef, Whitespace, ExternalLaw
 
@@ -95,7 +95,8 @@ ChapterSectionItemRef  ::= ChapterSectionRef, Whitespace, ItemRef
 ChapterSectionRef ::= ChapterRef, Whitespace, SectionRef
 SFSNr             ::= LeftParen, Whitespace?, LawRef, Whitespace?,RightParen
 LawRef            ::= LawRefID
-LawRefID          ::= LangtAr, Colon, number, (Whitespace, ('s.', Whitespace)?, digit)?
+LawRefID          ::= LangtAr, Colon, number, (Whitespace, ('s.', Whitespace?)?, digit)?
+# LawRefID          ::= LangtAr, Colon, number, Whitespace, 's.', Whitespace , digit
 SectionRef        ::= SectionRefID, Whitespace, '§'
 
 # Note the use of SectionRefChar instead of just char -- it's to avoid

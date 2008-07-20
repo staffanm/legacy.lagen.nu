@@ -5,7 +5,7 @@ vad som gått bra och dåligt (en övergripande vy och en sida per
 modul/operation)"""
 
 import re,sys,codecs,locale
-
+from sets import Set 
 locale.setlocale(locale.LC_ALL,'') 
 if sys.platform == 'win32':
     if sys.stdout.encoding:
@@ -32,6 +32,7 @@ def analyse(logfile):
     okcnt = 0
     errlocs = {}
     warnlocs = {}
+    probdocs = Set()
     for line in f:
         log_match = re_logline(line)
         if not log_match:
@@ -43,7 +44,8 @@ def analyse(logfile):
             level = log_match.group(4)
             docid = log_match.group(5)
             message = log_match.group(7)
-            if level == 'ERROR':
+            if level == 'ERROR' and 'Error:' in line: # real errors with tracebacks
+                probdocs.add(docid)
                 errcnt += 1
                 # print "ERR: %s" % message
                 done = False
@@ -61,7 +63,14 @@ def analyse(logfile):
                 errloc += "(%s)" % line[:-2]
                 errlocs[errloc] = errlocs.get(errloc,0) + 1
 
+            elif level == 'ERROR':
+                probdocs.add(docid)
+                errcnt += 1
+                errloc = "%s (%s)" % (loc,message)
+                # print "ERRLOC %r" % errloc
+                errlocs[errloc] = errlocs.get(errloc,0) + 1
             elif level == 'WARNING':
+                probdocs.add(docid)
                 warncnt += 1
                 warnloc = "%s (%s)" % (loc,message)
                 # print "WARNLOC %r" % warnloc
@@ -75,7 +84,13 @@ def analyse(logfile):
     printdict(errlocs)
     print "WARNINGS"
     printdict(warnlocs)
+    dumplist(probdocs, "probdocs.txt")
 
+def dumplist(l, file):
+    fp = open(file,"w")
+    for entry in l:
+        fp.write(entry+"\n")
+    fp.close()
                  
 def printdict(d):
     items = d.items()

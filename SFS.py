@@ -163,21 +163,27 @@ class Register(CompoundStructure):
 
 class Registerpost(MapStructure):
     """Metadata för en viss (ändrings)författning: SFS-nummer,
-    omfattning, förarbeten m.m 
+    omfattning, förarbeten m.m . Vanligt förekommande nycklar och dess värden:
 
-    * sfsnr: en sträng, exv u'1970:488'
-    * ansvarigmyndighet: en sträng, exv u'Justitiedepartementet L3'
-    * rubrik: en sträng, exv u'Lag (1978:488) om ändring i lagen (1960:729) om upphovsrätt till litterära och konstnärliga verk'
-    * ikraft: en date, exv datetime.date(1996, 1, 1)
-    * overgangsbestammelse: True eller False
-    * omfattning: en lista av nodeliknande saker i stil med
-      [u'ändr.', Link('23',uri='http://www.lagen.nu/1960:729#P23', rel='modified'),
-       u', ', Link('24',uri='http://www.lagen.nu/1960:729#P24' rel='modified'),
-       u'; ny ' Link('24 a',uri='http://www.lagen.nu/1960:729#P24a' rel='added')]
-    * forarbeten: en lista av nodeliknande saker i stil med
-      [Link('Prop. 1981/82:152',uri='http://www.lagen.nu/prop_1981/82:152'),
-       u', ', Link('KrU_1977/78:27',uri='http://www.lagen.nu/KrU_1977/78:27')]
-    * celexnr: en node,  exv Link('393L0098',uri='http://www.eurlex.eu/393L0098')
+    * 'SFS-nummer': en sträng, exv u'1970:488'
+    * 'Ansvarig myndighet': en sträng, exv u'Justitiedepartementet L3'
+    * 'Rubrik': en sträng, exv u'Lag (1978:488) om ändring i lagen (1960:729) om upphovsrätt till litterära och konstnärliga verk'
+    * 'Ikraft': en date, exv datetime.date(1996, 1, 1)
+    * 'Övergångsbestämmelse': True eller False
+    * 'Omfattning': en lista av nodeliknande saker i stil med
+      [u'ändr.',
+       LinkSubject('23',uri='http://rinfo.lagrummet.se/publ/sfs/1960:729#P23', pred='rinfo:andrar'),
+       u', ',
+       LinkSubject('24',uri='http://rinfo.lagrummet.se/publ/sfs/1960:729#P24', pred='rinfo:andrar'),
+       u' §§; ny ',
+       LinkSubject('24 a',uri='http://rinfo.lagrummet.se/publ/sfs/1960:729#P24a' pred='rinfo:inforsI'),
+       ' §']
+    * 'Förarbeten': en lista av nodeliknande saker i stil med
+      [Link('Prop. 1981/82:152',uri='http://rinfo.lagrummet.se/publ/prop/1981/82:152'),
+       u', ',
+       Link('KrU 1977/78:27',uri='http://rinfo.lagrummet.se/extern/bet/KrU/1977/78:27')]
+    * 'CELEX-nr': en node,  exv:
+      Link('393L0098',uri='http://rinfo.lagrummet.se/extern/celex/393L0098')
     """
     pass
 
@@ -489,22 +495,31 @@ class SFSParser(LegalSource.Parser):
         except IOError:
             log.warning("%s: Fulltext saknas" % self.id)
             # extractSFST misslyckades, då det fanns någon post i
-            # SFST-databasen. Fejka ihop vad vi kan utifrån SFSR-datat
+            # SFST-databasen (det händer alltför ofta att bara
+            # SFSR-databasen är uppdaterad). Fejka ihop en meta
+            # (Forfattningsinfo) och en body (Forfattning) utifrån
+            # SFSR-datat
+
             # print serialize(registry)
             meta = Forfattningsinfo()
             meta['Rubrik'] = registry.rubrik
             meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
                                             uri=self.find_authority_rec("Regeringskansliet"),
                                             predicate=self.labels[u'Utgivare'])
-            meta[u'Departement/ myndighet'] = ''
-            dateval = "1970-01-01" # heh
-            meta[u'Utfärdad'] = DateSubject(datetime.strptime(dateval, '%Y-%m-%d'), predicate=self.labels[u'Utfärdad'])
-            fldmap = {u'sfsnr' :u'SFS nr',
-                      u'rubrik':u'Rubrik',
-                      u'ansvarigmyndighet':u'Departement/ myndighet'}
+            # dateval = "1970-01-01" 
+            # meta[u'Utfärdad'] = DateSubject(datetime.strptime(dateval, '%Y-%m-%d'),
+            #                                 predicate=self.labels[u'Utfärdad'])
+            fldmap = {u'SFS-nummer' :u'SFS nr', 
+                      u'Ansvarig myndighet':u'Departement/ myndighet'}
             for k,v in registry[0].items():
                 if k in fldmap:
                     meta[fldmap[k]] = v
+            # self.lagrum_parser.verbose = True
+            docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
+            # self.lagrum_parser.verbose = False
+            # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
+            meta[u'xml:base'] = docuri
+
             body = Forfattning()
 
             kwargs = {'id':u'S1'}
@@ -551,11 +566,11 @@ class SFSParser(LegalSource.Parser):
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
                     
-        print serialize(meta)
-        print 
-        print serialize(body)
-        print
-        print serialize(registry)
+        # print serialize(meta)
+        # print 
+        # print serialize(body)
+        # print
+        # print serialize(registry)
         xhtml = self.generate_xhtml(meta,body,registry,__moduledir__,globals())
         return xhtml
 
@@ -624,7 +639,11 @@ class SFSParser(LegalSource.Parser):
                             # (börjar med 'L' eftersom NCNames måste
                             # börja med ett Letter)
                             p.id = u'L' + val
-                            p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
+                            # p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
+                            p.uri = self.lagrum_parser.parse(val)[0].uri
+                            # self.lagrum_parser.verbose = False
+                            # print "docuri for %s: %s" % (val, p.uri)
+                            
                         elif key == u'Ansvarig myndighet':
                             try:
                                 authrec = self.find_authority_rec(val)
@@ -864,8 +883,8 @@ class SFSParser(LegalSource.Parser):
                                             uri=self.find_authority_rec("Regeringskansliet"),
                                             predicate=self.labels[u'Utgivare'])
 
-        
         docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
+        # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
         meta[u'xml:base'] = docuri
 
         return meta

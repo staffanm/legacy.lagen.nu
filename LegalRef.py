@@ -8,6 +8,7 @@ import codecs
 import traceback
 from StringIO import StringIO
 from pprint import pprint
+import hashlib
 import locale
 import logging
 locale.setlocale(locale.LC_ALL,'') 
@@ -172,7 +173,8 @@ class LegalRef:
 
         self.parser = Parser(self.decl, "root")
         self.tagger = self.parser.buildTagger("root")
-        self.verbose        = False
+        # print "tagger length: %d" % len(repr(self.tagger))
+        self.verbose = False
         self.depth = 0
 
         # SFS-specifik kod
@@ -187,7 +189,7 @@ class LegalRef:
         """Laddar in produktionerna i den angivna filen i den
         EBNF-deklaration som används, samt returnerar alla
         *Ref och *RefId-produktioner"""
-
+        # print "%s: Loading %s" % (id(self), file)
         f = open(file)
         content = f.read()
         self.decl += content
@@ -203,6 +205,9 @@ class LegalRef:
 
     def parse(self, indata, baseuri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9",predicate=None):
         if indata == "": return indata # this actually triggered a bug...
+        # h = hashlib.sha1()
+        # h.update(indata)
+        # print "Called with %r (%s) (%s)" % (indata, h.hexdigest(), self.verbose)
         self.predicate = predicate
         m = self.re_urisegments.match(baseuri)
         self.baseuri_attributes = {'baseuri':m.group(1),
@@ -227,8 +232,10 @@ class LegalRef:
         # att göra det, men om man gör enligt
         # Simpleparse-dokumentationen byggs taggertabellen om för
         # varje anrop till parse()
+        # print "calling tag with %s (%s)" % (fixedindata, self.verbose)
+        # print "tagger length: %d" % len(repr(self.tagger))
         taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
-
+        
         result = []
 
         root = NodeTree(taglist,fixedindata)
@@ -470,7 +477,7 @@ class LegalRef:
 
     def normalize_sfsid(self,sfsid):
         # sometimes '1736:0123 2' is given as '1736:0123 s. 2'. This fixes that.
-        return sfsid.replace('s. ','') # more advanced normalizations to come...
+        return sfsid.replace('s. ','').replace('s.','') # more advanced normalizations to come...
 
     def normalize_lawname(self,lawname):
         lawname=lawname.replace('|','').lower()
@@ -501,7 +508,11 @@ class LegalRef:
                  u'slagen',
                  u'tillslagen',
                  u'trädslagen',
-                 u'varuslagen'
+                 u'varuslagen',
+                 u'förordningen',
+                 u'arbetsordningen',
+                 u'bolagsordningen',
+                 u'stödordningen'
                  ]
         if text in nolaw:
             return None
@@ -512,7 +523,7 @@ class LegalRef:
             return self.namedlaws[text]
         else:
             if self.verbose:
-                log.warning("(unknown): I don't know the ID of named law '%s'" % text)
+                log.warning("(unknown): I don't know the ID of named law [%s]" % text)
             return None
 
     def sfs_format_uri(self,attributes):
@@ -535,6 +546,7 @@ class LegalRef:
                       }
         attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
 
+        # print "sfs_format_uri: %r" % attributes
         if 'law' in attributes and attributes['law'].startswith('http://'):
             res = ''
         else:
@@ -735,7 +747,7 @@ class LegalRef:
         return [self.format_custom_link({'lawref':id},
                                         root.text,
                                         root.tag)]
-    
+
     def format_NamedExternalLawRef(self,root):
         resetcurrentlaw = False
         if self.currentlaw == None:
@@ -929,97 +941,10 @@ class TestLegalRef(FilebasedTester):
             resparas.append(serialize(nodes))
         res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
         return res
-                
-    
-#     def ParseTest(self,testfile,verbose=False,quiet=False):
-#         if not quiet:
-#             print("Running test %s\n------------------------------" % testfile)
-#         try:
-#             namedlaws = {}
-#             if testfile.startswith(os.path.sep.join(['test','data','LegalRef','sfs-'])):
-#                 p = LegalRef(LegalRef.LAGRUM)
-#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','short-'])):
-#                 p = LegalRef(LegalRef.KORTLAGRUM)
-#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','regpubl-'])):
-#                 p = LegalRef(LegalRef.FORARBETEN)
-#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','eglag-'])):
-#                 p = LegalRef(LegalRef.EGLAGSTIFTNING)
-#             elif testfile.startswith(os.path.sep.join(['test','data','LegalRef','dv-'])):
-#                 p = LegalRef(LegalRef.RATTSFALL)
-#             else:
-#                 print u'WARNING: Har ingen aning om hur %s ska testas, provar med LegalRef.LAGRUM' % testfile
-#                 # return False
-#                 p = LegalRef(LegalRef.LAGRUM)
-#                 
-#             p.verbose = verbose
-#             p.currentlynamedlaws = namedlaws
-#             
-#             testdata = codecs.open(testfile,encoding=SP_CHARSET).read()
-#             paragraphs = re.split('\r?\n\r?\n',testdata,1)
-#             if len(paragraphs) == 1:
-#                 (test, key) = (testdata,None)
-#             elif len(paragraphs) == 2:
-#                 (test,key) = re.split('\r?\n\r?\n',codecs.open(testfile,encoding=SP_CHARSET).read(),1)
-#             else:
-#                 print "WARNING: len(paragraphs) > 2 for %s, that can't be good" % testfile
-#                 return false
-# 
-#             testparas = re.split('\r?\n---\r?\n',test)
-#             if key:
-#                 keyparas = re.split('\r?\n---\r?\n',key)
-#             resparas = []
-# 
-#             for i in range(len(testparas)):
-#                 if testparas[i].startswith("RESET:"):
-#                     # namedlaws.clear()
-#                     p.currentlynamedlaws.clear()
-#                 nodes = p.parse(testparas[i],u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9')
-#                 resparas.append(serialize(nodes))
-# 
-#             res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
-#             if key:
-#                 key = "\n---\n".join(keyparas).replace("\r\n","\n").strip()
-#                 if res.strip() == key.strip():
-#                     result = "."
-#                 else:
-#                     result = "F"
-#             else:
-#                 result = "N"
-# 
-#         except Exception:
-#             result = "E"
-# 
-#         if quiet:
-#             sys.stdout.write(result)
-#         else:
-#             if result == '.':
-#                 sys.stdout.write("OK %s" % testfile)
-#             elif result == 'F':
-#                 sys.stdout.write("FAIL %s" % testfile)
-#                 from difflib import Differ
-#                 difflines = list(Differ().compare(key.split('\n'),res.split('\n')))
-#                 print "----------------------------------------"
-#                 sys.stdout.write(u'\n'.join(difflines))
-#                 print "----------------------------------------"
-#             elif result == 'N':
-#                 print "NOT IMPLEMENTED: %s" % testfile
-#                 print "----------------------------------------"
-#                 print "GOT:"
-#                 print res
-#                 print "----------------------------------------"
-#             elif result == 'E':
-#                 tb = sys.exc_info()[2]
-#                 formatted_tb = traceback.format_tb(sys.exc_info()[2])
-#                 print (u" EXCEPTION:\nType: %s\nValue: %s\nTraceback:\n %s" %
-#                        (sys.exc_info()[0],
-#                         sys.exc_info()[1],
-#                         u''.join(formatted_tb)))
-#         return result == '.'
-# 
         
     def ParseTestString(self,s, verbose=True):
-        p = LegalRef(LegalRef.RATTSFALL)
-        #p = LegalRef(LegalRef.LAGRUM)
+        # p = LegalRef(LegalRef.RATTSFALL)
+        p = LegalRef(LegalRef.LAGRUM)
         p.verbose = verbose
         print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
 
@@ -1060,20 +985,6 @@ class TestLegalRef(FilebasedTester):
     # jag rationaliserade bort de flesta format_*-funktionerna). Den
     # funkar om man pillar på ItemRef-produktionen, men då slutar
     # sfs-tricky-punkt att funka. Svårt problem.)
-#    def ParseTestAll(self):
-#        results = []
-#        failures = []
-#        for f in Util.listDirs(u"test%sdata%sLegalRef" % (os.path.sep,os.path.sep), ".txt"):
-#            result = self.ParseTest(f,verbose=False,quiet=True)
-#            if not result:
-#                failures.append(f)
-#            results.append(result)
-#
-#        succeeded = len([r for r in results if r])
-#        all       = len(results)
-#        print "\n%s/%s" % (succeeded,all)
-#        if failures:
-#            print "\n".join(failures)
 
 if __name__ == "__main__":
     if sys.platform == 'win32':

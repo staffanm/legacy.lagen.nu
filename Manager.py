@@ -4,6 +4,7 @@
 and Generators (Renderers?) to create the static HTML files and other stuff"""
 
 import os,sys
+import codecs
 import inspect
 import time
 import logging
@@ -112,6 +113,25 @@ class Manager:
                 print "Module %s has no Manager class" % m
             log.info(u'%s: %s finished in %s' % (m,action,time.strftime("%H:%M:%S", time.gmtime(time.time()-start))))
             
+    def _doActionFor(self,action,module,docids):
+        mod = __import__(module, globals(), locals(), [])
+        mgrClass = self._findManager(mod)
+        if mgrClass:
+            if hasattr(mod,'__moduledir__'):
+                mgr = mgrClass(self.baseDir, mod.__moduledir__)
+            else:
+                mgr = mgrClass(self.baseDir)                
+            if hasattr(mgr,action):
+                for docid in docids:
+                    if docid:
+                        method = getattr(mgr,action)
+                        method(docid)
+            else:
+                log.warning(u"Module %s's manager has no %s action" % (m,action))
+        else:
+            print "Module %s has no Manager class" % m
+
+
     def InitializeDB(self):
         from rdflib.store import Store
         from rdflib import plugin
@@ -131,6 +151,10 @@ class Manager:
 
     def ParseAll(self,module):
         self._doAction('ParseAll',module)
+
+    def ParseSome(self,module,listfile):
+        docids = codecs.open(listfile,encoding='iso-8859-1').read().split("\r\n")
+        self._doActionFor('Parse',module,docids)
 
     def RelateAll(self,module):
         self._doAction('RelateAll',module)
