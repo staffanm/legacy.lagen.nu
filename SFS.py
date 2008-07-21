@@ -3,6 +3,7 @@
 """Hanterar (konsoliderade) författningar i SFS från Regeringskansliet
 rättsdatabaser.
 """
+from __future__ import with_statement
 # system libraries
 # import shutil
 # import types
@@ -16,6 +17,7 @@ import htmlentitydefs
 import traceback
 import logging
 import difflib
+from tempfile import mktemp
 from pprint import pprint
 from time import time
 from datetime import date, datetime
@@ -24,6 +26,7 @@ from collections import defaultdict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
+    
 # 3rdparty libs
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
@@ -470,7 +473,6 @@ class SFSParser(LegalSource.Parser):
         LegalSource.Parser.__init__(self)
     
     def Parse(self,basefile,files):
-        #self.id = FilenameToSFSnr(basefile)
         self.id = basefile
         # find out when data was last fetched (use the oldest file)
         timestamp = sys.maxint
@@ -831,7 +833,7 @@ class SFSParser(LegalSource.Parser):
 
 
     def makeHeader(self):
-        subreader = self.reader.getreader(self.reader.readchunk, self.reader.linesep * 3)
+        subreader = self.reader.getreader(self.reader.readchunk, self.reader.linesep * 4)
         meta = Forfattningsinfo()
 
         for line in subreader.getiterator(subreader.readparagraph):
@@ -887,6 +889,10 @@ class SFSParser(LegalSource.Parser):
         # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
         meta[u'xml:base'] = docuri
 
+        if u'Rubrik' not in meta:
+            log.warning("%s: Rubrik saknas" % self.id)
+        if u'' not in meta:
+            log.warning("%s: Rubrik saknas" % self.id)
         return meta
         
     def makeForfattning(self):
@@ -1739,12 +1745,13 @@ class SFSParser(LegalSource.Parser):
     def isOvergangsbestammelser(self):
         separators = [u'Övergångsbestämmelser',
                       u'Ikraftträdande- och övergångsbestämmelser',
-                      u'Övergångs- och slutbestämmelser']
+                      u'Övergångs- och slutbestämmelser',
+                      u'Övergångs- och ikraftträdandebestämmelser']
         
         l = self.reader.peekline()
         if l in separators:
             return True
-        fuzz = difflib.get_close_matches(l, separators, 1, 0.9)
+        fuzz = difflib.get_close_matches(l, separators, 1, 0.8)
         if fuzz:
             log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, l, fuzz[0]))
             return True
@@ -1763,7 +1770,7 @@ class SFSParser(LegalSource.Parser):
         
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
-
+    re_nt_line = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     ####################################################################
     # CLASS-SPECIFIC HELPER FUNCTIONS
     ####################################################################
@@ -1884,22 +1891,167 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         self.__doAll('downloaded/sfst','html',self.Parse)
 
 
+    XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}'
     def Indexpages(self):
-        # * öppna rdf-grafen
-        g = Graph()
-        rdffile = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
-        log.info("Start RDF loading from %s" % rdffile)
-        start = time()
-        g.load(rdffile, format="nt")
-        log.info("RDF loaded (%.3f sec)", time()-start)
-        
+        # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
+        #
+        # g = Graph()
+        rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
+        # log.info("Start RDF loading from %s" % rdffile)
+        # start = time()
+        # g.load(rdffile, format="nt")
+        # log.info("RDF loaded (%.3f sec)", time()-start)
+        #
+        # men eftersom det tar över två minuter att ladda är det inte
+        # ett alternativ - det får ävnta tills all RDF-data är i en
+        # sesame-db. Sen måste vi:
+        # 
         # * lista alla som börjar på 'a' (kräver ev nya
         #   rdf-statements, rinfoex:sorterinsgtitel), 'b' etc
         # * skapa en enkel xht2 med genshi eller tom elementtree
         # * transformera till html mha static.xslt
         # * gör samma för alla som har SFS-nummer som börjar på 1600-1700 etc
         # * porta nyckelbegreppskoden
-        pass
+
+        fsnummer = {}
+        rubrik = {}
+        triples = {}
+
+        indexbody = ET.Element("div")
+
+        log.info("Start RDF loading from %s" % rdf_nt)
+        start = time()
+        fp = codecs.open(rdf_nt, encoding='utf-8')
+        # fp = open(rdf_nt)
+        for line in fp:
+            m = self.re_nt_line.match(line)
+            if m:
+                subj = m.group(1)
+                pred = m.group(2)
+                objUri = m.group(4)
+                objLiteral = m.group(5)
+                if pred == 'http://dublincore.org/documents/dcmi-terms/title':
+                    if objLiteral != "":
+                        assert(objLiteral not in rubrik, "Det fanns redan en rubrik '%s'" % objLiteral)
+                        rubrik[objLiteral] = subj
+                elif pred == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
+                    fsnummer[objLiteral] = subj
+            else:
+                log.warning("Couldn't parse line %s" % line)
+        log.info("RDF loaded (%.3f sec)", time()-start)
+        log.info("%s rubriker, %s fsnummer" % (len(rubrik), len(fsnummer)))
+
+        yearintervals = [(1686,1920),
+                         (1921,1940),
+                         (1941,1960),
+                         (1961,1970),
+                         (1971,1974),
+                         (1974,1977),
+                         (1978,1980),
+                         (1981,1984),
+                         (1985,1987),
+                         (1988,1990)]
+        for y in range(1991, datetime.today().year+1):
+            yearintervals.append((y,y))
+        header = ET.Element("h")
+        header.text = u"Utgivningsår"
+        indexbody.append(header)
+
+        para = ET.Element("p")
+        for (startyear,endyear) in yearintervals:
+            if startyear == endyear:
+                title = u'Författningar utgivna %s' % startyear
+                outfile = u'%s/%s/generated/index/%s.html' % (self.baseDir,self.moduleDir,startyear)
+                linktext = startyear
+            else:
+                title = u'Författningar utgivna mellan %s och %s' % (startyear,endyear)
+                outfile = u'%s/%s/generated/index/%s-%s.html' % (
+                    self.baseDir,self.moduleDir,startyear,endyear)
+                linktext = "%s-%s" % (startyear,endyear)
+                
+            tmpfilename = mktemp()
+            fp = open(tmpfilename, "w")
+            fp.write(self.__buildXht2(title,
+                                      self.__indexByYear(startyear,endyear,fsnummer)))
+            fp.close()
+
+            Util.ensureDir(outfile)
+            Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
+            os.unlink(tmpfilename)
+            # a = ET.Element("a")
+            # a.attrib["href"]=outfile
+            # a.text = linktext
+            # indexbody.append(a)
+            # spacer = ET.Element("span")
+            # spacer.text = " "
+            # indexbody.append(spacer)
+
+        letters = [unicode(chr(x)) for x in range(ord('a'),ord('z'))]
+        letters.append(u'å')
+        letters.append(u'ä')
+        letters.append(u'ö')
+        header = ET.Element("h")
+        header.text = u"Inledningsbokstav"
+        indexbody.append(header)
+        
+        for letter in letters:
+            tmpfilename = mktemp()
+            fp = open(tmpfilename, "w")
+            fp.write(self.__buildXht2(u"Författningar som som börjar på '%s'"%letter
+                                      , self.__indexByLetter(letter, rubrik)))
+            fp.close()
+            outfile = "%s/%s/generated/index/%s.html"%(self.baseDir,self.moduleDir,letter)
+            linktext = letter.upper()
+            Util.ensureDir(outfile)
+            Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
+            os.unlink(tmpfilename)
+            # a = ET.Element("a")
+            # a.attrib["href"]=outfile
+            # a.text = linktext
+            # indexbody.append(a)
+            # spacer = ET.Element("span")
+            # spacer.text = " "
+            # indexbody.append(spacer)
+
+        tmpfilename = mktemp()
+        fp = open(tmpfilename, "w")
+        fp.write(self.__buildXht2(u"Lista över författningar", indexbody))
+        fp.close()
+        outfile = "%s/%s/generated/index/index.html"%(self.baseDir,self.moduleDir)
+        Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
+
+
+    def __buildXht2(self,title,body):
+        root = ET.Element(self.XHT2NS+"html")
+        head = ET.SubElement(root, self.XHT2NS+"head")
+        titleelem = ET.SubElement(head, self.XHT2NS+"title")
+        titleelem.text = title
+        bodyelem = ET.SubElement(root, self.XHT2NS+"body")
+        headline = ET.SubElement(bodyelem, self.XHT2NS+"h")
+        headline.text = title
+        bodyelem.append(body)
+        return ET.tostring(root)
+        
+    def __indexByLetter(self,letter,titles):
+        ulist = ET.Element(self.XHT2NS+"ul")
+        for (key,value) in titles.items():
+            if key.lower().startswith(letter):
+                item = ET.SubElement(ulist,self.XHT2NS+"li")
+                a = ET.SubElement(item,self.XHT2NS+"a")
+                a.attrib['href'] = value
+                a.text = key
+        return ulist
+
+    def __indexByYear(self,startyear,endyear,fsnummer):
+        ulist = ET.Element(self.XHT2NS+"ul")
+        for (key,value) in fsnummer.items():
+            year = int(key.split(":")[0])
+            if startyear <= year <= endyear:
+                item = ET.SubElement(ulist,self.XHT2NS+"li")
+                a = ET.SubElement(item,self.XHT2NS+"a")
+                a.attrib['href'] = value
+                a.text = key
+        return ulist
         
 
     # processes dv/parsed/rdf.xml to get a new xml file suitable for

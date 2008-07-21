@@ -44,6 +44,7 @@ def analyse(logfile):
             level = log_match.group(4)
             docid = log_match.group(5)
             message = log_match.group(7)
+            message = re.sub(r'\[[^]]+\]', r'[...]',message)
             if level == 'ERROR' and 'Error:' in line: # real errors with tracebacks
                 probdocs.add(docid)
                 errcnt += 1

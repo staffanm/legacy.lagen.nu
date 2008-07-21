@@ -159,7 +159,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
         param_str += "--param %s \"'%s'\" " % (p,parameters[p])
     
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,outfile)
-    # print cmdline
+    print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
