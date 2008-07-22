@@ -1,8 +1,0 @@
-{% extends "base.html" %}
-{% load mymarkdown %}
-{% block title %}{{ displayid }}{% endblock %}
-{% block pageid %}L{{ displayid|underscore }}{% endblock %}
-{% block content %}
-<p>Källa:{{ source }}</p>
-{{ content }}
-{% endblock %}

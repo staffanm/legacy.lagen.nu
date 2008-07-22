@@ -1,4 +1,0 @@
-# Please don't spider the site until it's a little more ready. In time, 
-# this policy will be changed.
-User-agent: *
-Disallow: /
