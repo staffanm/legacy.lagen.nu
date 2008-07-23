@@ -87,10 +87,10 @@ section {
 }
 
 /* visa inte metadatablocket i början (plocka ut ev "Ändring införd"-fältet senare) eller */
-dl.metadata {
+*[role="contentinfo"] {
     display: none;
 }
-section.register {
+*[role="secondary"] {
     display: none;
 }
 /* indentera alla stycken utom det första i varje paragraf */

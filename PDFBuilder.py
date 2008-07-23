@@ -36,16 +36,21 @@ def parseAccessExport(s):
                               'rubrik': name})
     return res
         
-
+def parseSimpleList(s):
+    res = []
+    for l in s.split("\n"):
+        (sfsnr, rubrik) = l.split("\t")
+        res.append({'sfsnr':sfsnr,'rubrik':rubrik})
+    return {u'main':res}
 
 if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     m = SFSManager('testdata','sfs')
     # for l in parseList(open(sys.argv[1]).read()):
-    res = parseAccessExport(open(sys.argv[1]).read().decode('iso-8859-1'))
+    # res = parseAccessExport(open(sys.argv[1]).read().decode('iso-8859-1'))
+    res = parseSimpleList(open(sys.argv[1]).read().decode('iso-8859-1'))
     for area in sorted(res.keys()):
-        print "doing %s" % area
         for f in res[area]:
             #m.Parse(f['sfsnr'].replace(':','/'))
             pass
@@ -70,7 +75,7 @@ if __name__ == "__main__":
         cmd = "xmllint --xinclude --format tmp.xht2 > out.xht2" 
         os.system(cmd)
         cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\print-2col.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
-        # print cmd
+        print cmd
         os.system(cmd)
     
 

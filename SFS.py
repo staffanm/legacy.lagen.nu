@@ -891,8 +891,7 @@ class SFSParser(LegalSource.Parser):
 
         if u'Rubrik' not in meta:
             log.warning("%s: Rubrik saknas" % self.id)
-        if u'' not in meta:
-            log.warning("%s: Rubrik saknas" % self.id)
+            
         return meta
         
     def makeForfattning(self):
@@ -1327,13 +1326,13 @@ class SFSParser(LegalSource.Parser):
             if (p.endswith(",") or
                 p.endswith(";") or
                 p.endswith(")") or
-                p.endswith("och") or # in unlucky cases, a chapter heading might span two lines in a way that the first line ends with "och" (eg 1998:808 kap. 3)
-                p.endswith("om") or
-                p.endswith("samt") or
+                p.endswith(" och") or # in unlucky cases, a chapter heading might span two lines in a way that the first line ends with "och" (eg 1998:808 kap. 3)
+                p.endswith(" om") or
+                p.endswith(" samt") or
                 (p.endswith(".") and not
                  (m.span()[1] == len(p) or # if the ENTIRE p is eg "6 kap." (like it is in 1962:700)
-                  p.endswith("m.m.") or
-                  p.endswith("m. m.") or
+                  p.endswith(" m.m.") or
+                  p.endswith(" m. m.") or
                   self.re_ChapterRevoked(p)))): # If the entire chapter's
                                            # been revoked, we still
                                            # want to count it as a
