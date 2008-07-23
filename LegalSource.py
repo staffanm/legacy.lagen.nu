@@ -8,6 +8,8 @@ import locale
 import xml.etree.cElementTree as ET
 import logging
 import difflib
+from collections import defaultdict
+from tempfile import mktemp
 
 # 3rd party modules
 import BeautifulSoup
@@ -325,10 +327,7 @@ class Manager:
         # f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
         #f.write(graph.serialize(format="pretty-xml"))
         #f.close()
-
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
-            
-            
     
     def Index(self,basefile):
         start = time()
@@ -365,13 +364,87 @@ class Manager:
         print "executing %s" % cmd
         os.system(cmd)
 
-#    def Test(self,testname = None):
-#        """Runs a named test for the Parser of this module. If no testname is
-#        given, run all available tests"""
-#        sys.path.append("test")
-#        from test_Parser import TestParser
-#        if testname:
-#            TestParser.Run(testname,self.parserClass,"test/data/sfs")
-#        else:
-#            TestParser.RunAll(self.parserClass,"test/data/sfs")
-    
+    def Indexpages(self):
+        rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
+        # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
+        #
+        # g = Graph()
+        # log.info("Start RDF loading from %s" % rdffile)
+        # start = time()
+        # g.load(rdffile, format="nt")
+        # log.info("RDF loaded (%.3f sec)", time()-start)
+        #
+        # men eftersom det tar över två minuter att ladda
+        # sfs/parsed/rdf.nt är det inte ett alternativ - det får vänta
+        # tills all RDF-data är i en sesame-db. Sen måste vi:
+        # 
+        # * lista alla som börjar på 'a' (kräver ev nya
+        #   rdf-statements, rinfoex:sorterinsgtitel), 'b' etc
+        # * skapa en enkel xht2 med genshi eller tom elementtree
+        # * transformera till html mha static.xslt
+        # * gör samma för alla som har SFS-nummer som börjar på 1600-1700 etc
+        # * porta nyckelbegreppskoden
+        triples = defaultdict(lambda:defaultdict(list))
+        subjects = defaultdict(dict)
+        log.info("Reading triples from %s" % rdf_nt)
+        start = time()
+        fp = codecs.open(rdf_nt, encoding='utf-8')
+        count = 0
+        for line in fp:
+            count += 1
+            if count % 10000 == 0:
+                sys.stdout.write(".")
+            m = self.re_nt_line.match(line)
+            if m:
+                subj = m.group(1)
+                pred = m.group(2)
+                objUri = m.group(4)
+                objLiteral = m.group(5)
+                if pred != 'http://dublincore.org/documents/dcmi-terms/references':
+                    if objLiteral != "":
+                        triples[pred][objLiteral].append(subj)
+                        subjects[subj][pred] = objLiteral
+                    elif objUri != "":
+                        triples[pred][objUri].append(subj)
+                        subjects[subj][pred] = objUri
+            else:
+                log.warning("Couldn't parse line %s" % line)
+        log.info("RDF loaded (%.3f sec)", time()-start)
+
+        for predicate in triples.keys():
+            self.IndexpagesForPredicate(predicate, triples[predicate],subjects)
+
+        # make something with the collected page,title tuples
+
+    def IndexpagesForPredicate(self,predicate,predtriples,subjects):
+        print "Default implementation of IndexpagesForPredicate"
+        # provide sensible default implementation of this
+        pass
+
+    def IndexpagesForLegalsource(self):
+        # provide sensible default implementation of this
+        print "Default implementation of IndexpagesForLegasource"
+        pass
+
+    def _elementtree_to_html(self, title, tree, outfile):
+        """Helper function that takes a ET fragment (which should be
+        using the xhtml2 namespace), puts it in a skeleton xht2 page,
+        then renders that page to browser-ready xhtml1, to the
+        filename specified"""
+        tmpfilename = mktemp()
+        root = ET.Element(self.XHT2NS+"html")
+        head = ET.SubElement(root, self.XHT2NS+"head")
+        titleelem = ET.SubElement(head, self.XHT2NS+"title")
+        titleelem.text = title
+        bodyelem = ET.SubElement(root, self.XHT2NS+"body")
+        headline = ET.SubElement(bodyelem, self.XHT2NS+"h")
+        headline.text = title
+        bodyelem.append(tree)
+
+        fp = open(tmpfilename,"w")
+        fp.write(ET.tostring(root))
+        fp.close()
+        Util.ensureDir(outfile)
+        Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
+        os.unlink(tmpfilename)
+        

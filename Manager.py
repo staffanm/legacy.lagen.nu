@@ -143,31 +143,33 @@ class Manager:
         print "MySQL DB store initialized"
 
             
-    def DownloadAll(self, module):
+    def DownloadAll(self, module='all'):
         self._doAction('DownloadAll',module)
 
-    def DownloadNew(self, module):
+    def DownloadNew(self, module='all'):
         self._doAction('DownloadNew', module)
 
-    def ParseAll(self,module):
+    def ParseAll(self,module='all'):
         self._doAction('ParseAll',module)
 
     def ParseSome(self,module,listfile):
         docids = codecs.open(listfile,encoding='iso-8859-1').read().split("\r\n")
         self._doActionFor('Parse',module,docids)
 
-    def RelateAll(self,module):
+    def RelateAll(self,module='all'):
         self._doAction('RelateAll',module)
 
-    def GenerateAll(self,module):
+    def GenerateAll(self,module='all'):
         self._doAction('GenerateAll',module)
     
-    def RunTest(self, module):
+    def RunTest(self, module='all'):
         self._doTest(module)
 
-    def GenerateSite(self):
-        self._doAction('Indexpages', 'all')
-        log.info("Creating some main html pages here")
+    def Indexpages(self,module='all'):
+        self._doAction('Indexpages', module)
+        if module in ('all','main'):
+            # make the front page and other static pages
+            log.info("Creating some main html pages here")
     
     def Publish(self):
         log.info("Creating zip file")
@@ -194,14 +196,13 @@ class Manager:
         else:
             log.info("scp failed with error code %s (%s)" % (ret, stderr))
     
-    def DoAll(self,module):
+    def DoAll(self,module='all'):
         start = time.time()
         self._doAction('DownloadNew',module)
         self._doAction('ParseAll',module)
-        # self._doAction('IndexAll',module)
         self._doAction('RelateAll',module)
         self._doAction('GenerateAll',module)
-        self.GenerateSite()
+        self.IndexPages(module)
         self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
