@@ -364,6 +364,7 @@ class Manager:
         print "executing %s" % cmd
         os.system(cmd)
 
+    re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     def Indexpages(self):
         rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
         # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
@@ -394,7 +395,7 @@ class Manager:
             count += 1
             if count % 10000 == 0:
                 sys.stdout.write(".")
-            m = self.re_nt_line.match(line)
+            m = self.re_ntriple.match(line)
             if m:
                 subj = m.group(1)
                 pred = m.group(2)

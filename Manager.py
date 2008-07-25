@@ -175,7 +175,8 @@ class Manager:
         log.info("Creating zip file")
         from zipfile import ZipFile, ZIP_DEFLATED
         basepath = os.path.sep.join([self.baseDir,'sfs'])
-        zipname = basepath+os.path.sep+'all.zip'
+        # start with this for blendow:
+        zipname = basepath+os.path.sep+'blendow.sfs.zip'
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
         for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
             zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')

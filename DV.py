@@ -368,6 +368,7 @@ class DVParser(LegalSource.Parser):
         # "NJA 1987 s 187 (NJA 1987:39)") av upp till fyra separata
         # properties
         if u'Referat' in head:
+            # print "finding out stuff from %s" % head['Referat']
             txt = unicode(head[u'Referat'])
             for (pred,regex) in {u'rattsfallspublikation':r'([^ ]+)',
                                  u'publikationsordinal'  :r'(\d{4}:\d+)',
@@ -387,12 +388,21 @@ class DVParser(LegalSource.Parser):
                 m = re.search(r'(\d{4}) nr (\d+)', txt)
                 if m:
                     head['[publikationsordinal]'] = m.group(1) + ":" + m.group(2)
+                else: # workaround för RegR-domar
+                    m = re.search(r'(\d{4}) ref. (\d+)', txt)
+                    if m:
+                        head['[publikationsordinal]'] = m.group(1) + ":" + m.group(2)
                 
 
         # Find out correct URI for this case, preferably by leveraging
         # the URI formatting code in LegalRef
-        assert '[rattsfallspublikation]' in head, "missing rinfo:rattsfallspublikation"
-        assert '[publikationsordinal]' in head, "missing rinfo:publikationsordinal"
+        if u'Referat' in head:
+            assert '[rattsfallspublikation]' in head, "missing rinfo:rattsfallspublikation for %s" % head['Referat']
+            assert '[publikationsordinal]' in head, "missing rinfo:publikationsordinal for %s" % head['Referat']
+        else:
+            assert '[rattsfallspublikation]' in head, "missing rinfo:rattsfallspublikation"
+            assert '[publikationsordinal]' in head, "missing rinfo:publikationsordinal"
+            
         head['xml:base'] = None
         if u'Referat' in head:
             res = rattsfall_parser.parse(head[u'Referat'])
@@ -496,6 +506,7 @@ class DVManager(LegalSource.Manager):
             basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
             basefiles.add(basefile)
         for basefile in sorted(basefiles,Util.numcmp):
+            # print repr(basefile)
             method(basefile)
 
     def __doAllParsed(self,method,max=None):
@@ -576,12 +587,16 @@ class DVManager(LegalSource.Manager):
             # loggging-modulen inte klarar av när källkoden
             # (iso-8859-1-kodad) innehåller svenska tecken
             formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-            log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s %s' %
+            if isinstance(sys.exc_info()[1].message, unicode):
+                msg = sys.exc_info()[1].message
+            else:
+                msg = unicode(sys.exc_info()[1].message,'iso-8859-1')
+            log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
                       (basefile,
                        sys.exc_info()[0].__name__, 
                        u''.join(formatted_tb),
                        sys.exc_info()[0].__name__,
-                       unicode(str(sys.exc_info()[1]), 'iso-8859-1')))
+                       msg))
             # raise
 
 
@@ -617,6 +632,11 @@ class DVManager(LegalSource.Manager):
         self.__doAllParsed(self.Index)
         tree = ET.ElementTree(self.indexroot)
         tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+
+    def IndexpagesForPredicate(self,predicate,predtriples,subjects):
+        if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
+            print "H"
+            
 
 
 if __name__ == "__main__":

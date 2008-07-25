@@ -39,8 +39,9 @@ def parseAccessExport(s):
 def parseSimpleList(s):
     res = []
     for l in s.split("\n"):
-        (sfsnr, rubrik) = l.split("\t")
-        res.append({'sfsnr':sfsnr,'rubrik':rubrik})
+        if l:
+            (sfsnr, rubrik) = l.split("\t")
+            res.append({'sfsnr':sfsnr,'rubrik':rubrik})
     return {u'main':res}
 
 if __name__ == "__main__":
