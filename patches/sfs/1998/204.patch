@@ -1,0 +1,28 @@
+--- testdata\sfs\intermediate\1998\204.txt	2008-02-23 18:04:43.182800000 +0100
++++ testdata\sfs\intermediate\1998\204-mod.txt	2008-02-23 18:04:49.017200000 +0100
+@@ -34,7 +34,7 @@
+ 
+ Beteckning                   Betydelse
+ 
+-Behandling (av person)          Varje åtgärd eller serie av
++Behandling (av person-          Varje åtgärd eller serie av
+ uppgifter)                      åtgärder som vidtas i fråga om
+                                 personuppgifter, vare sig det
+                                 sker på automatisk väg eller inte,
+@@ -323,7 +323,6 @@
+ betecknas i denna lag som känsliga personuppgifter.
+ 
+ Undantag från förbudet mot behandling av känsliga
+-
+ personuppgifter
+ 
+ 14 § Det är trots förbudet i 13 § tillåtet att behandla
+@@ -506,7 +505,7 @@
+ c) ändamålen med behandlingen, och
+ 
+ d) till vilka mottagare eller kategorier av mottagare som
+-uppgifterna läm-nas ut.
++uppgifterna lämnas ut.
+ 
+ En ansökan enligt första stycket skall göras skriftligen hos
+ den personuppgiftsansvarige och vara undertecknad av den

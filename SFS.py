@@ -520,6 +520,25 @@ class SFSParser(LegalSource.Parser):
             f = codecs.open(plaintextfile, "w",'iso-8859-1')
             f.write(plaintext)
             f.close()
+            patchfile = 'patches/sfs/%s.patch' % basefile
+            if os.path.exists(patchfile):
+                patchedfile = mktemp()
+                # we don't want to sweep the fact that we're patching under the carpet
+                log.warning(u'%s: Applying patch %s' % (basefile, patchfile))
+                cmd = 'patch -s %s %s -o %s' % (plaintextfile, patchfile, patchedfile)
+                log.debug(u'%s: running %s' % (basefile,cmd))
+                (ret, stdout, stderr) = Util.runcmd(cmd)
+                if ret == 0: # successful patch
+                    # patch from cygwin always seem to produce unix lineendings
+                    cmd = 'unix2dos %s' % patchedfile
+                    log.debug(u'%s: running %s' % (basefile,cmd))
+                    (ret, stdout, stderr) = Util.runcmd(cmd)
+                    if ret == 0: 
+                        plaintextfile = patchedfile
+                    else:
+                        log.warning(u"%s: Failed lineending conversion: %s" % (basefile,stderr))
+                else:
+                    log.warning(u"%s: Could not apply patch %s: %s" % (basefile, patchfile, stdout.strip()))
             (meta, body) = self._parseSFST(plaintextfile, registry)
         except IOError:
             log.warning("%s: Fulltext saknas" % self.id)
@@ -1882,7 +1901,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
             # check to see if the outfile is newer than all ingoing
             # files. If it is (and force is False), don't parse
-            force = False
+            force = True
             if not force and self._outfileIsNewer(files,filename):
                 log.debug(u"%s: Överhoppad", basefile)
                 return
