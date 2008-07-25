@@ -958,7 +958,10 @@ class SFSParser(LegalSource.Parser):
 
         while not self.reader.eof():
             state_handler = self.guess_state()
-            if state_handler == self.makeAvdelning: # Ny avdelning betyder att den förra är avslutad
+
+            if state_handler in (self.makeAvdelning, # Strukturer som signalerar att denna avdelning är slut
+                                 self.makeOvergangsbestammelser,
+                                 self.makeBilaga): 
                 log.debug(u"  Avdelning %s färdig" % p.ordinal)
                 return p
             else:
@@ -1799,7 +1802,6 @@ class SFSParser(LegalSource.Parser):
         
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
-    re_nt_line = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     ####################################################################
     # CLASS-SPECIFIC HELPER FUNCTIONS
     ####################################################################
