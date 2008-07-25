@@ -270,15 +270,16 @@ class SFSDownloader(LegalSource.Downloader):
         done = False
         while not done:
             log.info(u'Söker efter SFS nr %s:%s' % (year,nr))
-            base_sfsnr = self._checkForSFS(year,nr)
-            if base_sfsnr:
-                self._downloadSingle(base_sfsnr)
+            base_sfsnr_list = self._checkForSFS(year,nr)
+            if base_sfsnr_list:
+                for base_sfsnr in base_sfsnr_list: # usually only a 1-elem list
+                    self._downloadSingle(base_sfsnr)
                 nr = nr + 1
             else:
                 if datetime.today().year > year:
                     log.info(u'    Är det dags att byta år?')
-                    base_sfsnr = self._checkForSFS(datetime.today().year, 1)
-                    if base_sfsnr:
+                    base_sfsnr_list = self._checkForSFS(datetime.today().year, 1)
+                    if base_sfsnr_list:
                         year = datetime.today().year
                         nr = 1 # actual downloading next loop
                     else:
@@ -290,10 +291,14 @@ class SFSDownloader(LegalSource.Downloader):
         self._setLastSFSnr("%s:%s" % (year,nr))
                 
     def _checkForSFS(self,year,nr):
-        """Givet ett SFS-nummer, returnera SFS-numret för dess
-        grundförfattning, eller None om det inte finns ett sådant SFS-nummer"""
+        """Givet ett SFS-nummer, returnera en lista med alla
+        SFS-numret för dess grundförfattningar. Normalt sett har en
+        ändringsförfattning bara en grundförfattning, men för vissa
+        (exv 2008:605) finns flera. Om SFS-numret inte finns alls,
+        returnera en tom lista."""
         # Titta först efter grundförfattning
         log.info(u'    Letar efter grundförfattning')
+        grundforf = []
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
         # FIXME: consider using mechanize
         self.browser.retrieve(url,"sfs.tmp")
@@ -301,7 +306,7 @@ class SFSDownloader(LegalSource.Downloader):
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
         except IOError: # hurra!
-            return "%s:%s" % (year,nr)             
+            grundforf.append("%s:%s" % (year,nr))
 
         # Sen efter ändringsförfattning
         log.info(u'    Letar efter ändringsförfattning')
@@ -312,14 +317,21 @@ class SFSDownloader(LegalSource.Downloader):
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
             log.info(u'    Hittade ingen ändringsförfattning')
-            return None
+            return grundforf
         except IOError:
             t.seek(0)
-            t.cuepast(u'<input type="hidden" name="BET" value="')
-            sfsnr = t.readto("$")
-
-            log.info(u'    Hittade ändringsförfattning (till %s)' % sfsnr)
-            return sfsnr
+            try:
+                t.cuepast(u'<input type="hidden" name="BET" value="')
+                grundforf.append(t.readto("$"))
+                log.debug(u'    Hittade ändringsförfattning (till %s)' % grundforf[-1])
+                return grundforf
+            except IOError:
+                t.seek(0)
+                page = t.read(sys.maxint)
+                for m in re.finditer('>(\d+:\d+)</a>',page):
+                    grundforf.append(m.group(1))
+                    log.debug(u'    Hittade ändringsförfattning (till %s)' % grundforf[-1])
+                return grundforf
 
     def _downloadSingle(self, sfsnr):
         """Laddar ner senaste konsoliderade versionen av
@@ -338,12 +350,17 @@ class SFSDownloader(LegalSource.Downloader):
             sfst_file = "%s/sfst/%s.html" % (self.dir, SFSnrToFilename(part))
             self.browser.retrieve(sfst_url,"sfst.tmp")
             if os.path.exists(sfst_file):
-                if (self._checksum(sfst_file) != self._checksum("sfst.tmp")):
+                old_checksum = self._checksum(sfst_file)
+                new_checksum = self._checksum("sfst.tmp")
+                if (old_checksum != new_checksum):
                     old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
                     uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
                     if uppdaterad_tom != old_uppdaterad_tom:
                         log.info(u'        %s har ändrats (%s -> %s)' % (sfsnr,old_uppdaterad_tom,uppdaterad_tom))
                         self._archive(sfst_file, sfsnr, old_uppdaterad_tom)
+                    else:
+                        log.info(u'        %s har ändrats (gammal checksum %s)' % (sfsnr,old_checksum))
+                        self._archive(sfst_file, sfsnr, old_uppdaterad_tom,old_checksum)
 
                     # replace the current file, regardless of wheter
                     # we've updated it or not
@@ -362,14 +379,14 @@ class SFSDownloader(LegalSource.Downloader):
         self.browser.retrieve(sfsr_url, sfsr_file)
         
             
-    def _archive(self, filename, sfsnr, uppdaterad_tom):
+    def _archive(self, filename, sfsnr, uppdaterad_tom, checksum=None):
         """Arkivera undan filen filename, som ska vara en
         grundförfattning med angivet sfsnr och vara uppdaterad
         t.o.m. det angivna sfsnumret"""
-        if sfsnr == "1942:740":
-            two_parter_mode = True
         archive_filename = "%s/sfst/%s-%s.html" % (self.dir, SFSnrToFilename(sfsnr),
-                                         SFSnrToFilename(uppdaterad_tom).replace("/","-"))
+                                                   SFSnrToFilename(uppdaterad_tom).replace("/","-"))
+        if checksum:
+            archive_filename = archive_filename.replace(".html", "-checksum-%s.html"%checksum)
         log.info(u'        Arkiverar %s till %s' % (filename, archive_filename))
 
         if not os.path.exists(archive_filename):
@@ -392,16 +409,26 @@ class SFSDownloader(LegalSource.Downloader):
             return sfsnr
 
     def _checksum(self,filename):
-        """SHA-checksumman för den angivna filen"""
-        import sha
-        c = sha.new()
+        """MD5-checksumman för den angivna filen"""
+        import hashlib
+        c = hashlib.md5()
         # fixme: Use SFSParser._extractSFST so that we only compare
         # the plaintext part of the downloaded file
-        f = open(filename)
-        data = f.read()
-        f.close()
-        c.update(data)
+        #f = open(filename)
+        #data = f.read()
+        #f.close()
+        #c.update(data)
+        #return c.hexdigest()
+        p = SFSParser()
+        try:
+            plaintext = p._extractSFST([filename])
+            # for some insane reason, hashlib:s update method can't seem
+            # to handle ordinary unicode strings
+            c.update(plaintext.encode('iso-8859-1'))
+        except:
+            log.warning("Could not extract plaintext from %s" % filename)
         return c.hexdigest()
+
 
 class UpphavdForfattning(Exception):
     """Slängs när en upphävd författning parseas"""
@@ -656,6 +683,9 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Rubrik':
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Observera':
+                            if u'Författningen är upphävd/skall upphävas: ' in val:
+                                if datetime.strptime(val[41:51], '%Y-%m-%d') < datetime.today():
+                                    raise UpphavdForfattning()
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ikraft':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
@@ -1750,7 +1780,7 @@ class SFSParser(LegalSource.Parser):
         l = self.reader.peekline()
         if l in separators:
             return True
-        fuzz = difflib.get_close_matches(l, separators, 1, 0.8)
+        fuzz = difflib.get_close_matches(l, separators, 1, 0.9)
         if fuzz:
             log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, l, fuzz[0]))
             return True
@@ -1837,6 +1867,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             if verbose:
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
+
             start = time()
             files = {'sfst':self.__listfiles('sfst',basefile),
                      'sfsr':self.__listfiles('sfsr',basefile)}
@@ -1844,11 +1875,14 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             if (not files['sfst'] and not files['sfsr']):
                 raise LegalSource.IdNotFound("No files found for %s" % basefile)
             filename = self._xmlFileName(basefile)
+            if '/N' in basefile:
+                raise IckeSFS()
 
             # check to see if the outfile is newer than all ingoing
             # files. If it is (and force is False), don't parse
-            force = True
+            force = False
             if not force and self._outfileIsNewer(files,filename):
+                log.debug(u"%s: Överhoppad", basefile)
                 return
                     
             # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
@@ -1866,10 +1900,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.info(u'%s: Upphävd', basefile)
+            log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
-            log.info(u'%s: Ingen SFS', basefile)
+            log.debug(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
         except Exception:
             # Vi hanterar traceback-loggning själva eftersom
