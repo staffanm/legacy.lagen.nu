@@ -1,8 +1,0 @@
-5 kap. 4 § blahonga. 3 § blahonga
-
-<list>
-  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P4">5 kap. 4 §</Link>
-  <unicode> blahonga. </unicode>
-  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P3">3 §</Link>
-  <unicode> blahonga</unicode>
-</list>

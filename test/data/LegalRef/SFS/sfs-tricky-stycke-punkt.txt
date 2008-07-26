@@ -1,7 +1,0 @@
-föreligger enligt tredje stycket 2 b i denna paragraf
-
-<list>
-  <unicode>föreligger enligt </unicode>
-  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#S3N2b">tredje stycket 2 b</Link>
-  <unicode> i denna paragraf</unicode>
-</list>

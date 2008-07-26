@@ -1,3 +1,0 @@
-1 st: Det här ska mappas till "S1"
-
-1 st 2 p: Det här ska mappas till "S1N2"

@@ -1,5 +1,0 @@
-1 §: Det här ska mappas till "P1"
-
-1 § 2 st: Det här ska mappas till "P1S2"
-
-1 § 2 st 3 p: Det här ska mappas till "P1S2N3"
