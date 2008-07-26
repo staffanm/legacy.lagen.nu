@@ -1,0 +1,16 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>Det här är en paragraf som har</unicode>
+      <NumreradLista>
+        <Listelement id="P1S1N1" ordinal="1">
+          <unicode>1. En</unicode>
+        </Listelement><Listelement id="P1S1N2" ordinal="2">
+          <unicode>2. Två</unicode>
+        </Listelement><Listelement id="P1S1N3" ordinal="3">
+          <unicode>3. Tre listpunkter</unicode>
+        </Listelement>
+      </NumreradLista>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

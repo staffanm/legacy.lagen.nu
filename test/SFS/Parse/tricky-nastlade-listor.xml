@@ -1,0 +1,141 @@
+<Forfattning>
+  <Paragraf id="P2" ordinal="2">
+    <Stycke id="P2S1">
+      <unicode>Skyldig att betala mervärdesskatt (skattskyldig) är</unicode>
+      <NumreradLista>
+        <Listelement id="P2S1N1" ordinal="1">
+          <unicode>1. för sådan omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode>, om inte annat följer av 2-4 c: den som omsätter varan eller tjänsten,</unicode>
+        </Listelement><Listelement id="P2S1N2" ordinal="2">
+          <unicode>2. för omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode> av sådana tjänster som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P7">5 kap. 7 §</LinkSubject>
+          <unicode>, om den som omsätter tjänsten är en utländsk företagare och förvärvaren är en näringsidkare: den som förvärvar tjänsten,</unicode>
+        </Listelement><Listelement id="P2S1N3" ordinal="3">
+          <unicode>3. för omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode> av sådana varor som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5">5 kap.</LinkSubject>
+          <unicode> </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P2c">2 c</LinkSubject>
+          <unicode> och </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P2d">2 d §§</LinkSubject>
+          <unicode> eller av sådana tjänster som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P5S3">5 kap. 5 § tredje stycket</LinkSubject>
+          <unicode> samt </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P5a">5 a</LinkSubject>
+          <unicode>, </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P6a">6 a</LinkSubject>
+          <unicode>, </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P6b">6 b</LinkSubject>
+          <unicode> och </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P7a">7 a §§</LinkSubject>
+          <unicode>, om den som omsätter varan eller tjänsten är en utländsk företagare och förvärvaren är registrerad till mervärdesskatt här: den som förvärvar varan eller tjänsten,</unicode>
+        </Listelement><Listelement id="P2S1N4" ordinal="4">
+          <unicode>4. för sådan efterföljande omsättning inom landet som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K3P30bS1">3 kap. 30 b § första stycket</LinkSubject>
+          <unicode>: den till vilken omsättningen görs,</unicode>
+        </Listelement><Listelement id="P2S1N4a" ordinal="4a">
+          <unicode>4 a. för omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode> mellan näringsidkare som är eller ska vara registrerade till mervärdesskatt här, av guldmaterial eller halvfärdiga produkter med en finhalt av minst 325 tusendelar eller av investeringsguld om den som omsätter guldet är skattskyldig enligt </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K3P10b">3 kap. 10 b §</LinkSubject>
+          <unicode>: den som förvärvar varan,</unicode>
+        </Listelement><Listelement id="P2S1N4b" ordinal="4b">
+          <unicode>4 b. för omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode> av sådana tjänster som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S2">andra stycket</LinkSubject>
+          <unicode>, om skattskyldighet inte föreligger enligt </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S1N2">första stycket 2</LinkSubject>
+          <unicode> i denna paragraf: den som förvärvar tjänsten, om denne är</unicode>
+          <Strecksatslista>
+            <Listelement id="P2S1N4bN1" ordinal="1">
+              <unicode>- en näringsidkare som i sin verksamhet inte endast tillfälligt tillhandahåller sådana tjänster, eller</unicode>
+            </Listelement><Listelement id="P2S1N4bN2" ordinal="2">
+              <unicode>- en annan näringsidkare som tillhandahåller en näringsidkare som avses i första strecksatsen sådana tjänster,</unicode>
+            </Listelement>
+          </Strecksatslista>
+        </Listelement><Listelement id="P2S1N4c" ordinal="4c">
+          <unicode>4 c. för annan omsättning som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N1">1 § första stycket 1</LinkSubject>
+          <unicode> än som avses i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S1N2">första stycket 2</LinkSubject>
+          <unicode>, </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S1N3">3</LinkSubject>
+          <unicode> eller </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2S1N4b">4 b</LinkSubject>
+          <unicode> i denna paragraf, i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K3">3 kap.</LinkSubject>
+          <unicode> </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K3P3S2">3 § andra</LinkSubject>
+          <unicode> och </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K3P3S3">tredje styckena</LinkSubject>
+          <unicode>, i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K5P6S1N1">5 kap. 6 § 1</LinkSubject>
+          <unicode> eller i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K7P1S3N11">7 kap. 1 § tredje stycket 11</LinkSubject>
+          <unicode>, om den som omsätter varan eller tjänsten är en utländsk företagare och förvärvaren är registrerad till mervärdesskatt här: den som förvärvar varan eller tjänsten, om inte annat följer av </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P2d">2 d §</LinkSubject>
+          <unicode>,</unicode>
+        </Listelement><Listelement id="P2S1N5" ordinal="5">
+          <unicode>5. för sådant förvärv som anges i </unicode>
+          <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P1S1N2">1 § första stycket 2</LinkSubject>
+          <unicode>: den som förvärvar varan, och</unicode>
+        </Listelement><Listelement id="P2S1N6" ordinal="6">
+          <unicode>6. för import av varor</unicode>
+          <Bokstavslista>
+            <Listelement id="P2S1N6Na" ordinal="a">
+              <unicode>a) om en tullskuld uppkommer i Sverige till följd av importen: den som är skyldig att betala tullen,</unicode>
+            </Listelement><Listelement id="P2S1N6Nb" ordinal="b">
+              <unicode>b) om importen avser en gemenskapsvara eller om varan ska förtullas i Sverige men inte är belagd med tull: den som skulle ha varit skyldig att betala tullen om varan hade varit tullbelagd,</unicode>
+            </Listelement><Listelement id="P2S1N6Nc" ordinal="c">
+              <unicode>c) om skyldighet att betala tull med anledning av importen uppkommer, eller skulle ha uppkommit om varan hade varit belagd med tull, i ett annat EG-land till följd av att ett sådant mellanstatligt enhetstillstånd som avses i </unicode>
+              <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/2000:1281#K4P24S2">4 kap. 24 § andra stycket tullagen (2000:1281)</LinkSubject>
+              <unicode> åberopas: innehavaren av tillståndet.</unicode>
+            </Listelement>
+          </Bokstavslista>
+        </Listelement>
+      </NumreradLista>
+    </Stycke><Stycke id="P2S2">
+      <unicode>Första stycket 4 b gäller</unicode>
+      <NumreradLista>
+        <Listelement id="P2S2N1" ordinal="1">
+          <unicode>1. sådana tjänster avseende fastighet, byggnad eller anläggning som kan hänföras till</unicode>
+          <Strecksatslista>
+            <Listelement id="P2S2N1N1" ordinal="1">
+              <unicode>- mark- och grundarbeten,</unicode>
+            </Listelement><Listelement id="P2S2N1N2" ordinal="2">
+              <unicode>- bygg- och anläggningsarbeten,</unicode>
+            </Listelement><Listelement id="P2S2N1N3" ordinal="3">
+              <unicode>- bygginstallationer,</unicode>
+            </Listelement><Listelement id="P2S2N1N4" ordinal="4">
+              <unicode>- slutbehandling av byggnader, eller</unicode>
+            </Listelement><Listelement id="P2S2N1N5" ordinal="5">
+              <unicode>- uthyrning av bygg- och anläggningsmaskiner med förare,</unicode>
+            </Listelement>
+          </Strecksatslista>
+        </Listelement><Listelement id="P2S2N2" ordinal="2">
+          <unicode>2. byggstädning, och</unicode>
+        </Listelement><Listelement id="P2S2N3" ordinal="3">
+          <unicode>3. uthyrning av arbetskraft för sådana aktiviteter som avses i 1 och 2.</unicode>
+        </Listelement>
+      </NumreradLista>
+    </Stycke><Stycke id="P2S3">
+      <unicode>Med tullskuld och gemenskapsvara förstås detsamma som i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/ext/celex/31992R2913">rådets förordning (EEG) nr 2913/92 av den 12 oktober 1992</LinkSubject>
+      <unicode> om inrättandet av en tullkodex för gemenskapen.</unicode>
+    </Stycke><Stycke id="P2S4">
+      <unicode>Särskilda bestämmelser om vem som i vissa fall är skattskyldig finns i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K6">6 kap.</LinkSubject>
+      <unicode>, </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K9">9 kap.</LinkSubject>
+      <unicode> och </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K9c">9 c kap.</LinkSubject>
+      <unicode> </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#L2007:1376">Lag (2007:1376).</LinkSubject>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

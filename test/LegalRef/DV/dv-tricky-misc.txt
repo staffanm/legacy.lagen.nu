@@ -1,0 +1,10 @@
+Exempel på felformatterade domslutsreferenser in the wild
+000 (NJA 2000:87)
+AD 2005-nr 115
+AD 2006-73
+MD 2007-18
+MÖD 2000: 48
+MÖD 2003-39
+MÖD 2006 :18
+NJA 2003 s.107 (NJA 2003:16)
+NJA 2003:16

@@ -1,0 +1,7 @@
+1 kap.: Det här ska mappas till "K1".
+
+1 kap. 2 §: Det här ska mappas till "K1P2".
+
+1 kap. 2 § 3 st: Det här ska mappas till "K1P2S3".
+
+1 kap. 2 § 3 st 4 p: Det här ska mappas till "K1P2S3N4".

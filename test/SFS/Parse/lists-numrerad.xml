@@ -1,0 +1,11 @@
+<Forfattning>
+  <NumreradLista>
+    <Listelement id="N1" ordinal="1">
+      <unicode>1. Första punkten</unicode>
+    </Listelement><Listelement id="N2" ordinal="2">
+      <unicode>2. Andra punkten</unicode>
+    </Listelement><Listelement id="N3" ordinal="3">
+      <unicode>3. Tredje punkten</unicode>
+    </Listelement>
+  </NumreradLista>
+</Forfattning>
