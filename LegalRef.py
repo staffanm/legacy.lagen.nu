@@ -951,17 +951,17 @@ class LegalRef:
 from FilebasedTester import FilebasedTester
 class TestLegalRef(FilebasedTester):
 
-    testparams = {'URI': {'dir': u'test/data/LegalRef/URI',
+    testparams = {'URI': {'dir': u'test/LegalRef/URI',
                           'testext':'.n3'},
-                  'ParseLagrum': {'dir': u'test/data/LegalRef/SFS',
+                  'ParseLagrum': {'dir': u'test/LegalRef/SFS',
                                   'testext':'.txt'},
-                  'ParseKortlagrum': {'dir': u'test/data/LegalRef/Short',
+                  'ParseKortlagrum': {'dir': u'test/LegalRef/Short',
                                       'testext':'.txt'},
-                  'ParseForarbeten': {'dir': u'test/data/LegalRef/Regpubl',
+                  'ParseForarbeten': {'dir': u'test/LegalRef/Regpubl',
                                       'testext':'.txt'},
-                  'ParseEGLagstiftning': {'dir': u'test/data/LegalRef/EGLag',
+                  'ParseEGLagstiftning': {'dir': u'test/LegalRef/EGLag',
                                           'testext':'.txt'},
-                  'ParseRattsfall': {'dir': u'test/data/LegalRef/DV',
+                  'ParseRattsfall': {'dir': u'test/LegalRef/DV',
                                      'testext':'.txt'},
                   }
 
@@ -1026,12 +1026,12 @@ class TestLegalRef(FilebasedTester):
     # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest URI
     # E 0/1
     # Failed tests:
-    # test/data/LegalRef/URI\base.n3
+    # test/LegalRef/URI\base.n3
     # 
     # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseRattsfall
     # ....N 4/5
     # Failed tests:
-    # test/data/LegalRef/DV\dv-tricky-misc.txt
+    # test/LegalRef/DV\dv-tricky-misc.txt
     # 
     # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseEGLagstiftning
     # .... 4/4
@@ -1042,14 +1042,14 @@ class TestLegalRef(FilebasedTester):
     # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseLagrum
     # ......NN..........F.................N..............N.N....N...F 55/63
     # Failed tests:
-    # test/data/LegalRef/SFS\sfs-basic-kungorelse-kapitel-paragrafer.txt
-    # test/data/LegalRef/SFS\sfs-basic-kungorelse.txt
-    # test/data/LegalRef/SFS\sfs-basic-punktlista.txt
-    # test/data/LegalRef/SFS\sfs-regression-obestamd-form.txt
-    # test/data/LegalRef/SFS\sfs-tricky-overgangsbestammelse.txt
-    # test/data/LegalRef/SFS\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test/data/LegalRef/SFS\sfs-tricky-sammalag.txt
-    # test/data/LegalRef/SFS\sfs-tricky-vvfs.txt
+    # test/LegalRef/SFS\sfs-basic-kungorelse-kapitel-paragrafer.txt
+    # test/LegalRef/SFS\sfs-basic-kungorelse.txt
+    # test/LegalRef/SFS\sfs-basic-punktlista.txt
+    # test/LegalRef/SFS\sfs-regression-obestamd-form.txt
+    # test/LegalRef/SFS\sfs-tricky-overgangsbestammelse.txt
+    # test/LegalRef/SFS\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
+    # test/LegalRef/SFS\sfs-tricky-sammalag.txt
+    # test/LegalRef/SFS\sfs-tricky-vvfs.txt
     #
     # (sfs-basic-punktlista gick igenom förut, men slutade funka när
     # jag rationaliserade bort de flesta format_*-funktionerna). Den

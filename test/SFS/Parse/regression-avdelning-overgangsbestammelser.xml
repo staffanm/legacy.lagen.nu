@@ -1,0 +1,18 @@
+<Forfattning>
+  <Avdelning ordinal="1" rubrik="FÖRSTA AVDELNINGEN" underrubrik="ÖVERGRIPANDE BESTÄMMELSER">
+    <Kapitel id="K1" ordinal="1" rubrik="1 Kap. Första kapitlet">
+      <Paragraf id="K1P1" ordinal="1">
+        <Stycke id="K1P1S1">
+          <unicode>Första paragrafen.</unicode>
+        </Stycke>
+      </Paragraf>
+    </Kapitel>
+  </Avdelning>
+  <Overgangsbestammelser rubrik="Övergångsbestämmelser">
+    <Overgangsbestammelse id="L1234:568" sfsnr="1234:568">
+      <Stycke id="L1234:568S1">
+        <unicode>Det här är en övergångsbestämmelse med ett stycke.</unicode>
+      </Stycke>
+    </Overgangsbestammelse>
+  </Overgangsbestammelser>
+</Forfattning>

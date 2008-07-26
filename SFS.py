@@ -955,7 +955,14 @@ class SFSParser(LegalSource.Parser):
             
         while not self.reader.eof():
             state_handler = self.guess_state()
-            res = state_handler()
+            # special case - if a Overgangsbestammelse is encountered
+            # without the preceeding headline (which would normally
+            # set state_handler to makeOvergangsbestammelser (notice
+            # the plural)
+            if state_handler == self.makeOvergangsbestammelse:
+                res = self.makeOvergangsbestammelser(rubrik_saknas = True)
+            else:
+                res = state_handler()
             if res != None:
                 b.append(res)
         return b
@@ -1097,6 +1104,10 @@ class SFSParser(LegalSource.Parser):
                 return p
             elif state_handler == self.blankline:
                 state_handler() # Bara att slänga bort
+            elif state_handler == self.makeOvergangsbestammelse:
+                log.debug(u"      Paragraf %s färdig" % paragrafnummer)
+                log.warning(u"%s: Avskiljande rubrik saknas mellan författningstext och övergångsbestämmelser" % self.id)
+                return p
             else:
                 assert state_handler == self.makeStycke, "guess_state returned %s, not makeStycke" % state_handler.__name__
                 #if state_handler != self.makeStycke:
@@ -1204,13 +1215,16 @@ class SFSParser(LegalSource.Parser):
     def eof(self):
         return None
 
-    def makeOvergangsbestammelser(self): # svenska: övergångsbestämmelser
+    def makeOvergangsbestammelser(self,rubrik_saknas=False): # svenska: övergångsbestämmelser
         # det kan diskuteras om dessa ska ses som en del av den
         # konsoliderade lagtexten öht, men det verkar vara kutym att
         # ha med åtminstone de som kan ha relevans för gällande rätt
         log.debug(u"    Ny Övergångsbestämmelser")
 
-        rubrik = self.reader.readparagraph()
+        if rubrik_saknas:
+            rubrik = u"[Övergångsbestämmelser]"
+        else:
+            rubrik = self.reader.readparagraph()
         obs = Overgangsbestammelser(rubrik=rubrik)
         
         while not self.reader.eof():
@@ -1900,17 +1914,37 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             if (not files['sfst'] and not files['sfsr']):
                 raise LegalSource.IdNotFound("No files found for %s" % basefile)
             filename = self._xmlFileName(basefile)
+
+            # three sets of tests before proper parsing begins
+
+            # 1: check to see if this might not be a proper SFS at all
+            # (from time to time, other agencies publish their stuff
+            # in SFS - this seems to be handled by giving those
+            # documents a SFS nummer on the form "N1992:31". Filter
+            # these out.
             if '/N' in basefile:
                 raise IckeSFS()
 
-            # check to see if the outfile is newer than all ingoing
+            # 2: check to see if the outfile is newer than all ingoing
             # files. If it is (and force is False), don't parse
             force = (self.config[__moduledir__]['parse_force'] == 'True')
             if not force and self._outfile_is_newer(files,filename):
                 log.info(u"%s: Överhoppad", basefile)
                 return
-                    
-            # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
+
+            # 3: check to see if the Författning has been revoked using
+            # plain fast string searching, no fancy HTML parsing and
+            # traversing
+            t = TextReader(files['sfsr'][0],encoding="iso-8859-1")
+            try:
+                t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
+                datestr = t.readto(u'</i></b>')
+                if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
+                    raise UpphavdForfattning()
+            except IOError:
+                pass
+
+            # OK, all clear, now begin real parsing
             p = SFSParser()
             p.verbose = verbose
             # p.references.verbose = verbose
@@ -1925,10 +1959,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.debug(u'%s: Upphävd', basefile)
+            log.info(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
-            log.debug(u'%s: Ingen SFS', basefile)
+            log.info(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
                      
     def ParseAll(self):
@@ -1980,16 +2014,16 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     ################################################################
     # IMPLEMENTATION OF FilebasedTester interface
     ################################################################
-    testparams = {'Parse': {'dir': u'test/data/SFS',
+    testparams = {'Parse': {'dir': u'test/SFS',
                             'testext':'.txt',
                             'testencoding':'iso-8859-1',
                             'answerext':'.xml',
                             'answerencoding':'utf-8'},
-                  'Serialize': {'dir': u'test/data/SFS',
+                  'Serialize': {'dir': u'test/SFS',
                                 'testext':'.xml',
                                 'testencoding':'utf-8',
                                 'answerext':'.xml'},
-                  'Render': {'dir': u'test/data/SFS/Render',
+                  'Render': {'dir': u'test/SFS/Render',
                              'testext':'.xml',
                              'testencoding':'utf-8',
                              'answerext':'.xht2'},
@@ -2036,22 +2070,19 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
 
     # Aktuell teststatus:
-    # ..........N........N.......FN..N.F........N..NN.NF.N..N..N. 45/59
+    # ..........N.................FN..N.F........N..N..N..N...N..N. 50/61
     # Failed tests:
-    # test/data/SFS\extra-overgangsbestammelse-med-rubriker.txt
-    # test/data/SFS\regression-avdelning-overgangsbestammelser.txt
-    # test/data/SFS\regression-rubrik-inte-vanstercell.txt
-    # test/data/SFS\regression-stycke-inte-rubrik.txt
-    # test/data/SFS\regression-tabell-tva-korta-vansterceller.txt
-    # test/data/SFS\regression-tva-tomma-vansterceller.txt
-    # test/data/SFS\temporal-kapitelrubriker.txt
-    # test/data/SFS\temporal-rubriker.txt
-    # test/data/SFS\tricky-felstavade-overgangsbestammelser.txt
-    # test/data/SFS\tricky-lopande-numrering.txt
-    # test/data/SFS\tricky-nastlade-listor.txt
-    # test/data/SFS\tricky-okand-aldre-lag.txt
-    # test/data/SFS\tricky-paragrafupprakning.txt
-    # test/data/SFS\tricky-tabell-sju-kolumner.txt
+    # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
+    # test/SFS\Parse\regression-rubrik-inte-vanstercell.txt
+    # test/SFS\Parse\regression-stycke-inte-rubrik.txt
+    # test/SFS\Parse\regression-tabell-tva-korta-vansterceller.txt
+    # test/SFS\Parse\regression-tva-tomma-vansterceller.txt
+    # test/SFS\Parse\temporal-kapitelrubriker.txt
+    # test/SFS\Parse\temporal-rubriker.txt
+    # test/SFS\Parse\tricky-lopande-numrering.txt
+    # test/SFS\Parse\tricky-okand-aldre-lag.txt
+    # test/SFS\Parse\tricky-paragrafupprakning.txt
+    # test/SFS\Parse\tricky-tabell-sju-kolumner.txt
 
     ####################################################################
     # OVERRIDES OF Manager METHODS
