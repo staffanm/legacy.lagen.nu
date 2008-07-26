@@ -216,9 +216,9 @@ def FilenameToSFSnr(filename):
 
 class SFSDownloader(LegalSource.Downloader):
     def __init__(self,config):
-        self.config = config
+        super(SFSDownloader,self).__init__(config) # sets config, initializes browser
         self.download_dir = config['datadir'] + "/%s/downloaded" % __moduledir__
-        super(SFSDownloader,self).__init__()
+
         # self.browser = Browser()
 
     
@@ -255,13 +255,13 @@ class SFSDownloader(LegalSource.Downloader):
                 if tmp > last_sfsnr:
                     log.info(u'%s > %s (%s)' % (tmp, last_sfsnr, f))
                     last_sfsnr = tmp
-        self.config['next_sfsnr'] = last_sfsnr 
+        self.config[__moduledir__]['next_sfsnr'] = last_sfsnr 
         self.config.write()
 
     def DownloadNew(self):
-        if not 'next_sfsnr' in self.config:
+        if not 'next_sfsnr' in self.config[__moduledir__]:
             self._setLastSFSnr()
-        (year,nr) = [int(x) for x in self.config['next_sfsnr'].split(":")]
+        (year,nr) = [int(x) for x in self.config[__moduledir__]['next_sfsnr'].split(":")]
         done = False
         while not done:
             log.info(u'Söker efter SFS nr %s:%s' % (year,nr))
@@ -1929,7 +1929,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # files. If it is (and force is False), don't parse
             force = (self.config[__moduledir__]['parse_force'] == 'True')
             if not force and self._outfile_is_newer(files,filename):
-                log.info(u"%s: Överhoppad", basefile)
+                log.debug(u"%s: Överhoppad", basefile)
                 return
 
             # 3: check to see if the Författning has been revoked using
@@ -1959,10 +1959,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.info(u'%s: Upphävd', basefile)
+            log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
-            log.info(u'%s: Ingen SFS', basefile)
+            log.debug(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
                      
     def ParseAll(self):
@@ -1994,15 +1994,15 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         self._do_for_all('downloaded/sfst','html',self.ParseGen)
         
     def Download(self,id):
-        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
+        sd = SFSDownloader(self.config)
         sd._downloadSingle(id)
 
     def DownloadAll(self):
-        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
+        sd = SFSDownloader(self.config)
         sd.DownloadAll()
 
     def DownloadNew(self):
-        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
+        sd = SFSDownloader(self.config)
         sd.DownloadNew()
 
     def RelateAll(self):

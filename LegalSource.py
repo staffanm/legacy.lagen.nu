@@ -85,7 +85,8 @@ class Downloader(object):
 
     TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
 
-    def __init__():
+    def __init__(self,config):
+        self.config = config
         self.browser = Browser()
         # FIXME: Set user-agent header somehow. Also, if we could make
         # it support Robot.ThrottlingProcessor it would be cool
