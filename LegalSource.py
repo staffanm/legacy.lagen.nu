@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Base classes for Downloaders and Parsers. Also utility classes (should be moved?)"""
-import sys, os, re, codecs, types
-import pickle
-from time import time
-import locale
-import xml.etree.cElementTree as ET
-import logging
-import difflib
 from collections import defaultdict
 from tempfile import mktemp
+from time import time
+import codecs
+import difflib
+import locale
+import logging
+import os
+import re
+import sys
+import traceback
+import types
+import xml.etree.cElementTree as ET
 
 # 3rd party modules
 import BeautifulSoup
@@ -77,13 +81,14 @@ class IdNotFound(Exception):
     
     
 class Downloader:
-    TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
     """Abstract base class for downloading legal source documents
     (statues, cases, etc).
 
     Apart from naming the resulting files, and constructing a
     index.xml file, subclasses should do as little modification to the
     data as possible."""
+
+    TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
 
     def __init__():
         self.browser = Browser()
@@ -186,58 +191,12 @@ class Manager:
         for each LegalSource.Manager subclass."""
         self.baseDir = baseDir
         self.moduleDir = moduleDir
+        self.config = ConfigObj("conf.ini")
 
-
-    def _outfileIsNewer(self,infiles,outfile):
-        """check to see if the outfile is newer than all ingoing files"""
-        if not os.path.exists(outfile): return False
-        outfileMTime = os.stat(outfile).st_mtime
-        newer = True
-        for f in infiles:
-            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
-        return newer
-
-    def _htmlFileName(self,basefile):
-        if not isinstance(basefile, unicode):
-            raise Exception("WARNING: _htmlFileName called with non-unicode name")
-        # will typically never be overridden 
-        """Returns the full path of the GENERATED HTML fragment that represents a legal document""" 
-        return u'%s/%s/generated/%s.html' % (self.baseDir, self.moduleDir,basefile)         
- 
-    def _xmlFileName(self,basefile): 
-        if not isinstance(basefile, unicode):
-            raise Exception("WARNING: _xmlFileName called with non-unicode name")
-        # will typically never be overridden 
-        """Returns the full path of the XHTML2/RDFa doc that represents the parsed legal document""" 
-        return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
-
-    def __tidy_graph(self,graph):
-        # remove unneccesary whitespace and xmlliteral typing
-        for tup in graph:
-            (o,p,s) = tup
-            if (isinstance(s,Literal) and
-                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
-                graph.remove(tup)
-                l = Literal(u' '.join(s.split()))
-                graph.add((o,p,l))
-
-    def __get_default_graph(self):
-        use_mysql_store = False
-        if (use_mysql_store):
-            configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
-            store = plugin.get('MySQL', Store)('rdfstore')
-            rt = store.open(configString,create=False)
-            print "MySQL triple store opened: %s" % rt
-            graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
-        else: 
-            graph = Graph(identifier = URIRef("http://lagen.nu/rdfstore"))
-        for key, value in Util.ns.items():
-            graph.bind(key,  Namespace(value));
-        return graph
-
-
+    re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
+    XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 
     ####################################################################
-    # Manager INTERFACE DEFINITION
+    # Manager INTERFACE DEFINITION - a subclass must implement these
     ####################################################################
     
     def Download(self,id):
@@ -281,31 +240,18 @@ class Manager:
     
 
     ####################################################################
-    # GENERIC DIRECTLY-CALLABLE METHODS
+    # GENERIC DIRECTLY-CALLABLE METHODS - a subclass might want to override some of these
     ####################################################################
+
     def DumpTriples(self, filename, format="turtle"):
+        """Given a XML file (any file), extract RDFa embedded triples
+        and display them - useful for debugging"""
         g = self.__load_rdfa(filename)
         print unicode(g.serialize(format=format, encoding="utf-8"), "utf-8")
 
-    def __load_rdfa(self, filename, graph=None):
-        import xml.dom.minidom
-        import pyRdfa
-        dom  = xml.dom.minidom.parse(filename)
-        o = pyRdfa.Options()
-        o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, None, options=o)
-        self.__tidy_graph(g)
-        if not graph is None:
-            graph += g
-            #print "Adding to graph, now %d triples" % len(graph)
-        else:
-            graph = g
-            #print "New graph, %d triples" % len(g)
-        return graph
-
     def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan
-        och bygger en stor RDF-graf. """
+        och bygger en stor RDF-fil i NTriples-format. """
         c = 0
         triples = 0
         # graph = self.__get_default_graph()
@@ -329,42 +275,6 @@ class Manager:
         #f.close()
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
     
-    def Index(self,basefile):
-        start = time()
-        sys.stdout.write("Index: %s" % basefile)
-        xmlFileName = self._xmlFileName(basefile)
-        root = ET.ElementTree(file=xmlFileName).getroot()
-
-        urn = root.get('urn')
-        try:
-            displayid = self._findDisplayId(root,basefile)
-        except LegalSource.ParseError, e:
-            print "error for basefile %s" % basefile
-            raise e
-        sys.stdout.write("\t%r (displayid: %r)\t" % (urn,displayid))
-        (d,created) = Document.objects.get_or_create(urn = urn.encode('utf-8'),
-                                                     displayid = displayid.encode('utf-8'),
-                                                     basefile = basefile.encode('utf-8'))
-
-
-        try:
-            # build paralell index structure in the form of an xml file
-            docElement = ET.SubElement(self.indexroot, "document")
-            docElement.set('id', str(d.id))
-            docElement.set('urn',urn)
-            docElement.set('displayid',displayid)
-            docElement.set('basefile',basefile)
-        except AttributeError:
-            pass # probably b/c self.indexroot doesn't exist
-            
-        sys.stdout.write(" %s sec\n" % (time() - start))
-    
-    def Publish(self):
-        cmd = "tar czf - %s/%s | ssh staffan@minimac.tomtebo.org \"cd /Library/WebServer/Documents/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s/%s\"" % (self.baseDir, self._getModuleDir(),self.baseDir, self._getModuleDir())
-        print "executing %s" % cmd
-        os.system(cmd)
-
-    re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     def Indexpages(self):
         rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
         # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
@@ -413,19 +323,73 @@ class Manager:
         log.info("RDF loaded (%.3f sec)", time()-start)
 
         for predicate in triples.keys():
-            self.IndexpagesForPredicate(predicate, triples[predicate],subjects)
+            self._indexpages_for_predicate(predicate, triples[predicate],subjects)
+        
+        self._indexpages_for_legalsource()
+        
+    ################################################################
+    # CONVENIENCE FUNCTIONS FOR SUBCLASSES (can be overridden if needed)
+    ################################################################
 
-        # make something with the collected page,title tuples
-
-    def IndexpagesForPredicate(self,predicate,predtriples,subjects):
+    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
         print "Default implementation of IndexpagesForPredicate"
         # provide sensible default implementation of this
         pass
 
-    def IndexpagesForLegalsource(self):
+    def _indexpages_for_legalsource(self):
         # provide sensible default implementation of this
         print "Default implementation of IndexpagesForLegasource"
         pass
+
+
+    def _do_for_all(self,dir,suffix,method):
+        for f in Util.listDirs(dir, suffix, reverse=True):
+            # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
+            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            # regardless of any errors in calling this method, we just
+            # want to log it and go on
+            try:
+                method(basefile)
+            except KeyboardInterrupt:
+                raise
+            except:
+                # Handle traceback-loggning ourselves since the
+                # logging module can't handle source code containing
+                # swedish characters (iso-8859-1 encoded).
+                formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
+                if isinstance(sys.exc_info()[1].message, unicode):
+                    msg = sys.exc_info()[1].message
+                else:
+                    msg = unicode(sys.exc_info()[1].message,'iso-8859-1')
+                log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
+                          (basefile,
+                           sys.exc_info()[0].__name__, 
+                           u''.join(formatted_tb),
+                           sys.exc_info()[0].__name__,
+                           msg))
+                
+        
+
+    def _outfile_is_newer(self,infiles,outfile):
+        """check to see if the outfile is newer than all ingoing files"""
+        if not os.path.exists(outfile): return False
+        outfileMTime = os.stat(outfile).st_mtime
+        newer = True
+        for f in infiles:
+            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
+        return newer
+
+    def _htmlFileName(self,basefile):
+        """Returns the generated, browser-ready XHTML 1.0 file name for the given basefile"""
+        if not isinstance(basefile, unicode):
+            raise Exception("WARNING: _htmlFileName called with non-unicode name")
+        return u'%s/%s/generated/%s.html' % (self.baseDir, self.moduleDir,basefile)         
+ 
+    def _xmlFileName(self,basefile): 
+        """Returns the generated, browser-ready XHTML 1.0 file name for the given basefile"""
+        if not isinstance(basefile, unicode):
+            raise Exception("WARNING: _xmlFileName called with non-unicode name")
+        return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
     def _elementtree_to_html(self, title, tree, outfile):
         """Helper function that takes a ET fragment (which should be
@@ -448,4 +412,51 @@ class Manager:
         Util.ensureDir(outfile)
         Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
         os.unlink(tmpfilename)
-        
+
+    ################################################################
+    # PURELY INTERNAL FUNCTIONS
+    ################################################################
+
+    def __tidy_graph(self,graph):
+        """remove unneccesary whitespace and XMLLiteral typing from
+        literals in the graph"""
+        for tup in graph:
+            (o,p,s) = tup
+            if (isinstance(s,Literal) and
+                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
+                graph.remove(tup)
+                l = Literal(u' '.join(s.split()))
+                graph.add((o,p,l))
+
+    def __get_default_graph(self):
+        """Returns an initialized RDFLib graph object (eg using a
+        in-memory store, or a mysql store, depending on the phase of
+        the moon or whatever)"""
+        use_mysql_store = False
+        if (use_mysql_store):
+            configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
+            store = plugin.get('MySQL', Store)('rdfstore')
+            rt = store.open(configString,create=False)
+            print "MySQL triple store opened: %s" % rt
+            graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
+        else: 
+            graph = Graph(identifier = URIRef("http://lagen.nu/rdfstore"))
+        for key, value in Util.ns.items():
+            graph.bind(key,  Namespace(value));
+        return graph
+
+    def __load_rdfa(self, filename, graph=None):
+        import xml.dom.minidom
+        import pyRdfa
+        dom  = xml.dom.minidom.parse(filename)
+        o = pyRdfa.Options()
+        o.warning_graph = None
+        g = pyRdfa.parseRDFa(dom, None, options=o)
+        self.__tidy_graph(g)
+        if not graph is None:
+            graph += g
+            #print "Adding to graph, now %d triples" % len(graph)
+        else:
+            graph = g
+            #print "New graph, %d triples" % len(g)
+        return graph

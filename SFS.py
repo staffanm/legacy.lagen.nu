@@ -14,7 +14,6 @@ import os
 import re
 import codecs
 import htmlentitydefs
-import traceback
 import logging
 import difflib
 from tempfile import mktemp
@@ -307,6 +306,7 @@ class SFSDownloader(LegalSource.Downloader):
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
         except IOError: # hurra!
             grundforf.append("%s:%s" % (year,nr))
+            return grundforf
 
         # Sen efter ändringsförfattning
         log.info(u'    Letar efter ändringsförfattning')
@@ -1821,214 +1821,18 @@ class SFSParser(LegalSource.Parser):
         
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
-    ####################################################################
-    # CLASS-SPECIFIC HELPER FUNCTIONS
-    ####################################################################
-
-    def __listfiles(self,source,basename):
-        """Given a SFS id, returns the filenames within source dir that
-        corresponds to that id. For laws that are broken up in _A and _B
-        parts, returns both files"""
-        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,basename)
-        return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
-        
-    def __doAll(self,dir,suffix,method):
-        from sets import Set
-        basefiles = Set()
-        # find all IDs based on existing files
-        for f in Util.listDirs(u"%s/%s/%s" % (self.baseDir,__moduledir__,dir), ".%s" % suffix):
-            if '-' in f: continue
-            # this transforms 'foo/bar/baz/1960/729.html' to '1960/729'
-            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
-            if basefile.endswith('_A') or basefile.endswith('_B'):
-                basefile = basefile[:-2]
-            basefiles.add(basefile)
-        for basefile in sorted(basefiles,Util.numcmp,reverse=True):
-            method(basefile)
-  
-        
-    ####################################################################
-    # OVERRIDES OF Manager METHODS
-    ####################################################################    
-    
-    def _findDisplayId(self,root,basefile):
-        # we don't need the (ElementTree) root -- basename is enough
-        return FilenameToSFSnr(basefile)
-
-    def _basefileToDisplayId(self,basefile, urnprefix):    
-        assert(urnprefix == u'urn:x-sfs')
-        return FilenameToSFSnr(basefile)
-        
-    def _basefileToUrn(self, basefile, urnprefix):        
-        assert(urnprefix == u'urn:x-sfs')
-        return u'urn:x-sfs:%s' % FilenameToSFSnr(basefile).replace(' ','_')
-        
-    def _displayIdToBasefile(self,displayid, urnprefix):        
-        assert(urnprefix == u'urn:x-sfs')
-        return SFSnrToFilename(displayid)
-        
-    def _displayIdToURN(self,displayid, urnprefix):        
-        assert(urnprefix == u'urn:x-sfs')
-        return u'urn:x-sfs:%s' % displayid.replace(' ','_')
-    
-    def _UrnToBasefile(self,urn):
-        return SFSnrToFilename(self._UrnToDisplayId(urn))
-        
-    def _UrnToDisplayId(self,urn):
-        return urn.split(':',2)[-1].replace('_',' ')
-        
-    def _getModuleDir(self):
-        return __moduledir__
-    ####################################################################
-    # IMPLEMENTATION OF Manager INTERFACE
-    ####################################################################    
-
-    def Parse(self, basefile, verbose=False):
-        try:
-            if verbose:
-                print "Setting verbosity"
-                log.setLevel(logging.DEBUG)
-
-            start = time()
-            files = {'sfst':self.__listfiles('sfst',basefile),
-                     'sfsr':self.__listfiles('sfsr',basefile)}
-            # sanity check - if no files are returned
-            if (not files['sfst'] and not files['sfsr']):
-                raise LegalSource.IdNotFound("No files found for %s" % basefile)
-            filename = self._xmlFileName(basefile)
-            if '/N' in basefile:
-                raise IckeSFS()
-
-            # check to see if the outfile is newer than all ingoing
-            # files. If it is (and force is False), don't parse
-            force = True
-            if not force and self._outfileIsNewer(files,filename):
-                log.debug(u"%s: Överhoppad", basefile)
-                return
-                    
-            # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
-            p = SFSParser()
-            p.verbose = verbose
-            # p.references.verbose = verbose
-            if not verbose:
-                for k in p.trace.keys():
-                    p.trace[k].setLevel(logging.NOTSET)
-            parsed = p.Parse(basefile,files)
-            Util.ensureDir(filename)
-            out = file(filename, "w")
-            out.write(parsed)
-            out.close()
-            # Util.indentXmlFile(filename)
-            log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
-        except UpphavdForfattning:
-            log.debug(u'%s: Upphävd', basefile)
-            Util.robust_remove(filename)
-        except IckeSFS:
-            log.debug(u'%s: Ingen SFS', basefile)
-            Util.robust_remove(filename)
-        except Exception:
-            # Vi hanterar traceback-loggning själva eftersom
-            # loggging-modulen inte klarar av när källkoden
-            # (iso-8859-1-kodad) innehåller svenska tecken
-            formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-            log.error(u'%s: %s:\nMyTraceback (most recent call last):\n%s%s: %s' %
-                      (basefile,
-                       sys.exc_info()[0].__name__,
-                       u''.join(formatted_tb),
-                       sys.exc_info()[0].__name__,
-                       unicode(str(sys.exc_info()[1]), 'iso-8859-1')))
-            # raise
-                     
-    def ParseAll(self):
-        #log.info("ParseAll temporarily disabled")
-        #return
-        self.__doAll('downloaded/sfst','html',self.Parse)
 
 
-    XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}'
-
-    def IndexpagesForPredicate(self,predicate,predtriples,subjects):
-        if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
-            log.info("Creating index pages ordered by fsNummer")
-            yearintervals = [(1686,1920),
-                             (1921,1940),
-                             (1941,1960),
-                             (1961,1970),
-                             (1971,1974),
-                             (1974,1977),
-                             (1978,1980),
-                             (1981,1984),
-                             (1985,1987),
-                             (1988,1990)]
-            for y in range(1991, datetime.today().year+1):
-                yearintervals.append((y,y))
-
-            para = ET.Element("p")
-            for (startyear,endyear) in yearintervals:
-                if startyear == endyear:
-                    title = u'Författningar utgivna %s' % startyear
-                    outfile = u'%s/%s/generated/index/%s.html' % (self.baseDir,self.moduleDir,startyear)
-                    linktext = startyear
-                else:
-                    title = u'Författningar utgivna mellan %s och %s' % (startyear,endyear)
-                    outfile = u'%s/%s/generated/index/%s-%s.html' % (
-                        self.baseDir,self.moduleDir,startyear,endyear)
-                    linktext = "%s-%s" % (startyear,endyear)
-
-                self._elementtree_to_html(title,
-                                          self.__indexByYear(startyear,endyear,predtriples,subjects),
-                                          outfile)
-
-        elif predicate == 'http://dublincore.org/documents/dcmi-terms/title':
-            log.info("Creating index pages ordered by title")
-            letters = [unicode(chr(x)) for x in range(ord('a'),ord('z'))]
-            letters.append(u'å')
-            letters.append(u'ä')
-            letters.append(u'ö')
-
-            for letter in letters:
-                outfile = "%s/%s/generated/index/%s.html"%(self.baseDir,self.moduleDir,letter)
-                linktext = letter.upper()
-                self._elementtree_to_html(u"Författningar som som börjar på '%s'"%letter,
-                                          self.__indexByLetter(letter,predtriples),
-                                          outfile)
-
-    def __indexByLetter(self,letter,titles):
-        ulist = ET.Element(self.XHT2NS+"ul")
-        for (key,value) in sorted(titles.items()):
-            if key and key.lower().startswith(letter):
-                item = ET.SubElement(ulist,self.XHT2NS+"li")
-                a = ET.SubElement(item,self.XHT2NS+"a")
-                a.attrib['href'] = value[0] # shouldn't be more than
-                                            # one with this particular
-                                            # title
-                a.text = key
-        return ulist
-
-    def __indexByYear(self,startyear,endyear,fsnummer,subjects):
-        ulist = ET.Element(self.XHT2NS+"ul")
-        for (key,value) in sorted(fsnummer.items()):
-            year = int(key.split(":")[0])
-            if startyear <= year <= endyear:
-                item = ET.SubElement(ulist,self.XHT2NS+"li")
-                a = ET.SubElement(item,self.XHT2NS+"a")
-                a.attrib['href'] = value[0] # shouldn't be more than
-                                            # one with this particular
-                                            # fsnummer
-                a.text = subjects[value[0]]['http://dublincore.org/documents/dcmi-terms/title']
-        return ulist
-
-        
-
-    # processes dv/parsed/rdf.xml to get a new xml file suitable for
+    # processes dv/parsed/rdf.nt to get a new xml file suitable for
     # inclusion by sfs.xslt (something we should be able to do using
-    # SPARQL or maybe XSLT, but...)
+    # SPARQL, TriX export or maybe XSLT itself, but...)
     def IndexDV(self):
         g = Graph()
         log.info("Start RDF loading")
         start = time()
-        rdffile = "%s/dv/parsed/rdf.xml"%self.baseDir
-        g.load(rdffile)
+        rdffile = "%s/dv/parsed/rdf.nt"%self.baseDir
+        assert os.path.exists(rdffile), "RDF file %s doesn't exist" % rdffile
+        g.load(rdffile,format="nt")
         log.info("RDF loaded (%.3f sec)", time()-start)
         start = time()
         triples = defaultdict(list)
@@ -2083,6 +1887,58 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         log.info("New RDF file created")
         
 
+    ####################################################################
+    # IMPLEMENTATION OF Manager INTERFACE
+    ####################################################################    
+
+    def Parse(self, basefile, verbose=False):
+        try:
+            if verbose:
+                print "Setting verbosity"
+                log.setLevel(logging.DEBUG)
+
+            start = time()
+            files = {'sfst':self.__listfiles('sfst',basefile),
+                     'sfsr':self.__listfiles('sfsr',basefile)}
+            # sanity check - if no files are returned
+            if (not files['sfst'] and not files['sfsr']):
+                raise LegalSource.IdNotFound("No files found for %s" % basefile)
+            filename = self._xmlFileName(basefile)
+            if '/N' in basefile:
+                raise IckeSFS()
+
+            # check to see if the outfile is newer than all ingoing
+            # files. If it is (and force is False), don't parse
+            force = True
+            if not force and self._outfile_is_newer(files,filename):
+                log.debug(u"%s: Överhoppad", basefile)
+                return
+                    
+            # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
+            p = SFSParser()
+            p.verbose = verbose
+            # p.references.verbose = verbose
+            if not verbose:
+                for k in p.trace.keys():
+                    p.trace[k].setLevel(logging.NOTSET)
+            parsed = p.Parse(basefile,files)
+            Util.ensureDir(filename)
+            out = file(filename, "w")
+            out.write(parsed)
+            out.close()
+            # Util.indentXmlFile(filename)
+            log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        except UpphavdForfattning:
+            log.debug(u'%s: Upphävd', basefile)
+            Util.robust_remove(filename)
+        except IckeSFS:
+            log.debug(u'%s: Ingen SFS', basefile)
+            Util.robust_remove(filename)
+                     
+    def ParseAll(self):
+        downloaded_dir = os.path.sep.join([self.baseDir, u'sfs', 'downloaded', 'sfst'])
+        self._do_for_all(downloaded_dir,'html',self.Parse)
+
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
@@ -2096,18 +1952,16 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                         'today':datetime.today().strftime("%Y-%m-%d")},
                        validate=False)
 
-
     def GenerateAll(self):
-        #log.info("GenerateAll temporary disabled")
-        self.__doAll('parsed','xht2',self.Generate)
+        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+        self._do_for_all(parsed_dir,'xht2',self.Generate)
 
     def ParseGen(self,basefile):
         self.Parse(basefile)
         self.Generate(basefile)
 
     def ParseGenAll(self):
-        # self.__doAll('parsed','xml',self.ParseGen)
-        self.__doAll('downloaded/sfst','html',self.ParseGen)
+        self._do_for_all('downloaded/sfst','html',self.ParseGen)
         
     def Download(self,id):
         sd = SFSDownloader(self.baseDir)
@@ -2180,8 +2034,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         p.id = '(test)'
         return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
 
-
-
     # Aktuell teststatus:
     # ..........N........N.......FN..N.F........N..NN.NF.N..N..N. 45/59
     # Failed tests:
@@ -2200,11 +2052,97 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     # test/data/SFS\tricky-paragrafupprakning.txt
     # test/data/SFS\tricky-tabell-sju-kolumner.txt
 
+    ####################################################################
+    # OVERRIDES OF Manager METHODS
+    ####################################################################    
+        
+    def _getModuleDir(self):
+        return __moduledir__
+
+    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
+        if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
+            log.info("Creating index pages ordered by fsNummer")
+            yearintervals = [(1686,1920),
+                             (1921,1940),
+                             (1941,1960),
+                             (1961,1970),
+                             (1971,1974),
+                             (1974,1977),
+                             (1978,1980),
+                             (1981,1984),
+                             (1985,1987),
+                             (1988,1990)]
+            for y in range(1991, datetime.today().year+1):
+                yearintervals.append((y,y))
+
+            para = ET.Element("p")
+            for (startyear,endyear) in yearintervals:
+                if startyear == endyear:
+                    title = u'Författningar utgivna %s' % startyear
+                    outfile = u'%s/%s/generated/index/%s.html' % (self.baseDir,self.moduleDir,startyear)
+                    linktext = startyear
+                else:
+                    title = u'Författningar utgivna mellan %s och %s' % (startyear,endyear)
+                    outfile = u'%s/%s/generated/index/%s-%s.html' % (
+                        self.baseDir,self.moduleDir,startyear,endyear)
+                    linktext = "%s-%s" % (startyear,endyear)
+
+                self._elementtree_to_html(title,
+                                          self.__index_by_year(startyear,endyear,predtriples,subjects),
+                                          outfile)
+
+        elif predicate == 'http://dublincore.org/documents/dcmi-terms/title':
+            log.info("Creating index pages ordered by title")
+            letters = [unicode(chr(x)) for x in range(ord('a'),ord('z'))]
+            letters.append(u'å')
+            letters.append(u'ä')
+            letters.append(u'ö')
+
+            for letter in letters:
+                outfile = "%s/%s/generated/index/%s.html"%(self.baseDir,self.moduleDir,letter)
+                linktext = letter.upper()
+                self._elementtree_to_html(u"Författningar som som börjar på '%s'"%letter,
+                                          self.__index_by_letter(letter,predtriples),
+                                          outfile)
+
+    ################################################################
+    # PURELY INTERNAL FUNCTIONS
+    ################################################################
+
+    def __index_by_letter(self,letter,titles):
+        ulist = ET.Element(self.XHT2NS+"ul")
+        for (key,value) in sorted(titles.items()):
+            if key and key.lower().startswith(letter):
+                item = ET.SubElement(ulist,self.XHT2NS+"li")
+                a = ET.SubElement(item,self.XHT2NS+"a")
+                a.attrib['href'] = value[0] # shouldn't be more than
+                                            # one with this particular
+                                            # title
+                a.text = key
+        return ulist
+
+    def __index_by_year(self,startyear,endyear,fsnummer,subjects):
+        ulist = ET.Element(self.XHT2NS+"ul")
+        for (key,value) in sorted(fsnummer.items()):
+            year = int(key.split(":")[0])
+            if startyear <= year <= endyear:
+                item = ET.SubElement(ulist,self.XHT2NS+"li")
+                a = ET.SubElement(item,self.XHT2NS+"a")
+                a.attrib['href'] = value[0] # shouldn't be more than
+                                            # one with this particular
+                                            # fsnummer
+                a.text = subjects[value[0]]['http://dublincore.org/documents/dcmi-terms/title']
+        return ulist
+
+    def __listfiles(self,source,basename):
+        """Given a SFS id, returns the filenames within source dir that
+        corresponds to that id. For laws that are broken up in _A and _B
+        parts, returns both files"""
+        templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,basename)
+        return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
+        
 
 if __name__ == "__main__":
-    #if not '__file__' in dir():
-    #    print "probably running from within emacs"
-    #    sys.argv = ['SFS.py','Parse', '1960/729']
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     SFSManager.__bases__ += (DispatchMixin,)

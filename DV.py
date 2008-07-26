@@ -444,112 +444,10 @@ class DVParser(LegalSource.Parser):
                 # probably just a unicode object used for presentation
                 pass
 
-    def __createUrn(self,data):
-        domstolar = {
-            u'Marknadsdomstolen':                 u'md',
-            u'Hovrätten för Övre Norrland':       u'hovr:övrenorrland',
-            u'Hovrätten för Nedre Norrland':      u'hovr:nedrenorrland',
-            u'Hovrätten över Skåne och Blekinge': u'hovr:skåne',
-            u'Svea hovrätt':                      u'hovr:svea',
-            u'Hovrätten för Västra Sverige':      u'hovr:västra',
-            u'G\xf6ta hovr\xe4tt':                u'hovr:göta',
-            u'Kammarr\xe4tten i G\xf6teborg':     u'kamr:göteborg',
-            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'kamr:jönkoping',
-            u'Kammarr\xe4tten i Stockholm':       u'kamr:stockholm',
-            u'Kammarr\xe4tten i Sundsvall':       u'kamr:sundsvall',
-            u'Arbetsdomstolen':                   u'ad',
-            u'Högsta domstolen':                  u'hd',
-            u'Regeringsrätten':                   u'regr',
-            u'Patentbesvärsrätten':               u'pbr',
-            u'Rättshjälpsnämnden':                u'rhn',
-            u'Miljööverdomstolen':                u'möd',
-             }
-        idfield = {
-            u'Marknadsdomstolen':                 u'Domsnummer',
-            u'Hovrätten för Övre Norrland':       u'Målnummer',
-            u'Hovrätten för Nedre Norrland':      u'Målnummer',
-            u'Hovrätten över Skåne och Blekinge': u'Målnummer',
-            u'Svea hovrätt':                      u'Målnummer',
-            u'Hovrätten för Västra Sverige':      u'Målnummer',
-            u'G\xf6ta hovr\xe4tt':                u'Målnummer',
-            u'Kammarr\xe4tten i G\xf6teborg':     u'Målnummer',
-            u'Kammarr\xe4tten i J\xf6nk\xf6ping': u'Målnummer',
-            u'Kammarr\xe4tten i Stockholm':       u'Målnummer',
-            u'Kammarr\xe4tten i Sundsvall':       u'Målnummer',
-            u'Arbetsdomstolen':                   u'Domsnummer',
-            u'Högsta domstolen':                  u'Målnummer',
-            u'Regeringsrätten':                   u'Målnummer',
-            u'Patentbesvärsrätten':               u'Målnummer',
-            u'Rättshjälpsnämnden':                u'Diarienummer',
-            u'Miljööverdomstolen':                u'Målnummer',
-            }
-        domstol = data['Domstol']
-        urn = "urn:x-dv:%s:%s" % (domstolar[domstol], data[idfield[domstol]])
-        return urn
-
-
 class DVManager(LegalSource.Manager):
     __parserClass = DVParser
     
 
-    ####################################################################
-    # CLASS-SPECIFIC HELPER FUNCTIONS
-    ####################################################################
-    
-    # FIXME: This could and should be done in LegalSource
-    def __doAll(self,dir,suffix,method):
-        from sets import Set
-        basefiles = Set()
-        # find all IDs based on existing files
-        for f in Util.listDirs(dir, suffix):
-            # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
-            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
-            basefiles.add(basefile)
-        for basefile in sorted(basefiles,Util.numcmp):
-            # print repr(basefile)
-            method(basefile)
-
-    def __doAllParsed(self,method,max=None):
-        cnt = 0
-        for f in Util.listDirs(self.baseDir+u'/dv/parsed',u'xht2'):
-            if max and (max <= cnt):
-                return cnt
-            cnt += 1
-            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
-            method(basefile)
-        return cnt
-    
-    def __listfiles(self,suffix,basefile):
-        filename = "%s/%s/downloaded/%s.%s.html" % (self.baseDir,__moduledir__,basefile,suffix)
-        return [f for f in (filename,) if os.path.exists(f)]
-
-
-    ####################################################################
-    # OVERRIDES OF Manager METHODS
-    ####################################################################
-    
-    def _findDisplayId(self,root,basefile):
-        displayid = root.findtext(u'Metadata/Referat')
-        # trim or discard displayid if neccesary -- maybe code like this should live in DVParser?
-        if displayid.endswith(u', Referat ännu ej publicerat'): # 29 chars of trailing data, chop them off
-           displayid = displayid[:-29]
-        if (displayid == u'Referat ännu ej publicerat' or 
-            displayid == u'Referat finns ej'):
-            displayid = None
-        
-        if not displayid:
-            displayid = root.findtext(u'Metadata/Målnummer')
-        if not displayid:
-            displayid = root.findtext(u'Metadata/Diarienummer')
-        if not displayid:
-            displayid = root.findtext(u'Metadata/Domsnummer') # this seems to occur only for MD verdicts - maybe we should transform "2002-14" into "MD 2002:14"
-        if not displayid:
-            raise LegalSource.ParseError("Couldn't find suitable displayid") # a filename or URN would be useful here...
-
-        return displayid
-    
-    def _getModuleDir(self):
-        return __moduledir__
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE  
     ####################################################################
@@ -557,53 +455,34 @@ class DVManager(LegalSource.Manager):
     def Parse(self,basefile,verbose=False):
         """'basefile' here is a single digit representing the filename on disc, not
         any sort of inherit case id or similarly"""
-        try:
-            if verbose:
-                print "Setting verbosity"
-                log.setLevel(logging.DEBUG)
-            start = time()
-            # print "Basefile: %s" % basefile
-            infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
-            outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-            # print "infile: %s" % infile
-            # check to see if the outfile is newer than all ingoing
-            # files. If it is, don't parse
-            force = True
-            if not force and self._outfileIsNewer([infile],outfile):
-                return
+        if verbose:
+            print "Setting verbosity"
+            log.setLevel(logging.DEBUG)
+        start = time()
+        # print "Basefile: %s" % basefile
+        infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
+        outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
+        # print "infile: %s" % infile
+        # check to see if the outfile is newer than all ingoing
+        # files. If it is, don't parse
+        force = True
+        if not force and self._outfile_is_newer([infile],outfile):
+            return
 
-            p = self.__parserClass()
-            p.verbose = verbose
-            parsed = p.Parse(basefile,infile)
-            Util.ensureDir(outfile)
+        p = self.__parserClass()
+        p.verbose = verbose
+        parsed = p.Parse(basefile,infile)
+        Util.ensureDir(outfile)
 
-            out = file(outfile, "w")
-            out.write(parsed)
-            out.close()
-            Util.indentXmlFile(outfile)
-            log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
-        except Exception:
-            # Vi hanterar traceback-loggning själva eftersom
-            # loggging-modulen inte klarar av när källkoden
-            # (iso-8859-1-kodad) innehåller svenska tecken
-            formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-            if isinstance(sys.exc_info()[1].message, unicode):
-                msg = sys.exc_info()[1].message
-            else:
-                msg = unicode(sys.exc_info()[1].message,'iso-8859-1')
-            log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
-                      (basefile,
-                       sys.exc_info()[0].__name__, 
-                       u''.join(formatted_tb),
-                       sys.exc_info()[0].__name__,
-                       msg))
-            # raise
-
+        out = file(outfile, "w")
+        out.write(parsed)
+        out.close()
+        Util.indentXmlFile(outfile)
+        log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
     def ParseAll(self):
-        #log.info("ParseAll temporarily disabled")
-        #return
-        self.__doAll(os.path.sep.join([self.baseDir, u'dv', 'intermediate','word']), '.doc',self.Parse)
+        intermediate_dir = os.path.sep.join([self.baseDir, u'dv', 'intermediate','word'])
+        self._do_for_all(intermediate_dir, '.doc',self.Parse)
 
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
@@ -617,7 +496,8 @@ class DVManager(LegalSource.Manager):
                        validate=False)
 
     def GenerateAll(self):
-        self.__doAllParsed(self.Generate)
+        parsed_dir = os.path.sep.join([self.baseDir, u'dv', 'parsed'])
+        self._do_for_all(parsed_dir, '.xht2',self.Generate)
         
     def DownloadAll(self):
         sd = DVDownloader(self.baseDir)
@@ -627,17 +507,22 @@ class DVManager(LegalSource.Manager):
         sd = DVDownloader(self.baseDir)
         sd.DownloadNew()
 
-    def IndexAll(self):
-        self.indexroot = ET.Element("documents")
-        self.__doAllParsed(self.Index)
-        tree = ET.ElementTree(self.indexroot)
-        tree.write("%s/%s/index.xml" % (self.baseDir,__moduledir__))
+    ####################################################################
+    # OVERRIDES OF Manager METHODS
+    ####################################################################
+    
+    def _getModuleDir(self):
+        return __moduledir__
 
-    def IndexpagesForPredicate(self,predicate,predtriples,subjects):
+    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
         if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
             print "H"
-            
 
+    ####################################################################
+    # CLASS-SPECIFIC HELPER FUNCTIONS
+    ####################################################################
+    
+    # none for now...
 
 if __name__ == "__main__":
     #if not '__file__' in dir():

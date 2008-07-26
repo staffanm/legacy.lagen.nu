@@ -207,19 +207,20 @@ def runcmd(cmdline):
 def normalizeSpace(string):
     return u' '.join(string.split())
 
-def listDirs(dir,suffix=None):
+def listDirs(d,suffix=None,reverse=False):
     """A generator that works much like os.listdir, only recursively (and only returns files, not directories)"""
     # inspired by http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/161542
-    if isinstance(dir,str):
+        
+    if isinstance(d,str):
         print "WARNING: listDirs was called with str. Use unicode instead, plz"
-    directories = [dir]
+    directories = [d]
     while directories:
-        dir = directories.pop()
-        for f in os.listdir(dir):
+        d = directories.pop()
+        for f in sorted(os.listdir(d),cmp=numcmp,reverse=reverse):
             
-            f = "%s%s%s" % (dir,os.path.sep,f)
+            f = "%s%s%s" % (d,os.path.sep,f)
             if os.path.isdir(f):
-                directories.append(f)
+                directories.insert(0,f)
             elif os.path.isfile:
                 if suffix and not f.endswith(suffix):
                     continue
