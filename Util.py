@@ -5,31 +5,6 @@
 import os, sys, subprocess, codecs, shutil
 import BeautifulSoup
 
-# other peoples code
-
-# From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
-# author: Trent Mick
-# license: PSL
-def mkdir(newdir):
-    """works the way a good mkdir should :)
-    - already exists, silently complete
-    - regular file in the way, raise an exception
-    - parent directory(ies) does not exist, make them as well
-    """
-    if os.path.isdir(newdir):
-        pass
-    elif os.path.isfile(newdir):
-        raise OSError("a file with the same name as the desired " \
-                      "dir, '%s', already exists." % newdir)
-    else:
-        head, tail = os.path.split(newdir)
-        if head and not os.path.isdir(head):
-            mkdir(head)
-            #print "mkdir %s" % repr(newdir)
-        if tail:
-            os.mkdir(newdir)
-
-# the rest of the code is my fault
 
 # Set up common namespaces and suitable prefixes for them
 ns = {'dc':'http://purl.org/dc/elements/1.1/',
@@ -56,6 +31,10 @@ class ExternalCommandError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
+def mkdir(newdir):
+    if not os.path.exists(newdir):
+        os.path.makedirs(newdir)
 
 def ensureDir(filename):
     d = os.path.dirname(filename)

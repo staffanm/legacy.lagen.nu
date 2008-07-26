@@ -1,0 +1,12 @@
+datadir = "data"
+
+[sfs]
+next_sfsnr = 2008:720
+parse_force = False
+
+[dv]
+# user/pass information for Domstolsverkets FTP server - you have to
+# contact domstolsverket to get your own login
+ftp_user = user
+ftp_pass = pass
+parse_force = False

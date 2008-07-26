@@ -33,7 +33,9 @@ def analyse(logfile):
     errlocs = {}
     warnlocs = {}
     probdocs = Set()
+
     for line in f:
+        # sys.stdout.write(line)
         log_match = re_logline(line)
         if not log_match:
             sys.stdout.write(u"Malformed log line: %r\n" % line)
@@ -44,15 +46,19 @@ def analyse(logfile):
             level = log_match.group(4)
             docid = log_match.group(5)
             message = log_match.group(7)
-            message = re.sub(r'\[[^]]+\]', r'[...]',message)
+            if message:
+                message = re.sub(r'\[[^]]+\]', r'[...]',message)
+            else:
+                continue
             if level == 'ERROR' and 'Error:' in line: # real errors with tracebacks
+                # print log_match.groups()
                 probdocs.add(docid)
                 errcnt += 1
-                # print "ERR: %s" % message
+                #print "ERR: %s" % message
                 done = False
                 while not done:
                     line = f.next()
-                    if 'Error: ' in line:
+                    if 'Error: ' in line or 'Error [' in line:
                         done = True
                     # sys.stdout.write("    TB: " + line)
                     fb_match = re_tbframe(line)
@@ -60,6 +66,7 @@ def analyse(logfile):
                         errloc = "%s:%s" % (fb_match.group(1), fb_match.group(2))
                     else:
                         errcode = line
+                #print "Done"
                 #errloc += "(%s)" % line.split(":")[0]
                 errloc += "(%s)" % line[:-2]
                 errlocs[errloc] = errlocs.get(errloc,0) + 1

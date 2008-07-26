@@ -22,7 +22,6 @@ import BeautifulSoup
 
 # My own stuff
 import LegalSource
-import Robot
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -144,7 +143,10 @@ class ARNManager(LegalSource.Manager):
     def RelateAll(self):
         log.info('ParseAll not implemented')
         return
-        
+
+    def _get_module_dir(self):
+        return __moduledir__
+    
 
 class TestARNCollection(unittest.TestCase):
     baseDir = "testdata"

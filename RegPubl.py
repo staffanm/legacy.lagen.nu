@@ -218,7 +218,7 @@ class RegPublParser(LegalSource.Parser):
 
 class RegPublManager(LegalSource.Manager):
 
-    def _getModuleDir(self):
+    def _get_module_dir(self):
         return __moduledir__
 
     def Download(self,id):

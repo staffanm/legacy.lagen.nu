@@ -21,7 +21,6 @@ import BeautifulSoup
 
 # My own stuff
 import LegalSource
-import Robot
 import Util
 
 __version__   = (0,1)
@@ -119,7 +118,7 @@ class JOParser(LegalSource.Parser):
 
 
 class JOManager(LegalSource.Manager):
-    def _getModuleDir(self):
+    def _get_module_dir(self):
         return __moduledir__
     
     def DownloadNew(self):

@@ -17,6 +17,7 @@ import xml.etree.cElementTree as ET
 
 # 3rd party modules
 import BeautifulSoup
+from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
@@ -53,17 +54,11 @@ log = logging.getLogger(u'ls')
 
 
 class ParseError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class IdNotFound(Exception):
     """thrown whenever we try to lookup a URI/displayid/basefile but can't find it"""
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 # class CustomNamespaceManager(NamespaceManager):
 #     def __init__(self, graph):
@@ -80,7 +75,7 @@ class IdNotFound(Exception):
 #         return self.__cache[uri]
     
     
-class Downloader:
+class Downloader(object):
     """Abstract base class for downloading legal source documents
     (statues, cases, etc).
 
@@ -125,7 +120,7 @@ class Downloader:
             self.ids[id] = resource
 
 
-class Parser:
+class Parser(object):
     """Abstract base class for a legal source document"""
     re_NormalizeSpace  = re.compile(r'\s+',).sub
 
@@ -184,14 +179,14 @@ class Parser:
     def storage_uri_value(self, value):
         return value.replace(" ", '_')
 
-class Manager:
-    def __init__(self,baseDir=None,moduleDir=None):
+class Manager(object):
+    def __init__(self):
         """basedir is the top-level directory in which all file-based data is
         stored and handled. moduledir is a sublevel directory that is unique
         for each LegalSource.Manager subclass."""
-        self.baseDir = baseDir
-        self.moduleDir = moduleDir
+        self.moduleDir = self._get_module_dir()
         self.config = ConfigObj("conf.ini")
+        self.baseDir = self.config['datadir']
 
     re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 
@@ -277,6 +272,9 @@ class Manager:
     
     def Indexpages(self):
         rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
+        if not os.path.exists(rdf_nt):
+            log.warning("Could not find RDF dump %s" % rdf_nt)
+            return
         # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
         #
         # g = Graph()
@@ -344,8 +342,9 @@ class Manager:
 
     def _do_for_all(self,dir,suffix,method):
         for f in Util.listDirs(dir, suffix, reverse=True):
-            # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
-            basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+            basefile = self._file_to_basefile(f)
+            if not basefile:
+                continue
             # regardless of any errors in calling this method, we just
             # want to log it and go on
             try:
@@ -368,7 +367,13 @@ class Manager:
                            sys.exc_info()[0].__name__,
                            msg))
                 
-        
+
+    def _file_to_basefile(self,f):
+        """Given a full physical filename, transform it into the
+        logical id-like base of that filename, or None if the filename
+        shouldn't be processed."""
+        # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
+        return "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
 
     def _outfile_is_newer(self,infiles,outfile):
         """check to see if the outfile is newer than all ingoing files"""

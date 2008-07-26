@@ -86,27 +86,14 @@ class Referatstext(CompoundStructure): pass
 
 class Stycke(CompoundStructure): pass
 
-
-
 # NB: You can't use this class unless you have an account on
 # domstolsverkets FTP-server, and unfortunately I'm not at liberty to
 # give mine out in the source code...
 class DVDownloader(LegalSource.Downloader):
-    def __init__(self,baseDir="data"):
-        self.dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
-        self.intermediate_dir = baseDir + os.path.sep + __moduledir__ + os.path.sep + 'word'
-        if not os.path.exists(self.dir): 
-            Util.mkdir(self.dir)
-        inifile = self.dir + os.path.sep + __moduledir__ + ".ini"
-        log.info(u'Laddar inställningar från %s' % inifile)
-        self.config = ConfigObj(inifile)
-        # Why does this say "super() argument 1 must be type, not
-        # classobj"? Because LegalSource.Downloader is an oldstyle
-        # class. Change it to inherit from object, or replace the
-        # super call with LegalSource.Downloader.__init__(self)
-        # super(DVDownloader,self).__init__()
-        
-        self.browser = Browser()
+    def __init__(self,config):
+        self.config = config
+        self.download_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
+        self.intermediate_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'word'
 
     def DownloadAll(self):
         self.download(recurse=True)
@@ -130,16 +117,16 @@ class DVDownloader(LegalSource.Downloader):
             if line.startswith('type=dir') and recurse:
                 self.download(filename,recurse)
             elif line.startswith('type=file'):
-                if os.path.exists(os.path.sep.join([self.dir,dirname,filename])):
+                if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
                     pass 
                 else:
                     if dirname:
                         fullname = '%s/%s' % (dirname,filename)
-                        localdir = self.dir + os.path.sep + dirname
+                        localdir = self.download_dir + os.path.sep + dirname
                         Util.mkdir(localdir)
                     else:
                         fullname = filename
-                        localdir = self.dir
+                        localdir = self.download_dir
                         
                     log.info(u'Hämtar %s till %s' % (filename, localdir))
                     os.system("ncftpget -E -u %s -p %s ftp.dom.se %s %s" %
@@ -465,8 +452,9 @@ class DVManager(LegalSource.Manager):
         # print "infile: %s" % infile
         # check to see if the outfile is newer than all ingoing
         # files. If it is, don't parse
-        force = True
+        force = (self.config[__moduledir__]['parse_force'] == 'True')
         if not force and self._outfile_is_newer([infile],outfile):
+            log.info(u"%s: Överhoppad", basefile)
             return
 
         p = self.__parserClass()
@@ -500,18 +488,18 @@ class DVManager(LegalSource.Manager):
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
         
     def DownloadAll(self):
-        sd = DVDownloader(self.baseDir)
+        sd = DVDownloader(self.config[__moduledir__])
         sd.DownloadAll()
 
     def DownloadNew(self):
-        sd = DVDownloader(self.baseDir)
+        sd = DVDownloader(self.config[__moduledir__])
         sd.DownloadNew()
 
     ####################################################################
     # OVERRIDES OF Manager METHODS
     ####################################################################
     
-    def _getModuleDir(self):
+    def _get_module_dir(self):
         return __moduledir__
 
     def _indexpages_for_predicate(self,predicate,predtriples,subjects):
@@ -531,5 +519,5 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     DVManager.__bases__ += (DispatchMixin,)
-    mgr = DVManager(u'testdata', __moduledir__)
+    mgr = DVManager()
     mgr.Dispatch(sys.argv)

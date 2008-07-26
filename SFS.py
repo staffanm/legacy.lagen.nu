@@ -215,15 +215,11 @@ def FilenameToSFSnr(filename):
 
 
 class SFSDownloader(LegalSource.Downloader):
-    def __init__(self,baseDir="data"):
-        self.dir = baseDir + "/%s/downloaded" % __moduledir__
-        if not os.path.exists(self.dir): 
-            Util.mkdir(self.dir)
-        self.config = ConfigObj("%s/%s.ini" % (self.dir, __moduledir__))
-
-        # Why does this say "super() argument 1 must be type, not classobj"
-        # super(SFSDownloader,self).__init__()
-        self.browser = Browser()
+    def __init__(self,config):
+        self.config = config
+        self.download_dir = config['datadir'] + "/%s/downloaded" % __moduledir__
+        super(SFSDownloader,self).__init__()
+        # self.browser = Browser()
 
     
     def DownloadAll(self):
@@ -1909,9 +1905,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
             # check to see if the outfile is newer than all ingoing
             # files. If it is (and force is False), don't parse
-            force = True
+            force = (self.config[__moduledir__]['parse_force'] == 'True')
             if not force and self._outfile_is_newer(files,filename):
-                log.debug(u"%s: Överhoppad", basefile)
+                log.info(u"%s: Överhoppad", basefile)
                 return
                     
             # if not verbose: sys.stdout.write("\tParse %s" % basefile)        
@@ -1964,17 +1960,22 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         self._do_for_all('downloaded/sfst','html',self.ParseGen)
         
     def Download(self,id):
-        sd = SFSDownloader(self.baseDir)
+        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
         sd._downloadSingle(id)
 
     def DownloadAll(self):
-        sd = SFSDownloader(self.baseDir)
+        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
         sd.DownloadAll()
 
     def DownloadNew(self):
-        sd = SFSDownloader(self.baseDir)
+        sd = SFSDownloader(self.baseDir,self.config[__moduledir__])
         sd.DownloadNew()
 
+    def RelateAll(self):
+        super(SFSManager,self).__init__()
+        self.IndexDV
+
+        
 
     ################################################################
     # IMPLEMENTATION OF FilebasedTester interface
@@ -2056,9 +2057,20 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     # OVERRIDES OF Manager METHODS
     ####################################################################    
         
-    def _getModuleDir(self):
+    def _get_module_dir(self):
         return __moduledir__
 
+    def _file_to_basefile(self,f):
+        """Override of LegalSource._file_to_basefile, with special
+        handling of archived versions and two-part documents"""
+        # this transforms 'foo/bar/baz/HDO/1-01.doc' to 'HDO/1-01'
+        if '-' in f:
+            return None
+        basefile = "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+        if basefile.endswith('_A') or basefile.endswith('_B'): 
+            basefile = basefile[:-2] 
+        return basefile
+    
     def _indexpages_for_predicate(self,predicate,predtriples,subjects):
         if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
             log.info("Creating index pages ordered by fsNummer")
@@ -2146,7 +2158,7 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     SFSManager.__bases__ += (DispatchMixin,)
-    mgr = SFSManager("testdata",__moduledir__)
+    mgr = SFSManager()
     mgr.Dispatch(sys.argv)
 
 

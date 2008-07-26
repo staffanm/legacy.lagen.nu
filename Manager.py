@@ -8,6 +8,10 @@ import codecs
 import inspect
 import time
 import logging
+
+# 3rd party modules
+from configobj import ConfigObj
+
 # my libs
 from DispatchMixin import DispatchMixin
 import LegalSource
@@ -16,8 +20,9 @@ import Util
 log = logging.getLogger('mgr')
 
 class Manager:
-    def __init__(self,baseDir):
-        self.baseDir = baseDir
+    def __init__(self):
+        self.config = ConfigObj("conf.ini")
+        self.baseDir = self.config['datadir']
     
     def _pairListToDict(self,pairlist):
         """maybe this could be done w/ list comprehensions (can they
@@ -55,8 +60,10 @@ class Manager:
         import LegalSource
         classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
         for classname in classes.keys():
+            # print "examining classname %s (%s) in module %r" % (classname, classes[classname], module.__name__)
             if (LegalSource.Manager in inspect.getmro(classes[classname])
-                and str(classes[classname]).startswith(module.__name__)):
+                and classname.startswith(module.__name__)):
+                # print "found a match!"
                 return classes[classname]
 
     def _doTest(self,module):
@@ -93,16 +100,12 @@ class Manager:
         else:
             modules = (module,)
         for m in modules:
-            # print "doing %s" % m
             start = time.time()
             mod = __import__(m, globals(), locals(), [])
             mgrClass = self._findManager(mod)
                 
             if mgrClass:
-                if hasattr(mod,'__moduledir__'):
-                    mgr = mgrClass(self.baseDir, mod.__moduledir__)
-                else:
-                    mgr = mgrClass(self.baseDir)                
+                mgr = mgrClass()
                 if hasattr(mgr,action):
                     log.info(u'%s: calling %s' % (m,action))
                     method = getattr(mgr,action)
@@ -117,10 +120,7 @@ class Manager:
         mod = __import__(module, globals(), locals(), [])
         mgrClass = self._findManager(mod)
         if mgrClass:
-            if hasattr(mod,'__moduledir__'):
-                mgr = mgrClass(self.baseDir, mod.__moduledir__)
-            else:
-                mgr = mgrClass(self.baseDir)                
+            mgr = mgrClass()
             if hasattr(mgr,action):
                 for docid in docids:
                     if docid:
@@ -203,7 +203,7 @@ class Manager:
         self._doAction('ParseAll',module)
         self._doAction('RelateAll',module)
         self._doAction('GenerateAll',module)
-        self.IndexPages(module)
+        self.Indexpages(module)
         self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
@@ -211,5 +211,5 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     Manager.__bases__ += (DispatchMixin,)
-    mgr = Manager('testdata')
+    mgr = Manager()
     mgr.Dispatch(sys.argv)
