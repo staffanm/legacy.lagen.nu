@@ -40,15 +40,16 @@ WhitespaceOrPunctuation ::= (Whitespace/punctuation)+
 # * œ and Œ are windows-1252-only oe-ligatures (upper- and lowercase)
 # * Š (S-with-caron) occurs in 1994:1720 (where they probably mean 'é') 
 # * ş occurs in 1982:790 (where they probably mean space)
-word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]+
-char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠş]
+word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠşõÆÿ]+
+char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠşõÆÿ]
 number       ::= [0-9]+
 digit	     ::= [0-9]
 
 
 # Skiljetecken som hittats i SFST-datat:
-# * the – is some wierd windows-1252-hyphen, 
+# * the – and — are windows-1252-dashes, 
 # * “ and ” are "smart quotes", 
+# * „ is smart quoutes, subscripted
 # * › is larger-than-or-equal, 
 # * ‹ is less-than-or-equal,
 # * ˜ is a superscript-tilde. 
@@ -58,8 +59,12 @@ digit	     ::= [0-9]
 # * \177 is DEL, which is present in 1977:1194, 
 # *  is unmapped, but present in 1993:1199. 
 # * ‰ is unknown to me. 
-# * ¥ is (erronosly?) used in 2005:837. 
-punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–›‹˜‡•‰¥-]
+# * ¥ is (erronosly?) used in 2005:837.
+# * ± is plus-minus
+# * ¼, ½, ¾ are fractions (1/4, 1/2, 3/4 - should these be digits?)
+# * ¡ and ¿ is upside-down exclaimation point and question mark
+# * ¢ is a cent sign
+punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„-]
 
 
 # ------------ end of base.ebnf ----------------

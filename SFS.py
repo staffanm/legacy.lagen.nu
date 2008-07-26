@@ -866,7 +866,7 @@ class SFSParser(LegalSource.Parser):
         """convert Roman numeral to integer"""
         result = 0
         index = 0
-        for numeral, integer in self.romanNumeralMap:
+        for numeral, integer in self.roman_numeral_map:
             while s[index:index+len(numeral)] == numeral:
                 result += integer
                 index += len(numeral)

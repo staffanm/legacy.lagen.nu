@@ -254,7 +254,7 @@ class LegalRef:
             self.currentlaw = None
 
         if taglist[-1] != len(fixedindata):
-            log.error(u'Problem (%d:%d) with %s / %s' % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata))
+            log.error(u'Problem (%d:%d) with %r / %r' % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata))
 
             raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata), indata[(taglist[-1]-4):taglist[-1]+4])
 
