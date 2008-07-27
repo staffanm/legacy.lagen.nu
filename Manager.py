@@ -51,7 +51,8 @@ class Manager:
         classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
         for classname in classes.keys():
             if (FilebasedTester.FilebasedTester in inspect.getmro(classes[classname])
-                and str(classes[classname]).startswith(module.__name__)):
+                and (str(classes[classname]).startswith(module.__name__)
+                     or classname.startswith(module.__name__))):
                 return classes[classname]
         
     def _findManager(self,module):
@@ -60,7 +61,6 @@ class Manager:
         import LegalSource
         classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
         for classname in classes.keys():
-            # print "examining classname %s (%s) in module %r" % (classname, classes[classname], module.__name__)
             if (LegalSource.Manager in inspect.getmro(classes[classname])
                 and classname.startswith(module.__name__)):
                 # print "found a match!"
