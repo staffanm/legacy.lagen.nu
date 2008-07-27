@@ -670,7 +670,11 @@ class SFSParser(LegalSource.Parser):
                             if val.startswith('N'):
                                 raise IckeSFS()
                             if len(r) == 0:
-                                docuri = self.lagrum_parser.parse(val)[0].uri
+                                firstnode = self.lagrum_parser.parse(val)[0]
+                                if hasattr(firstnode,'uri'):
+                                    docuri = firstnode.uri
+                                else:
+                                    log.warning(u'Kunde inte tolka [%s] som ett SFS-nummer' % val)
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                             # FIXME: Eftersom det här sen går in i ett
                             # id-fält, id-värden måste vara NCNames,
@@ -684,7 +688,12 @@ class SFSParser(LegalSource.Parser):
                             # börja med ett Letter)
                             p.id = u'L' + val
                             # p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
-                            p.uri = self.lagrum_parser.parse(val)[0].uri
+                            firstnode = self.lagrum_parser.parse(val)[0]
+                            if hasattr(firstnode,'uri'):
+                                p.uri = firstnode.uri
+                            else:
+                                log.warning(u'Kunde inte tolka [%s] som ett SFS-nummer' % val)
+                            
                             # self.lagrum_parser.verbose = False
                             # print "docuri for %s: %s" % (val, p.uri)
                             
@@ -918,8 +927,14 @@ class SFSParser(LegalSource.Parser):
             elif key == u'Författningen har upphävts genom':
                 val = val.replace(u'SFS ','')
                 val = val.replace(u'SFS','')
-                uri = self.lagrum_parser.parse(val)[0].uri
-                meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+                firstnode = self.lagrum_parser.parse(val)[0]
+                if hasattr(firstnode,'uri'):
+                    uri = firstnode.uri
+                    meta[key] = LinkSubject(val,uri=uri,predicate=self.labels[key])
+                else:
+                    log.warning(u'Kunde inte tolka [%s] som ett "upphävd genom"-SFS-nummer' % val)
+                    meta[key] = val
+                
 
             elif key == u'Tidsbegränsad':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
@@ -930,6 +945,7 @@ class SFSParser(LegalSource.Parser):
                                             uri=self.find_authority_rec("Regeringskansliet"),
                                             predicate=self.labels[u'Utgivare'])
 
+        # print "parsing %s" % meta[u'SFS nr']
         docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
         # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
         meta[u'xml:base'] = docuri
@@ -1667,24 +1683,25 @@ class SFSParser(LegalSource.Parser):
         return t
 
     def makeTabellrad(self,p,tabstops=None,kwargs={}):
-    # Algoritmen är anpassad för att hantera tabeller där texten inte
-    # alltid är så jämnt ordnat i spalter, som fallet är med
-    # SFSR-datat (gissningvis på grund av någon trasig
-    # tab-till-space-konvertering nånstans).
+        # Algoritmen är anpassad för att hantera tabeller där texten inte
+        # alltid är så jämnt ordnat i spalter, som fallet är med
+        # SFSR-datat (gissningvis på grund av någon trasig
+        # tab-till-space-konvertering nånstans).
         def makeTabellcell(text):
             # Avavstavningsalgoritmen lämnar lite i övrigt att önska
             return Tabellcell([text.replace("- ", "").strip()])
-        cols = [u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än fem kolumner
+        cols = [u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än sju kolumner
         if tabstops:
             statictabstops = True # Använd de tabbstoppositioner vi fick förra raden
         else:
             statictabstops = False # Bygg nya tabbstoppositioner från scratch
+            self.trace['tabell'].debug("rebuilding tabstops")
             tabstops = [0,0,0,0,0,0,0]
         lines = p.split(self.reader.linesep)
         numlines = len([x for x in lines if x])
         potentialrows = len([x for x in lines if x and (x[0].isupper() or x[0].isdigit())])
         linecount = 0
-        self.trace['tabell'].debug("%s %s" % (numlines, potentialrows))
+        self.trace['tabell'].debug("numlines: %s, potentialrows: %s" % (numlines, potentialrows))
         if (numlines > 1 and numlines == potentialrows):
             self.trace['tabell'].debug(u'makeTabellrad: Detta verkar vara en tabellrad-per-rad')
             singlelinemode = True
@@ -1702,14 +1719,14 @@ class SFSParser(LegalSource.Parser):
             lasttab = 0
             colcount = 0
             if singlelinemode:
-                cols = [u'',u'',u'',u'',u'']
+                cols = [u'',u'',u'',u'',u'',u'',u'']
             if l[0] == ' ':
                 emptyleft = True
             else:
                 if emptyleft:
                     self.trace['tabell'].debug(u'makeTabellrad: skapar ny tabellrad pga snedformatering')
                     rows.append(cols)
-                    cols = [u'',u'',u'',u'',u'']
+                    cols = [u'',u'',u'',u'',u'',u'',u'']
                     emptyleft = False
                     
             for c in l:
@@ -1728,13 +1745,17 @@ class SFSParser(LegalSource.Parser):
                         if linecount > 1 or statictabstops:
                             if tabstops[colcount+1]+7 < charcount: # tillåt en ojämnhet om max sju tecken
 
+                                self.trace['tabell'].debug(u'colcount is %d, # of tabstops is %d' % (colcount, len(tabstops)))
                                 self.trace['tabell'].debug(u'charcount shoud be max %s, is %s - adjusting to next tabstop (%s)' % (tabstops[colcount+1] + 5, charcount,  tabstops[colcount+2]))
-                                colcount += 1
+                                if tabstops[colcount+2] != 0:
+                                    self.trace['tabell'].debug(u'safe to advance colcount')
+                                    colcount += 1
                         colcount += 1 
                         tabstops[colcount] = charcount
+                        self.trace['tabell'].debug("Tabstops now: %r" % tabstops)
                     spacecount = 0
             cols[colcount] += u' ' + l[lasttab:charcount]
-            self.trace['tabell'].debug(repr(tabstops))
+            self.trace['tabell'].debug("Tabstops: %r" % tabstops)
             if singlelinemode:
                 self.trace['tabell'].debug(u'makeTabellrad: skapar ny tabellrad')
                 rows.append(cols)
@@ -1929,7 +1950,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # files. If it is (and force is False), don't parse
             force = (self.config[__moduledir__]['parse_force'] == 'True')
             if not force and self._outfile_is_newer(files,filename):
-                log.debug(u"%s: Överhoppad", basefile)
+                log.info(u"%s: Överhoppad", basefile)
                 return
 
             # 3: check to see if the Författning has been revoked using
@@ -1959,10 +1980,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.debug(u'%s: Upphävd', basefile)
+            log.info(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
-            log.debug(u'%s: Ingen SFS', basefile)
+            log.info(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
                      
     def ParseAll(self):
@@ -2033,6 +2054,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
+            #pass
             quiet=True
         p = SFSParser()
         p.verbose = verbose

@@ -95,7 +95,7 @@ ChapterSectionItemRef  ::= ChapterSectionRef, Whitespace, ItemRef
 ChapterSectionRef ::= ChapterRef, Whitespace, SectionRef
 SFSNr             ::= LeftParen, Whitespace?, LawRef, Whitespace?,RightParen
 LawRef            ::= LawRefID
-LawRefID          ::= LangtAr, Colon, number, (Whitespace, ('s.', Whitespace?)?, digit)?
+LawRefID          ::= LangtAr, Colon, ('bih.',' '?)?, number, (Whitespace, ('s.', Whitespace?)?, digit)?
 # LawRefID          ::= LangtAr, Colon, number, Whitespace, 's.', Whitespace , digit
 SectionRef        ::= SectionRefID, Whitespace, '§'
 

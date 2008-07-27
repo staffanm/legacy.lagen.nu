@@ -34,7 +34,7 @@ class ExternalCommandError(Exception):
 
 def mkdir(newdir):
     if not os.path.exists(newdir):
-        os.path.makedirs(newdir)
+        os.makedirs(newdir)
 
 def ensureDir(filename):
     d = os.path.dirname(filename)
