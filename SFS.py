@@ -1214,7 +1214,7 @@ class SFSParser(LegalSource.Parser):
             elif state_handler == self.blankline:
                 res = state_handler()
             else:
-                log.debug(u"            Ny strecksats: '%s...'" % self.reader.peekline()[:30])
+                log.debug(u"            Ny strecksats: '%s...'" % self.reader.peekline()[:60])
                 cnt += 1
                 p = self.reader.readparagraph()
                 li = Listelement(ordinal = unicode(cnt))
@@ -1688,15 +1688,18 @@ class SFSParser(LegalSource.Parser):
         # SFSR-datat (gissningvis på grund av någon trasig
         # tab-till-space-konvertering nånstans).
         def makeTabellcell(text):
-            # Avavstavningsalgoritmen lämnar lite i övrigt att önska
-            return Tabellcell([text.replace("- ", "").strip()])
-        cols = [u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än sju kolumner
+            # Av-avstavning (algoritmen lämnar lite i övrigt att önska)
+            if len(text) > 1:
+                text = text.replace("- ", "")
+            return Tabellcell([text.strip()])
+
+        cols = [u'',u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än åtta kolumner
         if tabstops:
             statictabstops = True # Använd de tabbstoppositioner vi fick förra raden
         else:
             statictabstops = False # Bygg nya tabbstoppositioner från scratch
             self.trace['tabell'].debug("rebuilding tabstops")
-            tabstops = [0,0,0,0,0,0,0]
+            tabstops = [0,0,0,0,0,0,0,0]
         lines = p.split(self.reader.linesep)
         numlines = len([x for x in lines if x])
         potentialrows = len([x for x in lines if x and (x[0].isupper() or x[0].isdigit())])
@@ -1719,14 +1722,14 @@ class SFSParser(LegalSource.Parser):
             lasttab = 0
             colcount = 0
             if singlelinemode:
-                cols = [u'',u'',u'',u'',u'',u'',u'']
+                cols = [u'',u'',u'',u'',u'',u'',u'',u'']
             if l[0] == ' ':
                 emptyleft = True
             else:
                 if emptyleft:
                     self.trace['tabell'].debug(u'makeTabellrad: skapar ny tabellrad pga snedformatering')
                     rows.append(cols)
-                    cols = [u'',u'',u'',u'',u'',u'',u'']
+                    cols = [u'',u'',u'',u'',u'',u'',u'',u'']
                     emptyleft = False
                     
             for c in l:
@@ -1744,13 +1747,18 @@ class SFSParser(LegalSource.Parser):
                         # för hantering av tomma vänsterceller
                         if linecount > 1 or statictabstops:
                             if tabstops[colcount+1]+7 < charcount: # tillåt en ojämnhet om max sju tecken
-
+                                if len(tabstops) <= colcount + 2:
+                                    tabstops.append(0)
+                                    cols.append(u'')
                                 self.trace['tabell'].debug(u'colcount is %d, # of tabstops is %d' % (colcount, len(tabstops)))
                                 self.trace['tabell'].debug(u'charcount shoud be max %s, is %s - adjusting to next tabstop (%s)' % (tabstops[colcount+1] + 5, charcount,  tabstops[colcount+2]))
                                 if tabstops[colcount+2] != 0:
                                     self.trace['tabell'].debug(u'safe to advance colcount')
                                     colcount += 1
-                        colcount += 1 
+                        colcount += 1
+                        if len(tabstops) <= charcount:
+                            tabstops.append(0)
+                            cols.append(u'')
                         tabstops[colcount] = charcount
                         self.trace['tabell'].debug("Tabstops now: %r" % tabstops)
                     spacecount = 0
@@ -2054,7 +2062,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
-            #pass
+            # pass
             quiet=True
         p = SFSParser()
         p.verbose = verbose
