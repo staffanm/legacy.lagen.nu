@@ -246,11 +246,11 @@ class SFSDownloader(LegalSource.Downloader):
 
     def _setLastSFSnr(self,last_sfsnr=None):
         if not last_sfsnr:
-            log.info(u'Letar efter senaste SFS-nr i  %s/sfst" % self.dir')
+            log.info(u'Letar efter senaste SFS-nr i  %s/sfst"' % self.download_dir)
             last_sfsnr = "1600:1"
-            for f in Util.listDirs(u"%s/sfst" % self.dir, ".html"):
+            for f in Util.listDirs(u"%s/sfst" % self.download_dir, ".html"):
 
-                tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.dir)+6:-5]), f)
+                tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.download_dir)+6:-5]), f)
                 # FIXME: RFS1975:6 > 2008:1
                 if tmp > last_sfsnr:
                     log.info(u'%s > %s (%s)' % (tmp, last_sfsnr, f))
@@ -343,7 +343,7 @@ class SFSDownloader(LegalSource.Downloader):
         uppdaterad_tom = old_uppdaterad_tom = None
         for part in parts:
             sfst_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
-            sfst_file = "%s/sfst/%s.html" % (self.dir, SFSnrToFilename(part))
+            sfst_file = "%s/sfst/%s.html" % (self.download_dir, SFSnrToFilename(part))
             self.browser.retrieve(sfst_url,"sfst.tmp")
             if os.path.exists(sfst_file):
                 old_checksum = self._checksum(sfst_file)
@@ -367,7 +367,7 @@ class SFSDownloader(LegalSource.Downloader):
                 Util.robustRename("sfst.tmp", sfst_file)
 
         sfsr_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
-        sfsr_file = "%s/sfsr/%s.html" % (self.dir, SFSnrToFilename(sfsnr))
+        sfsr_file = "%s/sfsr/%s.html" % (self.download_dir, SFSnrToFilename(sfsnr))
         if uppdaterad_tom != old_uppdaterad_tom:
             self._archive(sfsr_file, sfsnr, old_uppdaterad_tom)
 
@@ -379,7 +379,7 @@ class SFSDownloader(LegalSource.Downloader):
         """Arkivera undan filen filename, som ska vara en
         grundförfattning med angivet sfsnr och vara uppdaterad
         t.o.m. det angivna sfsnumret"""
-        archive_filename = "%s/sfst/%s-%s.html" % (self.dir, SFSnrToFilename(sfsnr),
+        archive_filename = "%s/sfst/%s-%s.html" % (self.download_dir, SFSnrToFilename(sfsnr),
                                                    SFSnrToFilename(uppdaterad_tom).replace("/","-"))
         if checksum:
             archive_filename = archive_filename.replace(".html", "-checksum-%s.html"%checksum)

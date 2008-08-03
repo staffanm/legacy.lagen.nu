@@ -174,13 +174,16 @@ class Manager:
     def Publish(self):
         log.info("Creating zip file")
         from zipfile import ZipFile, ZIP_DEFLATED
-        basepath = os.path.sep.join([self.baseDir,'sfs'])
+        basepath = os.path.sep.join([self.baseDir,u'sfs'])
         # start with this for blendow:
         zipname = basepath+os.path.sep+'blendow.sfs.zip'
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
         for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
             zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')
-            z.write(f, zipf)
+            # it seems the write method can't handle unicode strings
+            # -- convert to bytestrings using default encoding (ascii)
+            # as they should never contain non-ascii chars (FLW...)
+            z.write(f.encode(), zipf.encode())
         z.close()
         
         #cmd = "tar czf - %s | ssh staffan@vps.tomtebo.org \"cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s\"" % (self.baseDir, self.baseDir)
