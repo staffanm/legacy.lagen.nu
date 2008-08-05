@@ -601,7 +601,10 @@ class SFSParser(LegalSource.Parser):
                 # iteration:
                 for rp in registry:
                     if rp[u'SFS-nummer'] == ob.sfsnr:
-                        rp[u'Övergångsbestämmelse'] = ob
+                        if u'Övergångsbestämmelse' in rp and rp[u'Övergångsbestämmelse'] != None:
+                            log.warning(u'%s: Det finns flera Övergångsbestämmelse-objekt för SFS-nummer %s - endast det första behålls' % (self.id, ob.sfsnr))
+                        else:
+                            rp[u'Övergångsbestämmelse'] = ob
                         found = True
                         break
                 if not found:
@@ -853,7 +856,7 @@ class SFSParser(LegalSource.Parser):
         # self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
         self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
         self.reader.autostrip = True
-
+        self.registry = registry
         meta = self.makeHeader() 
         body = self.makeForfattning()
         elements = self._count_elements(body)
@@ -1254,12 +1257,15 @@ class SFSParser(LegalSource.Parser):
             res = state_handler()
             if res != None:
                 if state_handler != self.makeOvergangsbestammelse:
-                    if hasattr(self,'id'):
-                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer" % self.id)
+                    # assume these are the initial Övergångsbestämmelser
+                    if hasattr(self,'id') and '/' in self.id:
+                        sfsnr = FilenameToSFSnr(self.id)
+                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer - antar %s" % (self.id, sfsnr))
                     else:
-                        log.warning(u"(unknown): Övergångsbestämmelsen saknar ett SFS-nummer")
+                        sfsnr = u'0000:000'
+                        log.warning(u"(unknown): Övergångsbestämmelsen saknar ett SFS-nummer - antar %s" % (sfsnr))
 
-                    obs.append(Overgangsbestammelse([res], sfsnr=u'0000:000'))
+                    obs.append(Overgangsbestammelse([res], sfsnr=sfsnr))
                 else:
                     obs.append(res)
             
@@ -1872,15 +1878,26 @@ class SFSParser(LegalSource.Parser):
                       u'Övergångs- och ikraftträdandebestämmelser']
         
         l = self.reader.peekline()
-        if l in separators:
-            return True
-        fuzz = difflib.get_close_matches(l, separators, 1, 0.9)
-        if fuzz:
-            log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, l, fuzz[0]))
-            return True
-        
-        return self.reader.peekline() in [u'Övergångsbestämmelser',
-                                          u'Ikraftträdande- och övergångsbestämmelser']
+        if l not in separators:
+            fuzz = difflib.get_close_matches(l, separators, 1, 0.9)
+            if fuzz:
+                log.warning(u"%s: Antar att '%s' ska vara '%s'?" % (self.id, l, fuzz[0]))
+            else:
+                return False
+        try:
+            # if the separator "Övergångsbestämmelser" (or similar) is
+            # followed by a regular paragraph, it was probably not a
+            # separator but an ordinary headline (occurs in a few law
+            # texts)
+            np = self.reader.peekparagraph(2)
+            if self.isParagraf(np):
+                return False
+            
+        except IOError:
+            pass
+
+        return True
+
 
     def isOvergangsbestammelse(self):
         return self.re_SimpleSfsId.match(self.reader.peekline())
