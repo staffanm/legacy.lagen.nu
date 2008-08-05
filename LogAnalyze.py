@@ -95,7 +95,8 @@ def analyse(logfile):
     dumplist(probdocs, "probdocs.txt")
 
 def dumplist(l, file):
-    fp = open(file,"w")
+    fp = codecs.open(file, "w",encoding='utf-8')
+    # fp = open(file,"w")
     for entry in l:
         fp.write(entry+"\n")
     fp.close()

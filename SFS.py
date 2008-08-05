@@ -1468,8 +1468,13 @@ class SFSParser(LegalSource.Parser):
             self.trace['rubrik'].debug("isRubrik: ends with comma/colon etc")
             return False
 
+        if p.startswith("/") and p.endswith("./"):
+            self.trace['rubrik'].debug("isRubrik: Seems like a comment")
+            return False
+            
+
         try:
-            nextp = self.reader.peekparagraph(2) # FIXME: should be 2
+            nextp = self.reader.peekparagraph(2)
         except IOError:
             nextp = u''
         
@@ -1574,6 +1579,9 @@ class SFSParser(LegalSource.Parser):
         # 1. Är kort (indikerar en tabellrad med en enda vänstercell)
         if (assumeTable or numlines > 1) and not requireColumns:
             matches = [l for l in lines if len(l) < 50]
+            if numlines == 1 and '  ' in lines[0]:
+                self.trace['tabell'].debug(u"isTabell('%s'): Endast en rad, men tydlig kolumnindelning" % (p[:20]))
+                return True
             if len(matches) == numlines:
                 self.trace['tabell'].debug(u"isTabell('%s'): Alla rader korta, undersöker undantag" % (p[:20]))
                 
@@ -1586,6 +1594,10 @@ class SFSParser(LegalSource.Parser):
                     p2 = self.reader.peekparagraph(2)
                 except IOError:
                     p2 = ''
+                try:
+                    p3 = self.reader.peekparagraph(3)
+                except IOError:
+                    p3 = ''
                 if not assumeTable and not self.isTabell(p2,
                                                          assumeTable = True, 
                                                          requireColumns = True):
@@ -1601,6 +1613,9 @@ class SFSParser(LegalSource.Parser):
                     # temporal-paragraf-med-tabell.txt
                     if self.isParagraf(p2):
                         self.trace['tabell'].debug(u"isTabell('%s'): Specialundantag: följs av Paragraf, inte Tabellrad" % (p[:20]))
+                        return False
+                    if self.isRubrik(p2) and self.isParagraf(p3):
+                        self.trace['tabell'].debug(u"isTabell('%s'): Specialundantag: följs av Rubrik och sedan Paragraf, inte Tabellrad" % (p[:20]))
                         return False
                     # Om stycket är *exakt* detta signalerar det nog
                     # övergången från tabell (kanske i slutet på en
@@ -2062,8 +2077,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
-            # pass
             quiet=True
+            pass
         p = SFSParser()
         p.verbose = verbose
         p.id = '(test)'

@@ -194,7 +194,7 @@ class Manager:
         (ret, stdout, stderr) = Util.runcmd(cmd)
         if (ret == 0):
             log.info("Fixing permissions and such")
-            cmd = "ssh staffan@vps.tomtebo.org 'chmod -R a+r /www/staffan/ferenda.lagen.nu/all.zip'"
+            cmd = "ssh staffan@vps.tomtebo.org 'chmod -R a+r /www/staffan/ferenda.lagen.nu/blendow.sfs.zip'"
             Util.runcmd(cmd)
             log.info("Published and done!")
         else:

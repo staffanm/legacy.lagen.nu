@@ -440,6 +440,7 @@ class LegalRef:
             return res
         else: return u""
 
+
     def format_generic_link(self,part,uriformatter=None):
         try:
             uri = self.uriformatter[part.tag](self.find_attributes([part]))
@@ -449,19 +450,29 @@ class LegalRef:
             else:
                 uri = self.sfs_format_uri(self.find_attributes([part]))
         if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
-        if self.predicate:
+        if not uri:
+            # the formatting function decided not to return a URI for
+            # some reason (maybe it was a partial/relative reference
+            # without a proper base uri context
+            return part.text
+        elif self.predicate:
             return LinkSubject(part.text, uri=uri, predicate=self.predicate)
         else:
             return Link(part.text, uri=uri)
         
-
+    # FIXME: unify this with format_generic_link
     def format_custom_link(self, attributes, text, production):
         try:
             uri = self.uriformatter[production](attributes)
         except KeyError:
             uri = self.sfs_format_uri(attributes)
 
-        if self.predicate:
+        if not uri:
+            # the formatting function decided not to return a URI for
+            # some reason (maybe it was a partial/relative reference
+            # without a proper base uri context
+            return part.text
+        elif self.predicate:
             return LinkSubject(text, uri=uri, predicate=self.predicate)
         else:
             return Link(text, uri=uri)
@@ -896,7 +907,6 @@ class LegalRef:
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celf.htm
         # Om hur länkning till EURLEX ska se ut:
         # http://eur-lex.europa.eu/sv/tools/help_syntax.htm
-
         # Absolut URI?
         if 'ar' in attributes and 'lopnummer' in attributes:
             sektor = '3'
@@ -908,6 +918,12 @@ class LegalRef:
             res += "%s%s%s%04d" % (sektor,attributes['ar'],
                                    rattslig_form[attributes['akttyp']],
                                    int(attributes['lopnummer']))
+        else:
+            if not self.baseuri_attributes['baseuri'].startswith(res):
+                # FIXME: should we warn about this?
+                # print "Relative reference, but base context %s is not a celex context" % self.baseuri_attributes['baseuri']
+                return None
+
         if 'artikel' in attributes:
             res += "#%s" % attributes['artikel']
             if 'underartikel' in attributes:

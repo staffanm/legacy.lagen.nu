@@ -9,9 +9,7 @@
           </Tabellcell><Tabellcell>
             <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K23P1">23 kap. 1 §</LinkSubject>
           </Tabellcell>
-        </Tabellrad>
-      </Tabell><Tabell>
-        <Tabellrad>
+        </Tabellrad><Tabellrad>
           <Tabellcell>
             <unicode>apportegendom</unicode>
           </Tabellcell><Tabellcell>
@@ -31,9 +29,7 @@
           </Tabellcell><Tabellcell>
             <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K23P1">23 kap. 1 §</LinkSubject>
           </Tabellcell>
-        </Tabellrad>
-      </Tabell><Tabell>
-        <Tabellrad>
+        </Tabellrad><Tabellrad>
           <Tabellcell>
             <unicode>apportegendom</unicode>
           </Tabellcell><Tabellcell>

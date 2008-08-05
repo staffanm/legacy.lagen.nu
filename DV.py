@@ -106,7 +106,7 @@ class DVDownloader(LegalSource.Downloader):
         # ftplib to play nice w/ domstolsverkets ftp server
         url = 'ftp://ftp.dom.se/%s' % dirname
         log.info(u'Listar innehåll i %s' % url)
-        cmd = "ncftpls -m -u %s -p %s %s" % (self.config['ftp_user'], self.config['ftp_pass'], url)
+        cmd = "ncftpls -m -u %s -p %s %s" % (self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'], url)
         (ret, stdout, stderr) = Util.runcmd(cmd)
         if ret != 0:
             raise Util.ExternalCommandError(stderr)
@@ -488,11 +488,11 @@ class DVManager(LegalSource.Manager):
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
         
     def DownloadAll(self):
-        sd = DVDownloader(self.config[__moduledir__])
+        sd = DVDownloader(self.config)
         sd.DownloadAll()
 
     def DownloadNew(self):
-        sd = DVDownloader(self.config[__moduledir__])
+        sd = DVDownloader(self.config)
         sd.DownloadNew()
 
     ####################################################################
