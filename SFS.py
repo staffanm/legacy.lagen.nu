@@ -1431,25 +1431,29 @@ class SFSParser(LegalSource.Parser):
 
     def isRubrik(self, p=None):
         if p == None:
-            self.trace['rubrik'].debug("isRubrik: direct")
             p = self.reader.peekparagraph()
             indirect = False
         else:
-            self.trace['rubrik'].debug("isRubrik: indirect")
             indirect = True
 
-        self.trace['rubrik'].debug("isRubrik: p=%s" % p)
+        self.trace['rubrik'].debug("isRubrik (%s): indirect=%s" % (p[:50], indirect))
+
+        # self.trace['rubrik'].debug("isRubrik: p=%s" % p)
         if len(p) > 100: # it shouldn't be too long
-            self.trace['rubrik'].debug("isRubrik: too long")
+            self.trace['rubrik'].debug("isRubrik (%s): too long" % (p[:50]))
             return False
 
         # A headline should not look like the start of a paragraph or a numbered list
         if self.isParagraf(p): 
-            self.trace['rubrik'].debug("isRubrik: looks like para")
+            self.trace['rubrik'].debug("isRubrik (%s): looks like para" % (p[:50]))
             return False
 
         if self.isNumreradLista(p):
-            self.trace['rubrik'].debug("isRubrik: looks like numreradlista")
+            self.trace['rubrik'].debug("isRubrik (%s): looks like numreradlista" % (p[:50]))
+            return False
+
+        if self.isStrecksatslista(p):
+            self.trace['rubrik'].debug("isRubrik (%s): looks like strecksatslista" % (p[:50]))
             return False
             
 
@@ -1458,18 +1462,18 @@ class SFSParser(LegalSource.Parser):
                  p.endswith("m. m.") or 
                  p.endswith("m.fl.") or 
                  p.endswith("m. fl."))):
-            self.trace['rubrik'].debug("isRubrik: ends with period")
+            self.trace['rubrik'].debug("isRubrik (%s): ends with period" % (p[:50]))
             return False 
 
         if (p.endswith(",") or  # a headline never ends with these characters
             p.endswith(":") or 
             p.endswith("samt") or 
             p.endswith("eller")):
-            self.trace['rubrik'].debug("isRubrik: ends with comma/colon etc")
+            self.trace['rubrik'].debug("isRubrik (%s): ends with comma/colon etc" % (p[:50]))
             return False
 
         if p.startswith("/") and p.endswith("./"):
-            self.trace['rubrik'].debug("isRubrik: Seems like a comment")
+            self.trace['rubrik'].debug("isRubrik (%s): Seems like a comment" % (p[:50]))
             return False
             
 
@@ -1483,7 +1487,7 @@ class SFSParser(LegalSource.Parser):
         # infinite recursion)
         if not indirect:
             if (not self.isParagraf(nextp)) and (not self.isRubrik(nextp)):
-                self.trace['rubrik'].debug("isRubrik: is not followed by a paragraf or rubrik")
+                self.trace['rubrik'].debug("isRubrik (%s): is not followed by a paragraf or rubrik" % (p[:50]))
                 return False
 
         # if this headline is followed by a second headline, that
@@ -1493,7 +1497,8 @@ class SFSParser(LegalSource.Parser):
             self.current_headline_level = 1
         
         # ok, all tests passed, this might be a headline!
-        self.trace['rubrik'].debug("isRubrik: All tests passed for %s" % p)
+        self.trace['rubrik'].debug("isRubrik (%s): All tests passed!" % (p[:50]))
+                                                                         
         return True
 
     def isUpphavdParagraf(self):
@@ -1831,8 +1836,10 @@ class SFSParser(LegalSource.Parser):
         self.trace['numlist'].debug("idOfNumreradLista: no match")
         return None
 
-    def isStrecksatslista(self):
-        p = self.reader.peekline()
+    def isStrecksatslista(self,p=None):
+        if not p:
+            p = self.reader.peekline()
+
         return (p.startswith("- ") or
                 p.startswith("--"))
 
@@ -2077,7 +2084,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
-            quiet=True
+            #quiet=True
             pass
         p = SFSParser()
         p.verbose = verbose
