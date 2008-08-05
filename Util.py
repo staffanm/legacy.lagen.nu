@@ -2,7 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 """General library of small utility functions"""
 
-import os, sys, subprocess, codecs, shutil
+import os, sys, subprocess, codecs, shutil, locale
 import BeautifulSoup
 
 
@@ -177,10 +177,15 @@ def runcmd(cmdline):
     (stdout, stderr) = p.communicate()
     ret = p.returncode
     # print "runcmd '%s...': %s, '%s...', '%s...'" % (cmdline[:15], ret, stdout[:15], stderr[:15])
-    if not isinstance(stdout, unicode):
-        stdout = stdout.decode(sys.stdout.encoding)
-    if not isinstance(stderr, unicode):
-        stderr = stderr.decode(sys.stdout.encoding)
+    if sys.stdout.encoding:
+        enc = sys.stdout.encoding
+    else:
+        enc = locale.getpreferredencoding()
+        
+    if isinstance(stdout, str):
+        stdout = stdout.decode(enc)
+    if isinstance(stderr, str):
+        stderr = stderr.decode(enc)
     return (p.returncode,stdout,stderr)
 
 def normalizeSpace(string):
