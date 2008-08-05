@@ -66,7 +66,7 @@
 	  <div py:when="isinstance(part,Rubrik)"  py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part,UpphavtKapitel)" py:strip="">${render_upphavtkapitel(part)}</div>
 	  <div py:when="isinstance(part,Kapitel)" py:strip="">${render_kapitel(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_avdelning</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Avdelning')}</div>
 	</py:for>
       </section>
       
@@ -85,7 +85,7 @@
 	  <div py:when="isinstance(part, Rubrik)"   py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
 	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_kapitel</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Kapitel')}</div>
 	</py:for>
       </section>
       
@@ -106,7 +106,7 @@
         ${render_stycke(paragraf[0], paragraf.ordinal)}
         <py:for each="part in paragraf[1:]" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_paragraf</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Paragraf')}</div>
         </py:for>
       </section>
             
@@ -114,7 +114,8 @@
 	 id="${stycke.id}"
 	 about="#${stycke.id}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
-        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div></py:for>
+        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div>
+</py:for>
       </p>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict
@@ -130,7 +131,7 @@
 	  >
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_numreradlista</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Numreradlista')}</div>
         </py:for>
       </ul>
 
@@ -141,7 +142,7 @@
 	  >
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_strecksatslista</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Strecksatslista')}</div>
         </py:for>
       </ul>
 
@@ -152,7 +153,7 @@
 	  >
         <py:for each="part in lista" py:choose="">
           <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bokstavslista</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Bokstavslista')}</div>
         </py:for>
       </ul>
 
@@ -161,7 +162,7 @@
 	  about="#${listelement.id}"
 	  >
       <!--! for nested lists -->
-      <py:for each="part in listelement" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_listelement</div></py:for>
+      <py:for each="part in listelement" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Listelement')}</div></py:for>
       </li>
 
       <table py:def="render_tabell(tabell)">
@@ -169,12 +170,16 @@
 	  <tr py:when="isinstance(part, Tabellrad)">
 	    <py:for each="subpart in part" py:choose="">
 	      <td py:when="isinstance(subpart, Tabellcell)">
-		<py:for each="node in subpart" py:choose=""><div py:when="isinstance(node, Link)" py:strip="">${render_link(node)}</div><div py:when="isinstance(node, unicode)" py:strip="">${node}</div><div py:otherwise="" class="warning">${node.__class__.__name__} utelämnad pga internt fel i render_tabell (td)</div></py:for>
- </td>
-	      <div py:otherwise="" class="warning">${subpart.__class__.__name__} utelämnad pga internt fel i render_tabell (tr)</div>
+		<py:for each="node in subpart" py:choose="">
+		  <div py:when="isinstance(node, Link)" py:strip="">${render_link(node)}</div>
+		  <div py:when="isinstance(node, unicode)" py:strip="">${node}</div>
+		  <div py:otherwise="" py:strip="">${dispatch_render(node,'Tabellcell')}</div>
+		</py:for>
+	      </td>
+	      <div py:otherwise="" py:strip="">${dispatch_render(subpart,'Tabellrad')}</div>
 	    </py:for>
 	  </tr>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_tabell</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Tabell')}</div>
 	</py:for>
       </table>
 
@@ -182,15 +187,17 @@
 	<h py:content="obs.rubrik">Övergångsbestämmelser</h>
         <py:for each="part in obs" py:choose="">
 	  <div py:when="isinstance(part, Overgangsbestammelse)" py:strip="">${render_overgangsbestammelse(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_overgangsbestammelser</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Overgangsbestammelser')}</div>
         </py:for>
       </section>
 
       <section py:def="render_overgangsbestammelse(ob)">
         <py:for each="part in ob" py:choose="">
+	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_overgangsbestammelse</div>
+	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Overgangsbestammelse')}</div>
         </py:for>
       </section>
 
@@ -203,7 +210,7 @@
 	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
 	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_numreradlista(part)}</div>
 	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_bilaga</div>
+	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Bilaga')}</div>
         </py:for>
       </section>
 
@@ -224,6 +231,27 @@
 	</dl>
       </section>
 
+      <section py:def="dispatch_render(part,context)" py:choose="">
+	${Markup('&lt;!--')}
+	<span class="warning">Internt fel: ${part.__class__.__name__} ska inte förekomma i ${context}</span>
+	${Markup('--&gt;')}
+	<div py:when="isinstance(part, Rubrik)"          py:strip="">${render_rubrik(part)}</div>
+	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>
+	<div py:when="isinstance(part, UpphavtKapitel)"  py:strip="">${render_upphavtkapitel(part)}</div>
+	<div py:when="isinstance(part, Kapitel)"         py:strip="">${render_kapitel(part)}</div>
+	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
+	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part)}</div>
+	<div py:when="isinstance(part, Stycke)"          py:strip="">${render_stycke(part)}</div>
+	<div py:when="isinstance(part, NumreradLista)"   py:strip="">${render_numreradlista(part)}</div>
+	<div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
+	<div py:when="isinstance(part, Bokstavslista)"   py:strip="">${render_bokstavslista(part)}</div>
+	<div py:when="isinstance(part, Listelement)"     py:strip="">${render_listelement(part)}</div>
+	<div py:when="isinstance(part, Tabell)"          py:strip="">${render_tabell(part)}</div>
+	<div py:when="isinstance(part, Bilaga)"          py:strip="">${render_bilaga(part)}</div>
+	<div py:when="isinstance(part, Overgangsbestammelse)" py:strip="">${render_overgangsbestammelse(part)}</div>
+	<div py:otherwise="" class="warning">${part.__class__.__name__} kan inte visas</div>
+      </section>
+      
       <!--! main body -->
       <h property="dct:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
       ${render_metadata(meta)}
@@ -241,7 +269,7 @@
 	<div py:when="isinstance(part, Tabell)"          py:strip="">${render_tabell(part)}</div>
 	<div py:when="isinstance(part, Overgangsbestammelser)" py:strip=""><!--!${render_overgangsbestammelser(part)}--></div>
 	<div py:when="isinstance(part, Bilaga)"          py:strip="">${render_bilaga(part)}</div>
-	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
+	<div py:otherwise="" py:strip="">${dispatch_render(part,'main')}</div>
       </py:for>
       </section>
       <section role="secondary">

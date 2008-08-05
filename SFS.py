@@ -362,7 +362,9 @@ class SFSDownloader(LegalSource.Downloader):
                     # we've updated it or not
                     Util.robustRename("sfst.tmp", sfst_file)
                 else:
+                    log.debug(u'        %s har inte ändrats (gammal checksum %s)' % (sfsnr,old_checksum))
                     pass # leave the current file untouched
+                
             else:
                 Util.robustRename("sfst.tmp", sfst_file)
 
@@ -491,7 +493,7 @@ class SFSParser(LegalSource.Parser):
         self.forarbete_parser = LegalRef(LegalRef.FORARBETEN)
 
         self.current_section = u'0'
-        self.current_chapter = u'0'
+        # self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
         LegalSource.Parser.__init__(self)
     
@@ -1029,6 +1031,7 @@ class SFSParser(LegalSource.Parser):
         if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
         k = Kapitel(**kwargs)
         self.current_headline_level = 0
+        self.current_section = u'0'
         
         log.debug(u"    Nytt kapitel: '%s...'" % line[:30])
         
@@ -1419,6 +1422,16 @@ class SFSParser(LegalSource.Parser):
                 # sys.stdout.write(u"chapter_id: '%s' failed second check" % p)
                 return None
 
+            # sometimes (2005:1207) it's a headline, referencing a
+            # specific section somewhere else - if the "1 kap. " is
+            # immediately followed by "5 § " then that's probably the
+            # case
+            if (p.endswith(u" §") or
+                p.endswith(u" §§") or
+                (p.endswith(u" stycket") and u" § " in p)):
+                return None
+            
+
             # Om det ser ut som en tabell är det nog ingen kapitelrubrik
             if self.isTabell(p, requireColumns=True):
                 return None 
@@ -1522,10 +1535,8 @@ class SFSParser(LegalSource.Parser):
         # section is probably just a reference and not really the
         # start of a new section. One example of that is
         # /1991:1469#K1P7S1.
-        #
-        # FIXME: "10" should be larger than "9"
         if Util.numcmp(paragrafnummer, self.current_section) >= 0:
-            self.trace['paragraf'].debug("isParagraf: sectionnumberingcompare succeded (%s > %s)" % (paragrafnummer, self.current_section))
+            self.trace['paragraf'].debug("isParagraf: section numbering compare succeded (%s > %s)" % (paragrafnummer, self.current_section))
             return True
         else:
             self.trace['paragraf'].debug("isParagraf: section numbering compare failed (%s <= %s)" % (paragrafnummer, self.current_section))
@@ -2084,7 +2095,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
-            #quiet=True
+            quiet=True
             pass
         p = SFSParser()
         p.verbose = verbose
