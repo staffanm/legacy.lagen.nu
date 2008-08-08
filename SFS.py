@@ -585,6 +585,11 @@ class SFSParser(LegalSource.Parser):
                     if isinstance(node,Link):
                         meta[u'Förarbeten'].append(node.uri)
 
+        # Plocka in lite extra metadata
+        meta[u'Senast hämtad'] = DateSubject(datetime.fromtimestamp(timestamp),
+                                             predicate="rinfoex:senastHamtad")
+        meta[u'Förkortning'] = u'PUL'
+
         # Plocka ut övergångsbestämmelserna och stoppa in varje
         # övergångsbestämmelse på rätt plats i registerdatat.
         obs = None
@@ -602,7 +607,7 @@ class SFSParser(LegalSource.Parser):
                 for rp in registry:
                     if rp[u'SFS-nummer'] == ob.sfsnr:
                         if u'Övergångsbestämmelse' in rp and rp[u'Övergångsbestämmelse'] != None:
-                            log.warning(u'%s: Det finns flera Övergångsbestämmelse-objekt för SFS-nummer %s - endast det första behålls' % (self.id, ob.sfsnr))
+                            log.warning(u'%s: Det finns flera Övergångsbestämmelse-objekt för SFS-nummer [%s] - endast det första behålls' % (self.id, ob.sfsnr))
                         else:
                             rp[u'Övergångsbestämmelse'] = ob
                         found = True
@@ -749,7 +754,7 @@ class SFSParser(LegalSource.Parser):
                                 else:
                                     log.warning(u"%s: Okänd omfattningstyp  ['%s']" % (self.id, changecat))
                                     pred = None
-                                p[key].extend(self.lagrum_parser.parse(val,docuri,pred))
+                                p[key].extend(self.lagrum_parser.parse(changecat,docuri,pred))
                                 p[key].append(u';')
                             p[key] = p[key][:-1] # chop of trailing ';'
                         elif key == u'F\xf6rarbeten':
@@ -1144,8 +1149,9 @@ class SFSParser(LegalSource.Parser):
         log.debug(u"        Nytt stycke: '%s...'" % self.reader.peekline()[:30])
         s = Stycke([self.reader.readparagraph()])
         while not self.reader.eof():
+            log.debug(u"            makeStycke: calling guess_state ")
             state_handler = self.guess_state()
-            log.debug(u"            guess_state:%s " % state_handler.__name__)
+            log.debug(u"            makeStycke: guess_state returned %s " % state_handler.__name__)
             if state_handler in (self.makeNumreradLista,
                                  self.makeBokstavslista,
                                  self.makeStrecksatslista,
@@ -1155,6 +1161,7 @@ class SFSParser(LegalSource.Parser):
             elif state_handler == self.blankline:
                 state_handler() # Bara att slänga bort
             else:
+                log.debug(u"            makeStycke: ...we're done")
                 return s
         return s
 
@@ -1260,7 +1267,7 @@ class SFSParser(LegalSource.Parser):
                     # assume these are the initial Övergångsbestämmelser
                     if hasattr(self,'id') and '/' in self.id:
                         sfsnr = FilenameToSFSnr(self.id)
-                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer - antar %s" % (self.id, sfsnr))
+                        log.warning(u"%s: Övergångsbestämmelsen saknar SFS-nummer - antar [%s]" % (self.id, sfsnr))
                     else:
                         sfsnr = u'0000:000'
                         log.warning(u"(unknown): Övergångsbestämmelsen saknar ett SFS-nummer - antar %s" % (sfsnr))
@@ -1874,7 +1881,6 @@ class SFSParser(LegalSource.Parser):
     def isOvergangsbestammelser(self):
         separators = [u'Övergångsbestämmelser',
                       u'Ikraftträdande- och övergångsbestämmelser',
-                      u'Övergångs- och slutbestämmelser',
                       u'Övergångs- och ikraftträdandebestämmelser']
         
         l = self.reader.peekline()
@@ -1921,7 +1927,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         start = time()
         rdffile = "%s/dv/parsed/rdf.nt"%self.baseDir
         assert os.path.exists(rdffile), "RDF file %s doesn't exist" % rdffile
-        g.load(rdffile,format="nt")
+        # seems like the NTriples parser incorrectly assumes that
+        # input is latin-1. As our NT file is utf-8, adjust
+        # transparently using EncodedFile
+        fp = codecs.EncodedFile(open(rdffile), 'iso-8859-1', 'utf-8')
+        
+        g.parse(fp,format="nt")
         log.info("RDF loaded (%.3f sec)", time()-start)
         start = time()
         triples = defaultdict(list)
@@ -1929,8 +1940,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         cnt = 0
         for triple in g:
             cnt += 1
-            if cnt % 100 == 0:
-                sys.stdout.write(".")
+            #if cnt % 100 == 0:
+            #    sys.stdout.write(".")
             (obj, pred, subj) = triple
             triples[obj].append(triple)
             if pred == RINFO['lagrum']:
@@ -1967,6 +1978,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                         nodename = pred.replace(Util.ns['dct'],'dct:')
                         triple_node = PET.SubElement(rattsfall_node, nodename)
                         triple_node.text = Util.normalizeSpace(obj)
+                        # print "triple_node.text: %r" % triple_node.text
 
         log.info("RDF processed (%.3f sec)", time()-start)
         Util.indent_et(root_node)
@@ -2051,15 +2063,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
-        sanitized_sfsnr = basefile.replace(' ','.')
-        log.info(u'Transformerar %s > %s' % (infile,outfile))
         Util.mkdir(os.path.dirname(outfile))
+        start = time()
         Util.transform("xsl/sfs.xsl",
                        infile,
                        outfile,
-                       {'lawid': sanitized_sfsnr,
-                        'today':datetime.today().strftime("%Y-%m-%d")},
                        validate=False)
+        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
@@ -2085,8 +2095,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         sd.DownloadNew()
 
     def RelateAll(self):
-        super(SFSManager,self).__init__()
-        self.IndexDV
+        # super(SFSManager,self).RelateAll()
+        self.IndexDV()
 
         
 
@@ -2198,7 +2208,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             for y in range(1991, datetime.today().year+1):
                 yearintervals.append((y,y))
 
-            para = ET.Element("p")
             for (startyear,endyear) in yearintervals:
                 if startyear == endyear:
                     title = u'Författningar utgivna %s' % startyear
@@ -2210,8 +2219,14 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                         self.baseDir,self.moduleDir,startyear,endyear)
                     linktext = "%s-%s" % (startyear,endyear)
 
+                container = ET.Element(self.XHT2NS+"div")
+                sidebar = ET.Element(self.XHT2NS+"p")
+                sidebar.attrib['role'] = 'secondary'
+                sidebar.text = "sidebar text here"
+                container.append(self.__index_by_year(startyear,endyear,predtriples,subjects))
+                container.append(sidebar)
                 self._elementtree_to_html(title,
-                                          self.__index_by_year(startyear,endyear,predtriples,subjects),
+                                          container,
                                           outfile)
 
         elif predicate == 'http://dublincore.org/documents/dcmi-terms/title':
@@ -2246,6 +2261,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
     def __index_by_year(self,startyear,endyear,fsnummer,subjects):
         ulist = ET.Element(self.XHT2NS+"ul")
+        ulist.attrib['role'] = 'main'
         for (key,value) in sorted(fsnummer.items()):
             year = int(key.split(":")[0])
             if startyear <= year <= endyear:

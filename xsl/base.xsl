@@ -26,7 +26,7 @@
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="base.js"></script>
-      <link rel="shortcut icon" href="http://lagen.nu/favicon.ico" type="image/x-icon" />
+      <link rel="shortcut icon" href="file:///C:/Users/staffan/wds/ferenda.lagen.nu/img/favicon.ico" type="image/x-icon" />
       <!-- <link rel="stylesheet" type="text/css" href="file:///home/staffan/wds/svn.lagen.nu/css/default.css"/> -->
       <link rel="stylesheet" type="text/css" href="file:///C:/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
       
@@ -39,19 +39,19 @@
     <!--<xsl:message>base/body</xsl:message>-->
     <body>
       <div id="vinjett">
+	<h1><a href="/">lagen.nu</a></h1>
+	<ul id="navigation">
+	  <li><a href="/nyheter">Nyheter</a></li>
+	  <li><a href="/index/sfs">Författningar</a></li>
+	  <li><a href="/index/dv">Domslut</a></li>
+	  <li><a href="/om">Om</a></li>
+	</ul>
 	<form method="get" action="http://www.google.com/custom" style="display:inline;">
-	  <div class="navigation">
-	    <a href="/">Lagen.nu</a> -
-	    <a href="/nyheter">Nyheter</a> - 
-	    <a href="/index/sfs">Författningar</a> -
-	    <a href="/index/dv">Domslut</a> -
-	    <a href="/om">Om</a> -
-	    <u>S</u>ök:
-	    <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>
-	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
-	    <input type="hidden" name="domains" value="lagen.nu"/><br/>
-	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
-	  </div>
+	  <u>S</u>ök:
+	  <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>
+	  <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
+	  <input type="hidden" name="domains" value="lagen.nu"/><br/>
+	  <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
 	</form>
       </div>
       <div id="wrapper_extra">
@@ -59,23 +59,16 @@
 	  <div id="lagtext">
 	    <xsl:apply-templates/>
 	  </div>
-	  <div id="kommentarer">
-	    <div class="sidoruta">
-	      &#160;
-	    </div>
+	  <div id="kommentarer" class="sidoruta">
+	    <xsl:apply-templates mode="kommentarer"/>
 	  </div>
-	  <div id="referenser">
-	    <div class="sidoruta">
-	      <p>Om dokumentet</p>
-	      <xsl:apply-templates mode="refs"/>
-	    </div>
+	  <div id="referenser" class="sidoruta">
+	    <xsl:apply-templates mode="refs"/>
 	  </div>
 	</div>
 	<div id="sidfot">
-	  <b>Lagen.nu:</b> Mauris non risus a nisi posuere
-	  gravida. Morbi ut lacus. Nulla faucibus pulvinar ligula. Proin
-	  mattis. Maecenas sagittis venenatis lorem. Praesent facilisis
-	  posuere pede.
+	  <b>Lagen.nu</b> är en privat webbplats. Informationen här är
+	  inte officiell och kan innehålla fel.
 	</div>
       </div>
     </body>

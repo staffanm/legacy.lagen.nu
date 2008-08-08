@@ -10,7 +10,7 @@
 
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
-    Statisk sida | Lagen.nu
+    <xsl:value-of select="//xht2:title"/> | Lagen.nu
   </xsl:template>
   <xsl:template name="metarobots"/>
   <xsl:template name="linkalternate"/>
@@ -31,12 +31,13 @@
   </xsl:template>
 
   <xsl:template match="xht2:a">
-    <xsl:call-template name="uri"/>
+    <xsl:call-template name="link"/>
   </xsl:template>
   <!-- specialregler som kopierar innehåll från xht2-namepace till
        xhtml1-dito. BORDE inte behövas med defaultregeln nedan, men
-       tydligen (pga de namespaceprefix som ElementTree genererar) -
-       känns som xsltproc beter sig skumt... -->
+       tydligen (pga att ElementTree genererar ns0 som namespaceprefix
+       istf xht2 som detta stylesheet använder) - känns som xsltproc
+       beter sig skumt... -->
   <xsl:template match="xht2:ul">
     <ul><xsl:apply-templates/></ul>
   </xsl:template>
@@ -45,6 +46,13 @@
   </xsl:template>
   <xsl:template match="xht2:div">
     <div><xsl:apply-templates/></div>
+  </xsl:template>
+  <xsl:template match="xht2:p">
+    <p><xsl:apply-templates/></p>
+  </xsl:template>
+
+  <xsl:template match="xht2:p[@role='secondary']">
+    <!-- emit nothing -->
   </xsl:template>
   
   <!-- defaultregel: kopierar alla element från xht2 till
@@ -55,7 +63,7 @@
     </xsl:element>
   </xsl:template>
 
-  <xsl:template match="@xht2:*">
+  <xsl:template match="xht2:*">
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
@@ -65,6 +73,29 @@
     <!-- emit nothing -->
   </xsl:template>
 
+  <!-- kommentarer mode -->
+
+  <xsl:template match="xht2:div" mode="kommentarer">
+    <xsl:apply-templates select="//xht2:p[@role='secondary']" mode="trans-ns"/>
+  </xsl:template>
+
+  <xsl:template match="*" mode="kommentarer">
+    <!-- emit nothing -->
+  </xsl:template>
+
+  
+  <!-- generic namespace translation -->
+  <xsl:template match="xht2:div" mode="trans-ns">
+    <div><xsl:apply-templates mode="trans-ns"/></div>
+  </xsl:template>
+  <xsl:template match="xht2:span" mode="trans-ns">
+    <span><xsl:apply-templates mode="trans-ns"/></span>
+  </xsl:template>
+  <xsl:template match="xht2:p" mode="trans-ns">
+    <p><xsl:apply-templates mode="trans-ns"/></p>
+  </xsl:template>
+  
+  
   
 </xsl:stylesheet>
 

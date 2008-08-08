@@ -9,7 +9,7 @@
 
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
-    [Rättsfallsidentifierare] | Lagen.nu
+    <xsl:value-of select="//xht2:title"/> | Lagen.nu
   </xsl:template>
   <xsl:template name="metarobots"/>
   <xsl:template name="linkalternate"/>

@@ -6,6 +6,7 @@
       xsi:schemaLocation="http://www.w3.org/2002/06/xhtml2/ http://www.w3.org/MarkUp/SCHEMA/xhtml2.xsd"
       xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
       xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+      xmlns:rinfoex="http://lagen.nu/terms#"
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:base="${meta['xml:base']}"
       xml:lang="sv"
@@ -14,7 +15,6 @@
       >
   <xi:include href="base.template.xht2"/>
     <head about="${meta['xml:base']}">
-      <!-- ! consider adding 'property="${meta[u'Referat'].predicate}"' -->
       <title py:content="meta[u'Rubrik']">Författningsrubrik</title>
       <!-- ! base is not valid in xhtml2 - but we need it to set the
       base context for RDFa parsing. Fix this later through pyRDFa
@@ -23,16 +23,21 @@
       <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
       <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
+      <py:if test="u'Senast hämtad' in meta">
+	<meta property="rinfoex:senastHamtad" content="${meta[u'Senast hämtad']}" datatype="xsd:date"/>
+      </py:if>
       <py:if test="u'uri' in meta[u'Utgivare']">
 	<link rel="dct:publisher" href="${meta[u'Utgivare'].uri}"/>
       </py:if>
       <py:if test="u'uri' in meta[u'Departement/ myndighet']">
 	<link rel="dct:creator" href="${meta[u'Departement/ myndighet'].uri}"/>
       </py:if>
-
       <py:if test="u'Utfärdad' in meta">
 	<meta property="rinfo:utfardandedatum"
 	      content="${meta[u'Utfärdad']}" datatype="xsd:date"/>
+      </py:if>
+      <py:if test="u'Förkortning' in meta">
+	<meta property="dct:alternate" content="${meta[u'Förkortning']}"/>
       </py:if>
       <py:if test="u'Ikraft' in meta">
         <meta property="rinfo:ikrafttradandedatum"
@@ -77,6 +82,7 @@
 
       <section py:def="render_kapitel(kapitel)"
 	       id="${kapitel.id}"
+	       typeof="rinfo:Kapitel"
 	       about="#${kapitel.id}">
 
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
@@ -97,6 +103,7 @@
 
       <section py:def="render_paragraf(paragraf)"
 	       id="${paragraf.id}"
+	       typeof="rinfo:Paragraf"
 	       about="#${paragraf.id}">
 	<!--! första stycket måste rendreras tillsammans med
 	     paragrafbeteckningen (inuti samma p-element) -->
@@ -226,7 +233,9 @@
 	    <dd py:when="isinstance(val,list)">
 	      ${render_listvalue(val)}
 	    </dd>
-	    <dd py:otherwise="" py:content="val">Värde</dd>
+	    <dd py:otherwise=""
+		py:content="val"
+		property="${val.predicate}">Värde</dd>
 	  </py:for>
 	</dl>
       </section>

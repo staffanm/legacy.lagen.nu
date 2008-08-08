@@ -272,7 +272,11 @@ class Manager(object):
         #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
     
     def Indexpages(self):
-        rdf_nt = "%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
+        """Creates index pages for all documents for a particular
+        legalsource. Subclasses can override _indexpages_for_predicate
+        and _indexpages_navigation to control exactly which index pages are created"""
+
+        rdf_nt ="%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
         if not os.path.exists(rdf_nt):
             log.warning("Could not find RDF dump %s" % rdf_nt)
             return

@@ -1,7 +1,24 @@
-h { background-color: #f5f5dc; } /* beige */
+#lagtext {
+      background: lightyellow;
+      border: solid 1px yellow;
+}
 
-p { background-color: #e0ffff; } /* lightblue */
+#kommentarer p {
+    background: lightgreen;
+    border: solid 1px green;
+    margin-bottom: 5px;
+}
 
-section > p:first-of-type { background-color: #add8e6; } /* lightcyan */
-
-section { background-color: #ffa07a } /* lightsalmon */ 
+#referenser p, #referenser dl {
+    background: lightblue;
+    border: solid 1px blue;
+    margin-bottom: 5px;
+}
+#vinjett {
+    border: solid 1px black;
+    background: lightgrey;
+}
+#sidfot {
+    border: solid 1px red;
+    background: pink;
+}

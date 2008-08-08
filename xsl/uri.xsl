@@ -1,22 +1,46 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
-		xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+		xmlns:str="http://exslt.org/strings"
+		extension-element-prefixes="str">
+
+
   <!-- this is a standalone template for formatting links that use
        rinfo-standard URI:s (mapping those abstract uris to concrete
        uris used by lagen.nu -->
-  <xsl:template name="uri">
+  <xsl:template name="link">
+    <xsl:variable name="uri" select="@href"/>
+    <xsl:variable name="localurl">
+      <xsl:call-template name="localurl">
+	<xsl:with-param name="uri" select="$uri"/>
+      </xsl:call-template>
+    </xsl:variable>
     <xsl:choose>
-      <xsl:when test="contains(@href,'/publ/sfs')">
-	<xsl:variable name="uri">
-	  <xsl:value-of select="substring-after(@href, '/publ/sfs')"/>
-	</xsl:variable>
-	<a href="{$uri}"><xsl:value-of select="."/></a>
+      <xsl:when test="contains($uri, '#L')">
+	<span class="andringsnot"><xsl:value-of select="."/></span>
+      </xsl:when>
+      <xsl:when test="$localurl = ''">
+	<xsl:value-of select="."/>
       </xsl:when>
       <xsl:otherwise>
-	<!-- more stuff (cases, propositions, celexdocs etc) to come -->
-	<xsl:value-of select="."/>
+	<a href="{$localurl}"><xsl:value-of select="."/></a>
       </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template name="localurl">
+    <xsl:param name="uri"/>
+    <xsl:choose>
+      <xsl:when test="contains($uri,'/publ/sfs')">
+	<xsl:value-of select="substring-after($uri, '/publ/sfs/')"/>
+      </xsl:when>
+      <xsl:when test="contains($uri,'/publ/rattsfall')">
+	/dv/<xsl:value-of select="substring-after($uri, '/publ/rattsfall/')"/>
+      </xsl:when>
+      <xsl:when test="contains($uri,'/ext/celex')">
+	http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML
+      </xsl:when>
     </xsl:choose>            
   </xsl:template>
 </xsl:stylesheet>
