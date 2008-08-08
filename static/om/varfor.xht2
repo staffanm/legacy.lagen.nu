@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+	<h1 class="main_header">Varför ska man använda lagen.nu?</h1>
+	<ol style="list-style-type: decimal;">
+	  <li><b>Läsbarheten</b>: Lagen.nu innehåller många saker som gör det
+	  enklare att läsa en paragraf eller en lag och snabbt förstå
+	  vad som sägs. Exempelvis är texten layoutad med ett typsnitt
+	  gjort för skärmläsning, med lagom långa rader, och med
+	  tydlig styckeindelning. Löpande referenser till andra lagar
+	  i texten är hyperlänkade, så när en referens i stil med
+	  "gäller dock inte uppgifter för vilka sekretess gäller
+	  enligt 8 kap. 27 § sekretesslagen (1980:100)" kan du snabbt
+	  ta reda på vad den refererade paragrafen säger, utan att
+	  behöva slå i böcker eller öppna nya fönster. I många fall
+	  räcker det att bara hålla muspekaren över länken, så dyker
+	  den första meningen upp i en tooltip. </li>
+
+	  <li><b>Länkbarheten</b>: Om du, på en websida, i ett email, eller i
+	  ett IM-meddelande, vill referera till en viss lag är
+	  länkarna alltid korta och lättbegripliga:
+	  <tt>http://lagen.nu/1960:729</tt> för att länka till
+	  upphovsrättslagen, tillexempel.
+	  <!-- För många namngivna lagar
+	  kan du även använda http://personuppgifts.lagen.nu/ eller
+	  http://pul.lagen.nu/. Fast inte än!
+	  -->
+	  Vill du länka till ett kapitel, en paragraf, eller ett
+	  enskilt stycke, kan du göra det:
+	  <tt>http://lagen.nu/1960:729#K2P26gS4</tt> för att referera till
+	  <b>K</b>apitel 2, <b>P</b>aragraf 26 g, <b>S</b>tycke 4. Läs mer under <a
+	  href="how.html">"Hur använder man lagen.nu?</a></li>
+
+	  <li><b>Övrig rättsinformation</b>: För att förstå en lag hjälper
+	  det att förstå varför den har tillkommit och hur den har
+	  tillämpats. För varje enskild paragraf på lagen.nu kan du se
+	  när den infördes med en länk till den ändringsförfattning
+	  som införde ändringen. I informationen för varje
+	  ändringsförfattning kan du se vilka förarbeten som föregick
+	  lagändringen, och (för förarbeten publicerade efter 1993)
+	  läsa dessa. Du kan även se vilka vägledande domar
+	  (publicerade efter 1999) som har refererat till varje
+	  enskild paragraf, och läsa domslutsreferaten.</li>
+	</ol>
+    </div>
+  </body>
+</html>

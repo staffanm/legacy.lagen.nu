@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Välkommen till lagen.nu</h1>
+
+    <p>Lagen.nu är gjord för att det ska gå lite snabbare att hitta
+    svar på frågor i lagtexterna jämfört med den traditionella
+    lagboken eller andra online-tjänster.<a href="how.html">Läs mer om
+    funktionaliten</a>.</p>
+
+    <p>Lagen.nu är lite mer än bara en statisk lagsamling. Du kan även
+    använda tjänsten för att hålla koll på lagändringar som är på väg
+    att införas, och även nya vägledande domar från Högsta Domstolen
+    och andra domstolar. <a href="/nyheter">Läs mer om
+    nyhetsflöden</a>.</p>
+
+    <p>Jag kan inte nog understryka att det här inte är en officell
+    sammanställning av svenska författningar. Det här är en webtjänst
+    gjord av en privatperson utan någon som helst koppling till svensk
+    lagstiftning och rättsväsende. <a href="me.html">Läs mer om vem
+    som ligger bakom</a>.</p>
+
+    <p>Eftersom det här är ett hobbyprojekt utan några större
+    ambitioner om exakthet finns det felaktigheter i författningarna,
+    så som de presenteras här. <a href="disclaimer.html">Läs mer om
+    felaktigheter och ansvarsfriskrivning</a>.</p>
+
+    <p>Varför har jag gjort den här webtjänsten? <a
+    href="why.html">Läs mer om motivationen till lagen.nu</a>.</p>
+
+    <p>Hur fungerar den här webtjänsten? <a href="tech.html">Läs mer
+    om teknologin bakom lagen.nu</a>.</p>
+
+    <p>Har du frågor, synpunkter, klagomål, beröm? Skriv till mig på
+    <a href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>.
+    Observera att jag inte kan svara på frågor som rör faktisk
+    juridik, bara sådana som handlar om den här tjänsten. Om du har
+    juridiska frågor kan du istället vända dig till <a
+    href="http://www.lawline.se/">Lawline</a>, som ger gratis juridisk
+    vägledning.
+    </p>
+      
+    </div>
+  </body>
+</html>

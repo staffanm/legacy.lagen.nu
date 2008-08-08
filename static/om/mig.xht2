@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Vem ligger bakom lagen.nu?</h1>
+    <p>Hej, jag heter Staffan Malmgren, och jag startade lagen.nu som
+    en del i förberedandet av mina juridikstudier. När jag försökte
+    sätta mig in i rättsfrågor irriterades jag över att de
+    lagtextsamlingar som fanns på internet drog så lite nytta av
+    internetmediets styrkor, framförallt genom bristen på länkar för
+    korsreferenser. Att hitta rätt paragraf, andra paragrafer den
+    refererade till, de förarbeten som ledde fram till paragrafen och
+    de vägledande domar som hänvisat till paragrafen kunde ta flera
+    timmar.</p>
+
+    <p>Så, eftersom jag kunde ett och annat kring att programmera
+    datorer (jag lämnar en knappt tioårig yrkesbana som programmerare
+    för att ge mig in i juridiken) satte jag igång att ladda ner alla
+    lagtexter och började skriva program för att analysera
+    texterna.</p>
+
+    <p>Det ledde fram till lagen.nu, som jag hoppas ska kunna bli en
+    bra resurs för alla som vill förstå svensk lag och
+    rättsskipning. Den är i första hand till för mig själv, därför
+    kommer fokuset ligga på sånt som en juridikstudent behöver. Men om
+    det är någon speciell funktionalitet du skulle vilja se, hör gärna
+    av dig!</p>
+
+    <p>Lagen.nu drivs idag ideellt, men det kanske ändras om jag
+    kommer på någon bra affärsidé.</p>
+
+    <p>Vill du veta mer om vad jag gör kanske du vill besöka <a
+    href="http://blog.tomtebo.org/">min blogg</a>?</p>
+      
+    </div>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Etiketter på lagen.nu</h1>
+    <p>
+      Det finns för närvarande runt 3500 gällande lagar och
+      förordningar. Det är därför rätt svårt att hitta de lagar som
+      gäller inom ett visst område, och det är svårt att organisera
+      upp dem i kategorier. Som ett försök att bringa ordning har jag
+      byggt ett system för att sätta <b>etiketter</b> på lagar. Tanken
+      är att alla lagar som har att göra med exempelvis arbetsrätt
+      eller immaterialrätt ska vara klassificerade som sådana.
+    </p>
+    <p>
+      En lag kan ha hur många etiketter som helst, och meningen med
+      varje etikett framgår förhoppningsvis från namnet. Eftersom jag
+      inte kommer kunna klassificera alla lagar själv är möjligheten
+      att etikettera öppen för alla; det är bara att klicka på "Ändra"
+      och skriva in några beskrivande ord för den aktuella lagen.
+    </p>
+    <p>
+      Etiketterna åtskiljs av mellanslag (inte kommatecken eller
+      liknande). Om du vill använda en etikett där själva namnet
+      innehåller mellanslag, omslut etiketten med citattecken. Använd
+      inte inledande versaler. Dvs, skriv såhär:
+      <pre>
+	datalagring "personlig integritet" it-rätt 
+      </pre>
+      och <b>inte</b> såhär:
+      <pre>
+	Datalagring, personlig integritet, IT-rätt
+      </pre>
+    </p>
+    <h2 class="main_header">Frågor och svar:</h2>
+    <dl>
+      <dt>Är inte det här "tags" med ett annat namn?</dt>
+      <dd>
+	Jo, typ. "Etikett" var det bästa motsvarande ord på svenska
+	jag kunde kommma på. "Nyckelord" eller "Sökord" är andra
+	alternativ, men de är mer förknippade med strukturerade,
+	centraliserade kategoriseringar.
+      </dd>
+      <dt>Om alla kan etikettera hursomhelst, kommer det inte resultera i felaktigheter och kaos?</dt>
+      <dd>
+	Inte nödvändigtvis. <a
+	href="http://en.wikipedia.org/wiki/Main_Page">Wikipedia</a> är
+	ett bra exempel på att det inte behöver bli så. En läsvärd
+	text som motiverar vilka fördelar öppna taggmöjligheter har
+	gentemot centraliserad kategorisering är <a
+	href="http://www.shirky.com/writings/ontology_overrated.html">Ontology
+	is Overrated</a>.
+      </dd>
+
+      <dt>Vilka etiketter finns det att välja mellan?</dt>
+      <dd>
+	Vilka behöver du? Det är fritt fram att hitta på
+	egna. Etiketter behöver inte vara begränsade till att tala
+	om vilken gren inom juridiken lagen i fråga rör; de kan
+	användas för alla sorters beskrivning eller
+	klassificering.
+	<!--
+	Ett exempel är etiketten "förstasidan";
+	lagar som har den etiketten syns automatiskt på
+	förstasidan.
+	-->
+      </dd>
+      <dt>Varför ska jag lägga ner tid och ork på att göra <i>din</i>
+      sajt bättre?</dt>
+      <dd>
+	Förhoppningsvis resulterar det i att sajten blir mer användbar
+	för dig också. Eftersom alla kan ändra etiketter kan alla
+	hjälpas åt att bygga upp ett vettigt metadataindex över svensk
+	lagstiftning. Jag tror det kan bli ganska coolt.
+      </dd>
+      <dt>Kan man ladda ner etikettdatabasen separat?</dt>
+      <dd>
+	<a href="/tags.xml">Jajjemen!</a>
+      </dd>
+      <dt>Är etikettdatabasen i ännu ett av dina ospecade ad-hoc-format?</dt>
+      <dd>
+	Jajjamen!
+      </dd>
+      
+      <dt>Vad är det för licens för etikettdatabasen?</dt>
+      <dd>
+	Än så länge är det inte bestämt; det här är en ny feature och
+	jag har inte funderat så mycket kring de upphovsrättliga
+	frågorna. Gissningsvis blir det <a
+	href="http://www.gnu.org/copyleft/fdl.html">GFDL</a>, <a
+	href="http://creativecommons.org/licenses/by/2.5/">Attribution
+	2.5</a> eller <a
+	href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-ShareAlike
+	2.5</a>. <a href="mailto:staffan@tomtebo.org">Hör av dig</a>
+	om du har nån stark åsikt åt endera hållet.
+      </dd>
+    </dl>
+    </div>
+  </body>
+</html>

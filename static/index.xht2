@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+    <head>
+      <title>Välkommen</title>
+    </head>
+    <body>
+      <div role="main">
+	<p>
+	  Välkommen till Lagen.nu! Den här webbplatsen innehåller alla
+	  Sveriges lagar, förordningar och andra författningar, och
+	  många av de vägledande rättsfallen.
+	</p>
+	<p>
+	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
+	</p>
+	<h1>Några av de viktigaste lagarna:</h1>
+	<dl>
+	  <dt>Straffrätt</dt>
+	  <dd><a href="">Brottsbalken</a></dd>
+	  
+	  <dt>Familjerätt</dt>
+	  <dd><a href="">Äktenskapsbalken</a></dd>
+	  
+	  <dt>Arbetsrätt</dt>
+	  <dt><a href="">Medbestämmandelagen</a></dt>
+	  
+	  <dt>IT-rätt</dt>
+	  <dd><a href="">Personuppgiftslagen</a></dd>
+	  <dd><a href="">Lagen om elektronisk kommunikation</a></dd>
+	  <dd><a href="">("BBS-lagen")</a></dd>
+	  
+	  <dt>Statsrätt</dt>
+	  <dd><a href="/1974:152" title="Kungörelse (1974:152) om beslutad ny regeringsform">Regeringsformen</a></dd>
+	  <dd><a href="/1810:0926">Successionsordningen</a></dd>
+	  <dd><a href="/1949:105">Tryckfrihetsförordningen</a></dd>
+	  <dd><a href="/1991:1469">Yttrandefrihetsgrundlagen</a></dd>
+	  
+	  <dt>Immaterialrätt</dt>
+	  <dd><a href="">Upphovsrättslagen</a></dd>
+	  
+	  <dt>Fastighetsrätt</dt>
+	  <dd><a href="">Jordabalken</a></dd>
+	  
+	  <dt>Associationsrätt</dt>
+	  <dd><a href="">Aktiebolagslagen</a></dd>
+	</dl>
+
+	<p>Hittar du inte lagen du söker i listan ovan? Bläddra i den
+	<a href="/index">fullständiga förteckningen</a>!</p>
+	
+	<p>Lagen.nu använder cookies, och enligt <a
+	href="/2003:389#K6P18">6 kap. 18 § lagen om elektronisk
+	kommunikation</a> ska man informera om syftet med dessa. <a
+	href="/om/cookies.html">Läs mer här!</a>
+	</p>
+      </div>
+      <div role="secondary">
+	<h2>
+	  <a href="/nyheter/site.atom"><img src="img/rss.png" alt="Atom-flöde för sajtnyheter"/></a>
+	  <a href="/nyheter/site.html">Nyheter på lagen.nu</a>
+	</h2>
+	<!-- xinclude:a bara de fem senaste -->
+	<xi:include href="generated/site/nyheter.xht2"/>
+
+	<h2>
+	  <a href="/nyheter/lagar.atom"><img src="img/rss.png" alt="Atom-flöde för nya och ändrade lagar"/></a>
+	  <a href="/nyheter/lagar.html">Nya och ändrade lagar</a>
+	</h2>
+	<!-- xinclude:a bara de fem senaste -->
+	<xi:include href="generated/sfs/lagar.xht2"/>
+
+	<h2>
+	  <a href="/nyheter/hd.atom"><img src="img/rss.png" alt="Atom-flöde för domslut från HD"/></a>
+	  <a href="/nyheter/hd.html">Domslut från HD</a>
+	</h2>
+	<!-- xinclude:a bara de fem senaste -->
+	<xi:include href="generated/sfs/hd.xht2"/>
+    </div>
+  </body>
+</html>

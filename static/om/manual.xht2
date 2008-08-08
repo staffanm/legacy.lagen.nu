@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+	<h1>Hur använder man lagen.nu?</h1>
+	<p>
+	  För att förstå hur man hittar på lagen.nu underlättar det
+	  att förstå hur de samlade svenska lagtexterna, allmänt
+	  kallade Svensk Författningssamling (SFS) fungerar.
+	</p>
+	<p>
+	  (Notera dock att lagen.nu <b>inte</b> är en elektronisk
+	  utgåva av SFS -- den beteckningen är <a
+	  href="/1998:281">skyddad</a>)
+	</p>
+	<h2 class="main_header">Vad finns på lagen.nu?</h2>
+	<p>
+	  Lagen.nu hjälper dig att hitta lagtexter, och utifrån dem
+	  även förarbeten och vägledande domar som underlättar
+	  förståelsen för lagtexten. Inget mer än så. Du hittar inga
+	  enkla svar på specifika frågor om rättsskipning, brott och
+	  straff, trafikregler, skatterätt eller liknande här, men
+	  däremot texten i <a href="/1942:740">Rättegångsbalken</a>,
+	  <a href="/1962:700">Brottsbalken</a>, <a
+	  href="/1998:1276">Trafikförordningen</a> och <a
+	  href="/1999:1229">Inkomstskattelagen</a>. Lagtexten ger
+	  sällan enkla svar, men den är det mest grundläggande man kan
+	  gå till om man vill veta vad det är som <b>egentligen</b>
+	  gäller. 
+	</p>
+	<h2 class="main_header">Att hitta rätt lag</h2>
+	<p>
+	  Så, för att hitta nånting måste du först hitta den eller de
+	  författningar (samlingsbegrepp för lagar, förordningar och
+	  andra bestämmelser) din fråga berör. Att hitta rätt
+	  författning är en utmaning, speciellt som vi har ungefär
+	  3000 gällande författningar. Det är också värt att notera
+	  att på lagen.nu hittar man bara författningar som ingår i
+	  SFS, det finns många myndigheter i Sverige som har egna
+	  författningssamlingar. Varje författning har ett ID, det så
+	  kallade SFS-numret. Om du känner till det är det rätt lätt
+	  att hitta lagtexten, det är bara att skriva in det i
+	  adressfältet efter "<tt>http://lagen.nu/</tt>", dvs, för att
+	  hitta texten till upphovsrättslagen, eller som den
+	  egentligen heter, "Lag (1960:729) om upphovsrätt till
+	  litterära och konstnärliga verk", skriv in
+	  "<tt>http://lagen.nu/1960:729</tt>" i adressfältet. Eller,
+	  så kan du gå via "<a href="/index/">Lista över
+	  författningar</a>"->"<a
+	  href="/index/1941-1960.html">1941-1960</a>"->"<a
+	  href="/1960:729">1960:729</a>: Lag om upphovsrätt till
+	  litterära och konstnärliga verk".
+	</p>
+	<p>
+	  Om du vet vad lagen heter, kan du gå via lagens
+	  inledningsbokstav istället. Låt oss anta att du vill hitta
+	  avtalslagen. Gå då via "<a href="/index/">Lista över
+	  författningar</a>"-><a
+	  href="http://lagen.nu/index/a.html">Lagar som börjar på
+	  'a'</a>, och leta i sidan efter "avtal". Det finns en hel
+	  hög med författningar som innehåller det ordet, och det kan
+	  vara svårt att veta att det är just "<a href="/1915:218">Lag
+	  (1915:218) om avtal och andra rättshandlingar på
+	  förmögenhetsrättens område</a>" som är den som i vardagligt
+	  tal kallas för avtalslagen, men så är det. Med tiden kommer
+	  det bli enklare att hitta lagar på lagen.nu via sådana
+	  informella namn. Notera också att de vanliga inledningsorden
+	  "Lag om" eller "Förordning om" inte ingår i den del av
+	  titeln som sorteras -- det är därför "<a
+	  href="/1915:218">Lag (1915:218) om avtal och andra
+	  rättshandlingar på förmögenhetsrättens område</a>" finns
+	  under 'a', inte 'l'.
+	</p>
+	<p>
+	   Om du vet att ett visst begrepp förekommer i lagens titel,
+	   men kanske inte först, kan du prova att gå via
+	   nyckelordsregistret. Låt oss anta att du vill ta reda på
+	   vilka lagar och förordningar som finns inom
+	   trafiklagstiftningen. Du kan då gå in via <a
+	   href="/index/">Lista över författningar</a>"-><a
+	   href="http://lagen.nu/index/keyword-t.html">Nyckelord:
+	   t</a>. Listan över ord och begrepp görs automatiskt av en
+	   kodsnutt som bara är marginellt vettigare än dess
+	   upphovsman, och därför är det en hel del nyckelord och
+	   -begrepp som inte är helt vettiga, men det brukar oftast gå
+	   att hitta det man är ute efter. Inga garantier ges för
+	   övrigt att alla lagar rörande ett visst nyckelbegrepp
+	   verkligen står listade under det begreppet, men <a
+	   href="mailto:staffan@tomtebo.org">påpeka gärna</a> om du
+	   tycker att en viss lag saknas under ett visst begrepp.
+	</p>
+	<p>
+	  Om du varken vet namn eller nummer på den lag som du vill ha
+	  fatt på blir det svårare, men ofta kan man hitta något via
+	  sökfönstret längst uppe i hörnet. Om du exempelvis har hört
+	  att teleoperatörer numera är skyldiga att se till att
+	  privatpersoner kan behålla sitt telefonnummer när de byter
+	  operatör, kan lämpliga sökord vara "abonnent" och
+	  "telefonnummer". Om du matar in dem och trycker på Enter får
+	  du en kort lista träffar, där det snabbt framgår att det är
+	  "Lag (2003:389) om elektronisk kommunikation", mer specifikt
+	  <a href="/2003:389#K5P9">5 Kap. 9 §</a>, som är den
+	  intressanta författningen ("Telelag (1993:597)" ser också ut
+	  att kunna vara intressant, men som du märker om du går dit,
+	  är den upphävd sedan den 25:e juli 2003).
+	</p>
+
+	<h2 class="main_header">Att hitta inuti lagtexten</h2>
+	<p>
+	  Innehållsförteckning: Om lagen har kapitelindelning finns
+	  det en stor blå länk med texten "Visa
+	  innehållsförteckning". Om du klickar på den listas länkar
+	  till alla kapitel och underrubriker som finns i lagen, så
+	  att du snabbare kan hitta ett visst avsnitt. Lagar som inte
+	  har kapitelindelning får ingen innehållsförteckning, även om
+	  det kanske vore vettigt att åtminstone lista alla
+	  underrubriker. Det kanske kommer senare.
+	</p>
+	<p>
+	  Interna lagreferenser: Om det, i den löpande lagtexten,
+	  finns en referens till en annan paragraf, i stil med <i>"Var
+	  och en får återge handlingar som är upprättade hos svenska
+	  myndigheter men inte är sådana som avses i <a
+	  href="/1960:729#P9S1" title="Upphovsrätt gäller inte...">9 §
+	  första stycket</a>"</i> (från <a href="/1960:729#P26aS2"
+	  title="Var och en får återge handlingar som är upprättade
+	  hos svenska myndigheter...">URL 26 a §</a> är den texten
+	  länkad (nästan jämt) till rätt ställe (nästan jämt). På så
+	  sätt kan du klicka dig runt få en översikt över en lag. Om
+	  du är bekant med lagen, men kanske inte kommer ihåg exakt
+	  vilken paragraf som hade vilket nummer, kan du bara vila med
+	  muspekaren över länken, så dyker de första orden från den
+	  refererade paragrafen upp i en s.k. tooltip-ruta.
+	</p>
+	<p>
+	  Vidare referenser (domar och ändringsförfattningar): Under
+	  vissa paragrafer finns det en ruta med blå text i. Den kan
+	  innehålla två sorters referenser: Ändringsförfattningar resp
+	  vägledande domar. Den första typen leder till information om
+	  lagändringar som införde, ändrade eller upphävde paragrafen
+	  i fråga, inklusive övergångsregler och länkar till
+	  förarbeten. Den andra typen leder till information om
+	  vägledande domslut (både i Högsta domstolen och de
+	  underliggande domstolarna) som refererat till
+	  paragrafen. Den blå texten är alltså inte en del av den
+	  officiella lagtexten.
+	</p>
+	<a name="direktlankar"></a>
+	<p>
+	  Om du skulle vilja länka till en lag eller en viss paragraf,
+	  på din websida, i ett mail eller ett IM-meddelande, kan det
+	  vara bra att veta hur URL'erna på lagen.nu
+	  funkar. Adresserna är på följande mönster:
+	</p>
+	<p><tt>http://lagen.nu/</tt>&lt;<i>SFS-nummer</i><tt>&gt;[#K&lt;</tt><i>kapitel</i><tt>&gt;][P&lt;</tt><i>paragraf</i><tt>&gt;]</tt></p>
+	<p>
+	  För att länka till 6 Kap. 18 § i Lagen (2003:389) om elektronisk kommunikation ("cookieparagrafen") blir alltså adressen:
+	</p>
+	<p><tt>http://lagen.nu/2003:389#K6P18</tt></p>
+	<p>
+	  Om lagen i fråga inte har kapitelindelning, eller om
+	  paragrafnumreringen är kontinuerlig över kapitelgränserna
+	  (som i <a href="/1960:729">Upphovsrättslagen</a>), använd
+	  inte <tt>K&lt;</tt><i>kapitel</i><tt>&gt;</tt>-biten. För
+	  att länka till Upphovsrättslagen 26 a § blir alltså adressen:
+	</p>
+	<p><tt>http://lagen.nu/1960:729#P26a</tt></p>
+	<!--
+	<p>
+	  Eller, om de här instruktionerna förvirrade mer än de
+	  klargjorde, för bara muspekaren över det tomma utrymmet
+	  precis efter det sista ordet i en paragraf. Ett ¶-tecken i
+	  en behaglig lila färg bör dyka upp, direktlänkat till just
+	  den paragrafen. Högerklicka på det och välj "Kopiera
+	  genväg", "Copy link location" eller vad det nu kan tänkas
+	  heta i din webläsare, och klistra sedan in adressen där du
+	  vill ha den.
+	</p>
+	-->
+	<p>
+	  Det kan vara värt att notera att om du länkar till en
+	  paragraf långt nere i en lång lag så kommer webläsaren visa
+	  början av lagtexten ända tills rätt paragraf hämtats över
+	  internet, då hoppar läsaren ner till rätt ställe. Detta
+	  märks särskilt tydligt om man sitter på en modemkoppling. I
+	  framtiden kanske sidorna kommer delas upp i kapitel- eller
+	  sektionsspecifika sidor, så att det går snabbare att komma
+	  just till en specifik paragraf, något som även skulle göra
+	  det nästan uthärdligt att använda lagen.nu på en
+	  mobiltelefon. Men vi får se.
+	</p>
+	<h2>Frågor?</h2>
+	<p>Maila mig på <a
+	href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>. Observera
+	att jag inte kan svara på konkreta juridiska frågor.</p>
+      
+    </div>
+  </body>
+</html>

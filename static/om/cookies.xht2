@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Hur använder lagen.nu cookies?</h1>
+	<p>
+	  Lagen.nu använder cookies för att unikt (men hyfsat anonymt)
+	  identifiera varje besökare, för att skapa ett statistiskt
+	  underlag som i framtiden kanske kommer kunna användas för
+	  att analysera besöksmönster, exempelvis för att se vilka
+	  kategorier av lagar som olika kategorier av besökare tittar
+	  på. Den cookie som används innehåller ingen mer information
+	  än ditt IP-nummer (<a
+	  href="http://httpd.apache.org">Apache</a>-modulen <a
+	  href="http://httpd.apache.org/docs/mod/mod_usertrack.html">mod_usertrack</a>
+	  används), och sparas i ett år.
+	</p>
+	<p>
+	  Om du inte vill att lagen.nu ska spara denna cookie hos dig
+	  kan du använda din webläsares funktionalitet för att slå av
+	  cookies. De flesta moderna webläsare kan göra sådant på
+	  sitenivå. Funktionaliteten i webtjänsten kommer vara
+	  oförändrad. 
+	</p>
+	<p>
+	  Om du använder dig av möjligheten att gömma den gula rutan
+	  som informerar om ansvarsfriskrivning högst uppe i varje
+	  lagtext sätts även en till kaka, 'hidedisclaimer', som kan
+	  ha antingen värdet 'yes' eller 'no' (det blir ofta en massa
+	  engelska i de bitar som är 'bakom kulisserna'). Om du slår
+	  av möjligheten för lagen.nu att lagra kakor hos dig kommer
+	  möjligheten att gömma undan den gula blaffan att försvinna.
+	</p>
+      
+    </div>
+  </body>
+</html>

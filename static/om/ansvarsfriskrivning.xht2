@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Ansvarsfriskrivning</h1>
+	
+	<p>Lagen.nu kan inte garantera att lagarna som de återges här
+	verkligen, till 100%, stämmer överens med lagarna så som de är
+	skrivna i Svensk författningssamling. Om du behöver vara helt
+	säker på vad lagen säger, dubbelkolla med de tryckta
+	versionerna.</p>
+
+	<p>Varför är det så? Jo, delvis så utgår jag från lagarna som
+	de är publicerade i <a
+	href="http://62.95.69.15/">Regeringskansliets
+	rättsdatabaser</a>, och redan där står det uttryckligen att
+	dessa versioner kan innehålla fel, framförallt avsaknader av
+	bilagor. Alla sådana fel finns även på lagen.nu. Sen
+	omformateras lagtexterna av ett program jag skrivit, som
+	lägger på sådana saker som rubriker, styckeindelning och
+	referenser till andra lagparagrafer, och det här programmet
+	kan också införa fel.</p>
+
+	<p>Det är min ambition att det inte ska finnas några fel i
+	lagarna så som de är publicerade här, men 100% rätt kommer det
+	nog aldrig kunna bli. Jag är dock tacksam för påpekanden om
+	felaktigheter, <a href="mailto:staffan@tomtebo.org">tipsa mig
+	om dem</a>!</p>
+
+	<p>Om du behöver de tryckta versionerna kan du nog beställa
+	dessa från riksdagen. Eller nån annanstans. Jag måste kolla
+	upp det där. Nån som vet? Eller så köper du antingen den <a
+	href="http://www.bokfynd.nu/cgi-bin/v2.0/www/nph-se.html/product/9139009890">blåa</a>,
+	<a
+	href="http://www.bokfynd.nu/cgi-bin/v2.0/www/nph-se.html/product/9176100839">röda</a>,
+	eller <a
+	href="http://www.bokfynd.nu/cgi-bin/v2.0/www/nph-se.html/product/9176785564">gröna</a>
+	lagboken. De innehåller inte alla gällande författningar, men
+	definitivt de viktigaste.</p>
+      
+    </div>
+  </body>
+</html>
