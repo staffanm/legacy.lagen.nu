@@ -166,10 +166,19 @@ class Manager:
         self._doTest(module)
 
     def Indexpages(self,module='all'):
-        self._doAction('Indexpages', module)
+        if module != 'main':
+            self._doAction('Indexpages', module)
         if module in ('all','main'):
-            # make the front page and other static pages
-            log.info("Creating some main html pages here")
+            self._static_indexpages()
+
+    def _static_indexpages(self):
+        # make the front page and other static pages
+        log.info("Generating site global static pages")
+        for f in Util.listDirs(u'static', '.xht2'):
+            outfile = '%s/site/generated/%s' % (self.baseDir, f.replace(".xht2",".html"))
+            Util.ensureDir(outfile)
+            log.info("Generating %s" % outfile)
+            Util.transform("xsl/static.xsl", f, outfile,validate=False)
     
     def Publish(self):
         log.info("Creating zip file")

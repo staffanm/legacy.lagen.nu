@@ -33,25 +33,8 @@
   <xsl:template match="xht2:a">
     <xsl:call-template name="link"/>
   </xsl:template>
-  <!-- specialregler som kopierar innehåll från xht2-namepace till
-       xhtml1-dito. BORDE inte behövas med defaultregeln nedan, men
-       tydligen (pga att ElementTree genererar ns0 som namespaceprefix
-       istf xht2 som detta stylesheet använder) - känns som xsltproc
-       beter sig skumt... -->
-  <xsl:template match="xht2:ul">
-    <ul><xsl:apply-templates/></ul>
-  </xsl:template>
-  <xsl:template match="xht2:li">
-    <li><xsl:apply-templates/></li>
-  </xsl:template>
-  <xsl:template match="xht2:div">
-    <div><xsl:apply-templates/></div>
-  </xsl:template>
-  <xsl:template match="xht2:p">
-    <p><xsl:apply-templates/></p>
-  </xsl:template>
 
-  <xsl:template match="xht2:p[@role='secondary']">
+  <xsl:template match="xht2:*[@role='navigation']">
     <!-- emit nothing -->
   </xsl:template>
   
@@ -74,27 +57,26 @@
   </xsl:template>
 
   <!-- kommentarer mode -->
-
   <xsl:template match="xht2:div" mode="kommentarer">
-    <xsl:apply-templates select="//xht2:p[@role='secondary']" mode="trans-ns"/>
+    <xsl:if test="@role='navigation'">
+      <xsl:apply-templates mode="trans-ns"/>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="*" mode="kommentarer">
     <!-- emit nothing -->
   </xsl:template>
 
+  <xsl:template match="xht2:h" mode="trans-ns">
+    <h2><xsl:apply-templates select="@*|node()"/></h2>
+  </xsl:template>
   
   <!-- generic namespace translation -->
-  <xsl:template match="xht2:div" mode="trans-ns">
-    <div><xsl:apply-templates mode="trans-ns"/></div>
+  <xsl:template match="xht2:*" mode="trans-ns">
+    <xsl:element name="{name()}">
+      <xsl:apply-templates select="@*|node()"/>
+    </xsl:element>
   </xsl:template>
-  <xsl:template match="xht2:span" mode="trans-ns">
-    <span><xsl:apply-templates mode="trans-ns"/></span>
-  </xsl:template>
-  <xsl:template match="xht2:p" mode="trans-ns">
-    <p><xsl:apply-templates mode="trans-ns"/></p>
-  </xsl:template>
-  
   
   
 </xsl:stylesheet>

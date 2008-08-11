@@ -29,9 +29,14 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- maps an idealized rinfo resource URI to an actual retrievable
+       URI, either at lagen.nu or somewhere else -->
   <xsl:template name="localurl">
     <xsl:param name="uri"/>
     <xsl:choose>
+      <xsl:when test="substring($uri, 0, 8) != 'http://'">
+	<xsl:value-of select="$uri"/>
+      </xsl:when>
       <xsl:when test="contains($uri,'/publ/sfs')">
 	<xsl:value-of select="substring-after($uri, '/publ/sfs/')"/>
       </xsl:when>

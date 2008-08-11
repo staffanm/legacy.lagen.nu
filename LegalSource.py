@@ -13,6 +13,7 @@ import re
 import sys
 import traceback
 import types
+import unicodedata
 import xml.etree.cElementTree as ET
 
 # 3rd party modules
@@ -273,9 +274,16 @@ class Manager(object):
     
     def Indexpages(self):
         """Creates index pages for all documents for a particular
-        legalsource. Subclasses can override _indexpages_for_predicate
-        and _indexpages_navigation to control exactly which index pages are created"""
+        legalsource. A typical set of index pages are one page that
+        lists all document who's title start with 'A', one page that
+        lists all documents who's title start with 'B', and so on. On
+        each such page there is also a meta-index (a list of all index
+        pages) placed in the right hand column. 
+        
+        Subclasses can override _build_indexpages to control exactly
+        which index pages are created"""
 
+        # read the RDF dump (NTriples format) created by RelateAll
         rdf_nt ="%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
         if not os.path.exists(rdf_nt):
             log.warning("Could not find RDF dump %s" % rdf_nt)
@@ -290,16 +298,13 @@ class Manager(object):
         #
         # men eftersom det tar över två minuter att ladda
         # sfs/parsed/rdf.nt är det inte ett alternativ - det får vänta
-        # tills all RDF-data är i en sesame-db. Sen måste vi:
-        # 
-        # * lista alla som börjar på 'a' (kräver ev nya
-        #   rdf-statements, rinfoex:sorterinsgtitel), 'b' etc
-        # * skapa en enkel xht2 med genshi eller tom elementtree
-        # * transformera till html mha static.xslt
-        # * gör samma för alla som har SFS-nummer som börjar på 1600-1700 etc
-        # * porta nyckelbegreppskoden
-        triples = defaultdict(lambda:defaultdict(list))
-        subjects = defaultdict(dict)
+        # tills all RDF-data är i en sesame-db. Ladda bara in alla
+        # triples i två stora dicts (nycklade på predikat + objekt
+        # respektive subjekt + predikat -- det verkar vara de två
+        # strukturerna vi behöver för att skapa alla filer vi behöver)
+        
+        by_pred_obj = defaultdict(lambda:defaultdict(list))
+        by_subj_pred = defaultdict(dict)
         log.info("Reading triples from %s" % rdf_nt)
         start = time()
         fp = codecs.open(rdf_nt, encoding='utf-8')
@@ -314,36 +319,26 @@ class Manager(object):
                 pred = m.group(2)
                 objUri = m.group(4)
                 objLiteral = m.group(5)
+                # most of the triples are dct:references, and these
+                # are not used for indexpage generation - filter these
+                # out to cut down on memory usage
                 if pred != 'http://dublincore.org/documents/dcmi-terms/references':
                     if objLiteral != "":
-                        triples[pred][objLiteral].append(subj)
-                        subjects[subj][pred] = objLiteral
+                        by_pred_obj[pred][objLiteral].append(subj)
+                        by_subj_pred[subj][pred] = objLiteral
                     elif objUri != "":
-                        triples[pred][objUri].append(subj)
-                        subjects[subj][pred] = objUri
+                        by_pred_obj[pred][objUri].append(subj)
+                        by_subj_pred[subj][pred] = objUri
             else:
                 log.warning("Couldn't parse line %s" % line)
         log.info("RDF loaded (%.3f sec)", time()-start)
 
-        for predicate in triples.keys():
-            self._indexpages_for_predicate(predicate, triples[predicate],subjects)
-        
-        self._indexpages_for_legalsource()
+        self._build_indexpages(by_pred_obj, by_subj_pred)
+
         
     ################################################################
     # CONVENIENCE FUNCTIONS FOR SUBCLASSES (can be overridden if needed)
     ################################################################
-
-    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
-        print "Default implementation of IndexpagesForPredicate"
-        # provide sensible default implementation of this
-        pass
-
-    def _indexpages_for_legalsource(self):
-        # provide sensible default implementation of this
-        print "Default implementation of IndexpagesForLegasource"
-        pass
-
 
     def _do_for_all(self,dir,suffix,method):
         for f in Util.listDirs(dir, suffix, reverse=True):
@@ -401,28 +396,81 @@ class Manager(object):
             raise Exception("WARNING: _xmlFileName called with non-unicode name")
         return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
-    def _elementtree_to_html(self, title, tree, outfile):
-        """Helper function that takes a ET fragment (which should be
-        using the xhtml2 namespace), puts it in a skeleton xht2 page,
-        then renders that page to browser-ready xhtml1, to the
-        filename specified"""
-        tmpfilename = mktemp()
-        root = ET.Element(self.XHT2NS+"html")
-        head = ET.SubElement(root, self.XHT2NS+"head")
-        titleelem = ET.SubElement(head, self.XHT2NS+"title")
-        titleelem.text = title
-        bodyelem = ET.SubElement(root, self.XHT2NS+"body")
-        headline = ET.SubElement(bodyelem, self.XHT2NS+"h")
-        headline.text = title
-        bodyelem.append(tree)
+    def _build_indexpages(self,by_pred_obj, by_subj_pred):
+        displaypredicates = {'http://dublincore.org/documents/dcmi-terms/title':
+                             u'titel',
+                             'http://dublincore.org/documents/dcmi-terms/identifier':
+                             u'identifierare',
+                             'http://www.w3.org/2000/01/rdf-schema#label':
+                             u'beteckning'}
+        
+        documents = defaultdict(lambda:defaultdict(list))
+        pagetitles = {} # used for title on a specific page
+        pagelabels = {} # used for link label in the navigation 
+        for predicate in by_pred_obj.keys():
+            if predicate in displaypredicates.keys():
+                # shorten
+                # 'http://dublincore.org/documents/dcmi-terms/title' to
+                # 'dct-title' etc for usage in filenames
+                pred_id = predicate
+                for (k,v) in Util.ns.items():
+                    pred_id = pred_id.replace(v,k+"-")
+                pred_label = "Ordnade efter %s" % displaypredicates[predicate]
 
+                log.info("creating index pages ordered by %s" % pred_id)
+                # generate a list of all lowercase letters using the unicode db
+                letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
+                for letter in letters:
+                    pageid = "%s-%s" % (pred_id, letter)
+
+                    pagetitles[pageid] = u"Dokument vars %s börjar på '%s'" % (displaypredicates[predicate], letter)
+                    pagelabels[pageid] = letter.upper()
+                    for obj in by_pred_obj[predicate]:
+                        if obj.lower().startswith(letter):
+                            for subject in by_pred_obj[predicate][obj]:
+                                # normally, the title of a document is
+                                # unique and thus there will only be a
+                                # single subject with this particular
+                                # object, but in some special cases
+                                # different documents can have the
+                                # same title
+                                documents[pred_label][pageid].append({'uri':subject,
+                                                                      'sortkey':obj,
+                                                                      'title':obj})
+
+        for category in documents.keys():
+            # print "doing cat %s" % category
+            for pageid in documents[category].keys():
+                # print "doing pg %s" % pageid
+                outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
+                title = pagetitles[pageid]
+                self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+
+    def _render_indexpage(self,outfile,title,documents,pagelabels,category,page,keyword=None,compactlisting=False, docsorter=cmp):
+        # only look in cwd and this file's directory
+        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
+                                variable_lookup='lenient') 
+        tmpl = loader.load("etc/indexpage.template.xht2")
+        # stream = tmpl.generate(**locals()) result: "got multiple values for keyword argument 'self'"
+
+        stream = tmpl.generate(title=title,
+                               documents=documents,
+                               pagelabels=pagelabels,
+                               currentcategory=category,
+                               currentpage=page,
+                               currentkeyword=keyword,
+                               compactlisting=compactlisting,
+                               docsorter=docsorter)
+        tmpfilename = mktemp()
         fp = open(tmpfilename,"w")
-        fp.write(ET.tostring(root))
+        fp.write(stream.render())
         fp.close()
         Util.ensureDir(outfile)
         Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
-        os.unlink(tmpfilename)
-
+        log.info("rendered %s" % outfile)
+        
+        Util
+    
     ################################################################
     # PURELY INTERNAL FUNCTIONS
     ################################################################

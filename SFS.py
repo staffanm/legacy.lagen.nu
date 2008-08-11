@@ -5,20 +5,17 @@ rättsdatabaser.
 """
 from __future__ import with_statement
 # system libraries
-# import shutil
-# import types
-# from cStringIO import StringIO
-# import pickle
-import sys
-import os
-import re
+from pprint import pprint
+from tempfile import mktemp
+from time import time
 import codecs
+import difflib
 import htmlentitydefs
 import logging
-import difflib
-from tempfile import mktemp
-from pprint import pprint
-from time import time
+import os
+import re
+import sys
+import unicodedata
 from datetime import date, datetime
 # python 2.5 required
 from collections import defaultdict
@@ -2192,86 +2189,64 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             basefile = basefile[:-2] 
         return basefile
     
-    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
-        if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
-            log.info("Creating index pages ordered by fsNummer")
-            yearintervals = [(1686,1920),
-                             (1921,1940),
-                             (1941,1960),
-                             (1961,1970),
-                             (1971,1974),
-                             (1974,1977),
-                             (1978,1980),
-                             (1981,1984),
-                             (1985,1987),
-                             (1988,1990)]
-            for y in range(1991, datetime.today().year+1):
-                yearintervals.append((y,y))
+    def _build_indexpages(self, by_pred_obj, by_subj_pred):
+        documents = defaultdict(lambda:defaultdict(list))
+        pagetitles = {}
+        pagelabels = {}
+        predicate = 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer'
+        label = u"Ordnade efter utgivningsår"
 
-            for (startyear,endyear) in yearintervals:
-                if startyear == endyear:
-                    title = u'Författningar utgivna %s' % startyear
-                    outfile = u'%s/%s/generated/index/%s.html' % (self.baseDir,self.moduleDir,startyear)
-                    linktext = startyear
+        for year in range(1686,datetime.today().year+1):
+            pagetitles[year] = u"Författningar utgivna %s" % year
+            pagelabels[year] = unicode(year)
+            for obj in by_pred_obj[predicate]:
+                if obj.startswith(unicode(year)):
+                    for subject in by_pred_obj[predicate][obj]: # should be a single subject
+                        documents[label][year].append({'uri':subject,
+                                                       'sortkey':obj,
+                                                       'title':by_subj_pred[subject]['http://dublincore.org/documents/dcmi-terms/title']})
+                        
+        # FIXME: implement rinfoex:sorttitle 
+        predicate = 'http://dublincore.org/documents/dcmi-terms/title'
+        label = u"Ordnade efter författningstitel"
+        letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
+        for letter in letters:
+            pagetitles[letter] = u"Författningar som börjar på %s" % letter
+            pagelabels[letter] = letter.upper()
+            for obj in by_pred_obj[predicate]:
+                sortkey = re.sub(ur'Kungl\. Maj:ts ','',obj)
+                sortkey = re.sub(ur'^(Lag|Förordning|Tillkännagivande|[kK]ungörelse) ?\([^\)]+\) ?(av|om|med|angående) ','',sortkey)
+
+                if sortkey.lower().startswith(letter):
+                    for subject in by_pred_obj[predicate][obj]:
+
+                        documents[label][letter].append({'uri':subject,
+                                                         'sortkey':sortkey,
+                                                         'title':sortkey,
+                                                         'leader':obj.replace(sortkey,''),
+                                                         'trailer':''})
+
+        # this step is identical to the base class implementation, and
+        # probably will be for many document collections (with the
+        # exception of three level hierarchies) - maybe this could be
+        # a separate method?
+        for category in documents.keys():
+            # print "doing cat %s" % category
+            for pageid in documents[category].keys():
+                # print "doing pg %s" % pageid
+                outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
+                title = pagetitles[pageid]
+                if category == u"Ordnade efter utgivningsår":
+                    self._render_indexpage(outfile,title,documents,pagelabels,category,pageid,docsorter=Util.numcmp)
                 else:
-                    title = u'Författningar utgivna mellan %s och %s' % (startyear,endyear)
-                    outfile = u'%s/%s/generated/index/%s-%s.html' % (
-                        self.baseDir,self.moduleDir,startyear,endyear)
-                    linktext = "%s-%s" % (startyear,endyear)
+                    self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                    
 
-                container = ET.Element(self.XHT2NS+"div")
-                sidebar = ET.Element(self.XHT2NS+"p")
-                sidebar.attrib['role'] = 'secondary'
-                sidebar.text = "sidebar text here"
-                container.append(self.__index_by_year(startyear,endyear,predtriples,subjects))
-                container.append(sidebar)
-                self._elementtree_to_html(title,
-                                          container,
-                                          outfile)
 
-        elif predicate == 'http://dublincore.org/documents/dcmi-terms/title':
-            log.info("Creating index pages ordered by title")
-            letters = [unicode(chr(x)) for x in range(ord('a'),ord('z'))]
-            letters.append(u'å')
-            letters.append(u'ä')
-            letters.append(u'ö')
-
-            for letter in letters:
-                outfile = "%s/%s/generated/index/%s.html"%(self.baseDir,self.moduleDir,letter)
-                linktext = letter.upper()
-                self._elementtree_to_html(u"Författningar som som börjar på '%s'"%letter,
-                                          self.__index_by_letter(letter,predtriples),
-                                          outfile)
 
     ################################################################
     # PURELY INTERNAL FUNCTIONS
     ################################################################
-
-    def __index_by_letter(self,letter,titles):
-        ulist = ET.Element(self.XHT2NS+"ul")
-        for (key,value) in sorted(titles.items()):
-            if key and key.lower().startswith(letter):
-                item = ET.SubElement(ulist,self.XHT2NS+"li")
-                a = ET.SubElement(item,self.XHT2NS+"a")
-                a.attrib['href'] = value[0] # shouldn't be more than
-                                            # one with this particular
-                                            # title
-                a.text = key
-        return ulist
-
-    def __index_by_year(self,startyear,endyear,fsnummer,subjects):
-        ulist = ET.Element(self.XHT2NS+"ul")
-        ulist.attrib['role'] = 'main'
-        for (key,value) in sorted(fsnummer.items()):
-            year = int(key.split(":")[0])
-            if startyear <= year <= endyear:
-                item = ET.SubElement(ulist,self.XHT2NS+"li")
-                a = ET.SubElement(item,self.XHT2NS+"a")
-                a.attrib['href'] = value[0] # shouldn't be more than
-                                            # one with this particular
-                                            # fsnummer
-                a.text = subjects[value[0]]['http://dublincore.org/documents/dcmi-terms/title']
-        return ulist
 
     def __listfiles(self,source,basename):
         """Given a SFS id, returns the filenames within source dir that
