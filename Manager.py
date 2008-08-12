@@ -194,6 +194,39 @@ class Manager:
         # copy everything in img to basedir site generated img
     
     def Publish(self):
+        self._make_zipfiles()
+
+        publish = "%s-publish.txt" % self.baseDir
+        lastpublish = "%s-lastpublish.txt" % self.baseDir
+
+        log.info("Listing changed files")
+        if os.path.exists(lastpublish):
+            cmd = 'C:/cygwin/bin/find %s -type f -cnewer %s > %s' % (self.baseDir, lastpublish, publish)
+        else:
+            cmd = 'C:/cygwin/bin/find %s > %s' % (self.baseDir, publish)
+        # print "command is '%s'" % cmd
+        (ret, stdout, stderr) = Util.runcmd(cmd)
+        numlines=0
+        for line in file(publish):
+            numlines+=1
+        log.info("%d files changed" % numlines)
+        if numlines == 0:
+            log.info("No files to publish, we're done!")
+        else:
+            log.info("Copying to target server")
+            localcmd    = 'tar -cz -T %s -f - ' % publish
+            transfercmd = 'ssh staffan@vps.tomtebo.org'
+            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s' % self.baseDir
+            cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
+            # print "command is '%s'" % cmd
+            (ret, stdout, stderr) = Util.runcmd(cmd)
+            if (ret == 0):
+                log.info("Published and done!")
+                Util.robustRename(publish, lastpublish)
+            else:
+                log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
+
+    def _make_zipfiles(self):
         log.info("Creating zip file")
         from zipfile import ZipFile, ZIP_DEFLATED
         basepath = os.path.sep.join([self.baseDir,u'sfs'])
@@ -207,20 +240,6 @@ class Manager:
             # as they should never contain non-ascii chars (FLW...)
             z.write(f.encode(), zipf.encode())
         z.close()
-        
-        #cmd = "tar czf - %s | ssh staffan@vps.tomtebo.org \"cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s\"" % (self.baseDir, self.baseDir)
-        #print "executing %s" % cmd
-        #os.system(cmd)
-        log.info("Copying to target server")
-        cmd = "scp -B %s staffan@vps.tomtebo.org:/www/staffan/ferenda.lagen.nu" % zipname.replace(os.path.sep, "/")
-        (ret, stdout, stderr) = Util.runcmd(cmd)
-        if (ret == 0):
-            log.info("Fixing permissions and such")
-            cmd = "ssh staffan@vps.tomtebo.org 'chmod -R a+r /www/staffan/ferenda.lagen.nu/blendow.sfs.zip'"
-            Util.runcmd(cmd)
-            log.info("Published and done!")
-        else:
-            log.info("scp failed with error code %s (%s)" % (ret, stderr))
     
     def DoAll(self,module='all'):
         start = time.time()

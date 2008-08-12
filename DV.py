@@ -9,6 +9,7 @@ import pprint
 import types
 import codecs
 from time import time
+from tempfile import mktemp
 from datetime import datetime
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
@@ -465,10 +466,12 @@ class DVManager(LegalSource.Manager):
         parsed = p.Parse(basefile,infile)
         Util.ensureDir(outfile)
 
-        out = file(outfile, "w")
+        tmpfile = mktemp()
+        out = file(tmpfile, "w")
         out.write(parsed)
         out.close()
-        Util.indentXmlFile(outfile)
+        Util.indentXmlFile(tmpfile)
+        Util.replace_if_different(tmpfile,outfile)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
     def ParseAll(self):

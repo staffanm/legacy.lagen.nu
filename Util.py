@@ -3,6 +3,7 @@
 """General library of small utility functions"""
 
 import os, sys, subprocess, codecs, shutil, locale
+from tempfile import mktemp
 import BeautifulSoup
 
 
@@ -39,12 +40,12 @@ def mkdir(newdir):
 
 def ensureDir(filename):
     d = os.path.dirname(filename)
-    if not os.path.exists(d):
+    if d and not os.path.exists(d):
         mkdir(d)
 
 def robustRename(old,new):
     """Rename old to new no matter what (if the file exists, it's
-    removed, if the target dir doesn't exist, it's created"""
+    removed, if the target dir doesn't exist, it's created)"""
     # print "robustRename: %s -> %s" % (old,new)
     ensureDir(new)
     if os.path.exists(new):
@@ -137,22 +138,21 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
         # using the tagname parameter on macos. Maybe for other
         # reasons as well, I dunno
         param_str += "--param %s \"'%s'\" " % (p,parameters[p])
-    
-    cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,outfile)
+
+    tmpfile = mktemp()
+    cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
     # print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
     if stderr:
-        #if isinstance(stderr, unicode):
         print stderr
-        #else:
-        #    print stderr.decode('iso-8859-1')
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
     # tidyHtmlFile(outfile)
-    #indentXmlFile(outfile)
+    # indentXmlFile(outfile)
 
+    replace_if_different(tmpfile, outfile)
     if validate:
         cmdline = "xmllint --noout --nonet --nowarning --dtdvalid %s/dtd/xhtml1-strict.dtd %s" % (basepath,outfile)
         (ret,stdout,stderr) = runcmd(cmdline)
@@ -289,6 +289,19 @@ def indent_node(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
+
+def replace_if_different(newfile,oldfile):
+    import filecmp
+
+    if not os.path.exists(oldfile):
+        # print "%s does not exist, replacing" % oldfile
+        robustRename(newfile,oldfile)
+    elif not filecmp.cmp(newfile,oldfile):
+        # print "%s and %s are different, replacing" % (newfile,oldfile)
+        robustRename(newfile,oldfile)
+    else:
+        # print "%s and %s are identical, removing the former" % (newfile,oldfile)
+        os.unlink(newfile)
 
 #print "indenting"
 #indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')

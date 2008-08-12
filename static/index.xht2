@@ -8,9 +8,17 @@
     <body>
       <div role="main">
 	<p>
-	  Välkommen till Lagen.nu! Den här webbplatsen innehåller alla
-	  Sveriges lagar, förordningar och andra författningar, och
-	  många av de vägledande rättsfallen.
+	  Välkommen till betaversionen av Lagen.nu! Den här
+	  webbplatsen innehåller alla Sveriges lagar, förordningar och
+	  andra författningar, och många av de vägledande rättsfallen.
+	</p>
+	<p>
+	  Under betaperioden (som kommer vara åtminstone augusti ut)
+	  kan det vara många saker som strular (länkar som inte
+	  funkar, textformattering som ser konstig ut, text som
+	  saknas, etc). Om du hittar något som ser fel ut får du
+	  jättegärna skicka ett mail till mig: <a
+	  href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
 	</p>
 	<p>
 	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
@@ -18,14 +26,56 @@
 	<h1>Några av de viktigaste lagarna:</h1>
 	<dl>
 	  <dt>Straffrätt</dt>
-	  <dd><a href="">Brottsbalken</a></dd>
-	  
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1962:700">Brottsbalken (BrB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1951:649">Trafikbrottslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1968:64">Narkotikastrafflagen (NSL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:69">Skattebrottslagen (SBL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:1225">Smugglingslagen</a></dd>
+
 	  <dt>Familjerätt</dt>
-	  <dd><a href="">Äktenskapsbalken</a></dd>
+
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:26_1">Internationella äktenskapslagen (IÄL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:381">Föräldrabalken (FB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1958:638">Ärvdabalken (ÄB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:796">Lag om internationella rättsförhållanden rörande adoption (LIA)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:2240">Inseminationslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:230">Äktenskapsbalken (ÄktB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988:711">Lag om befruktning utanför kroppen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1117">Partnerskapslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1997:192">Lag om internationell adoptionsförmedlning (LIF)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:376">Sambolagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:670">Namnlag</a></dd>
+
 	  
 	  <dt>Arbetsrätt</dt>
-	  <dt><a href="">Medbestämmandelagen</a></dt>
-	  
+	  <dd><a href="">Medbestämmandelagen (MBL)</a></dd>
+	  <dd><a href="">Lag om anställningsskydd (LAS)</a></dd>
+	  <dd><a href="">Semesterlag</a></dd>
+	  <dd><a href="">Arbetsmiljölag</a></dd>
+	  <dd><a href="">Arbetstidslag</a></dd>
+	  <dd><a href="">Jämställdhetslag</a></dd>
+	  <dd><a href="">Lag om offentlig anställning (LOA)</a></dd>
+
+	  <dt>Avtalsrätt</dt>
+
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1915:218">Avtalslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:292">Lag om avtalsvillkor mellan näringsidkare (AVLN)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1512">Lag om avtalsvillkor i konsumentförhållanden (AVLK)</a></dd>
+
+
+	  <dt>Köprätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1736:123_2">Handelsbalken (HB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:822">Lag om internationella köp (CISC)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:931">Köplag (KöpL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:716">Konsumenttjänstlag (KtjL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:932">Konsumentköplag (KKöpL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:830">Konsumentkreditlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:400">Fastighetsmäklarlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:862">Lag om finansiell rådgivning till konsumenter</a></dd>
+
+	  <dt>Sakrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1845:50_1">Lösöresköpslagen</a></dd>
+
 	  <dt>IT-rätt</dt>
 	  <dd><a href="">Personuppgiftslagen</a></dd>
 	  <dd><a href="">Lagen om elektronisk kommunikation</a></dd>
@@ -42,13 +92,20 @@
 	  
 	  <dt>Fastighetsrätt</dt>
 	  <dd><a href="">Jordabalken</a></dd>
+	  <dd><a href="">Anläggningslagen</a></dd>
+	  <dd><a href="">Expropriationslagen</a></dd>
+	  <dd><a href="">Väglagen</a></dd>
+	  <dd><a href="">Fastighetsbildningslagen (FBL)</a></dd>
+	  <dd><a href="">Plan- och bygglagen (PBL)</a></dd>
 	  
 	  <dt>Associationsrätt</dt>
 	  <dd><a href="">Aktiebolagslagen</a></dd>
 	</dl>
-
-	<p>Hittar du inte lagen du söker i listan ovan? Bläddra i den
-	<a href="/index">fullständiga förteckningen</a>!</p>
+	<p>I listan ovan används de förenklade lagbeteckningar som
+	vanligtvis används. Lagarnas fullständiga titlar kan skilja
+	sig från dessa. Hittar du inte lagen du söker i listan ovan?
+	Bläddra i den <a href="/index/">fullständiga
+	förteckningen</a>!</p>
 	
 	<p>Lagen.nu använder cookies, och enligt <a
 	href="/2003:389#K6P18">6 kap. 18 § lagen om elektronisk

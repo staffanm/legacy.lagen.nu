@@ -512,9 +512,11 @@ class SFSParser(LegalSource.Parser):
             # the below)
             plaintextfile = files['sfst'][0].replace(".html", ".txt").replace("downloaded/sfst", "intermediate")
             Util.ensureDir(plaintextfile)
-            f = codecs.open(plaintextfile, "w",'iso-8859-1')
+            tmpfile = mktemp()
+            f = codecs.open(tmpfile, "w",'iso-8859-1')
             f.write(plaintext)
             f.close()
+            Util.replace_if_different(tmpfile,plaintextfile)
             patchfile = 'patches/sfs/%s.patch' % basefile
             if os.path.exists(patchfile):
                 patchedfile = mktemp()
@@ -2040,10 +2042,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
             parsed = p.Parse(basefile,files)
-            Util.ensureDir(filename)
-            out = file(filename, "w")
+            tmpfile = mktemp()
+            out = file(tmpfile, "w")
             out.write(parsed)
             out.close()
+            Util.replace_if_different(tmpfile,filename)
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:

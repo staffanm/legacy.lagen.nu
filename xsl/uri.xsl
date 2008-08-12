@@ -38,10 +38,10 @@
 	<xsl:value-of select="$uri"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/sfs')">
-	<xsl:value-of select="substring-after($uri, '/publ/sfs/')"/>
+	<xsl:value-of select="substring-after($uri, '/publ/sfs')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">
-	/dv/<xsl:value-of select="substring-after($uri, '/publ/rattsfall/')"/>
+	/dom/<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/ext/celex')">
 	http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML
