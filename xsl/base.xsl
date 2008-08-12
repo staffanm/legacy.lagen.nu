@@ -25,10 +25,9 @@
     <head>
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
-      <script type="text/javascript" src="base.js"></script>
-      <link rel="shortcut icon" href="file:///C:/Users/staffan/wds/ferenda.lagen.nu/img/favicon.ico" type="image/x-icon" />
-      <!-- <link rel="stylesheet" type="text/css" href="file:///home/staffan/wds/svn.lagen.nu/css/default.css"/> -->
-      <link rel="stylesheet" type="text/css" href="file:///C:/Users/staffan/wds/ferenda.lagen.nu/css/default.css"/>
+      <script type="text/javascript" src="js/base.js"></script>
+      <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+      <link rel="stylesheet" type="text/css" href="/css/default.css"/>
       
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
@@ -42,8 +41,8 @@
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
 	  <li><a href="/nyheter">Nyheter</a></li>
-	  <li><a href="/index/sfs">Författningar</a></li>
-	  <li><a href="/index/dv">Domslut</a></li>
+	  <li><a href="/index/">Författningar</a></li>
+	  <li><a href="/dom/index">Domslut</a></li>
 	  <li><a href="/om">Om</a></li>
 	</ul>
 	<form method="get" action="http://www.google.com/custom" style="display:inline;">

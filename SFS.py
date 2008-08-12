@@ -2092,7 +2092,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         sd.DownloadNew()
 
     def RelateAll(self):
-        # super(SFSManager,self).RelateAll()
+        super(SFSManager,self).RelateAll()
         self.IndexDV()
 
         
@@ -2206,12 +2206,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                                                        'sortkey':obj,
                                                        'title':by_subj_pred[subject]['http://dublincore.org/documents/dcmi-terms/title']})
                         
-        # FIXME: implement rinfoex:sorttitle 
         predicate = 'http://dublincore.org/documents/dcmi-terms/title'
         label = u"Ordnade efter författningstitel"
         letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
         for letter in letters:
-            pagetitles[letter] = u"Författningar som börjar på %s" % letter
+            pagetitles[letter] = u"Författningar som börjar på %s" % letter.upper()
             pagelabels[letter] = letter.upper()
             for obj in by_pred_obj[predicate]:
                 sortkey = re.sub(ur'Kungl\. Maj:ts ','',obj)
@@ -2226,14 +2225,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                                                          'leader':obj.replace(sortkey,''),
                                                          'trailer':''})
 
-        # this step is identical to the base class implementation, and
-        # probably will be for many document collections (with the
-        # exception of three level hierarchies) - maybe this could be
-        # a separate method?
+        # FIXME: port the 'Nyckelbegrepp' code from 1.0
+        #        import the old etiketter data and make a tag cloud or something 
+
+        
         for category in documents.keys():
-            # print "doing cat %s" % category
             for pageid in documents[category].keys():
-                # print "doing pg %s" % pageid
                 outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
                 title = pagetitles[pageid]
                 if category == u"Ordnade efter utgivningsår":
@@ -2241,8 +2238,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 else:
                     self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
                     
-
-
+        # build index.html - same as 'Författningar som börjar på A'
+        outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
+        category = u'Ordnade efter författningstitel'
+        pageid = 'a'
+        title = pagetitles[pageid]
+        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
 
     ################################################################
     # PURELY INTERNAL FUNCTIONS

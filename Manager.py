@@ -4,6 +4,7 @@
 and Generators (Renderers?) to create the static HTML files and other stuff"""
 
 import os,sys
+import shutil
 import codecs
 import inspect
 import time
@@ -166,19 +167,31 @@ class Manager:
         self._doTest(module)
 
     def Indexpages(self,module='all'):
-        if module != 'main':
+        if module != 'site':
             self._doAction('Indexpages', module)
-        if module in ('all','main'):
+        if module in ('all','site'):
             self._static_indexpages()
 
     def _static_indexpages(self):
         # make the front page and other static pages
         log.info("Generating site global static pages")
         for f in Util.listDirs(u'static', '.xht2'):
-            outfile = '%s/site/generated/%s' % (self.baseDir, f.replace(".xht2",".html"))
-            Util.ensureDir(outfile)
+            basefile = f.replace('static'+os.path.sep,'')
+            outfile = os.path.sep.join([self.baseDir, 'site', 'generated', basefile.replace(".xht2",".html")])
             log.info("Generating %s" % outfile)
+            Util.ensureDir(outfile)
             Util.transform("xsl/static.xsl", f, outfile,validate=False)
+
+        for dirname in ['css','js','img']:
+            for f in os.listdir(dirname):
+                srcfile = dirname+os.path.sep+f
+                if os.path.isfile(srcfile):
+                    destfile = os.path.sep.join([self.baseDir, 'site', 'generated', dirname, f])
+                    Util.ensureDir(destfile)
+                    shutil.copy2(srcfile, destfile)
+
+
+        # copy everything in img to basedir site generated img
     
     def Publish(self):
         log.info("Creating zip file")

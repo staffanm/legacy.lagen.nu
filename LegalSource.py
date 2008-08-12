@@ -439,9 +439,7 @@ class Manager(object):
                                                                       'title':obj})
 
         for category in documents.keys():
-            # print "doing cat %s" % category
             for pageid in documents[category].keys():
-                # print "doing pg %s" % pageid
                 outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
                 title = pagetitles[pageid]
                 self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)

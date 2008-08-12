@@ -54,7 +54,7 @@
     #vinjett {
 	margin-top:-25px; /* shouldn't be needed */
  	height: 120px;
-        background-image: url('file:///C:/Users/staffan/wds/ferenda.lagen.nu/img/banner.jpg');
+        background-image: url('/img/banner.jpg');
 	position:relative;
         font-size: 14pt;
     }

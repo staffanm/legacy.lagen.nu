@@ -14,6 +14,7 @@ import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
 import zipfile
 import traceback
+from collections import defaultdict
 
 # 3rdparty libs
 from genshi.template import TemplateLoader
@@ -130,7 +131,7 @@ class DVDownloader(LegalSource.Downloader):
                         
                     log.info(u'Hämtar %s till %s' % (filename, localdir))
                     os.system("ncftpget -E -u %s -p %s ftp.dom.se %s %s" %
-                              (self.config['ftp_user'], self.config['ftp_pass'], localdir, fullname))
+                              (self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'], localdir, fullname))
                     self.process_zipfile(localdir + os.path.sep + filename)
 
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
@@ -218,14 +219,14 @@ class DVParser(LegalSource.Parser):
     # Listan härledd från containers.n3/rattsfallsforteckningar.n3 i
     # rinfoprojektets källkod - en ambitiösare lösning vore att läsa
     # in de faktiska N3-filerna i en rdflib-graf.
-    publikationsuri = {u'NJA': 'http://rinfo.lagrummet.se/ref/rff/nja',
-                       u'RH': 'http://rinfo.lagrummet.se/ref/rff/rh',
-                       u'MÖD': 'http://rinfo.lagrummet.se/ref/rff/mod',
-                       u'RÅ': 'http://rinfo.lagrummet.se/ref/rff/ra',
-                       u'MIG': 'http://rinfo.lagrummet.se/ref/rff/mig',
-                       u'AD': 'http://rinfo.lagrummet.se/ref/rff/ad',
-                       u'MD': 'http://rinfo.lagrummet.se/ref/rff/md',
-                       u'FÖD': 'http://rinfo.lagrummet.se/ref/rff/fod'}
+    publikationsuri = {u'NJA': u'http://rinfo.lagrummet.se/ref/rff/nja',
+                       u'RH': u'http://rinfo.lagrummet.se/ref/rff/rh',
+                       u'MÖD': u'http://rinfo.lagrummet.se/ref/rff/mod',
+                       u'RÅ': u'http://rinfo.lagrummet.se/ref/rff/ra',
+                       u'MIG': u'http://rinfo.lagrummet.se/ref/rff/mig',
+                       u'AD': u'http://rinfo.lagrummet.se/ref/rff/ad',
+                       u'MD': u'http://rinfo.lagrummet.se/ref/rff/md',
+                       u'FÖD': u'http://rinfo.lagrummet.se/ref/rff/fod'}
                        
     def Parse(self,id,docfile):
         import codecs
@@ -368,7 +369,9 @@ class DVParser(LegalSource.Parser):
                     # FIXME: arsutgava should be typed as DateSubject
                     if pred == 'rattsfallspublikation':
                         tmp_publikationsid = m.group(1)
-                        head[u'[%s]'%pred] = self.publikationsuri[m.group(1)]
+                        # head[u'[%s]'%pred] = self.publikationsuri[m.group(1)]
+                        head[u'[%s]'%pred] = UnicodeSubject(self.publikationsuri[m.group(1)],
+                                                            predicate=RINFO[pred])
                     else:
                         head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
             if not '[publikationsordinal]' in head: # Workaround för AD-domar
@@ -502,9 +505,59 @@ class DVManager(LegalSource.Manager):
     def _get_module_dir(self):
         return __moduledir__
 
-    def _indexpages_for_predicate(self,predicate,predtriples,subjects):
-        if predicate == 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer':
-            print "H"
+    def _build_indexpages(self, by_pred_obj, by_subj_pred):
+        publikationer = {u'http://rinfo.lagrummet.se/ref/rff/nja': u'Högsta domstolen',
+                         u'http://rinfo.lagrummet.se/ref/rff/rh':  u'Hovrätterna',
+                         u'http://rinfo.lagrummet.se/ref/rff/ra':  u'Regeringsrätten',
+                         u'http://rinfo.lagrummet.se/ref/rff/ad':  u'Arbetsdomstolen',
+                         u'http://rinfo.lagrummet.se/ref/rff/fod': u'Försäkringsöverdomstolen',
+                         u'http://rinfo.lagrummet.se/ref/rff/md':  u'Marknadsdomstolen',
+                         u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
+                         u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
+                         }
+        documents = defaultdict(lambda:defaultdict(list))
+        pagetitles = {}
+        pagelabels = {}
+        publ_pred = Util.ns['rinfo']+'rattsfallspublikation'
+        year_pred = Util.ns['rinfo']+'arsutgava'
+        id_pred =   Util.ns['dct']+'identifier'
+        desc_pred = Util.ns['dct']+'description'
+        subj_pred = Util.ns['dct']+'subject'
+        for obj in by_pred_obj[publ_pred]:
+            label = publikationer[obj]
+            for subject in by_pred_obj[publ_pred][obj]:
+                year = by_subj_pred[subject][year_pred]
+                identifier = by_subj_pred[subject][id_pred]
+                
+                desc = by_subj_pred[subject][desc_pred]
+                if len(desc) > 80:
+                    desc = desc[:80].rsplit(' ',1)[0]+'...'
+                pageid = '%s-%s' % (obj.split('/')[-1], year)
+                pagetitles[pageid] = u'Rättsfall från %s under %s' % (label, year)
+                pagelabels[pageid] = year
+                documents[label][pageid].append({'uri':subject,
+                                               'sortkey':identifier,
+                                               'title':identifier,
+                                               'trailer':' '+desc[:80]})
+
+        # FIXME: build a fancy three level hierarchy ('Efter sökord' /
+        # 'A' / 'Anställningsförhållande' / [list...])
+
+
+        # build index.html - same as Högsta domstolens verdicts for last year
+        outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
+        category = u'Högsta domstolen'
+        pageid = 'nja-%d' % (datetime.today().year-1)
+        title = pagetitles[pageid]
+        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+
+        for category in documents.keys():
+            for pageid in documents[category].keys():
+                outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
+                title = pagetitles[pageid]
+                self._render_indexpage(outfile,title,documents,pagelabels,category,pageid,docsorter=Util.numcmp)
+
+        
 
     ####################################################################
     # CLASS-SPECIFIC HELPER FUNCTIONS
