@@ -200,11 +200,17 @@ class Manager:
         lastpublish = "%s-lastpublish.txt" % self.baseDir
 
         log.info("Listing changed files")
-        if os.path.exists(lastpublish):
-            cmd = 'C:/cygwin/bin/find %s -type f -cnewer %s > %s' % (self.baseDir, lastpublish, publish)
+
+        if os.name == 'nt':
+            findcmd = 'C:/cygwin/bin/find'
         else:
-            cmd = 'C:/cygwin/bin/find %s > %s' % (self.baseDir, publish)
-        # print "command is '%s'" % cmd
+            findcmd = 'find'
+        
+        if os.path.exists(lastpublish):
+            cmd = '%s %s -type f -cnewer %s > %s' % (findcmd, self.baseDir, lastpublish, publish)
+        else:
+            cmd = '%s %s > %s' % (findcmd, self.baseDir, publish)
+        print "command is '%s'" % cmd
         (ret, stdout, stderr) = Util.runcmd(cmd)
         numlines=0
         for line in file(publish):
@@ -227,11 +233,11 @@ class Manager:
                 log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
 
     def _make_zipfiles(self):
-        log.info("Creating zip file")
         from zipfile import ZipFile, ZIP_DEFLATED
         basepath = os.path.sep.join([self.baseDir,u'sfs'])
         # start with this for blendow:
         zipname = basepath+os.path.sep+'blendow.sfs.zip'
+        log.info("Creating zip file %s" % zipname)
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
         for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
             zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')
