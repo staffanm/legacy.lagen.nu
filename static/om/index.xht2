@@ -9,32 +9,46 @@
     <div role="main">
     <h1>Välkommen till lagen.nu</h1>
 
+    <p>Syftet med lagen.nu är att samla information om innehållet i
+    gällande svensk rätt, och att presentera denna på ett så enkelt
+    och begripligt sätt som möjligt. Tjänsten innehåller alla lagar
+    och andra författningar som ingår i Svensk författningssamling
+    (SFS), och många vägledande domstolsavgöranden, inklusive samtliga
+    HD-avgöranden som publicerats i NJA sedan 1981.</p>
+
+    <p>För den som inte har läst juridik eller jobbat med juridiska
+    frågor kan det vara lite svårt att överhuvudtaget veta var man ska
+    börja för att hitta ett svar på en juridisk fråga. <a
+    href="rattskallor.html">Läs mer om rättsinformation,
+    rättskällelära och juridisk metod</a>.</p>
+    
     <p>Lagen.nu är gjord för att det ska gå lite snabbare att hitta
     svar på frågor i lagtexterna jämfört med den traditionella
-    lagboken eller andra online-tjänster.<a href="how.html">Läs mer om
-    funktionaliten</a>.</p>
+    lagboken eller andra online-tjänster. <a href="manual.html">Läs
+    mer om funktionaliten</a>.</p>
 
-    <p>Lagen.nu är lite mer än bara en statisk lagsamling. Du kan även
+    <p>För den som är lite mer van vid att använda
+    rättsinformationtjänster är det viktigt att veta vilken
+    information som ingår, om den är uppdaterad, vem som står bakom,
+    m.m. <a href="krav.xht2">Läs mer om hur tjänsten uppfyller
+    Stiftelsen för rättsinformations kvalitetskrav</a>.</p>
+    
+    <p>Lagen.nu är inte bara en statisk lagsamling. Du kan även
     använda tjänsten för att hålla koll på lagändringar som är på väg
-    att införas, och även nya vägledande domar från Högsta Domstolen
-    och andra domstolar. <a href="/nyheter">Läs mer om
-    nyhetsflöden</a>.</p>
+    att införas, och även nya vägledande domar från domstolarna. <a
+    href="/nyheter">Läs mer om nyhetsflöden</a>.</p>
 
-    <p>Jag kan inte nog understryka att det här inte är en officell
-    sammanställning av svenska författningar. Det här är en webtjänst
-    gjord av en privatperson utan någon som helst koppling till svensk
-    lagstiftning och rättsväsende. <a href="me.html">Läs mer om vem
-    som ligger bakom</a>.</p>
+    <p>Eftersom tjänsten sköts helt automatiskt, med begränsade
+    resurser och utgår från ofullständigt material så bör man räkna
+    med att det finns felaktigheter i författningarna, så som de
+    presenteras här. <a href="ansvarsfriskrivning.html">Läs mer om
+    felaktigheter och en ansvarsfriskrivning</a>.</p>
 
-    <p>Eftersom det här är ett hobbyprojekt utan några större
-    ambitioner om exakthet finns det felaktigheter i författningarna,
-    så som de presenteras här. <a href="disclaimer.html">Läs mer om
-    felaktigheter och ansvarsfriskrivning</a>.</p>
+    <p>Lagen.nu är gjord av en privatperson, på fritiden. Varför har
+    jag gjort den här webtjänsten? <a href="varfor.html">Läs mer om
+    motivationen till lagen.nu</a>.</p>
 
-    <p>Varför har jag gjort den här webtjänsten? <a
-    href="why.html">Läs mer om motivationen till lagen.nu</a>.</p>
-
-    <p>Hur fungerar den här webtjänsten? <a href="tech.html">Läs mer
+    <p>Hur fungerar den här webtjänsten? <a href="teknik.html">Läs mer
     om teknologin bakom lagen.nu</a>.</p>
 
     <p>Har du frågor, synpunkter, klagomål, beröm? Skriv till mig på

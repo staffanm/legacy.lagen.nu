@@ -8,91 +8,67 @@
   <body>
     <div role="main">
       <h1>Nyheter om och från lagen.nu</h1>
+      
       <p>Här på lagen.nu uppdateras alla författningar och vägledande
-      domar kontinuerligt. Det bästa sättet att hålla reda på allt
-      är via RSS. Om du inte är bekant med RSS, läs gärna <a
-      href="http://mikrodatorn.idg.se/tjanster/rss/">tidningen
-      Mikrodatorns introduktion</a>. Där får du även förslag på bra
-      RSS-läsare. Själv använder jag <a
-      href="http://www.rssbandit.org/">RSS Bandit</a>. Du kan också
-      se vad som hänt sen senaste på följande sidor.
+      domar kontinuerligt. Det bästa sättet att hålla reda på allt är
+      via Atom-flöden.</p>
+
+      <p>Lagen.nu uppdateras normalt sett varje onsdag, då nya och
+      ändrade författningar blir tillgängliga via Regeringskansliets
+      rättsdatabaser. Samtidigt uppdateras listan över vägledande
+      domar. Ibland skriver jag lite nyheter om vad som hänt på själva
+      webbplatsen också, med mycket oregelbundna intervall.</p>
+
+      <p>Följande nyhetsflöden finns:</p>
+
+      <h2>Nyheter om siten</h2>
+      <p>
+	<a href="/nyheter/site.atom"><img src="/img/feed.png"/></a>
+	<a href="/nyheter/site.html">Full lista</a>
+      </p>
+	
+      <h2>Lagar och förordningar</h2>
+      <p>
+	<a href="/nyheter/lagar.atom"><img src="/img/feed.png"/></a>
+	<a href="/nyheter/lagar.html">Nya och ändrade lagar</a>
       </p>
 
-	<p>Lagen.nu uppdateras normalt sett varje onsdag, då nya och
-	ändrade författningar blir tillgängliga via Regeringskansliets
-	rättsdatabaser. Samtidigt uppdateras listan över vägledande
-	domar. Ibland skriver jag lite nyheter om vad som hänt på
-	själva webbplatsen också, med mycket oregelbundna
-	intervall.</p>
+      <p>
+	<a href="/nyheter/forordningar.atom"><img src="/img/feed.png"/></a>
+	<a href="/nyheter/forordningar.html">Nya och ändrade förordningar</a>
+      </p>
 
-	<p>Följande nyhetsflöden finns:</p>
+      <h2>Vägledande domar</h2>
+      <p>
+	<a href="/dom/nyheter/allmanna.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/allmanna.html">Allmänna domstolar</a> (Högsta domstolen och hovrätterna)
+      </p>
+      <p>
+	<a href="/dom/nyheter/forvaltning.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/forvaltning.html">Förvaltningsdomstolar</a> (Regeringsrätten)
+      </p>
+      <p>
+	<a href="/dom/nyheter/ad.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/ad.html">Arbetsdomstolen</a>
+      </p>
+      <p>
+	<a href="/dom/nyheter/md.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/md.html">Marknadsdomstolen</a>
+      </p>
+      <p>
+	<a href="/dom/nyheter/mig.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/mig.html">Migrationsöverdomstolen</a>
+      </p>
+      <p>
+	<a href="/dom/nyheter/mod.atom"><img src="/img/feed.png"/></a>
+	<a href="/dom/nyheter/mod.html">Miljööverdomstolen</a>
+      </p>
 
-	<h2 class="main_header">Nyheter om siten</h2>
-	<p>
-	  Nyheter om ny funktionalitet på webbplatsen och
-	  liknande. Rekommenderas om du ofta använder lagen.nu och
-	  vill ha full koll på allt här.
-	  <a href="/nyheter/site.html">Full lista</a>
-	  <a href="/nyheter/site.rss" class="rssbutton">RSS</a>
-	</p>
-	
-	<h2 class="main_header">Lagar och förordningar</h2>
-	<p>
-	  Nya lagar:
-	  <a href="/nyheter/nya-lagar.html">Full lista</a>
-	  <a href="/nyheter/nya-lagar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<p>
-	  Nya förordningar (och övriga författningar):
-	  <a href="/nyheter/nya-forordningar.html">Full lista</a>
-	  <a href="/nyheter/nya-forordningar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<p>
-	  Ändrade lagar:
-	  <a href="/nyheter/andrade-lagar.html">Full lista</a>
-	  <a href="/nyheter/andrade-lagar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<p>
-	  Ändrade förordningar (och övriga författningar):
-	  <a href="/nyheter/andrade-forordningar.html">Full lista</a>
-	  <a href="/nyheter/andrade-forordningar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<h2 class="main_header">Vägledande domar</h2>
-
-	<p>
-	  Högsta Domstolen: 
-	  <a href="/nyheter/hd-domar.html">Full lista</a>
-	  <a href="/nyheter/hd-domar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<p>
-	  Hovrätterna och Regeringsrätten:
-	  <a href="/nyheter/regering-och-hovrattsdomar.html">Full lista</a>
-	  <a href="/nyheter/regering-och-hovrattsdomar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<p>
-	  Tingsrätterna och övriga domstolar:
-	  <a href="/nyheter/ovriga-domar.html">Full lista</a>
-	  <a href="/nyheter/ovriga-domar.rss" class="rssbutton">RSS</a>
-	</p>
-
-	<h2 class="main_header">Frågor och svar</h2>
-
-	<dl>
-	  <dt>Kan jag inkludera något eller alla av de här
-	  nyhetetsflödena på min webbplats (s.k. syndikering)?</dt>
-	  <dd>Ja, för mig går det alldeles utmärkt. Jag föredrar att
-	  du använder dig av RSS-filen (dvs: låt helst bli att ladda
-	  ner och parsa HTML-filerna), men om det är något data du
-	  skulle vilja ha i RSS-filen som inte finns där idag, <a
-	  href="mailto:staffan@tomtebo.org">hör av dig</a> så får vi
-	  se vad vi kan göra.</dd>
-	</dl>
+      <h2>Allt i en klump</h2>
+      <p>
+	<a href="/nyheter/allt.atom"><img src="/img/feed.png"/></a>
+	<a href="/nyheter/allt.html">Alla ovanstående nyheter, samlade.</a>
+      </p>
     </div>
   </body>
 </html>

@@ -268,9 +268,9 @@ class Manager(object):
 
         log.info("All documents related: %d documents, %d triples" % (c, triples))
         # f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-        #f.write(graph.serialize(format="pretty-xml"))
-        #f.close()
-        #print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
+        # f.write(graph.serialize(format="pretty-xml"))
+        # f.close()
+        # print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
     
     def Indexpages(self):
         """Creates index pages for all documents for a particular
@@ -323,12 +323,14 @@ class Manager(object):
                 # are not used for indexpage generation - filter these
                 # out to cut down on memory usage
                 if pred != 'http://dublincore.org/documents/dcmi-terms/references':
-                    if objLiteral != "":
+                    if objLiteral:
                         by_pred_obj[pred][objLiteral].append(subj)
                         by_subj_pred[subj][pred] = objLiteral
-                    elif objUri != "":
+                    elif objUri:
                         by_pred_obj[pred][objUri].append(subj)
                         by_subj_pred[subj][pred] = objUri
+                    else:
+                        pass
             else:
                 log.warning("Couldn't parse line %s" % line)
         log.info("RDF loaded (%.3f sec)", time()-start)

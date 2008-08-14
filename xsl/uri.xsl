@@ -18,13 +18,13 @@
     </xsl:variable>
     <xsl:choose>
       <xsl:when test="contains($uri, '#L')">
-	<span class="andringsnot"><xsl:value-of select="."/></span>
+	<span class="andringsnot"><xsl:apply-templates/></span>
       </xsl:when>
       <xsl:when test="$localurl = ''">
 	<xsl:value-of select="."/>
       </xsl:when>
       <xsl:otherwise>
-	<a href="{$localurl}"><xsl:value-of select="."/></a>
+	<a href="{$localurl}"><xsl:apply-templates/></a>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -41,10 +41,10 @@
 	<xsl:value-of select="substring-after($uri, '/publ/sfs')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">
-	/dom/<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
+	/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/ext/celex')">
-	http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML
+	<!-- http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML-->http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
       </xsl:when>
     </xsl:choose>            
   </xsl:template>

@@ -8,17 +8,38 @@
     <body>
       <div role="main">
 	<p>
-	  Välkommen till betaversionen av Lagen.nu! Den här
-	  webbplatsen innehåller alla Sveriges lagar, förordningar och
-	  andra författningar, och många av de vägledande rättsfallen.
+	  Välkommen till <i>ferenda.lagen.nu</i>, en förhandstitt på
+	  den kommande versionen av <a
+	  href="https://lagen.nu/">lagen.nu</a>. Den här webbplatsen
+	  innehåller alla Sveriges lagar och andra författningar, samt
+	  många vägledande rättsfall. Läs mer om <a
+	  href="/om/nytt.html">vad som är nytt i den här
+	  versionen</a>.
 	</p>
 	<p>
-	  Under betaperioden (som kommer vara åtminstone augusti ut)
-	  kan det vara många saker som strular (länkar som inte
-	  funkar, textformattering som ser konstig ut, text som
-	  saknas, etc). Om du hittar något som ser fel ut får du
-	  jättegärna skicka ett mail till mig: <a
+	  Eftersom det här är en förhandstitt så kan det vara många
+	  saker som strular (länkar som inte funkar, textformattering
+	  som ser konstig ut, text som saknas, etc). Om du hittar
+	  något som ser fel ut får du jättegärna skicka ett mail till
+	  mig: <a
 	  href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
+	  med en beskrivning av felet och en länk till sidan du
+	  hittade det på.
+	</p>
+
+	<p>
+	  För den som är extra intresserad finns en <a
+	  href="http://trac.lagen.nu/query?status=new&amp;status=assigned&amp;status=reopened&amp;milestone=1.5">lista
+	  över kända buggar</a> och andra saker som måste fixas innan
+	  den här versionen kan lanseras. Om du kan programmera python
+	  eller javascript kan du <a href="http://trac.lagen.nu/">till
+	  och med hjälpa till</a>. <a
+	  href="http://trac.lagen.nu/browser/trunk">Källkoden</a> till
+	  lagen.nu är öppen, och utvecklare är mycket välkomna!
+	  (Licensen är inte bestämd, men det kommer bli någon av de
+	  som <a
+	  href="http://www.opensource.org/licenses/pythonpl.html">OSI
+	  godkänt</a>.)
 	</p>
 	<p>
 	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
@@ -26,81 +47,236 @@
 	<h1>Några av de viktigaste lagarna:</h1>
 	<dl>
 	  <dt>Straffrätt</dt>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1962:700">Brottsbalken (BrB)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1951:649">Trafikbrottslagen</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1968:64">Narkotikastrafflagen (NSL)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:69">Skattebrottslagen (SBL)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:1225">Smugglingslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1951:649">Trafikbrottslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1962:700">Brottsbalk (BrB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1968:64">Narkotikastrafflag (NSL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:69">Skattebrottslag (SBL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:1225">Smugglingslag</a></dd>
 
 	  <dt>Familjerätt</dt>
-
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:26_1">Internationella äktenskapslagen (IÄL)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:381">Föräldrabalken (FB)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1958:638">Ärvdabalken (ÄB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:26_1">Internationella äktenskapslag (IÄL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:381">Föräldrabalk (FB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1958:638">Ärvdabalk (ÄB)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:796">Lag om internationella rättsförhållanden rörande adoption (LIA)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:2240">Inseminationslagen</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:230">Äktenskapsbalken (ÄktB)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988:711">Lag om befruktning utanför kroppen</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1117">Partnerskapslagen</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1997:192">Lag om internationell adoptionsförmedlning (LIF)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:376">Sambolagen</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:670">Namnlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:2240">Inseminationslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:230">Äktenskapsbalk (ÄktB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988:711">Lag om befruktning utanför kroppen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1117">Partnerskapslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1997:192">Lag om internationell adoptionsförmedlning (LIF)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:376">Sambolag</a></dd>
 
-	  
 	  <dt>Arbetsrätt</dt>
-	  <dd><a href="">Medbestämmandelagen (MBL)</a></dd>
-	  <dd><a href="">Lag om anställningsskydd (LAS)</a></dd>
-	  <dd><a href="">Semesterlag</a></dd>
-	  <dd><a href="">Arbetsmiljölag</a></dd>
-	  <dd><a href="">Arbetstidslag</a></dd>
-	  <dd><a href="">Jämställdhetslag</a></dd>
-	  <dd><a href="">Lag om offentlig anställning (LOA)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1976:580">Medbestämmandelag (MBL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1977:1160">Arbetsmiljölag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1977:480">Semesterlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:673">Arbetstidslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:80">Lag om anställningsskydd (LAS)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:433">Jämställdhetslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:260">Lag om offentlig anställning (LOA)</a></dd>
 
-	  <dt>Avtalsrätt</dt>
-
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1915:218">Avtalslagen</a></dd>
+	  <dt>Allmän avtalsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1915:218">Avtalslag (AvtL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1924:323">Lag om verkan av avtal, som slutits under påverkan av en psykisk störning</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1946:805">Lag med särskilda bestämmelser angående vittne vid vissa rättshandlingar</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:158">Prokuralag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:292">Lag om avtalsvillkor mellan näringsidkare (AVLN)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1512">Lag om avtalsvillkor i konsumentförhållanden (AVLK)</a></dd>
 
-
-	  <dt>Köprätt</dt>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1736:123_2">Handelsbalken (HB)</a></dd>
+	  <dt>Speciell avtalsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1914:45">Lag om kommission</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1936:83">Lag angående vissa utfästelser om gåva</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1978:599">Lag om avbetalningsköp mellan näringsidkare m.fl.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:716">Konsumenttjänstlag (KTjL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:822">Lag om internationella köp (CISC)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:931">Köplag (KöpL)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:716">Konsumenttjänstlag (KtjL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:932">Konsumentköplag (KKöpL)</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:830">Konsumentkreditlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:351">Lag om handelsagentur</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:1672">Lag om paketresor</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:830">Konsumentkreditlag (KKrL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:400">Fastighetsmäklarlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2002:562">Lag om elektronisk handel och andra informationssamhällets tjänster</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:862">Lag om finansiell rådgivning till konsumenter</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2005:59">Distans- och hemförsäljningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2006:484">Lag om franchisegivares informationsskyldighet</a></dd>
 
-	  <dt>Sakrätt</dt>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1845:50_1">Lösöresköpslagen</a></dd>
+	  <dt>Fordringsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1927:56">Lag om nedsättande av pengar hos myndighet</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1927:85">Lag om dödande av förkommen handling</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1930:173">Lag om beräkning av lagstadgad tid</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1936:81">Skuldebrevslag (SkbrL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1975:635">Räntelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1981:130">Preskriptionslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1981:131">Lag om kallelse å okända borgenärer</a></dd>
+
+	  <dt>Kredit- och Sakrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1845:50_s.1">Lag om handel med lösören, som köparen låter i säljarens vård kvarbliva</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:48_s.1">Lag om samäganderätt</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1936:88">Lag om pantsättning av lös egendom som innehaves av tredje man</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1944:181">Lag om redovisningsmedel</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1944:302">Lag om köpares rätt till märkt virke</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:979">Förmånsrättslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:980">Lag om retentionsrätt för fordran hos hotellgäst</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:982">Lag om näringsidkares rätt att sälja saker som inte har hämtats</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:796">Lag om godtrosförvärv av lösöre</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:1479">Lag om kontoföring av finansiella instrument 6 kap</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:528">Lag om företagsinteckning</a></dd>
+
+	  <dt>Skadeståndsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1922:382">Lag angående ansvarighet för skada i följd av luftfart</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1968:45">Atomansvarighetslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1972:207">Skadeståndslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1975:1410">Trafikskadelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1978:413">Brottsskadelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:192">Järnvägstrafiklag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:18">Produktansvarslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1996:799">Patientskadelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:714">Lag om ersättning vid frihetsberövanden och andra tvångsåtgärder</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2007:1150">Lag om tillsyn över hundar och katter</a></dd>
 
 	  <dt>IT-rätt</dt>
-	  <dd><a href="">Personuppgiftslagen</a></dd>
-	  <dd><a href="">Lagen om elektronisk kommunikation</a></dd>
-	  <dd><a href="">("BBS-lagen")</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:112">BBS-lagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:204">Personuppgiftslag (PUL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:832">Lag om kvalificerade elektroniska signaturer</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2002:562">E-handelslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:389">Lagen om elektronisk kommunikation (LEK)</a></dd>
 	  
 	  <dt>Statsrätt</dt>
-	  <dd><a href="/1974:152" title="Kungörelse (1974:152) om beslutad ny regeringsform">Regeringsformen</a></dd>
-	  <dd><a href="/1810:0926">Successionsordningen</a></dd>
-	  <dd><a href="/1949:105">Tryckfrihetsförordningen</a></dd>
-	  <dd><a href="/1991:1469">Yttrandefrihetsgrundlagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1810:0926">Successionsordningen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:105">Tryckfrihetsförordningen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:152">Regeringsformen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:153">Riksdagsordningen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1975:1339">JK-lagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:368">Lag om Lagrådet</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:369">Folkomröstningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:765">JO-instruktionen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:1469">Yttrandefrihetsgrundlagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:1559">Lag med föreskrifter på tryckfrihetsförordningens och yttrandefrihetsgrundlagens områden</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1219">Europakonventionen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1500">Anslutningslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1996:1515">Förordning med instruktion för Regeringskansliet</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1997:157">Vallag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2001:82">Medborgarskapslag</a></dd>
 	  
 	  <dt>Immaterialrätt</dt>
-	  <dd><a href="">Upphovsrättslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/"></a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:345">Lag om rätten till arbetstagares uppfinningar</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1960:644">Varumärkeslagen (VML)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1960:729">Upphovsrättslagen (URL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1967:837">Patentlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:485">Mönsterskyddslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:156">Firmalag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:1685">Lag om skydd för kretsmönster för halvledarprodukter (KML)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:193">Internationell upphovsrättsförordning (IURF)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1997:306">Växförädlarrättslag</a></dd>
+
+	  <dt>Marknadsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1978:800">Lag om namn och bild i reklam</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993:20">Konkurrenslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993:581">Tobakslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:450">Marknadsföringslag (MFL)</a></dd>
 	  
 	  <dt>Fastighetsrätt</dt>
-	  <dd><a href="">Jordabalken</a></dd>
-	  <dd><a href="">Anläggningslagen</a></dd>
-	  <dd><a href="">Expropriationslagen</a></dd>
-	  <dd><a href="">Väglagen</a></dd>
-	  <dd><a href="">Fastighetsbildningslagen (FBL)</a></dd>
-	  <dd><a href="">Plan- och bygglagen (PBL)</a></dd>
-	  
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:988">Fastighetsbildningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:994">Jordabalk</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:948">Väglag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1972:719">Expropriationslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1144">Ledningsrättslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1149">Anläggningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1150">Lag om förvaltning av samfälligheter</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1975:1132">Lag om förvärv av hyresfastighet m.m.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:230">Jordförvärvslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:352">Ombildningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:658">Lag om arrendatorers rätt att förvärva arrendestället</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:10">Plan- och bygglag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:11">Lag om exploateringssamverkan</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:259">Jaktlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988:950">Lag om kulturminnen m.m.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:45">Minerallag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:614">Bostadsrättslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993:787">Fiskelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:1649">Lag om byggande av järnväg</a></dd>
+
+	  <dt>Processrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1942:740">Rättegångsbalk (RB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:979">Förmånsrättslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:371">Lag om rättegång i arbetstvister</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1981:774">Utsökningsbalk</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:672">Konkurslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:746">Lag om betalningsföreläggande och handräckning</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:334">Skuldsaneringslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1996:764">Lag om företagsrekonstruktion</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1999:116">Lag om skiljeförfarande</a></dd>
+
 	  <dt>Associationsrätt</dt>
-	  <dd><a href="">Aktiebolagslagen</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1974:157">Handelsregisterlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:1102">Lag om handelsbolag och enkla bolag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:1245">Lag om styrelserepresentation för de privatanställda</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:667">Lag om ekonomiska föreningar</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1220">Stiftelselag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:1554">Årsredovisningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:665">Förordning om revisorer</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1999:1078">Bokföringslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2001:883">Revisorslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2005:551">Aktiebolagslag (ABL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2005:559">Aktiebolagsförordning</a></dd>
+
+	  <dt>Skatterätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:624">Kupongskattelag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:1152">Fastighetstaxeringslag (FTL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:1052">Lag om statlig fastighetsskatt</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:404">Lag om stämpelskatt vid inskrivningsmyndigheter</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:468">Lag om avräkning av utländsk skatt</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:659">Lag om särskild löneskatt på vissa förvärvsinkomster</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:586">Lag om särskild inkomstskatt för utomlands bosatta (SINK)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:1744">Lag om allmän pensionsavgift</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:200">Mervärdesskattelag (ML)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:575">Lag mot skatteflykt</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:674">Lag om inkomstgrundad ålderspension (LIP)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1999:1229">Inkomstskattelag (IL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:980">Socialavgiftslag (SAL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2001:1227">Lag om självdeklarationer och kontrolluppgifter (LSK)</a></dd>
+
+	  <dt>Allmän förvaltningsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:289">Lag om allmänna förvaltningsdomstolar.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:291">Förvaltningsprocesslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:309">Lag om behörighet för allmän förvaltningsdomstol att pröva vissa mål</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:100">Sekretesslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:657">Sekretessförordning</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:206">Lag om viten</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:223">Förvaltningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:191">Avgiftsförordning</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:234">Förordning om tiden för tillhandahållande av domar och beslut m.m.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2006:304">Lag om rättsprovning av vissa regeringsbeslut</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2007:515">Myndighetsförordning</a></dd>
+
+	  <dt>Speciell förvaltningsrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:763">Hälso- och sjukvårdslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1984:387">Polislag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988.870">Lag om vård av missbrukare i vissa fall</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:52">Lag med särskilda bestämmelser om vård av unga</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:1128">Lag om psykiatrisk tvångsvård</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993:1617">Ordningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993:387">Lag om stöd och service till vissa funktionshindrade</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1998:488">Körkortslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2001:453">Socialtjänstlag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:778">Lag om skydd mot olyckor</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2004:168">Smittskyddslag</a></dd>
+
+	  <dt>Kommunalrätt</dt>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1957:259">Lag om rätt för kommun att ta ut avgift för vissa upplåtelser av offentlig plats m.m.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1962:638">Lag om rätt för kommun att bistå utländska studerande</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1968:131">Lag om vissa kommunala befogenheter inom turistväsendet</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:663">Lag om vissa kommunala befogenheter i fråga om sysselsättning för handikappade</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1989:977">Lag om kommunal stöd till ungdomsorganisationer.</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1991:900">Kommunallag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1993.406">Lag om kommunal stöd till boendet</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:692">Lag om kommunala folkomröstningar</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2001:151">Lag om kommunal tjänsteexport och kommunalt internationellt bistånd</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2004:125">Lag om vissa kommunala befogenheter i fråga om sjuktransporter</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2006:544">Lag om kommuners och landstings åtgärder inför och vid extraordinära händelser i fredstid och höjd beredskap</a></dd>
 	</dl>
+
 	<p>I listan ovan används de förenklade lagbeteckningar som
 	vanligtvis används. Lagarnas fullständiga titlar kan skilja
 	sig från dessa. Hittar du inte lagen du söker i listan ovan?
@@ -108,29 +284,29 @@
 	förteckningen</a>!</p>
 	
 	<p>Lagen.nu använder cookies, och enligt <a
-	href="/2003:389#K6P18">6 kap. 18 § lagen om elektronisk
-	kommunikation</a> ska man informera om syftet med dessa. <a
-	href="/om/cookies.html">Läs mer här!</a>
+	href="http://rinfo.lagrummet.se/publ/sfs/2003:389#K6P18">6
+	kap. 18 § lagen om elektronisk kommunikation</a> ska man
+	informera om syftet med dessa. <a href="/om/cookies.html">Läs
+	mer här!</a>
 	</p>
       </div>
-      <div role="secondary">
+      <div role="navigation">
 	<h2>
-	  <a href="/nyheter/site.atom"><img src="img/rss.png" alt="Atom-flöde för sajtnyheter"/></a>
+	  <a href="/nyheter/site.atom"><img src="img/feed.png" title="Atom-flöde för sajtnyheter"/></a>
 	  <a href="/nyheter/site.html">Nyheter på lagen.nu</a>
 	</h2>
 	<!-- xinclude:a bara de fem senaste -->
 	<xi:include href="generated/site/nyheter.xht2"/>
-
 	<h2>
-	  <a href="/nyheter/lagar.atom"><img src="img/rss.png" alt="Atom-flöde för nya och ändrade lagar"/></a>
+	  <a href="/nyheter/lagar.atom"><img src="img/feed.png" title="Atom-flöde för nya och ändrade lagar"/></a>
 	  <a href="/nyheter/lagar.html">Nya och ändrade lagar</a>
 	</h2>
 	<!-- xinclude:a bara de fem senaste -->
 	<xi:include href="generated/sfs/lagar.xht2"/>
 
 	<h2>
-	  <a href="/nyheter/hd.atom"><img src="img/rss.png" alt="Atom-flöde för domslut från HD"/></a>
-	  <a href="/nyheter/hd.html">Domslut från HD</a>
+	  <a href="/dom/nyheter/allmanna.atom"><img src="img/feed.png" title="Atom-flöde för domslut från HD"/></a>
+	  <a href="/dom/nyheter/allmanna.html">Domslut från de allmänna domstolarna</a>
 	</h2>
 	<!-- xinclude:a bara de fem senaste -->
 	<xi:include href="generated/sfs/hd.xht2"/>

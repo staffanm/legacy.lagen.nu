@@ -15,13 +15,14 @@
   <xsl:template name="metarobots"/>
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
-      
+
+  <!--
   <xsl:template match="/">
     <div class="middle">
       <xsl:apply-templates/>
     </div>  
   </xsl:template>
-
+  -->
   <xsl:template match="xht2:h">
     <h2><xsl:value-of select="."/></h2>
   </xsl:template>
@@ -32,6 +33,11 @@
 
   <xsl:template match="xht2:a">
     <xsl:call-template name="link"/>
+  </xsl:template>
+
+  <xsl:template match="xht2:*[@role='main']">
+    <!-- strip the actual @role='main' container --> 
+    <xsl:apply-templates/> 
   </xsl:template>
 
   <xsl:template match="xht2:*[@role='navigation']">
@@ -46,10 +52,15 @@
     </xsl:element>
   </xsl:template>
 
-  <xsl:template match="xht2:*">
+  <xsl:template match="@*">
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
+  <!--
+  <xsl:template match="xht2:*">
+    <xsl:copy><xsl:apply-templates/></xsl:copy>
+  </xsl:template>
+  -->
   <!-- refs mode -->
 
   <xsl:template match="*|@*" mode="refs">

@@ -1,15 +1,15 @@
-#lagtext {
+#dokument {
       background: lightyellow;
       border: solid 1px yellow;
 }
 
-#kommentarer p {
+#kommentarer {
     background: lightgreen;
     border: solid 1px green;
     margin-bottom: 5px;
 }
 
-#referenser p, #referenser dl {
+#referenser dl {
     background: lightblue;
     border: solid 1px blue;
     margin-bottom: 5px;

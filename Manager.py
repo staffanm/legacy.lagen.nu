@@ -220,9 +220,9 @@ class Manager:
             log.info("No files to publish, we're done!")
         else:
             log.info("Copying to target server")
-            localcmd    = 'tar -cz -T %s -f - ' % publish
+            localcmd    = 'tar -cz -T %s -M 644 -f - ' % publish
             transfercmd = 'ssh staffan@vps.tomtebo.org'
-            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf - && chmod -R go+r %s' % self.baseDir
+            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
             # print "command is '%s'" % cmd
             (ret, stdout, stderr) = Util.runcmd(cmd)

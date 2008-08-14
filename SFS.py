@@ -1920,6 +1920,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     # processes dv/parsed/rdf.nt to get a new xml file suitable for
     # inclusion by sfs.xslt (something we should be able to do using
     # SPARQL, TriX export or maybe XSLT itself, but...)
+    #
+    # FIXME: In order for this to be correct, we must make sure that
+    # DV.RelateAll runs before SFS.RelateAll - otherwise we'll process
+    # an old file from last weeks run
     def IndexDV(self):
         g = Graph()
         log.info("Start RDF loading")
@@ -2196,57 +2200,50 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}
         pagelabels = {}
-        predicate = 'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#fsNummer'
-        label = u"Ordnade efter utgivningsår"
+        fsnr_pred  = Util.ns['rinfo']+'fsNummer'
+        title_pred = Util.ns['dct']+'title'
+        type_pred  = Util.ns['rdf']+'type'
+        type_obj   = Util.ns['rinfo']+'KonsolideradGrundforfattning'
+        year_lbl  = u'Ordnade efter utgivningsår'
+        title_lbl = u'Ordnade efter titel'
 
-        for year in range(1686,datetime.today().year+1):
-            pagetitles[year] = u"Författningar utgivna %s" % year
-            pagelabels[year] = unicode(year)
-            for obj in by_pred_obj[predicate]:
-                if obj.startswith(unicode(year)):
-                    for subject in by_pred_obj[predicate][obj]: # should be a single subject
-                        documents[label][year].append({'uri':subject,
-                                                       'sortkey':obj,
-                                                       'title':by_subj_pred[subject]['http://dublincore.org/documents/dcmi-terms/title']})
-                        
-        predicate = 'http://dublincore.org/documents/dcmi-terms/title'
-        label = u"Ordnade efter författningstitel"
-        letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
-        for letter in letters:
-            pagetitles[letter] = u"Författningar som börjar på %s" % letter.upper()
+        # list all subjects that are of rdf:type rinfo:KonsolideradGrundforfattning
+        for subj in by_pred_obj[type_pred][type_obj]:
+            fsnr  = by_subj_pred[subj][fsnr_pred]
+            title = by_subj_pred[subj][title_pred]
+
+            sorttitle = re.sub(ur'Kungl\. Maj:ts ','',title)
+            sorttitle = re.sub(ur'^(Lag|Förordning|Tillkännagivande|[kK]ungörelse) ?\([^\)]+\) ?(av|om|med|angående) ','',sorttitle)
+            year = fsnr.split(':')[0]
+            letter = sorttitle[0].lower()
+
+            pagetitles[year] = u'Författningar utgivna %s' % year
+            pagelabels[year] = year
+            pagetitles[letter] = u'Författningar som börjar på "%s"' % letter.upper()
             pagelabels[letter] = letter.upper()
-            for obj in by_pred_obj[predicate]:
-                sortkey = re.sub(ur'Kungl\. Maj:ts ','',obj)
-                sortkey = re.sub(ur'^(Lag|Förordning|Tillkännagivande|[kK]ungörelse) ?\([^\)]+\) ?(av|om|med|angående) ','',sortkey)
+            documents[year_lbl][year].append({'uri':subj,
+                                              'sortkey':fsnr,
+                                              'title':title})
 
-                if sortkey.lower().startswith(letter):
-                    for subject in by_pred_obj[predicate][obj]:
-
-                        documents[label][letter].append({'uri':subject,
-                                                         'sortkey':sortkey,
-                                                         'title':sortkey,
-                                                         'leader':obj.replace(sortkey,''),
-                                                         'trailer':''})
+            documents[title_lbl][letter].append({'uri':subj,
+                                                 'sortkey':sorttitle,
+                                                 'title':sorttitle,
+                                                 'leader':title.replace(sorttitle,'')})
 
         # FIXME: port the 'Nyckelbegrepp' code from 1.0
         #        import the old etiketter data and make a tag cloud or something 
-
         
         for category in documents.keys():
             for pageid in documents[category].keys():
                 outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
                 title = pagetitles[pageid]
-                if category == u"Ordnade efter utgivningsår":
+                if category == year_lbl:
                     self._render_indexpage(outfile,title,documents,pagelabels,category,pageid,docsorter=Util.numcmp)
                 else:
                     self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
-                    
-        # build index.html - same as 'Författningar som börjar på A'
-        outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
-        category = u'Ordnade efter författningstitel'
-        pageid = 'a'
-        title = pagetitles[pageid]
-        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                    if pageid == 'a': # make index.html
+                        outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
+                        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
 
     ################################################################
     # PURELY INTERNAL FUNCTIONS

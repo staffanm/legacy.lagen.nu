@@ -23,12 +23,13 @@
   <xsl:template match="xht2:head">
     <!--<xsl:message>base/head</xsl:message>-->
     <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
-      <script type="text/javascript" src="js/base.js"></script>
+      <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" type="text/css" href="/css/default.css"/>
-      
+      <link rel="stylesheet" href="/css/screen.css" media="screen" /> 
+      <link rel="stylesheet" href="/css/print.css" media="print" /> 
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
@@ -40,35 +41,37 @@
       <div id="vinjett">
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
-	  <li><a href="/nyheter">Nyheter</a></li>
+	  <li><a href="/nyheter/">Nyheter</a></li>
 	  <li><a href="/index/">Författningar</a></li>
-	  <li><a href="/dom/index">Domslut</a></li>
-	  <li><a href="/om">Om</a></li>
+	  <li><a href="/dom/index/">Domslut</a></li>
+	  <li><a href="/om/">Om</a></li>
 	</ul>
 	<form method="get" action="http://www.google.com/custom" style="display:inline;">
 	  <u>S</u>ök:
 	  <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>
 	  <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
-	  <input type="hidden" name="domains" value="lagen.nu"/><br/>
+	  <input type="hidden" name="domains" value="lagen.nu"/>
 	  <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
 	</form>
       </div>
-      <div id="wrapper_extra">
-	<div id="wrapper">
-	  <div id="lagtext">
-	    <xsl:apply-templates/>
-	  </div>
-	  <div id="kommentarer" class="sidoruta">
-	    <xsl:apply-templates mode="kommentarer"/>
-	  </div>
-	  <div id="referenser" class="sidoruta">
-	    <xsl:apply-templates mode="refs"/>
+      <div id="colmask" class="threecol">
+	<div id="colmid">
+	  <div id="colleft">
+	    <div id="dokument">
+	      <xsl:apply-templates/>
+	    </div>
+	    <div id="kommentarer" class="sidoruta">
+	      <xsl:apply-templates mode="kommentarer"/>
+	    </div>
+	    <div id="referenser" class="sidoruta">
+	      <xsl:apply-templates mode="refs"/>
+	    </div>
 	  </div>
 	</div>
-	<div id="sidfot">
-	  <b>Lagen.nu</b> är en privat webbplats. Informationen här är
-	  inte officiell och kan innehålla fel.
-	</div>
+      </div>
+      <div id="sidfot">
+	<b>Lagen.nu</b> är en privat webbplats. Informationen här är
+	inte officiell och kan vara felaktig. 
       </div>
     </body>
   </xsl:template>

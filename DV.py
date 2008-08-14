@@ -437,7 +437,7 @@ class DVParser(LegalSource.Parser):
 
 class DVManager(LegalSource.Manager):
     __parserClass = DVParser
-    
+    re_xmlbase = re.compile('xml:base="http://rinfo.lagrummet.se/publ/rattsfall/([^"]+)"').search
 
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE  
@@ -481,6 +481,7 @@ class DVManager(LegalSource.Manager):
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
+
         Util.mkdir(os.path.dirname(outfile))
         log.info(u'Transformerar %s > %s' % (infile,outfile))
         Util.transform("xsl/dv.xsl",
@@ -488,8 +489,19 @@ class DVManager(LegalSource.Manager):
                        outfile,
                        {},
                        validate=False)
+        # get URI from basefile as fast as possible
+        head = codecs.open(infile,encoding='utf-8').read(1024)
+        m = self.re_xmlbase(head)
+        if m:
+            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map'])
+            f = codecs.open(mapfile,'a',encoding='utf-8')
+            f.write(u"%s\t%s\n" % (m.group(1),basefile))
+        else:
+            log.warning("could not find xml:base in %s" % infile)
+        
 
     def GenerateAll(self):
+        Util.robust_remove(os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map']))
         parsed_dir = os.path.sep.join([self.baseDir, u'dv', 'parsed'])
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
         

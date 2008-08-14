@@ -5,8 +5,8 @@
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/">
 
+  <xsl:import href="uri.xsl"/>
   <xsl:include href="base.xsl"/>
-
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
     <xsl:value-of select="//xht2:title"/> | Lagen.nu
@@ -15,24 +15,22 @@
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
       
-  <xsl:template match="/">
-    <div class="middle">
-      <xsl:apply-templates/>
-    </div>  
-  </xsl:template>
-
   <xsl:template match="xht2:h">
     <h2><xsl:value-of select="."/></h2>
+  </xsl:template>
+
+  <xsl:template match="xht2:a">
+    <xsl:call-template name="link"/>
   </xsl:template>
 
   <xsl:template match="xht2:section">
     <div><xsl:apply-templates/></div>
   </xsl:template>
 
-  <xsl:template match="xht2:dl[@class='metadata']">
+  <xsl:template match="xht2:dl[@role='contentinfo']">
     <!-- plocka ut det gottaste från metadatat -->
-    <h1><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/identifier']"/></h1>
-    <p><b><xsl:value-of select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/description']"/></b></p>
+    <h1><xsl:value-of select="xht2:dd[@property='dct:identifier']"/></h1>
+    <p><b><xsl:value-of select="xht2:dd[@property='dct:description']"/></b></p>
   </xsl:template>
 
   <!-- defaultregel: kopierar alla element från xht2 till
@@ -47,38 +45,57 @@
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
-  <!-- -->
+  <!-- refs mode -->
   <xsl:template match="xht2:h" mode="refs">
     <!-- emit nothing -->
   </xsl:template>
 
-  <xsl:template match="xht2:dl[@class='metadata']" mode="refs">
+  <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
     <dl>
       <dt>Domstol</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='http://dublincore.org/documents/dcmi-terms/creator']"/></dd>
+      <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
       <dt>Avgörandedatum</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#avgorandedatum']"/></dd>
+      <dd><xsl:value-of select="xht2:dd[@property='rinfo:avgorandedatum']"/></dd>
       <dt>Målnummer</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#malnummer']"/></dd>
-    </dl>
-    <p>Hänvisningar</p>
-    <dl>
-      <dt>Lagrum</dt>
-      <xsl:for-each select="xht2:dd[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#lagrum']">
-	<dd><xsl:value-of select="."/></dd>
-      </xsl:for-each>
-      <dt>Rättsfall</dt>
-      <xsl:for-each select="xht2:dd[a[@property='http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#rattsfallshanvisning']]">
-	<dd><xsl:value-of select="."/></dd>
-      </xsl:for-each>
-      <dt>Litteratur</dt>
-      <xsl:for-each select="xht2:dd[@property='http://dublincore.org/documents/dcmi-terms/relation']">
-	<dd><xsl:value-of select="."/></dd>
-      </xsl:for-each>
+      <dd><xsl:value-of select="xht2:dd[@property='rinfo:malnummer']"/></dd>
+      <!-- <xsl:if test="xht2:a[@rel='rinfo:lagrum']">  -->
+	<dt>Lagrum</dt>
+	<xsl:for-each select="xht2:dd[xht2:a[@rel='rinfo:lagrum']]">
+	  <dd><xsl:apply-templates select="."/></dd>
+	</xsl:for-each>
+      <!-- </xsl:if> -->
+      
+      <!-- <xsl:if test="xht2:a[@rel='rinfo:rattsfallshanvisning']"> -->
+	<dt>Rättsfall</dt>
+	<xsl:for-each select="xht2:dd[xht2:a[@rel='rinfo:rattsfallshanvisning']]">
+	  <dd><xsl:apply-templates select="."/></dd>
+	</xsl:for-each>
+      <!-- </xsl:if> -->
+
+      <xsl:if test="xht2:dd[@property='dct:relation']">
+	<dt>Litteratur</dt>
+	<xsl:for-each select="xht2:dd[@property='dct:relation']">
+	  <dd><xsl:value-of select="."/></dd>
+	</xsl:for-each>
+      </xsl:if>
+
+      <xsl:if test="xht2:dd[@property='dct:subject']">
+	<dt>Sökord</dt>
+	<xsl:for-each select="xht2:dd[@property='dct:subject']">
+	  <dd><xsl:value-of select="."/></dd>
+	</xsl:for-each>
+      </xsl:if>
+
+      
     </dl>
   </xsl:template>
 
   <xsl:template match="*|@*" mode="refs">
+    <!-- emit nothing -->
+  </xsl:template>
+
+  <!-- kommentar mode -->
+  <xsl:template match="*|@*" mode="kommentarer">
     <!-- emit nothing -->
   </xsl:template>
 
