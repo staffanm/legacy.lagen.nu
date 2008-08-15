@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Kvalitetskrav</title>
+  </head>
+  <body>
+    <div role="main">
+      <h1>Kvalitetskrav</h1>
+
+      <p><a href="http://rattsinfo.se/">Stiftelsen för
+      rättsinformation</a> har tagit fram en <a
+      href="http://rattsinfo.se/kvalitetskrav.htm">lista på
+      kvalitetskrav</a> för juridiska databaser. Lagen.nu har som
+      ambition att uppfylla kraven.</p>
+
+      <dl class="regular">
+	<dt>Krav 1: Att få veta vem som står bakom</dt>
+	<dd>Lagen.nu drivs av privatpersonen Staffan Malmgren, som kan
+	nås på <a
+	href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
+	eller, om det brådskar, på telefon 0733 - 118 506.</dd>
+
+	<dt>Krav 2: Att få veta vad databasen innehåller</dt>
+	<dd>Lagen.nu innehåller alla författningar i SFS i
+	konsoliderad form, samt vägledande rättsfall från 1981 och
+	framåt. Lagen.nu utför ingen egen digitalisering, utan
+	förlitar sig på det material som finns tillgängligt i
+	elektronisk form från <a
+	href="http://62.95.69.15/">Regeringskansliets
+	rättsdatabaser</a> och <a
+	href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a>. Utöver
+	detta material finns även länkar till förarbeten på <a
+	href="http://riksdagen.se/Webbnav/index.aspx?nid=34">Riksdagens
+	webbplats</a>, SFS som de kungörs hos <a
+	href="http://62.95.69.3/">Regeringskansliet</a> samt
+	EG-lagstiftning på <a href="http://eurlex.nu/">eurlex.nu</a>.</dd>
+
+	<dt>Krav 3: Att få veta hur databaserna uppdateras</dt>
+	<dd>Informationen på lagen.nu sker automatiskt och
+	kontinuerligt - när ny information görs tillgänglig i
+	ovanstående källor finns den vanligtvis på lagen.nu inom ett
+	dygn. På varje sida med lagtext finns även en länk tillbaka
+	till ursprungsversionen hos RK, så att användaren själv kan
+	kontrollera att informationen är aktuell.</dd>
+
+	<dt>Krav 4: Att få veta villkoren för användning av informationen</dt>
+	<dd>Upphovsrätt <a
+	href="http://rinfo.lagrummet.se/publ/sfs/1960:729#P9">gäller
+	inte till lagtexter och beslut av myndigheter</a>, och vad
+	gäller rättsfallsreferat är de <a
+	href="http://rinfo.lagrummet.se/publ/sfs/1960:729#P26aS2">fria
+	att återge</a> (kopiera) så länge man <a
+	href="http://rinfo.lagrummet.se/publ/sfs/1960:729#P11">anger
+	källan</a> (Domstolsverket). Lagen.nu har inget eget
+	upphovsrättsligt skyddat material, men möjligvis kan
+	informationsförädlingen och sammanställningen lyda under
+	s.k. <a
+	href="http://rinfo.lagrummet.se/publ/sfs/1960:729#P49">databasskydd</a>. Var
+	och en tillåts (och uppmuntras!) dock att ta information
+	härifrån och vidareanvända den hur som helst.</dd>
+
+	<dt>Krav 5: Att få veta hur information om användarna skyddas</dt>
+	<dd>Lagen.nu samlar inte in någon identifierande information
+	om användare, men <a href="cookies.html">använder
+	cookies</a>. För sökningar så används Google, som har <a
+	href="http://www.google.se/intl/sv/privacy.html">sin egen
+	policy om personuppgiftsskydd m.m.</a></dd>
+      </dl>
+    </div>
+  </body>
+</html>

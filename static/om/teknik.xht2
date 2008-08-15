@@ -3,11 +3,11 @@
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:lang="sv">
   <head>
-    <title>Välkommen</title>
+    <title>Hur ser det ut bakom kulisserna?</title>
   </head>
   <body>
     <div role="main">
-    <h1>Hur funkar lagen.nu?</h1>
+    <h1>Hur ser det ut bakom kulisserna?</h1>
 
     <p>Allt började med ett litet pythonscript för att ladda hem
     lagtexter från Regeringskansliets rättsdatabaser. Jag hade tänkt
@@ -51,22 +51,25 @@
 	</p>
 
 	
-	<h2 class="main_header">Frågor och svar:</h2>
-	<dl>
+	<h2>Frågor och svar:</h2>
+	<dl class="regular">
 	  <dt>Kan man ladda ner XML-versionerna av lagtexterna?</dt>
 	  <dd>Jajjemen, ladda ned <a href="/all-xml.zip">här</a>! Eller, om du 
 	  Enligt <a href="/1960:729#P9">§ 9 upphovsrättslagen</a>
 	  lyder dessa inte under upphovsrätt, så gör vad du vill med
 	  dem. Hör gärna av dig om du gör något kul.</dd>
+
 	  <dt>Finns det någon dokumenterad DTD eller liknande för
 	  XML-filerna?</dt>
 	  <dd>Inte än. Det kanske kommer, om jag hittar någon riktig
 	  nytta med det. Annars väntar jag tills LawML eller LEXML är
 	  färdigt och ser om det går att använda.</dd>
+
 	  <dt>Är koden släppt under någon open source-licens?</dt>
 	  <dd>Inte just nu. Finns det något kul du vill göra som du
 	  skulle kunna om du hade koden (som du inte kan göra med
 	  XML-filerna)? Hör av dig, så kanske vi kan lösa det.</dd>
+
 	  <dt>Har lagen.nu några Web services?</dt>
 	  <dd>Nej, men det finns med i planeringen. Det vore schysst
 	  om det gick att göra ett XML-RPC- eller SOAP-anrop för att

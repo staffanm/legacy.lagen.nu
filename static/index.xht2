@@ -35,7 +35,7 @@
 	  eller javascript kan du <a href="http://trac.lagen.nu/">till
 	  och med hjälpa till</a>. <a
 	  href="http://trac.lagen.nu/browser/trunk">Källkoden</a> till
-	  lagen.nu är öppen, och utvecklare är mycket välkomna!
+	  lagen.nu är öppen (BSD-licens), och utvecklare är mycket välkomna!
 	  (Licensen är inte bestämd, men det kommer bli någon av de
 	  som <a
 	  href="http://www.opensource.org/licenses/pythonpl.html">OSI
@@ -54,7 +54,7 @@
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2000:1225">Smugglingslag</a></dd>
 
 	  <dt>Familjerätt</dt>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:26_1">Internationella äktenskapslag (IÄL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1904:26_1">Internationella äktenskapslagen (IÄL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1949:381">Föräldrabalk (FB)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1958:638">Ärvdabalk (ÄB)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:796">Lag om internationella rättsförhållanden rörande adoption (LIA)</a></dd>
@@ -177,12 +177,12 @@
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1995:450">Marknadsföringslag (MFL)</a></dd>
 	  
 	  <dt>Fastighetsrätt</dt>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:988">Fastighetsbildningslag</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:994">Jordabalk</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:948">Väglag</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1972:719">Expropriationslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:988">Fastighetsbildningslag (FAL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1970:994">Jordabalk (JB)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:948">Väglag (VägL)</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1972:719">Expropriationslag (ExprL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1144">Ledningsrättslag</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1149">Anläggningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1149">Anläggningslag (AL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1973:1150">Lag om förvaltning av samfälligheter</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1975:1132">Lag om förvärv av hyresfastighet m.m.</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:230">Jordförvärvslag</a></dd>
@@ -239,12 +239,12 @@
 
 	  <dt>Allmän förvaltningsrätt</dt>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:289">Lag om allmänna förvaltningsdomstolar.</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:291">Förvaltningsprocesslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:291">Förvaltningsprocesslag (FPL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1971:309">Lag om behörighet för allmän förvaltningsdomstol att pröva vissa mål</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:100">Sekretesslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:100">Sekretesslag (SekrL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1980:657">Sekretessförordning</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:206">Lag om viten</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:223">Förvaltningslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1986:223">Förvaltningslag (FL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1992:191">Avgiftsförordning</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2003:234">Förordning om tiden för tillhandahållande av domar och beslut m.m.</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2006:304">Lag om rättsprovning av vissa regeringsbeslut</a></dd>

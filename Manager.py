@@ -210,7 +210,7 @@ class Manager:
             cmd = '%s %s -type f -cnewer %s > %s' % (findcmd, self.baseDir, lastpublish, publish)
         else:
             cmd = '%s %s > %s' % (findcmd, self.baseDir, publish)
-        print "command is '%s'" % cmd
+        # print "command is '%s'" % cmd
         (ret, stdout, stderr) = Util.runcmd(cmd)
         numlines=0
         for line in file(publish):
@@ -220,7 +220,7 @@ class Manager:
             log.info("No files to publish, we're done!")
         else:
             log.info("Copying to target server")
-            localcmd    = 'tar -cz -T %s -M 644 -f - ' % publish
+            localcmd    = 'tar -cz -T %s --mode a+r -f - ' % publish
             transfercmd = 'ssh staffan@vps.tomtebo.org'
             remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)

@@ -208,7 +208,7 @@
         </py:for>
       </section>
 
-      <section py:def="render_bilaga(bilaga)">
+      <section py:def="render_bilaga(bilaga)" typeof="rinfo:Bilaga">
 	<h py:content="bilaga.rubrik">Bilagerubrik</h>
         <py:for each="part in bilaga" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>

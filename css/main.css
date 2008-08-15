@@ -35,20 +35,47 @@
     dt {
 	float: left;
         clear: left;
-	width: 10em;
+	width: 8em;
         font-weight: bold;
     }
 
     dt:after { content: ":"; }
 
     dd {
-	margin: 0 0 0 10.5em;
+	margin: 0 0 0 8.1em;
         padding: 0;
+	clear: right;
     }
     dd:after {
 	clear: left;
 	}
 
+   dl.regular { display: block }
+
+  dl.regular dt {
+    display: block;
+    float: none;
+    width: inherit;
+    font-weight: bold;
+  }
+
+   dl.regular dd {
+    display: block;
+    float: none;
+    width: inherit;
+    margin-left: 22.5pt;
+    margin-bottom: 1.0em
+  }
+
+ 
+    ol {
+    display: block;
+    margin-left: 2em;
+    list-style-type: decimal;
+    counter-reset: list-item
+    }
+
+ 
     #vinjett {
  	height: 120px;
         background-image: url('/img/banner.jpg');

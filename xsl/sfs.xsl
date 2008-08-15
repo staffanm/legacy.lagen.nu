@@ -17,7 +17,11 @@
   
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
-    <xsl:value-of select="//xht2:title"/> (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>) | Lagen.nu
+    <xsl:value-of select="//xht2:title"/>
+    <xsl:if test="//xht2:meta[@property='dct:alternate']/@content">
+      (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>)
+    </xsl:if>
+    | Lagen.nu
   </xsl:template>
 
   <!-- FIXME: anpassa till xht2-datat -->
@@ -95,7 +99,7 @@
       <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
       <dt>Utfärdad</dt>
       <dd><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
-      <dt>Ändring införd t.o.m.</dt>
+      <dt>Ändring införd</dt>
       <dd><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
       <dt>Källa</dt>
       <dd><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-"""General library of small utility functions"""
+"""General  library of small utility functions"""
 
 import os, sys, subprocess, codecs, shutil, locale
 from tempfile import mktemp

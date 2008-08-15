@@ -490,7 +490,6 @@ class SFSParser(LegalSource.Parser):
         self.forarbete_parser = LegalRef(LegalRef.FORARBETEN)
 
         self.current_section = u'0'
-        # self.current_chapter = u'0'
         self.current_headline_level = 0 # 0 = unknown, 1 = normal, 2 = sub
         LegalSource.Parser.__init__(self)
     
@@ -559,9 +558,8 @@ class SFSParser(LegalSource.Parser):
             for k,v in registry[0].items():
                 if k in fldmap:
                     meta[fldmap[k]] = v
-            # self.lagrum_parser.verbose = True
             docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
-            # self.lagrum_parser.verbose = False
+
             # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
             meta[u'xml:base'] = docuri
 
@@ -587,7 +585,12 @@ class SFSParser(LegalSource.Parser):
         # Plocka in lite extra metadata
         meta[u'Senast hämtad'] = DateSubject(datetime.fromtimestamp(timestamp),
                                              predicate="rinfoex:senastHamtad")
-        meta[u'Förkortning'] = u'PUL'
+
+        # hitta eventuella etablerade förkortningar
+        g = Graph()
+        g.load("etc/sfs-extra.n3", format="n3")
+        for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
+            meta[u'Förkortning'] = unicode(obj)
 
         # Plocka ut övergångsbestämmelserna och stoppa in varje
         # övergångsbestämmelse på rätt plats i registerdatat.

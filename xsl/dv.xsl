@@ -86,7 +86,8 @@
 	</xsl:for-each>
       </xsl:if>
 
-      
+      <dt>Källa</dt>
+      <dd><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
     </dl>
   </xsl:template>
 

@@ -34,7 +34,7 @@
   <xsl:template name="localurl">
     <xsl:param name="uri"/>
     <xsl:choose>
-      <xsl:when test="substring($uri, 0, 8) != 'http://'">
+      <xsl:when test="substring($uri, 0, 8) != 'http://rinfo.lagrummet.se'">
 	<xsl:value-of select="$uri"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/sfs')">

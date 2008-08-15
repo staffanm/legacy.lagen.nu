@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Välkommen</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Vad är nytt?</h1>
+
+    <p>Den stora nyheten i den här versionen är att rättsfall nu finns
+    i fulltext. Informationen kommer från domstolsverket, och är i
+    stort identisk med den som finns på <a
+    href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">domstolsväsendets
+    rättsinformation</a>.</p>
+
+    <p>Den grafiska formgivningen av textern har också ändrats --
+    varje sida har nu en struktur med tre spalter, där den stora
+    mittenspalten innehåller själva dokumentet (lagtext eller
+    rättsfallsreferat). I högerspalten finns mer information om
+    dokumentet - datum, källhänvisningar, id-nummer och annat, samt
+    för lagtext även information om enskilda paragrafer (som vilka
+    rättsfall som hänvisar till varje enskild paragraf, och vilka
+    lagändringar som påverkat paragrafinnehållet). I vänsterspalten
+    finns i vissa fall en innehållsförteckning över dokumentet.</p>
+
+    <p>Förhoppningen med den nya formgivningen är att den ska vara
+    lika lättviktig som tidigare, men mer lättläst genom en något
+    smalare spaltbredd.</p>
+
+    <p>Bakom kulisserna har i stort sett all kod som skapar sidorna
+    skrivits om, och koden har gjorts tillgänglig som öppen källkod
+    under BSD-licensen. För den som är intresserad av att ladda ner
+    och testa koden, och kanske hjälpa till med utveckling, finns mer
+    information på <a
+    href="http://trac.lagen.nu/">utvecklingswebben</a>. Koden är i
+    huvudsak skriven i python och XSLT, samt sedvanlig webteknik
+    (HTML/CSS/Javascript).</p>
+
+    <p>Det egenpåhittade XML-format som förut fanns att tillgå har
+    ersatts av standardformatet <a
+    href="http://www.w3.org/TR/xhtml2/">XHTML2</a>, med metadata i <a
+    href="http://www.w3.org/TR/xhtml-rdfa-primer/">RDFa-formatet</a>
+    som använder sig av standardvokabulären <a
+    href="http://dublincore.org/documents/dcmi-terms/">Dublin Core</a>
+    och den metadatamodell som <a
+    href="http://rinfo.lagrummet.se/">Rättsinformationsprojektet</a>
+    tagit fram.</p>
+
+    </div>
+  </body>
+</html>

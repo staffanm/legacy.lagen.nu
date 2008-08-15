@@ -18,7 +18,7 @@
 	  utgåva av SFS -- den beteckningen är <a
 	  href="/1998:281">skyddad</a>)
 	</p>
-	<h2 class="main_header">Vad finns på lagen.nu?</h2>
+	<h2>Vad finns på lagen.nu?</h2>
 	<p>
 	  Lagen.nu hjälper dig att hitta lagtexter, och utifrån dem
 	  även förarbeten och vägledande domar som underlättar
@@ -33,7 +33,7 @@
 	  gå till om man vill veta vad det är som <b>egentligen</b>
 	  gäller. 
 	</p>
-	<h2 class="main_header">Att hitta rätt lag</h2>
+	<h2>Att hitta rätt lag</h2>
 	<p>
 	  Så, för att hitta nånting måste du först hitta den eller de
 	  författningar (samlingsbegrepp för lagar, förordningar och
@@ -45,14 +45,14 @@
 	  författningssamlingar. Varje författning har ett ID, det så
 	  kallade SFS-numret. Om du känner till det är det rätt lätt
 	  att hitta lagtexten, det är bara att skriva in det i
-	  adressfältet efter "<tt>http://lagen.nu/</tt>", dvs, för att
+	  adressfältet efter "<tt>https://lagen.nu/</tt>", dvs, för att
 	  hitta texten till upphovsrättslagen, eller som den
 	  egentligen heter, "Lag (1960:729) om upphovsrätt till
 	  litterära och konstnärliga verk", skriv in
-	  "<tt>http://lagen.nu/1960:729</tt>" i adressfältet. Eller,
+	  "<tt>https://lagen.nu/1960:729</tt>" i adressfältet. Eller,
 	  så kan du gå via "<a href="/index/">Lista över
 	  författningar</a>"->"<a
-	  href="/index/1941-1960.html">1941-1960</a>"->"<a
+	  href="/index/1960.html">1960</a>"->"<a
 	  href="/1960:729">1960:729</a>: Lag om upphovsrätt till
 	  litterära och konstnärliga verk".
 	</p>
@@ -76,6 +76,7 @@
 	  rättshandlingar på förmögenhetsrättens område</a>" finns
 	  under 'a', inte 'l'.
 	</p>
+	<!--
 	<p>
 	   Om du vet att ett visst begrepp förekommer i lagens titel,
 	   men kanske inte först, kan du prova att gå via
@@ -94,6 +95,7 @@
 	   href="mailto:staffan@tomtebo.org">påpeka gärna</a> om du
 	   tycker att en viss lag saknas under ett visst begrepp.
 	</p>
+	-->
 	<p>
 	  Om du varken vet namn eller nummer på den lag som du vill ha
 	  fatt på blir det svårare, men ofta kan man hitta något via
@@ -109,17 +111,10 @@
 	  att kunna vara intressant, men som du märker om du går dit,
 	  är den upphävd sedan den 25:e juli 2003).
 	</p>
-
-	<h2 class="main_header">Att hitta inuti lagtexten</h2>
+	<h2>Att hitta inuti lagtexten</h2>
 	<p>
-	  Innehållsförteckning: Om lagen har kapitelindelning finns
-	  det en stor blå länk med texten "Visa
-	  innehållsförteckning". Om du klickar på den listas länkar
-	  till alla kapitel och underrubriker som finns i lagen, så
-	  att du snabbare kan hitta ett visst avsnitt. Lagar som inte
-	  har kapitelindelning får ingen innehållsförteckning, även om
-	  det kanske vore vettigt att åtminstone lista alla
-	  underrubriker. Det kanske kommer senare.
+	  Innehållsförteckning: För lite längre lagar finns en
+	  innehållsförteckning i högerspalten.
 	</p>
 	<p>
 	  Interna lagreferenser: Om det, i den löpande lagtexten,
@@ -131,24 +126,24 @@
 	  title="Var och en får återge handlingar som är upprättade
 	  hos svenska myndigheter...">URL 26 a §</a> är den texten
 	  länkad (nästan jämt) till rätt ställe (nästan jämt). På så
-	  sätt kan du klicka dig runt få en översikt över en lag. Om
-	  du är bekant med lagen, men kanske inte kommer ihåg exakt
+	  sätt kan du klicka dig runt få en översikt över en lag.
+	  <!--
+	  Om du är bekant med lagen, men kanske inte kommer ihåg exakt
 	  vilken paragraf som hade vilket nummer, kan du bara vila med
 	  muspekaren över länken, så dyker de första orden från den
 	  refererade paragrafen upp i en s.k. tooltip-ruta.
+	  -->
 	</p>
 	<p>
-	  Vidare referenser (domar och ändringsförfattningar): Under
+	  Vidare referenser (domar och ändringsförfattningar): Bredvid
 	  vissa paragrafer finns det en ruta med blå text i. Den kan
 	  innehålla två sorters referenser: Ändringsförfattningar resp
 	  vägledande domar. Den första typen leder till information om
 	  lagändringar som införde, ändrade eller upphävde paragrafen
 	  i fråga, inklusive övergångsregler och länkar till
 	  förarbeten. Den andra typen leder till information om
-	  vägledande domslut (både i Högsta domstolen och de
-	  underliggande domstolarna) som refererat till
-	  paragrafen. Den blå texten är alltså inte en del av den
-	  officiella lagtexten.
+	  vägledande domslut som hänvisat till paragrafen. Den blå
+	  texten är alltså inte en del av den officiella lagtexten.
 	</p>
 	<a name="direktlankar"></a>
 	<p>
@@ -157,11 +152,11 @@
 	  vara bra att veta hur URL'erna på lagen.nu
 	  funkar. Adresserna är på följande mönster:
 	</p>
-	<p><tt>http://lagen.nu/</tt>&lt;<i>SFS-nummer</i><tt>&gt;[#K&lt;</tt><i>kapitel</i><tt>&gt;][P&lt;</tt><i>paragraf</i><tt>&gt;]</tt></p>
+	<p><tt>https://lagen.nu/</tt>&lt;<i>SFS-nummer</i><tt>&gt;[#K&lt;</tt><i>kapitel</i><tt>&gt;][P&lt;</tt><i>paragraf</i><tt>&gt;]</tt></p>
 	<p>
 	  För att länka till 6 Kap. 18 § i Lagen (2003:389) om elektronisk kommunikation ("cookieparagrafen") blir alltså adressen:
 	</p>
-	<p><tt>http://lagen.nu/2003:389#K6P18</tt></p>
+	<p><tt>https://lagen.nu/2003:389#K6P18</tt></p>
 	<p>
 	  Om lagen i fråga inte har kapitelindelning, eller om
 	  paragrafnumreringen är kontinuerlig över kapitelgränserna
@@ -169,7 +164,7 @@
 	  inte <tt>K&lt;</tt><i>kapitel</i><tt>&gt;</tt>-biten. För
 	  att länka till Upphovsrättslagen 26 a § blir alltså adressen:
 	</p>
-	<p><tt>http://lagen.nu/1960:729#P26a</tt></p>
+	<p><tt>https://lagen.nu/1960:729#P26a</tt></p>
 	<!--
 	<p>
 	  Eller, om de här instruktionerna förvirrade mer än de
@@ -187,12 +182,14 @@
 	  paragraf långt nere i en lång lag så kommer webläsaren visa
 	  början av lagtexten ända tills rätt paragraf hämtats över
 	  internet, då hoppar läsaren ner till rätt ställe. Detta
-	  märks särskilt tydligt om man sitter på en modemkoppling. I
-	  framtiden kanske sidorna kommer delas upp i kapitel- eller
+	  märks särskilt tydligt om man sitter på en modemkoppling.
+	  <!--
+	  I framtiden kanske sidorna kommer delas upp i kapitel- eller
 	  sektionsspecifika sidor, så att det går snabbare att komma
 	  just till en specifik paragraf, något som även skulle göra
 	  det nästan uthärdligt att använda lagen.nu på en
 	  mobiltelefon. Men vi får se.
+	  -->
 	</p>
 	<h2>Frågor?</h2>
 	<p>Maila mig på <a
