@@ -3,7 +3,7 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dc="http://purl.org/dc/elements/1.1/">
+		xmlns:dct="http://dublincore.org/documents/dcmi-terms/">
   <!-- fixme: change dc to dct -->
 
   <xsl:output method="xml"
@@ -26,6 +26,10 @@
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
+      <script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script>
+      <script type="text/javascript" src="/js/jquery.treeview.min.js"></script>
+      <script type="text/javascript" src="/js/jquery.autocomplete.min.js"></script>
+      <script type="text/javascript" src="/js/localdata.js"></script>
       <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
       <link rel="stylesheet" href="/css/screen.css" media="screen" /> 
@@ -46,9 +50,9 @@
 	  <li><a href="/dom/index/">Domslut</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
-	<form method="get" action="http://www.google.com/custom" style="display:inline;">
+	<form method="get" action="http://www.google.com/custom" style="display:inline;" autocomplete="off">
 	  <u>S</u>ök:
-	  <input type="text" name="q" size="20" maxlength="255" value="" accesskey="S"/>
+	  <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
 	  <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
 	  <input type="hidden" name="domains" value="lagen.nu"/>
 	  <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>

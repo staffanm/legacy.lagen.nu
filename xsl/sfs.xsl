@@ -53,10 +53,10 @@
 	<h1><xsl:value-of select="."/></h1>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
-	<h3><xsl:value-of select="."/></h3>
+	<h3 id="{@id}"><xsl:value-of select="."/></h3>
       </xsl:when>
       <xsl:otherwise>
-	<h2><xsl:value-of select="."/></h2>
+	<h2 id="{@id}"><xsl:value-of select="."/></h2>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -73,59 +73,20 @@
     <!-- emit nothing -->
   </xsl:template>
 
-  <xsl:template match="xht2:section[@role='secondary']/xht2:section">
-    <h2>Ändring: <xsl:value-of select="xht2:dl/xht2:dd[@property='dct:title']"/></h2>
+  <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
     <xsl:apply-templates/>
-  </xsl:template>
 
-  
-  <xsl:template match="*">
-    <xsl:element name="{name()}">
-      <xsl:apply-templates select="@*|node()"/>
-    </xsl:element>
-  </xsl:template>
-
-  <xsl:template match="@*">
-    <xsl:copy><xsl:apply-templates/></xsl:copy>
-  </xsl:template>
-
-  <!-- REFS MODE -->
-  <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
-    <!-- Den stora metadata-definitionslistan innehåller en massa som
-         inte är intressant att visa för slutanvändaren. Filtrera ut
-         de intressanta bitarna -->
-    <dl>
-      <dt>Departement</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
-      <dt>Utfärdad</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
-      <dt>Ändring införd</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
-      <dt>Källa</dt>
-      <dd><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
-      <dt>Senast hämtad</dt>
-      <dd><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
-    </dl>
-    <!-- 
-    <p>Rättsfall:<br/>
-    <xsl:call-template name="rattsfall">
-      <xsl:with-param name="rattsfall" select="$alla_rattsfall/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:isReferencedBy/rdf:Description"/>
-    </xsl:call-template>
-    </p>
-    -->
-  </xsl:template>
-
-  <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']" mode="refs">
-    
+    <!-- plocka fram referenser kring/till denna paragraf -->
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
     <xsl:variable name="rattsfall" select="document('../data/sfs/parsed/dv-rdf.xml')/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
     <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
     <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
     <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
-
     <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-      <p id="refs-{@id}">
-	<b><xsl:value-of select="@id"/></b><br/>
+      <p id="refs-{@id}" class="refbox">
+	<!--
+	<span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
+	-->
 	<xsl:call-template name="andringsnoteringar">
 	  <xsl:with-param name="typ" select="'Införd'"/>
 	  <xsl:with-param name="andringar" select="$inford"/>
@@ -147,7 +108,6 @@
       </p>
     </xsl:if>
   </xsl:template>
-
   <xsl:template name="andringsnoteringar">
     <xsl:param name="typ"/>
     <xsl:param name="andringar"/>
@@ -168,8 +128,8 @@
 	<xsl:variable name="tuned-width">
 	  <xsl:call-template name="tune-width">
 	    <xsl:with-param name="txt" select="dct:description"/>
-	    <xsl:with-param name="width" select="70"/>
-	    <xsl:with-param name="def" select="70"/>
+	    <xsl:with-param name="width" select="95"/>
+	    <xsl:with-param name="def" select="95"/>
 	  </xsl:call-template>
 	</xsl:variable>
 	<xsl:variable name="localurl">
@@ -178,40 +138,143 @@
 	  </xsl:call-template>
 	</xsl:variable>
 	<a href="{$localurl}"><b><xsl:value-of select="dct:identifier"/></b></a>:
-	<xsl:value-of select="normalize-space(substring(dct:description, 1, $tuned-width - 1))" />...
+	<xsl:choose>
+	  <xsl:when test="string-length(dct:description) > 95">
+	    <xsl:value-of select="normalize-space(substring(dct:description, 1, $tuned-width - 1))" />...
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="dct:description"/>
+	  </xsl:otherwise>
+	</xsl:choose>
 	<br/>
       </xsl:for-each>
   </xsl:template>
+
+  <xsl:template match="xht2:section[@role='main']">
+    <div class="konsolideradtext"><xsl:apply-templates/></div>
+  </xsl:template>
+		
+  <xsl:template match="xht2:section[@role='secondary']">
+    <div class="andringar"><xsl:apply-templates/></div>
+  </xsl:template>
+
+  <xsl:template match="xht2:section[@role='secondary']/xht2:section">
+    <!-- titel eller sfsnummer, om ingen titel finns -->
+    <h2><xsl:choose>
+	<xsl:when test="xht2:dl/xht2:dd[@property='dct:title']">
+	  <xsl:value-of select="xht2:dl/xht2:dd[@property='dct:title']"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="xht2:dl/xht2:dd[@property='rinfo:fsNummer']"/>
+	</xsl:otherwise>
+      </xsl:choose></h2>
+    <xsl:apply-templates/>
+  </xsl:template>
+
   
-  <xsl:template match="xht2:h" mode="refs">
-    <!-- emit nothing -->
+  
+  <!-- defaultregler: översätt allt från xht2 till xht1-namespace, men inga ändringar i övrigt
+  -->
+  <xsl:template match="*">
+    <xsl:element name="{name()}">
+      <xsl:apply-templates select="@*|node()"/>
+    </xsl:element>
+  </xsl:template>
+  <xsl:template match="@*">
+    <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
-  <xsl:template match="xht2:section[@class='upphavd']" mode="refs">
-    <!-- emit nothing -->
-  </xsl:template>
-    
-  <xsl:template match="xht2:section[@role='secondary']" mode="refs">
-    <!-- emit nothing -->
+  <!-- REFS MODE -->
+  <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
+    <!-- Den stora metadata-definitionslistan innehåller en massa som
+         inte är intressant att visa för slutanvändaren. Filtrera ut
+         de intressanta bitarna -->
+    <dl id="refs-dokument" class="refbox">
+      <dt>Departement</dt>
+      <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
+      <dt>Utfärdad</dt>
+      <dd><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
+      <dt>Ändring införd</dt>
+      <dd><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
+      <dt>Källa</dt>
+      <dd><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
+      <dt>Senast hämtad</dt>
+      <dd><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+    </dl>
   </xsl:template>
 
-  <xsl:template match="*|@*" mode="refs">
-    <xsl:apply-templates mode="refs"/>
+  <xsl:template match="*" mode="refs">
+    <!-- default: emit nothing -->
   </xsl:template>
 
+  <!--
+      helst skulle vi ha alla refboxar i högerspalten, men så att
+      varje box är i höjd med sin paragraf, men det verkar omöjligt
+      att få till en lösning (vare sig med css eller js) som funkar
+      för alla fall. Saker som gör det svårt:
+
+      * lagar med 1000+ refboxar (inkomstskattelagen) - tar en evighet att 
+
+      * paragrafer med väldigt många rättsfall (så att refboxen blir
+      högre än sin paragraf, exv marknadsföringslagen 4 §) - boxarna
+      får inte täcka över varandra, och lagtexten måste ändå vara
+      sammanhållen det måste vara tydligt.
+
+      * det måste se OK ut även vid utskrift.
+
+      Tills vidare får vi köra som lagen.nu 1.0, dvs med refboxar
+  <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']" mode="refs">
+    <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
+    <xsl:variable name="rattsfall" select="document('../data/sfs/parsed/dv-rdf.xml')/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
+    <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
+    <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
+    <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
+
+    <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
+      <p id="refs-{@id}" class="refbox">
+	<span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
+	<xsl:call-template name="andringsnoteringar">
+	  <xsl:with-param name="typ" select="'Införd'"/>
+	  <xsl:with-param name="andringar" select="$inford"/>
+	</xsl:call-template>
+	
+	<xsl:call-template name="andringsnoteringar">
+	  <xsl:with-param name="typ" select="'Ändrad'"/>
+	  <xsl:with-param name="andringar" select="$andrad"/>
+	</xsl:call-template>
+	
+	<xsl:call-template name="andringsnoteringar">
+	  <xsl:with-param name="typ" select="'Upphävd'"/>
+	  <xsl:with-param name="andringar" select="$upphavd"/>
+	</xsl:call-template>
+	
+	<xsl:call-template name="rattsfall">
+	  <xsl:with-param name="rattsfall" select="$rattsfall"/>
+	</xsl:call-template>
+      </p>
+    </xsl:if>
+  </xsl:template>
+  -->
 
   <!-- KOMMENTARER MODE -->
   <xsl:template match="xht2:section[@role='main']" mode="kommentarer">
-    <ul>
+    <h2>Innehållsförteckning</h2>
+    <ul id="toc">
       <xsl:apply-templates mode="kommentarer"/>
     </ul>
   </xsl:template>
 
+  <xsl:template match="xht2:section[@typeof='rinfo:Avdelning']" mode="kommentarer">
+    <li class="toc-avdelning"><a href="#{@id}"><xsl:value-of select="xht2:h[@class='avdelningsrubrik']"/>: <xsl:value-of select="xht2:h[@class='avdelningsunderrubrik']"/></a>
+    <ul><xsl:apply-templates mode="kommentarer"/></ul>
+    </li>
+  </xsl:template>
+
   <xsl:template match="xht2:section[@typeof='rinfo:Kapitel']" mode="kommentarer">
-    <li>kr: <xsl:value-of select="xht2:h[@class='kapitelrubrik']"/>
-    <ul>
-      <xsl:apply-templates mode="kommentarer"/>
-    </ul>
+    <li class="toc-kapitel"><a href="#{@id}"><xsl:value-of select="xht2:h[@class='kapitelrubrik']"/></a>
+    <xsl:if test="xht2:h[@id]">
+      <ul><xsl:apply-templates mode="kommentarer"/></ul>
+    </xsl:if>
     </li>
   </xsl:template>
 
@@ -222,10 +285,17 @@
   <xsl:template match="xht2:h[@class='kapitelrubrik']" mode="kommentarer">
     <!--<li>Not emitting kapitelrubrik</li>-->
   </xsl:template>
+  <xsl:template match="xht2:h[@class='avdelningsrubrik']" mode="kommentarer">
+    <!--<li>Not emitting kapitelrubrik</li>-->
+  </xsl:template>
+  <xsl:template match="xht2:h[@class='avdelningsunderrubrik']" mode="kommentarer">
+    <!--<li>Not emitting kapitelrubrik</li>-->
+  </xsl:template>
   
   <xsl:template match="xht2:h" mode="kommentarer">
-    <li><b>h: </b><xsl:value-of select="."/>
-    <!-- select ../xht2:h,
+    <li class="toc-rubrik"><a href="#{@id}"><xsl:value-of select="."/></a>
+    <!-- for proper handling of underrubriker
+	 select ../xht2:h,
          loop until this headline is found (identify by id),
          then output a li for each xht2:h[@class='underrubrik']
 	 until a regular headline is found
@@ -234,7 +304,7 @@
   </xsl:template>
 
   <xsl:template match="xht2:h[@class='underrubrik']" mode="kommentarer">
-    <li><i>uh: </i><xsl:value-of select="."/></li>
+    <li class="toc-underrubrik"><a href="#{@id}"><xsl:value-of select="."/></a></li>
   </xsl:template>
 
   <!-- filter the rest -->

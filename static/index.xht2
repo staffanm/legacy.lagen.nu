@@ -36,10 +36,6 @@
 	  och med hjälpa till</a>. <a
 	  href="http://trac.lagen.nu/browser/trunk">Källkoden</a> till
 	  lagen.nu är öppen (BSD-licens), och utvecklare är mycket välkomna!
-	  (Licensen är inte bestämd, men det kommer bli någon av de
-	  som <a
-	  href="http://www.opensource.org/licenses/pythonpl.html">OSI
-	  godkänt</a>.)
 	</p>
 	<p>
 	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
@@ -188,7 +184,7 @@
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1979:230">Jordförvärvslag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1982:352">Ombildningslag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1985:658">Lag om arrendatorers rätt att förvärva arrendestället</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:10">Plan- och bygglag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:10">Plan- och bygglag (PBL)</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:11">Lag om exploateringssamverkan</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:259">Jaktlag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1988:950">Lag om kulturminnen m.m.</a></dd>

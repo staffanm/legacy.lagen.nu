@@ -36,7 +36,7 @@
                    only padding top and bottom is included here, make it whatever value
                    you need */
 		padding:0 0 1em 0;
-		overflow:hidden;
+		/*overflow:hidden;*/
 	}
 	/* 3 Column settings */
 	.threecol {

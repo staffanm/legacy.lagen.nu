@@ -1,24 +1,33 @@
     /* Typografi, ramar, färger etc */
+    .positioned {
+	position: absolute;
+        color: #f00;
+    }
+    .positioned .refboxlabel {
+	font-weight: bold;
+    } 
     body {
 	margin: 0;
         padding: 0;
 	font: 12pt Palatino;
     }
+    strong {
+	font-weight: bold;
+    }
     #kommentarer, #referenser {
 	font-size: 10pt;
 	}
-
-    #kommentarer ul {
-	list-style: disc;
-        padding: 0 10pt;
-    }
-    #referenser p, #referenser dl {
+   
+    #referenser p, #referenser dl, .refbox {
 	background: #ddf;
         border: solid 1px darkblue;
         margin-bottom: 5px;
+	font-size: 10pt;
+        padding: 3pt;
+	margin-bottom: 12pt;
     }
     .sidoruta p, .sidoruta dl {
-      padding: 0 1em;
+      padding: 3pt;
       margin-top: 0;
     }
     
@@ -27,37 +36,65 @@
       padding-bottom: 18px;
     }
     
+
+
     td {
 	border: solid 1px #ddd;
         vertical-align: top;
     }
 
-    dt {
+    /* olika sätt att formattera dl-listor:
+       side-by-side, bred högerspalt */
+    .andringar dl {
+	margin-bottom: 18pt;
+    }
+    
+    .andringar dt {
 	float: left;
         clear: left;
-	width: 8em;
-        font-weight: bold;
+	width: 10em;
+        /* font-weight: bold; */
     }
 
-    dt:after { content: ":"; }
+    .andringar dt:after { content: ":"; }
 
-    dd {
+    .andringar dd {
+	margin: 0 0 0 10.5em;
+        padding: 0;
+	clear: right;
+    }
+    .andringar dd:after {
+	clear: left;
+	}
+
+    /* side-by-side, smal högerspalt */
+    .sidoruta dt {
+	float: left;
+        clear: left;
+	width: 8m;
+        font-weight: bold;
+    }
+   
+    .sidoruta dt:after { content: ":"; }
+
+    .sidoruta dd {
 	margin: 0 0 0 8.1em;
         padding: 0;
 	clear: right;
     }
-    dd:after {
+    .sidoruta dd:after {
 	clear: left;
 	}
-
+ 
+    /* vanlig layout  */
    dl.regular { display: block }
 
-  dl.regular dt {
+   dl.regular dt {
     display: block;
     float: none;
     width: inherit;
     font-weight: bold;
-  }
+   }
 
    dl.regular dd {
     display: block;
@@ -66,6 +103,7 @@
     margin-left: 22.5pt;
     margin-bottom: 1.0em
   }
+
 
  
     ol {

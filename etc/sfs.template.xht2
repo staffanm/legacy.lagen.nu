@@ -59,14 +59,15 @@
     <body>
       <!--! macro definitions -->
       <div py:def="render_rubrik(rubrik)" py:strip="" py:choose="">
-	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" class="underrubrik">Underrubrik</h>
-	<h py:otherwise="" py:content="rubrik">Huvudrubrik</h>
+	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" id="${rubrik.id}" class="underrubrik">Underrubrik</h>
+	<h py:otherwise="" py:content="rubrik" id="${rubrik.id}">Huvudrubrik</h>
       </div>
 
       <section py:def="render_avdelning(avdelning)"
+	       typeof="rinfo:Avdelning"
 	       id="${avdelning.id}">
-	<h py:content="avdelning.rubrik">Avdelningsrubrik</h>
-	<h py:if="avdelning.underrubrik" py:content="avdelning.underrubrik" class="underrubrik">Underrubrik</h>
+	<h py:content="avdelning.rubrik" class="avdelningsrubrik">Avdelningsrubrik</h>
+	<h py:if="avdelning.underrubrik" py:content="avdelning.underrubrik" class="avdelningsunderrubrik">Underrubrik</h>
 	<py:for each="part in avdelning" py:choose="">
 	  <div py:when="isinstance(part,Rubrik)"  py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part,UpphavtKapitel)" py:strip="">${render_upphavtkapitel(part)}</div>
@@ -121,8 +122,7 @@
 	 id="${stycke.id}"
 	 about="#${stycke.id}">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
-        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div>
-</py:for>
+        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
       </p>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict
@@ -208,7 +208,9 @@
         </py:for>
       </section>
 
-      <section py:def="render_bilaga(bilaga)" typeof="rinfo:Bilaga">
+      <section py:def="render_bilaga(bilaga)"
+	       about="#${bilaga.id}"
+	       typeof="rinfo:Bilaga">
 	<h py:content="bilaga.rubrik">Bilagerubrik</h>
         <py:for each="part in bilaga" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>

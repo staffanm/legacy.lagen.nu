@@ -107,7 +107,10 @@ class Tabellrad(CompoundStructure, TemporalStructure): pass # Varje tabellcell ä
 class Tabellcell(CompoundStructure): pass # ..som kan innehålla text och länkar
 
 class Avdelning(CompoundStructure, OrdinalStructure):
-    pass
+    fragment_label = "A"
+    def __init__(self, *args, **kwargs):
+        self.id = kwargs['id'] if 'id' in kwargs else None
+        super(Avdelning,self).__init__(*args, **kwargs)
 
 class UpphavtKapitel(UnicodeStructure, OrdinalStructure):
     """Ett UpphavtKapitel är annorlunda från ett upphävt Kapitel på så
@@ -150,8 +153,11 @@ class Overgangsbestammelse(CompoundStructure, OrdinalStructure):
         self.id = kwargs['id'] if 'id' in kwargs else None
         super(Overgangsbestammelse,self).__init__(*args,**kwargs)
 
-class Bilaga(CompoundStructure): pass
-
+class Bilaga(CompoundStructure):
+    fragment_label = "B"
+    def __init__(self, *args, **kwargs):
+        self.id = kwargs['id'] if 'id' in kwargs else None
+        super(Bilaga,self).__init__(*args,**kwargs)
 
 class Register(CompoundStructure):
     """Innehåller lite metadata om en grundförfattning och dess
@@ -617,7 +623,7 @@ class SFSParser(LegalSource.Parser):
                 if not found:
                     log.warning(u'%s: Övergångsbestämmelse för [%s] saknar motsvarande registerpost' % (self.id, ob.sfsnr))
                     kwargs = {'id':u'L'+ob.sfsnr,
-                              'uri':u'http://rinfo.lagrummet.nu/publ/sfs/'+ob.sfsnr}
+                              'uri':u'http://rinfo.lagrummet.se/publ/sfs/'+ob.sfsnr}
                     rp = Registerpost(**kwargs)
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
@@ -670,7 +676,7 @@ class SFSParser(LegalSource.Parser):
             changes = soup.body('table')[3:-2]
             for table in changes:
                 kwargs = {'id': 'undefined',
-                          'uri': u'http://rinfo.lagrummet.nu/publ/sfs/undefined'}
+                          'uri': u'http://rinfo.lagrummet.se/publ/sfs/undefined'}
                 p = Registerpost(**kwargs)
                 for row in table('tr'):
                     key = Util.elementText(row('td')[0])
@@ -699,7 +705,7 @@ class SFSParser(LegalSource.Parser):
                             # (börjar med 'L' eftersom NCNames måste
                             # börja med ett Letter)
                             p.id = u'L' + val
-                            # p.uri = u'http://rinfo.lagrummet.nu/publ/sfs/' + val
+                            # p.uri = u'http://rinfo.lagrummet.se/publ/sfs/' + val
                             firstnode = self.lagrum_parser.parse(val)[0]
                             if hasattr(firstnode,'uri'):
                                 p.uri = firstnode.uri
@@ -725,7 +731,8 @@ class SFSParser(LegalSource.Parser):
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ikraft':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
-                            p[u'Har övergångsbestämmelse'] = (val.find(u'\xf6verg.best.') != -1)
+                            #if val.find(u'\xf6verg.best.') != -1):
+                            #    p[u'Har övergångsbestämmelse'] = UnicodeSubject(val,predicate
                         elif key == u'Omfattning':
                             p[key] = []
                             for changecat in val.split(u'; '):
@@ -795,18 +802,19 @@ class SFSParser(LegalSource.Parser):
     def _descapeEntity(self,m):
         return unichr(htmlentitydefs.name2codepoint[m.group(1)])
 
-    # rekursera igenom dokumentet på jakt efter adresserbara enheter
-    # (kapitel, paragrafer, stycken, punkter) * konstruera xml:id's
+    # rekurserar igenom dokumentet på jakt efter adresserbara enheter
+    # (kapitel, paragrafer, stycken, punkter) och konstruerar id's
     # för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2
     # § 3 st. 4 p)
+    #
+    # Letar även igenom löptexten efter lagrumshänvisningar
     def _construct_ids(self, element, prefix, baseuri, skipfragments=[]):
         counters = defaultdict(int)
         if isinstance(element, CompoundStructure):
+            # set ids
             for p in element:
-                #if type(p) in counters:
                 counters[type(p)] += 1
-                #else:
-                #    counters[type(p)] = 1
+
                 if hasattr(p, 'fragment_label'):
                     elementtype = p.fragment_label
                     if hasattr(p, 'ordinal'):
@@ -821,9 +829,10 @@ class SFSParser(LegalSource.Parser):
                     fragment = prefix
                 if ((hasattr(p, 'fragment_label') and
                      p.fragment_label in skipfragments)):
-                    self._construct_ids(p,prefix,baseuri, skipfragments)
+                    self._construct_ids(p,prefix,baseuri,skipfragments)
                 else:
-                    self._construct_ids(p,fragment,baseuri, skipfragments)
+                    self._construct_ids(p,fragment,baseuri,skipfragments)
+            # find references
             if (isinstance(element, Stycke)
                 or isinstance(element, Listelement)
                 or isinstance(element, Tabellcell)):
@@ -832,12 +841,10 @@ class SFSParser(LegalSource.Parser):
                                   # if the Stycke has a NumreradLista
                                   # or similar
                     if isinstance(p,unicode): # look for stuff
-
                         # Make all links have a dct:references
                         # predicate -- not that meaningful for the
-                        # XHTML2 code, but needed to make useful RDF
+                        # XHTML2 code, but needed to get useful RDF
                         # triples in the RDFa output
-                        
                         nodes.extend(self.lagrum_parser.parse(" ".join(p.split()),
                                                               baseuri+prefix,
                                                               "dct:references"))
@@ -870,10 +877,10 @@ class SFSParser(LegalSource.Parser):
         # print elements
         if 'K' in elements and elements['P1'] < 2:
             # print "Activating special ignore-the-chapters code"
-            skipfragments = ['K']
+            skipfragments = ['A','K']
         else:
-            skipfragments = []
-        self._construct_ids(body, u'', u'http://rinfo.lagrummet.nu/publ/sfs/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
+            skipfragments = ['A']
+        self._construct_ids(body, u'', u'http://rinfo.lagrummet.se/publ/sfs/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
         return meta,body
 
     def _swedish_ordinal(self,s):
@@ -1387,11 +1394,11 @@ class SFSParser(LegalSource.Parser):
         p = self.reader.peekline()
         if p.lower().endswith(u"avdelningen") and len(p.split()) == 2:
             ordinal = p.split()[0]
-            return self._swedish_ordinal(ordinal)
+            return unicode(self._swedish_ordinal(ordinal))
         elif p.startswith(u"AVD. "):
             roman = re.split(r'\W',p)[2]
             if self.re_roman_numeral_matcher(roman):
-                return self._from_roman(roman)
+                return unicode(self._from_roman(roman))
         elif p[2:6] == "avd.":
             if p[0].isdigit():
                 return p[0]
@@ -1971,7 +1978,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         for l in sorted(lagrum, cmp=Util.numcmp):
             # FIXME: Gör sanitychecks så att vi inte får med trasiga
             # lagnummer-URI:er i stil med "1 §", "1949:105" eller
-            # "http://rinfo.lagrummet.nu/publ/sfs/9999:999#K1"
+            # "http://rinfo.lagrummet.se/publ/sfs/9999:999#K1"
             lagrum_node = PET.SubElement(root_node,"rdf:Description")
             lagrum_node.set("rdf:about",l)
             for r in lagrum[l]:
@@ -2143,7 +2150,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         p.reader = TextReader(ustring=data,encoding='iso-8859-1',linesep=TextReader.DOS)
         p.reader.autostrip=True
         b = p.makeForfattning()
-        p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
+        elements = p._count_elements(b)
+        if 'K' in elements and elements['K'] > 1 and  elements['P1'] < 2:
+            # should be "skipfragments = ['A','K']", but this breaks test cases
+            skipfragments = ['A']
+        else:
+            skipfragments = ['A']
+        p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999', skipfragments)
         return serialize(b)            
 
     def TestSerialize(self, data):

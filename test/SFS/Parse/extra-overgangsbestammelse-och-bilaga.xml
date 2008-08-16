@@ -11,8 +11,8 @@
       </Stycke>
     </Overgangsbestammelse>
   </Overgangsbestammelser>
-  <Bilaga rubrik="Bilaga">
-    <Stycke id="S1">
+  <Bilaga id="B1" rubrik="Bilaga">
+    <Stycke id="B1S1">
       <unicode>Det här är en enkel bilaga.</unicode>
     </Stycke>
   </Bilaga>
