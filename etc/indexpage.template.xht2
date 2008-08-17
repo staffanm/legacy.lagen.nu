@@ -34,11 +34,6 @@ from operator import itemgetter
       <h py:content="title">Defaulttitel</h>
       <py:when test="isinstance(documents[currentcategory][currentpage], list)">
 	<ul>
-	  <!--! FIXME: Now documents get sorted by lexical order - for
-	       SFS we'd like them sorted in the pseudo-numeric order
-	       that Util.numcmp implements. It's concievable that
-	       other document collections needs other kinds of
-	       sorting. Fix this in some nice generic way -->
 	  <py:for each="document in sorted(documents[currentcategory][currentpage], docsorter, key=itemgetter('sortkey'))">
 	    <li>${document['leader']}<a href="${document['uri']}" py:content="document['title']">Document display title</a>${document['trailer']}</li>
 	  </py:for>

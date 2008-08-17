@@ -21,7 +21,7 @@
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>
-      <!-- <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#VagledandeDomstolsavgorande"/> -->
+      <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#Rattsfallsreferat"/>
       <!-- !publisher = auktoritetspost för DV -->
       <!--  <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/> -->
       <!-- !creator = auktoritetspost för aktuell domstol -->

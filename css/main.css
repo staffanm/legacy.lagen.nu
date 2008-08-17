@@ -71,7 +71,7 @@
     .sidoruta dt {
 	float: left;
         clear: left;
-	width: 8m;
+	width: 8em;
         font-weight: bold;
     }
    
@@ -85,6 +85,28 @@
     .sidoruta dd:after {
 	clear: left;
 	}
+
+    /* side-by-side, statiska sidor */
+    dl.tablestyle {
+    }
+    .tablestyle dt {
+	float: left;
+        clear: left;
+	width: 8em;
+        font-weight: bold;
+    }
+   
+    .tablestyle dt:after { content: ":"; }
+
+    .tablestyle dd {
+	margin: 0 0 0 8.1em;
+        padding: 0;
+	clear: right;
+    }
+    .tablestyle dd:after {
+	clear: left;
+    }
+    
  
     /* vanlig layout  */
    dl.regular { display: block }

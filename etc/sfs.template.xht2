@@ -65,7 +65,8 @@
 
       <section py:def="render_avdelning(avdelning)"
 	       typeof="rinfo:Avdelning"
-	       id="${avdelning.id}">
+	       id="${avdelning.id}"
+	       about="#${avdelning.id}">
 	<h py:content="avdelning.rubrik" class="avdelningsrubrik">Avdelningsrubrik</h>
 	<h py:if="avdelning.underrubrik" py:content="avdelning.underrubrik" class="avdelningsunderrubrik">Underrubrik</h>
 	<py:for each="part in avdelning" py:choose="">

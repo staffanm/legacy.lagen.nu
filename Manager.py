@@ -182,7 +182,7 @@ class Manager:
             Util.ensureDir(outfile)
             Util.transform("xsl/static.xsl", f, outfile,validate=False)
 
-        for dirname in ['css','js','img']:
+        for dirname in ['css','js','img', 'img/treeview']:
             for f in os.listdir(dirname):
                 srcfile = dirname+os.path.sep+f
                 if os.path.isfile(srcfile):

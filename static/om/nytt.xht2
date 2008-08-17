@@ -19,16 +19,22 @@
     varje sida har nu en struktur med tre spalter, där den stora
     mittenspalten innehåller själva dokumentet (lagtext eller
     rättsfallsreferat). I högerspalten finns mer information om
-    dokumentet - datum, källhänvisningar, id-nummer och annat, samt
-    för lagtext även information om enskilda paragrafer (som vilka
-    rättsfall som hänvisar till varje enskild paragraf, och vilka
-    lagändringar som påverkat paragrafinnehållet). I vänsterspalten
-    finns i vissa fall en innehållsförteckning över dokumentet.</p>
+    dokumentet - datum, källhänvisningar, id-nummer och annat. I
+    vänsterspalten finns i vissa fall en innehållsförteckning över
+    dokumentet.</p>
 
     <p>Förhoppningen med den nya formgivningen är att den ska vara
     lika lättviktig som tidigare, men mer lättläst genom en något
     smalare spaltbredd.</p>
 
+    <p>Hanteringen av lagtexternas struktur har utvecklats mycket -
+    hänvisningar till andra lagrum, data i tabellform, och indelningar
+    i paragrafer, kapitel och avdelningar fungerar mycket bättre än
+    tidigare. Det är dock fortfarande fråga om ett helt automatiserat
+    processande av informationen från <a
+    href="http://62.95.69.15/">Regeringskansliets rättsdatabaser</a>,
+    så fel förekommer med all säkerhet.</p>
+    
     <p>Bakom kulisserna har i stort sett all kod som skapar sidorna
     skrivits om, och koden har gjorts tillgänglig som öppen källkod
     under BSD-licensen. För den som är intresserad av att ladda ner

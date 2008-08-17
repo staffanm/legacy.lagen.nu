@@ -94,8 +94,10 @@ class Stycke(CompoundStructure): pass
 class DVDownloader(LegalSource.Downloader):
     def __init__(self,config):
         self.config = config
-        self.download_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
-        self.intermediate_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'word'
+        # self.download_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
+        self.download_dir = os.path.sep.join([config['datadir'], __moduledir__, 'downloaded'])
+        # self.intermediate_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'word'
+        self.intermediate_dir = os.path.sep.join([config['datadir'], __moduledir__, 'intermediate','word'])
 
     def DownloadAll(self):
         self.download(recurse=True)
@@ -120,7 +122,9 @@ class DVDownloader(LegalSource.Downloader):
                 self.download(filename,recurse)
             elif line.startswith('type=file'):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
-                    pass 
+                    #pass
+                    localdir = self.download_dir + os.path.sep + dirname
+                    self.process_zipfile(localdir + os.path.sep + filename)
                 else:
                     if dirname:
                         fullname = '%s/%s' % (dirname,filename)
@@ -138,8 +142,8 @@ class DVDownloader(LegalSource.Downloader):
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
     def process_zipfile(self, zipfilename):
         removed = replaced = created = untouched = 0
-        file = zipfile.ZipFile(zipfilename, "r")
-        for name in file.namelist():
+        zipf = zipfile.ZipFile(zipfilename, "r")
+        for name in zipf.namelist():
             # Namnen i zipfilen använder codepage 437 - retro!
             uname = name.decode('cp437')
             m = self.re_malnr.match(uname)
@@ -157,6 +161,7 @@ class DVDownloader(LegalSource.Downloader):
                     os.unlink(outfilename)
                     removed += 1
                 else:
+                    log.debug(u'%s: Packar upp %s' % (zipfilename, outfilename))
                     if "BYTUT" in name:
                         replaced += 1
                     else:
@@ -165,7 +170,7 @@ class DVDownloader(LegalSource.Downloader):
                             continue
                         else:
                             created += 1
-                    data = file.read(name)
+                    data = zipf.read(name)
                     Util.ensureDir(outfilename)
                     # sys.stdout.write(".")
                     outfile = open(outfilename,"wb")
@@ -246,8 +251,8 @@ class DVParser(LegalSource.Parser):
         # vars enda text är något av de kända domstolsnamnen
         #
         # Ibland saknas domstolsnamnet helt eller är felskrivet
-        # (".Högsta Domstolen"). Där borde vi kunna falla tillbaks på
-        # första delen av basename/id
+        # (".Högsta Domstolen"). Det löses genom att
+        # find_authority_rec fuzzymatchar.
         if soup.first('span', 'riDomstolsRubrik'):
             node = soup.first('span', 'riDomstolsRubrik').findParent('td')
         elif soup.first('td', 'ritop1'):
@@ -383,7 +388,13 @@ class DVParser(LegalSource.Parser):
                     m = re.search(r'(\d{4}) ref. (\d+)', txt)
                     if m:
                         head['[publikationsordinal]'] = m.group(1) + ":" + m.group(2)
-                
+
+            m = re.search(r'(NJA \d{4} s.? \d+)', head['Referat'])
+            if m:
+                head['[referatkortform]'] = UnicodeSubject(m.group(1),
+                                                           predicate=self.labels[u'Referat'])
+                head['Referat'] = unicode(head['Referat'])
+            
 
         # Find out correct URI for this case, preferably by leveraging
         # the URI formatting code in LegalRef
@@ -458,7 +469,7 @@ class DVManager(LegalSource.Manager):
         # files. If it is, don't parse
         force = (self.config[__moduledir__]['parse_force'] == 'True')
         if not force and self._outfile_is_newer([infile],outfile):
-            log.info(u"%s: Överhoppad", basefile)
+            log.debug(u"%s: Överhoppad", basefile)
             return
 
         p = self.__parserClass()
@@ -559,12 +570,18 @@ class DVManager(LegalSource.Manager):
         # 'A' / 'Anställningsförhållande' / [list...])
 
 
-        # build index.html - same as Högsta domstolens verdicts for last year
+        # build index.html - same as Högsta domstolens verdicts for current year 
         outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
         category = u'Högsta domstolen'
-        pageid = 'nja-%d' % (datetime.today().year-1)
+        if 'nja-%d' % (datetime.today().year) in pagetitles:
+            pageid = 'nja-%d' % (datetime.today().year)
+        else:
+            # handles the situation in january, before any verdicts
+            # for the new year is available
+            pageid = 'nja-%d' % (datetime.today().year-1) 
+
         title = pagetitles[pageid]
-        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+        self._render_indexpage(outfile,title,documents,pagelabels,category,pageid,docsorter=Util.numcmp)
 
         for category in documents.keys():
             for pageid in documents[category].keys():
