@@ -31,7 +31,7 @@ from operator import itemgetter
       </py:for>
     </div>
     <div role="main" py:choose="">
-      <h py:content="title">Defaulttitel</h>
+      <h property="dct:title" py:content="title">Defaulttitel</h>
       <py:when test="isinstance(documents[currentcategory][currentpage], list)">
 	<ul>
 	  <py:for each="document in sorted(documents[currentcategory][currentpage], docsorter, key=itemgetter('sortkey'))">

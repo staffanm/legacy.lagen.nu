@@ -219,12 +219,8 @@ def FilenameToSFSnr(filename):
 
 class SFSDownloader(LegalSource.Downloader):
     def __init__(self,config):
-        super(SFSDownloader,self).__init__(config) # sets config, initializes browser
-        self.download_dir = config['datadir'] + "/%s/downloaded" % __moduledir__
-
-        # self.browser = Browser()
-
-    
+        super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
+                                     
     def DownloadAll(self):
         start = 1600
         end = datetime.today().year
@@ -246,6 +242,8 @@ class SFSDownloader(LegalSource.Downloader):
                 done = True
         self._setLastSFSnr(self)
 
+    def _get_module_dir(self):
+        return __moduledir__
 
     def _setLastSFSnr(self,last_sfsnr=None):
         if not last_sfsnr:
@@ -270,6 +268,7 @@ class SFSDownloader(LegalSource.Downloader):
             log.info(u'Söker efter SFS nr %s:%s' % (year,nr))
             base_sfsnr_list = self._checkForSFS(year,nr)
             if base_sfsnr_list:
+                self.download_log.info("%s:%s [%s]" % (year,nr,", ".join(base_sfsnr_list)))
                 for base_sfsnr in base_sfsnr_list: # usually only a 1-elem list
                     self._downloadSingle(base_sfsnr)
                 nr = nr + 1
@@ -304,7 +303,7 @@ class SFSDownloader(LegalSource.Downloader):
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
         except IOError: # hurra!
-            grundforf.append("%s:%s" % (year,nr))
+            grundforf.append(u"%s:%s" % (year,nr))
             return grundforf
 
         # Sen efter ändringsförfattning
@@ -550,7 +549,6 @@ class SFSParser(LegalSource.Parser):
             # (Forfattningsinfo) och en body (Forfattning) utifrån
             # SFSR-datat
 
-            # print serialize(registry)
             meta = Forfattningsinfo()
             meta['Rubrik'] = registry.rubrik
             meta[u'Utgivare'] = LinkSubject(u'Regeringskansliet',
@@ -565,8 +563,6 @@ class SFSParser(LegalSource.Parser):
                 if k in fldmap:
                     meta[fldmap[k]] = v
             docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
-
-            # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
             meta[u'xml:base'] = docuri
 
             body = Forfattning()
@@ -628,11 +624,6 @@ class SFSParser(LegalSource.Parser):
                     rp[u'SFS-nummer'] = ob.sfsnr
                     rp[u'Övergångsbestämmelse'] = ob
                     
-        # print serialize(meta)
-        # print 
-        # print serialize(body)
-        # print
-        # print serialize(registry)
         xhtml = self.generate_xhtml(meta,body,registry,__moduledir__,globals())
         return xhtml
 
@@ -711,9 +702,6 @@ class SFSParser(LegalSource.Parser):
                                 p.uri = firstnode.uri
                             else:
                                 log.warning(u'Kunde inte tolka [%s] som ett SFS-nummer' % val)
-                            
-                            # self.lagrum_parser.verbose = False
-                            # print "docuri for %s: %s" % (val, p.uri)
                             
                         elif key == u'Ansvarig myndighet':
                             try:
@@ -874,9 +862,7 @@ class SFSParser(LegalSource.Parser):
         meta = self.makeHeader() 
         body = self.makeForfattning()
         elements = self._count_elements(body)
-        # print elements
         if 'K' in elements and elements['P1'] < 2:
-            # print "Activating special ignore-the-chapters code"
             skipfragments = ['A','K']
         else:
             skipfragments = ['A']
@@ -964,9 +950,7 @@ class SFSParser(LegalSource.Parser):
                                             uri=self.find_authority_rec("Regeringskansliet"),
                                             predicate=self.labels[u'Utgivare'])
 
-        # print "parsing %s" % meta[u'SFS nr']
         docuri = self.lagrum_parser.parse(meta[u'SFS nr'])[0].uri
-        # print "docuri for %s: %s" % (meta[u'SFS nr'], docuri)
         meta[u'xml:base'] = docuri
 
         if u'Rubrik' not in meta:
@@ -1919,7 +1903,8 @@ class SFSParser(LegalSource.Parser):
 
 
     def isBilaga(self):
-        return (self.reader.peekline() in (u"Bilaga", u"Bilaga 1"))
+        l = self.reader.peekline().strip()
+        return (self.reader.peekline().strip() in (u"Bilaga", u"Bilaga 1", u"Bilaga 2"))
 
 
         
@@ -1991,7 +1976,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                         nodename = pred.replace(Util.ns['dct'],'dct:')
                         triple_node = PET.SubElement(rattsfall_node, nodename)
                         triple_node.text = Util.normalizeSpace(obj)
-                        # print "triple_node.text: %r" % triple_node.text
 
         log.info("RDF processed (%.3f sec)", time()-start)
         Util.indent_et(root_node)
@@ -2160,10 +2144,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         return serialize(b)            
 
     def TestSerialize(self, data):
-        # print "Caller globals"
-        # print repr(globals().keys())
-        # print "Caller locals"
-        # print repr(locals().keys())
         return serialize(deserialize(data,globals()))
 
     def TestRender(self,data):
@@ -2260,6 +2240,68 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                     if pageid == 'a': # make index.html
                         outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
                         self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+
+    re_message = re.compile(r'(\d+:\d+) \[([^\]]*)\]')
+    re_qname = re.compile(r'(\{.*\})(\w+)')
+    def _build_newspages(self,messages):
+        entries = []
+        for (timestamp,message) in messages:
+            m = self.re_message.match(message)
+            change = m.group(1)
+            bases = m.group(2).split(", ")
+            basefile = "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir, SFSnrToFilename(bases[0]))
+            if not os.path.exists(basefile):
+                # om inte den parseade filen finns kan det bero på att
+                # författningen är upphävd _eller_ att det blev något
+                # fel vid parseandet.
+                log.warning("File %s not found" % basefile)
+                continue
+            tree,ids = ET.XMLID(open(basefile).read())
+
+            if change != bases[0]:
+                for e in ids['L'+change].findall(".//{http://www.w3.org/2002/06/xhtml2/}dd"):
+                    if 'property' in e.attrib and e.attrib['property'] == 'dct:title':
+                        title = e.text
+            else:
+                title = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}title").text
+
+            print "%s: %s" % (change, title)
+
+            # use relative, non-rinfo uri:s here - since the atom
+            # transform wont go through xslt and use uri.xslt
+            uri = u'/%s' % bases[0]
+            
+            for node in ids['L'+change]:
+                m = self.re_qname.match(node.tag)
+                if m.group(2) == 'dl':
+                    content = self._element_to_string(node)
+
+            entry = {'title':title,
+                     'timestamp':timestamp,
+                     'id':change,
+                     'uri':uri,
+                     'content':u'<p><a href="%s">Författningstext</a></p>%s' % (uri, content)}
+            entries.append(entry)
+
+        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade författningar', entries)
+
+    def _element_to_string(self,e):
+        """Creates a string from a elementtree.Element, removing
+        namespaces and rel/propery attributes"""
+        m = self.re_qname.match(e.tag)
+        tag = m.group(2)
+
+        if e.attrib.keys():
+            attributestr = " " + " ".join([x+'="'+e.attrib[x].replace('"','&quot;')+'"' for x in e.attrib.keys() if x not in ['rel','property']])
+        else:
+            attributestr = ""
+
+        childstr = u''
+        for child in e:
+            childstr += self._element_to_string(child)
+        return "<%s%s>%s%s%s</%s>" % (tag,attributestr,e.text,childstr,e.tail,tag)
 
     ################################################################
     # PURELY INTERNAL FUNCTIONS

@@ -1,3 +1,4 @@
+/* -*- coding: utf-8 -*- */
 var docs = [
 	{ t: "Lag (1915:218) om avtal och andra rättshandlingar på förmögenhetsrättens område (Avtalslagen, AvtL)", l: "/1915:218" },
 	{ t: "Upphovsrättslag (1960:729)", l: "/1960:729" },

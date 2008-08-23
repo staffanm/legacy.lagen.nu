@@ -75,7 +75,7 @@
       </div>
       <div id="sidfot">
 	<b>Lagen.nu</b> är en privat webbplats. Informationen här är
-	inte officiell och kan vara felaktig. 
+	inte officiell och kan vara felaktig. <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning.</a>
       </div>
     </body>
   </xsl:template>

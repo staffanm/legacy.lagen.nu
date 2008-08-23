@@ -4,6 +4,7 @@
 from collections import defaultdict
 from tempfile import mktemp
 from time import time
+import datetime
 import codecs
 import difflib
 import locale
@@ -80,46 +81,29 @@ class Downloader(object):
     """Abstract base class for downloading legal source documents
     (statues, cases, etc).
 
-    Apart from naming the resulting files, and constructing a
-    index.xml file, subclasses should do as little modification to the
-    data as possible."""
-
-    TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
+    Apart from naming the resulting files, subclasses should do as
+    little modification to the data as possible."""
 
     def __init__(self,config):
         self.config = config
         self.browser = Browser()
         # FIXME: Set user-agent header somehow. Also, if we could make
         # it support Robot.ThrottlingProcessor it would be cool
-        self.ids = {}
+
+        moduledir = self._get_module_dir()
+        self.download_dir = config['datadir'] + "/%s/downloaded" % moduledir
+        self.download_log = logging.getLogger('%s/download' % moduledir)
+        logfile = self.download_dir+"/downloaded.log"
+        handler = logging.FileHandler(logfile)
+        handler.setFormatter(logging.Formatter("%(asctime)s: %(message)s","%Y-%m-%d %H:%M:%S"))
+        self.download_log.addHandler(handler)
+
  
     def DownloadAll():
         raise NotImplementedError
     
     def DownloadNew():
         raise NotImplementedError
-
-    def _saveIndex(self):
-        indexroot = ET.Element("index")
-        for k in self.ids.keys():
-            resource = ET.SubElement(indexroot, "resource")
-            resource.set("id", k)
-            resource.set("url", self.ids[k].url)
-            resource.set("localFile", self.ids[k].localFile)
-            resource.set("fetched", time.strftime(self.TIME_FORMAT,self.ids[k].fetched))
-        tree = ET.ElementTree(indexroot)
-        tree.write(self.dir + "/index.xml")
-
-    def _loadIndex(self):
-        self.ids.clear()
-        tree = ET.ElementTree(file=self.dir + "/index.xml")
-        for node in tree.getroot():
-            id = node.get("id")
-            resource = LegalSource.DownloadedResource(id)
-            resource.url = node.get("url")
-            resource.localFile = node.get("localFile")
-            resource.fetched = time.strptime(node.get("fetched"), self.TIME_FORMAT)
-            self.ids[id] = resource
 
 
 class Parser(object):
@@ -337,6 +321,19 @@ class Manager(object):
 
         self._build_indexpages(by_pred_obj, by_subj_pred)
 
+    def News(self):
+        """Creates one or more pages containing updated and new documents for the datasource"""
+        startdate = datetime.datetime.now() - datetime.timedelta(7)
+        log = codecs.open("%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir),
+                          encoding = "utf-8")
+        entries = []
+        for line in log:
+            (timestr, message) = line.strip().split(": ", 1)
+            timestamp = datetime.datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S")
+            if timestamp > startdate:
+                entries.append([timestamp,message])
+        entries.reverse()
+        self._build_newspages(entries)
         
     ################################################################
     # CONVENIENCE FUNCTIONS FOR SUBCLASSES (can be overridden if needed)
@@ -469,7 +466,43 @@ class Manager(object):
         Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
         log.info("rendered %s" % outfile)
         
-        Util
+    def _build_newspages(self,messages):
+        entries = []
+        for (timestamp,message) in messages:
+            entry = {'title':message,
+                     'timestamp':timestamp}
+            entries.append(entry)
+        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nyheter', entries)
+
+    def _render_newspage(self,htmlfile,atomfile,title,entries):
+        # only look in cwd and this file's directory
+        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
+                                variable_lookup='lenient') 
+        tmpl = loader.load("etc/newspage.template.xht2")
+        stream = tmpl.generate(title=title,
+                               entries=entries)
+        tmpfilename = mktemp()
+        fp = open(tmpfilename,"w")
+        fp.write(stream.render())
+        fp.close()
+        Util.ensureDir(htmlfile)
+        Util.transform("xsl/static.xsl", tmpfilename, htmlfile, validate=False)
+        
+        tmpl = loader.load("etc/newspage.template.atom")
+        stream = tmpl.generate(title=title,
+                               entries=entries)
+        tmpfilename = mktemp()
+        fp = open(tmpfilename,"w")
+        fp.write(stream.render())
+        fp.close()
+        Util.ensureDir(atomfile)
+        Util.replace_if_different(tmpfilename, atomfile)
+
+        log.info("rendered %s (%s)" % (htmlfile, atomfile))
+
+                            
     
     ################################################################
     # PURELY INTERNAL FUNCTIONS

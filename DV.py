@@ -93,11 +93,11 @@ class Stycke(CompoundStructure): pass
 # give mine out in the source code...
 class DVDownloader(LegalSource.Downloader):
     def __init__(self,config):
-        self.config = config
-        # self.download_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'downloaded'
-        self.download_dir = os.path.sep.join([config['datadir'], __moduledir__, 'downloaded'])
-        # self.intermediate_dir = config['datadir'] + os.path.sep + __moduledir__ + os.path.sep + 'word'
+        super(DVDownloader,self).__init__(config) # sets config, logging initializes browser
         self.intermediate_dir = os.path.sep.join([config['datadir'], __moduledir__, 'intermediate','word'])
+
+    def _get_module_dir(self):
+        return __moduledir__
 
     def DownloadAll(self):
         self.download(recurse=True)
@@ -122,9 +122,9 @@ class DVDownloader(LegalSource.Downloader):
                 self.download(filename,recurse)
             elif line.startswith('type=file'):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
-                    #pass
-                    localdir = self.download_dir + os.path.sep + dirname
-                    self.process_zipfile(localdir + os.path.sep + filename)
+                    pass
+                    # localdir = self.download_dir + os.path.sep + dirname
+                    # self.process_zipfile(localdir + os.path.sep + filename)
                 else:
                     if dirname:
                         fullname = '%s/%s' % (dirname,filename)
@@ -163,12 +163,14 @@ class DVDownloader(LegalSource.Downloader):
                 else:
                     log.debug(u'%s: Packar upp %s' % (zipfilename, outfilename))
                     if "BYTUT" in name:
+                        self.download_log.info(outfilename)
                         replaced += 1
                     else:
                         if os.path.exists(outfilename):
                             untouched += 1
                             continue
                         else:
+                            self.download_log.info(outfilename)
                             created += 1
                     data = zipf.read(name)
                     Util.ensureDir(outfilename)
@@ -440,7 +442,7 @@ class DVParser(LegalSource.Parser):
                     # print "adding %s as %s (URIRef)" % (item.uri,item.predicate)
                     graph.add((objecturi,item.predicate,URIRef(item.uri)))
                 else:
-                    # print "adding %s as %s (Literal)" % (item,item.predicate)
+                   # print "adding %s as %s (Literal)" % (item,item.predicate)
                     graph.add((objecturi,item.predicate,Literal(item)))
             else:
                 # probably just a unicode object used for presentation
@@ -589,7 +591,36 @@ class DVManager(LegalSource.Manager):
                 title = pagetitles[pageid]
                 self._render_indexpage(outfile,title,documents,pagelabels,category,pageid,docsorter=Util.numcmp)
 
-        
+
+    def _build_newspages(self,messages):
+        entries = []
+        for (timestamp,message) in messages:
+            f = message.replace('intermediate\word','parsed').replace('.doc','.xht2')
+            if not os.path.exists(f):
+                # kan hända om parsandet gick snett
+                log.warning("File %s not found" % f)
+                continue
+
+            tree,ids = ET.XMLID(open(f).read())
+            title = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}title").text
+            metadata = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}dl")
+            for e in metadata:
+                if 'property' in e.attrib and e.attrib['property'] == "dct:description":
+                    content = '<p>%s</p>' % e.text
+                if e.text and e.text.startswith(u'http://rinfo.lagrummet.se/publ/rattsfall'):
+                    uri = e.text.replace('http://rinfo.lagrummet.se/publ/rattsfall','/dom')
+
+            entry = {'title':title,
+                     'timestamp':timestamp,
+                     'id':uri,
+                     'uri':uri,
+                     'content':u'%s<p><a href="%s">Referat i fulltext</a></p>' % (content,uri)}
+            entries.append(entry)
+            
+        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nya rättsfall', entries)
+
 
     ####################################################################
     # CLASS-SPECIFIC HELPER FUNCTIONS
