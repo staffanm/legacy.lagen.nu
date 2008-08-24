@@ -487,7 +487,9 @@ class LegalRef:
         self.currentpiece   = None
 
     def normalize_sfsid(self,sfsid):
-        # sometimes '1736:0123 2' is given as '1736:0123 s. 2'. This fixes that.
+        # sometimes '1736:0123 2' is given as '1736:0123 s. 2' or
+        # '1736:0123.2'. This fixes that.
+        sfsid = re.sub(r'(\d+:\d+)\.(\d)',r'\1 \2',sfsid)
         return sfsid.replace('s. ','').replace('s.','') # more advanced normalizations to come...
 
     def normalize_lawname(self,lawname):

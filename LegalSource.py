@@ -233,10 +233,15 @@ class Manager(object):
     def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan
         och bygger en stor RDF-fil i NTriples-format. """
+        files = list(Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'))
+        rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
+        if self._outfile_is_newer(files,rdffile):
+            log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
+            return
+        
         c = 0
         triples = 0
-        # graph = self.__get_default_graph()
-        f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']),'w')
+        f = open(rdffile,'w')
         f.close()
         for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
             c += 1
@@ -380,11 +385,11 @@ class Manager(object):
     def _outfile_is_newer(self,infiles,outfile):
         """check to see if the outfile is newer than all ingoing files"""
         if not os.path.exists(outfile): return False
-        outfileMTime = os.stat(outfile).st_mtime
-        newer = True
+        outfile_mtime = os.stat(outfile).st_mtime
         for f in infiles:
-            if os.path.exists(f) and os.stat(f).st_mtime > outfileMTime: newer = False
-        return newer
+            if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
+                return False
+        return True
 
     def _htmlFileName(self,basefile):
         """Returns the generated, browser-ready XHTML 1.0 file name for the given basefile"""

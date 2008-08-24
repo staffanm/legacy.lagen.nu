@@ -21,7 +21,7 @@ are met (all command line programs must be in your PATH):
    * rdflib 2.4
    * pyRDFa
 
- * xsltproc (for XSLT transformations)
+ * xmllint and xsltproc (for XSLT transformations)
  * patch and find (If you're on windows, install cygwin)
  * apache2 (to view the entire generated site -- if you're on windows
    you must use the cygwin version, since the win32 version has `a bug

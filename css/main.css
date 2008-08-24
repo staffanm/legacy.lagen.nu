@@ -226,7 +226,7 @@
     .paragrafbeteckning {
 	font-weight: bold;
     }
-    .andringsnot, .upphavd, {
+    .andringsnot, .upphavd {
 	font-style: italic;
     } 
 
