@@ -74,7 +74,9 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
-    <xsl:apply-templates/>
+    <div id="{@id}">
+      <xsl:apply-templates/>
+    </div>
 
     <!-- plocka fram referenser kring/till denna paragraf -->
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>

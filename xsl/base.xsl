@@ -28,8 +28,10 @@
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script>
       <script type="text/javascript" src="/js/jquery.treeview.min.js"></script>
+      <!--
       <script type="text/javascript" src="/js/jquery.autocomplete.min.js"></script>
       <script type="text/javascript" src="/js/localdata.js"></script>
+      -->
       <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
       <link rel="stylesheet" href="/css/screen.css" media="screen" /> 
@@ -46,8 +48,8 @@
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
 	  <li><a href="/nyheter/">Nyheter</a></li>
-	  <li><a href="/index/">Författningar</a></li>
-	  <li><a href="/dom/index/">Domslut</a></li>
+	  <li><a href="/index/">Lagar</a></li>
+	  <li><a href="/dom/index/">Domar</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
 	<form method="get" action="http://www.google.com/custom" style="display:inline;" autocomplete="off">

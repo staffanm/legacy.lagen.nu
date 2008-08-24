@@ -471,6 +471,7 @@ class DVManager(LegalSource.Manager):
         # check to see if the outfile is newer than all ingoing
         # files. If it is, don't parse
         force = (self.config[__moduledir__]['parse_force'] == 'True')
+        # print "Force: %s, infile: %s, outfile: %s" % (force,infile,outfile)
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return

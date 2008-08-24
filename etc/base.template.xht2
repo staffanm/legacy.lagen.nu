@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/2002/06/xhtml2/"
-      xmlns:py="http://genshi.edgewall.org/">
-
+      xmlns:py="http://genshi.edgewall.org/"
+      py:strip="">
   <!--! Library of common Genshi template definitions -->
   <a py:def="render_link(link)" rel="${link.predicate}" href="${link.uri}">${link}</a>
  
@@ -34,5 +34,4 @@
 	  property="${val.predicate}">Värde</dd>
     </py:for>
   </dl>
-
 </html>
