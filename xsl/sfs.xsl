@@ -311,6 +311,10 @@
     <li class="toc-underrubrik"><a href="#{@id}"><xsl:value-of select="."/></a></li>
   </xsl:template>
 
+  <xsl:template match="xht2:section[@typeof='rinfo:Bilaga']" mode="kommentarer">
+    <li class="toc-bilaga"><a href="#{@id}"><xsl:value-of select="xht2:h"/></a></li>
+  </xsl:template>
+
   <!-- filter the rest -->
   <xsl:template match="xht2:dl[@role='contentinfo']" mode="kommentarer">
     <!-- emit nothing -->
