@@ -1,11 +1,53 @@
 2008-08-24 00:59:04 På väg mot lagen.nu 1.5
 
-<p>Den nya versionen av lagen.nu går nu att betatesta på <a
+<p>Sedan årsskiftet har jag jobbat med en ny version av lagen.nu, som
+nu går nu att betatesta på <a
 href="http://ferenda.lagen.nu/">ferenda.lagen.nu</a>.</p>
 
 <p>Läs mer om <a href="/om/nytt.html">vad som är nytt</a>, och meddela
 gärna problem och brister till <a
 href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>.</p>
+
+2008-02-23 13:26:49 Tack för hjälpen!
+
+<p>Nu har exakt 100 personer svarat på enkäten om lagen.nu, och det
+känns som ett lagom underlag, så nu stänger jag den. Nedan följer en
+liten summering av resultatet, samt mina planer härnäst.</p>
+
+<p>Det jag har lärt mig är:</p>
+<ul>
+<li>Ungefär en tredjedel av er jobbar med eller studerar juridik. Det
+är förstås jättekul, men nästan roligare är att 2/3 av er inte är
+jurister men intresserade ändå.</li>
+<li>Över en fjärdedel använder tjänsten nån gång i veckan (och 13%
+använder den dagligen!).</li>
+<li>Nästan en tredjedel använder tjänsten bara eller mestadels i
+jobbet.</li>
+<li>Den mest uppskattade egenskapen (33 %) är snabbheten.</li>
+<li>Nästan 2/3 av er vill ha rättsfallsreferat i fulltext (det är på
+gång!).</li>
+<li>Vad gäller finansiering vill de flesta  att det löses med
+sponsring (40%) eller bannerannonsering (29%). Särskilda funktioner
+för betalande medlemmar är inte så populärt (12%).</li>
+<li>Ganska många av er är villiga att hjälpa till med teknisk (19%)
+eller juridisk (28%) kunskap.</li>
+</ul>
+<p>Baserat på det här, och på mina egna idéer, kommer jag inte att
+försöka göra lagen.nu till en kommersiell verksamhet, och inte att
+försöka få in pengar via medlemstjänster, privata donationer,
+annonsering eller liknande. Målet för nästa version kommer vara att
+öppna upp koden och det övriga innehållet under någon fri licens och
+driva det hela som ett öppet projekt. Mer information finns på <a
+href="http://trac.lagen.nu/wiki">utvecklingswikin</a>.</p>
+
+2008-01-11 23:26:49 Jag behöver just DIN hjälp
+
+<p>Under de närmaste månaderna försöker jag få fart på nyutvecklingen
+av lagen.nu, men för att veta vad jag ska fokusera på vill jag gärna
+ha in dina åsikter. Om du svarar på <a
+href="http://www.surveymonkey.com/s.aspx?sm=RuJRXAg2w2AUR9wxzydWvQ_3d_3d">den
+här korta enkäten</a> är det till stor hjälp. Tack på förhand!
+(uppdatering: Enkäten är nu stängd - tack för hjälpen!) </p>
 
 2007-09-27 20:50:18 Rättsfall uppdaterade
 

@@ -64,10 +64,10 @@
 	    <div id="dokument">
 	      <xsl:apply-templates/>
 	    </div>
-	    <div id="kommentarer" class="sidoruta">
+	    <div id="kommentarer">
 	      <xsl:apply-templates mode="kommentarer"/>
 	    </div>
-	    <div id="referenser" class="sidoruta">
+	    <div id="referenser">
 	      <xsl:apply-templates mode="refs"/>
 	    </div>
 	  </div>
@@ -75,7 +75,7 @@
       </div>
       <div id="sidfot">
 	<b>Lagen.nu</b> är en privat webbplats. Informationen här är
-	inte officiell och kan vara felaktig. <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning.</a>
+	inte officiell och kan vara felaktig | <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning</a> | <a href="/om/kontakt.html">Kontaktinformation</a>
       </div>
     </body>
   </xsl:template>

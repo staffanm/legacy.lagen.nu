@@ -17,10 +17,9 @@
 
       <dl class="regular">
 	<dt>Krav 1: Att få veta vem som står bakom</dt>
-	<dd>Lagen.nu drivs av privatpersonen Staffan Malmgren, som kan
-	nås på <a
-	href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
-	eller, om det brådskar, på telefon 0733 - 118 506.</dd>
+	<dd>Lagen.nu drivs av privatpersonen Staffan Malmgren. Mer
+	information finns under <a
+	href="kontakt.html">kontaktinformation</a>.</dd>
 
 	<dt>Krav 2: Att få veta vad databasen innehåller</dt>
 	<dd>Lagen.nu innehåller alla författningar i SFS i
@@ -38,7 +37,7 @@
 	EG-lagstiftning på <a href="http://eurlex.nu/">eurlex.nu</a>.</dd>
 
 	<dt>Krav 3: Att få veta hur databaserna uppdateras</dt>
-	<dd>Informationen på lagen.nu sker automatiskt och
+	<dd>Informationen på lagen.nu uppdateras automatiskt och
 	kontinuerligt - när ny information görs tillgänglig i
 	ovanstående källor finns den vanligtvis på lagen.nu inom ett
 	dygn. På varje sida med lagtext finns även en länk tillbaka

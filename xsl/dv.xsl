@@ -51,44 +51,46 @@
   </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
-    <dl>
-      <dt>Domstol</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
-      <dt>Avgörandedatum</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='rinfo:avgorandedatum']"/></dd>
-      <dt>Målnummer</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='rinfo:malnummer']"/></dd>
-      <!-- <xsl:if test="xht2:a[@rel='rinfo:lagrum']">  -->
+    <div class="sidoruta">
+      <dl>
+	<dt>Domstol</dt>
+	<dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
+	<dt>Avgörandedatum</dt>
+	<dd><xsl:value-of select="xht2:dd[@property='rinfo:avgorandedatum']"/></dd>
+	<dt>Målnummer</dt>
+	<dd><xsl:value-of select="xht2:dd[@property='rinfo:malnummer']"/></dd>
+	<!-- <xsl:if test="xht2:a[@rel='rinfo:lagrum']">  -->
 	<dt>Lagrum</dt>
 	<xsl:for-each select="xht2:dd[xht2:a[@rel='rinfo:lagrum']]">
 	  <dd><xsl:apply-templates select="."/></dd>
 	</xsl:for-each>
-      <!-- </xsl:if> -->
-      
-      <!-- <xsl:if test="xht2:a[@rel='rinfo:rattsfallshanvisning']"> -->
+	<!-- </xsl:if> -->
+	
+	<!-- <xsl:if test="xht2:a[@rel='rinfo:rattsfallshanvisning']"> -->
 	<dt>Rättsfall</dt>
 	<xsl:for-each select="xht2:dd[xht2:a[@rel='rinfo:rattsfallshanvisning']]">
 	  <dd><xsl:apply-templates select="."/></dd>
 	</xsl:for-each>
-      <!-- </xsl:if> -->
-
-      <xsl:if test="xht2:dd[@property='dct:relation']">
-	<dt>Litteratur</dt>
-	<xsl:for-each select="xht2:dd[@property='dct:relation']">
-	  <dd><xsl:value-of select="."/></dd>
-	</xsl:for-each>
-      </xsl:if>
-
-      <xsl:if test="xht2:dd[@property='dct:subject']">
-	<dt>Sökord</dt>
-	<xsl:for-each select="xht2:dd[@property='dct:subject']">
-	  <dd><xsl:value-of select="."/></dd>
-	</xsl:for-each>
-      </xsl:if>
-
-      <dt>Källa</dt>
-      <dd><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
-    </dl>
+	<!-- </xsl:if> -->
+	
+	<xsl:if test="xht2:dd[@property='dct:relation']">
+	  <dt>Litteratur</dt>
+	  <xsl:for-each select="xht2:dd[@property='dct:relation']">
+	    <dd><xsl:value-of select="."/></dd>
+	  </xsl:for-each>
+	</xsl:if>
+	
+	<xsl:if test="xht2:dd[@property='dct:subject']">
+	  <dt>Sökord</dt>
+	  <xsl:for-each select="xht2:dd[@property='dct:subject']">
+	    <dd><xsl:value-of select="."/></dd>
+	  </xsl:for-each>
+	</xsl:if>
+	
+	<dt>Källa</dt>
+	<dd><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
+      </dl>
+    </div>
   </xsl:template>
 
   <xsl:template match="*|@*" mode="refs">

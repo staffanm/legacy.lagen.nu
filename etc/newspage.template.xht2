@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--! Genshi template for generating a list of new/updated documents -->
-
+<?python
+from datetime import datetime
+?>
 <html xmlns="http://www.w3.org/2002/06/xhtml2/"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
@@ -24,9 +26,15 @@
       <py:for each="entry in entries">
 	<section class="entry" id="${entry.id}">
 	  <h py:content="entry.title">Entrytitel</h>
-	  <div>
+	  <p class="timestamp" py:content="datetime.strftime(entry['timestamp'],'%Y-%m-%d')">Timestamp</p>
+	  <py:choose>
+	  <div py:when="entry.shortdesc">
+	    ${Markup(entry.shortdesc)}
+	  </div>
+	  <div py:otherwise="">
 	    ${Markup(entry.content)}
 	  </div>
+	  </py:choose>
 	</section>
       </py:for>
     </div>

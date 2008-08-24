@@ -32,7 +32,7 @@
 	<h3 id="{@id}"><xsl:value-of select="."/></h3>
       </xsl:when>
       <xsl:otherwise>
-	<h2 id="{@id}"><xsl:value-of select="."/></h2>
+	<h3 id="{@id}"><xsl:value-of select="."/></h3>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -58,6 +58,9 @@
   <xsl:template match="xht2:*[@role='navigation']">
     <!-- emit nothing -->
   </xsl:template>
+  <xsl:template match="xht2:*[@role='note']">
+    <!-- emit nothing -->
+  </xsl:template>
   
   <!-- defaultregel: kopierar alla element från xht2 till
        default-namespacet -->
@@ -79,7 +82,9 @@
   <!-- refs mode -->
 
   <xsl:template match="*|@*" mode="refs">
-    <!-- emit nothing -->
+    <xsl:if test="@role='note'">
+      <xsl:apply-templates mode="trans-ns"/>
+    </xsl:if>
   </xsl:template>
 
   <!-- kommentarer mode -->

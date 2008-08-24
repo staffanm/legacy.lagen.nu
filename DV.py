@@ -16,6 +16,7 @@ import logging
 import zipfile
 import traceback
 from collections import defaultdict
+from operator import itemgetter
 
 # 3rdparty libs
 from genshi.template import TemplateLoader
@@ -608,27 +609,27 @@ class DVManager(LegalSource.Manager):
                 log.warning("File %s not found" % f)
                 continue
 
-            print "reading %s" % f
             tree,ids = ET.XMLID(open(f).read())
             metadata = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}dl")
             sokord = []
             for e in metadata:
-                if 'property' in e.attrib and e.attrib['property'] == "dct:description":
-                    content = '<p>%s</p>' % e.text
-                if 'property' in e.attrib and e.attrib['property'] == "dct:identifier":
-                    title = e.text
-                if 'property' in e.attrib and e.attrib['property'] == "dct:subject":
-                    if e.text:
-                        print u'\tadding sökord %s' % e.text
+                if 'property' in e.attrib:
+                    if e.attrib['property'] == "dct:description":
+                        content = '<p>%s</p>' % e.text
+                    elif e.attrib['property'] == "dct:identifier":
+                        title = e.text
+                    elif e.attrib['property'] == "rinfo:avgorandedatum":
+                        timestamp = datetime.strptime(e.text, "%Y-%m-%d")
+                    elif e.attrib['property'] == "dct:subject" and e.text:
                         sokord.append(e.text)
-                if 'property' in e.attrib and e.attrib['property'] == "rinfo:rattsfallspublikation":
-                    if e.text in ('http://rinfo.lagrummet.se/ref/rff/nja',
-                                  'http://rinfo.lagrummet.se/ref/rff/rh'):
-                        slot = u'de allmänna domstolarna'
-                    elif e.text == 'http://rinfo.lagrummet.se/ref/rff/ra':
-                        slot = u'förvaltningsdomstolarna'
-                    else:
-                        slot = self.publikationer[e.text]
+                    elif e.attrib['property'] == "rinfo:rattsfallspublikation":
+                        if e.text in ('http://rinfo.lagrummet.se/ref/rff/nja',
+                                      'http://rinfo.lagrummet.se/ref/rff/rh'):
+                            slot = u'de allmänna domstolarna'
+                        elif e.text == 'http://rinfo.lagrummet.se/ref/rff/ra':
+                            slot = u'förvaltningsdomstolarna'
+                        else:
+                            slot = self.publikationer[e.text]
                 if e.text and e.text.startswith(u'http://rinfo.lagrummet.se/publ/rattsfall'):
                     uri = e.text.replace('http://rinfo.lagrummet.se/publ/rattsfall','/dom')
                     
@@ -643,10 +644,11 @@ class DVManager(LegalSource.Manager):
             entries[slot].append(entry)
 
         for slot in entries.keys():
+            slotentries = sorted(entries[slot],key=itemgetter('timestamp'),reverse=True)
             base = basefile[slot]
             htmlfile = "%s/%s/generated/news/%s.html" % (self.baseDir, self.moduleDir, base)
             atomfile = "%s/%s/generated/news/%s.atom" % (self.baseDir, self.moduleDir, base)
-            self._render_newspage(htmlfile, atomfile, u'Nya rättsfall från %s'%slot, entries[slot])
+            self._render_newspage(htmlfile, atomfile, u'Nya r\xe4ttsfall fr\xe5n %s'%slot, slotentries)
 
 
     ####################################################################

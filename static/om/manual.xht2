@@ -78,7 +78,7 @@
 	</p>
 	<!--
 	<p>
-	   Om du vet att ett visst begrepp förekommer i lagens titel,
+	   Om du vet att ett visst <em>begrepp</em> förekommer i lagens titel,
 	   men kanske inte först, kan du prova att gå via
 	   nyckelordsregistret. Låt oss anta att du vill ta reda på
 	   vilka lagar och förordningar som finns inom
@@ -91,9 +91,7 @@
 	   -begrepp som inte är helt vettiga, men det brukar oftast gå
 	   att hitta det man är ute efter. Inga garantier ges för
 	   övrigt att alla lagar rörande ett visst nyckelbegrepp
-	   verkligen står listade under det begreppet, men <a
-	   href="mailto:staffan@tomtebo.org">påpeka gärna</a> om du
-	   tycker att en viss lag saknas under ett visst begrepp.
+	   verkligen står listade under det begreppet.
 	</p>
 	-->
 	<p>
@@ -107,9 +105,7 @@
 	  du en kort lista träffar, där det snabbt framgår att det är
 	  "Lag (2003:389) om elektronisk kommunikation", mer specifikt
 	  <a href="/2003:389#K5P9">5 Kap. 9 §</a>, som är den
-	  intressanta författningen ("Telelag (1993:597)" ser också ut
-	  att kunna vara intressant, men som du märker om du går dit,
-	  är den upphävd sedan den 25:e juli 2003).
+	  intressanta författningen.
 	</p>
 	<h2>Att hitta inuti lagtexten</h2>
 	<p>
@@ -145,7 +141,7 @@
 	  vägledande domslut som hänvisat till paragrafen. Den blå
 	  texten är alltså inte en del av den officiella lagtexten.
 	</p>
-	<a name="direktlankar"></a>
+	<h2 id="direktlankar">Länka till lagen.nu</h2>
 	<p>
 	  Om du skulle vilja länka till en lag eller en viss paragraf,
 	  på din websida, i ett mail eller ett IM-meddelande, kan det
@@ -165,37 +161,13 @@
 	  att länka till Upphovsrättslagen 26 a § blir alltså adressen:
 	</p>
 	<p><tt>https://lagen.nu/1960:729#P26a</tt></p>
-	<!--
-	<p>
-	  Eller, om de här instruktionerna förvirrade mer än de
-	  klargjorde, för bara muspekaren över det tomma utrymmet
-	  precis efter det sista ordet i en paragraf. Ett ¶-tecken i
-	  en behaglig lila färg bör dyka upp, direktlänkat till just
-	  den paragrafen. Högerklicka på det och välj "Kopiera
-	  genväg", "Copy link location" eller vad det nu kan tänkas
-	  heta i din webläsare, och klistra sedan in adressen där du
-	  vill ha den.
-	</p>
-	-->
 	<p>
 	  Det kan vara värt att notera att om du länkar till en
 	  paragraf långt nere i en lång lag så kommer webläsaren visa
 	  början av lagtexten ända tills rätt paragraf hämtats över
 	  internet, då hoppar läsaren ner till rätt ställe. Detta
 	  märks särskilt tydligt om man sitter på en modemkoppling.
-	  <!--
-	  I framtiden kanske sidorna kommer delas upp i kapitel- eller
-	  sektionsspecifika sidor, så att det går snabbare att komma
-	  just till en specifik paragraf, något som även skulle göra
-	  det nästan uthärdligt att använda lagen.nu på en
-	  mobiltelefon. Men vi får se.
-	  -->
 	</p>
-	<h2>Frågor?</h2>
-	<p>Maila mig på <a
-	href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>. Observera
-	att jag inte kan svara på konkreta juridiska frågor.</p>
-      
     </div>
   </body>
 </html>

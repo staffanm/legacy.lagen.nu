@@ -63,12 +63,13 @@
 	<a href="/dom/nyheter/mod.atom"><img src="/img/feed.png"/></a>
 	<a href="/dom/nyheter/mod.html">Miljööverdomstolen</a>
       </p>
-
+      <!--
       <h2>Allt i en klump</h2>
       <p>
 	<a href="/nyheter/allt.atom"><img src="/img/feed.png"/></a>
 	<a href="/nyheter/allt.html">Alla ovanstående nyheter, samlade.</a>
       </p>
+      -->
     </div>
   </body>
 </html>

@@ -178,7 +178,7 @@ class Manager:
 
     def News(self,module='all'):
         if module != 'site':
-            self._doAction('Indexpages', module)
+            self._doAction('News', module)
         if module in ('all','site'):
             self._static_newspages()
 
@@ -190,7 +190,7 @@ class Manager:
             outfile = os.path.sep.join([self.baseDir, 'site', 'generated', basefile.replace(".xht2",".html")])
             log.info("Generating %s" % outfile)
             Util.ensureDir(outfile)
-            Util.transform("xsl/static.xsl", f, outfile,validate=False)
+            Util.transform("xsl/static.xsl", f, outfile,validate=False,xinclude=True)
 
         # copy everything in img to basedir site generated img
         for dirname in ['css','js','img', 'img/treeview']:
@@ -214,7 +214,7 @@ class Manager:
                     paras = entry['content'].strip().split("\n\n")
                     entry['shortdesc'] = paras[0]
                     if len(paras) > 1:
-                        entry['shortdesc'] += u'<p><a href="%s">Las mer...</a></p>' % entry['uri']
+                        entry['shortdesc'] += u'<p><a href="%s">Läs mer...</a></p>' % entry['uri']
                     entries.append(entry)
 
                 timestamp = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
@@ -225,7 +225,7 @@ class Manager:
                          'timestamp':timestamp,
                          'timefmt':timefmt,
                          'uri':'/nyheter/%s.html' % timefmt,
-                         'id':'/nyheter/%s' % timefmt,
+                         'id': timefmt,
                          'content':''}
             else:
                 entry['content'] += line+"\n"
@@ -238,17 +238,29 @@ class Manager:
             entries.append(entry)
 
         outfile = "%s/site/generated/nyheter/site.html" % self.baseDir
-        self._render_page(outfile,'etc/newspage.template.xht2','xsl/static.xsl','Nyheter',entries)
+        xht2file = "%s/site/generated/nyheter/site.xht2" % self.baseDir
+        self._render_page(outfile,'etc/newspage.template.xht2',xht2file,'xsl/static.xsl','Nyheter',entries)
         outfile = "%s/site/generated/nyheter/site.atom" % self.baseDir
-        self._render_page(outfile,'etc/newspage.template.atom',None,'Nyheter',entries)
+        self._render_page(outfile,'etc/newspage.template.atom',None,None,'Nyheter',entries)
 
-    def _render_page(self,outfile,template,transform,title,entries):
+        for entry in entries:
+            del entry['shortdesc']
+            title = entry['title']
+            del entry['title']
+            outfile = "%s/site/generated/nyheter/%s.html" % (self.baseDir, entry['timefmt'])
+            self._render_page(outfile,'etc/newspage.template.xht2',
+                              None,'xsl/static.xsl',title,[entry])
+
+    def _render_page(self,outfile,template,xht2file,transform,title,entries):
         loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
                                 variable_lookup='lenient') 
         tmpl = loader.load(template)
         stream = tmpl.generate(title=title,
                                entries=entries)
-        tmpfilename = mktemp()
+        if xht2file:
+            tmpfilename = xht2file
+        else:
+            tmpfilename = mktemp()
         fp = open(tmpfilename,"w")
         fp.write(stream.render())
         fp.close()
@@ -257,6 +269,8 @@ class Manager:
             Util.transform(transform, tmpfilename, outfile, validate=False)
         else:
             Util.replace_if_different(tmpfilename, outfile)
+
+        log.info("rendered %s" % (outfile))
             
         
     

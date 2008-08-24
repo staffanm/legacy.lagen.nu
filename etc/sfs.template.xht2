@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<?python
+from datetime import datetime
+?>
 <html xmlns="http://www.w3.org/2002/06/xhtml2/"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
@@ -110,8 +113,8 @@
 	<!--! första stycket måste rendreras tillsammans med
 	     paragrafbeteckningen (inuti samma p-element) -->
 	
-	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${paragraf.ikrafttrader})</span>
-	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${paragraf.upphor})</span>
+	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${datetime.strftime(paragraf.ikrafttrader,'%Y-%m-%d')})</span>
+	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${datetime.strftime(paragraf.upphor,'%Y-%m-%d')})</span>
         ${render_stycke(paragraf[0], paragraf.ordinal)}
         <py:for each="part in paragraf[1:]" py:choose="">
 	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
@@ -267,7 +270,7 @@
       <!--! main body -->
       <h property="dct:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
       ${render_metadata(meta)}
-      <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
+      <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${datetime.strftime(body.ikrafttrader,'%Y-%m-%d')})</p>
       <section role="main">
       <py:for each="part in body" py:choose="">
 	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>

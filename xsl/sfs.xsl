@@ -83,7 +83,7 @@
     <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
     <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
     <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-      <p id="refs-{@id}" class="refbox">
+      <p id="refs-{@id}" class="sidoruta">
 	<!--
 	<span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
 	-->
@@ -189,7 +189,7 @@
     <!-- Den stora metadata-definitionslistan innehåller en massa som
          inte är intressant att visa för slutanvändaren. Filtrera ut
          de intressanta bitarna -->
-    <dl id="refs-dokument" class="refbox">
+    <dl id="refs-dokument" class="sidoruta">
       <dt>Departement</dt>
       <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
       <dt>Utfärdad</dt>
@@ -208,12 +208,12 @@
   </xsl:template>
 
   <!--
-      helst skulle vi ha alla refboxar i högerspalten, men så att
+      helst skulle vi ha alla sidorutor i högerspalten, men så att
       varje box är i höjd med sin paragraf, men det verkar omöjligt
       att få till en lösning (vare sig med css eller js) som funkar
       för alla fall. Saker som gör det svårt:
 
-      * lagar med 1000+ refboxar (inkomstskattelagen) - tar en evighet att 
+      * lagar med 1000+ sidorutor (inkomstskattelagen) - tar en evighet att 
 
       * paragrafer med väldigt många rättsfall (så att refboxen blir
       högre än sin paragraf, exv marknadsföringslagen 4 §) - boxarna
@@ -222,7 +222,9 @@
 
       * det måste se OK ut även vid utskrift.
 
-      Tills vidare får vi köra som lagen.nu 1.0, dvs med refboxar
+      Tills vidare får vi köra som lagen.nu 1.0, dvs med sidorutor
+      under paragraferna
+      
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']" mode="refs">
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
     <xsl:variable name="rattsfall" select="document('../data/sfs/parsed/dv-rdf.xml')/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>

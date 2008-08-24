@@ -254,26 +254,51 @@
 	mer här!</a>
 	</p>
       </div>
-      <div role="navigation">
-	<h2>
-	  <a href="/nyheter/site.atom"><img src="img/feed.png" title="Atom-flöde för sajtnyheter"/></a>
-	  <a href="/nyheter/site.html">Nyheter på lagen.nu</a>
-	</h2>
-	<!-- xinclude:a bara de fem senaste -->
-	<xi:include href="generated/site/nyheter.xht2"/>
-	<h2>
-	  <a href="/nyheter/lagar.atom"><img src="img/feed.png" title="Atom-flöde för nya och ändrade lagar"/></a>
-	  <a href="/nyheter/lagar.html">Nya och ändrade lagar</a>
-	</h2>
-	<!-- xinclude:a bara de fem senaste -->
-	<xi:include href="generated/sfs/lagar.xht2"/>
+      <div role="note">
+	<div class="sidoruta">
+	  <h2>
+	    <a href="/nyheter/site.atom"><img src="img/feed.png" title="Atom-flöde för sajtnyheter" alt="Atom-flöde"/></a>
+	    <a href="/nyheter/site.html">Nyheter på lagen.nu</a>
+	  </h2>
+	  <!-- xinclude:a bara de fem senaste - det måste finnas ett
+	       smartare sätt, men jag får inte till
+	       xpath-uttrycket. Borde vara ngt i stil med
+	       '//h:sextion[position()<6]' men det ger xinclude error
+	       från xmllint -->
+	  <xi:include href="../data/site/generated/nyheter/site.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[1]/*)"/>
+	  <xi:include href="../data/site/generated/nyheter/site.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[2]/*)"/>
+	  <xi:include href="../data/site/generated/nyheter/site.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[3]/*)"/>
+	  <xi:include href="../data/site/generated/nyheter/site.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[4]/*)"/>
+	  <xi:include href="../data/site/generated/nyheter/site.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[5]/*)"/>
+	</div>
+	<div class="sidoruta">
+	  <h2>
+	    <a href="/nyheter/lagar.atom"><img src="img/feed.png" title="Atom-flöde för nya och ändrade lagar" alt="Atom-flöde"/></a>
+	    <a href="/nyheter/lagar.html">Nya och ändrade lagar</a>
+	  </h2>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[1]/h:h[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[1]/h:div/h:p[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[2]/h:h[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[2]/h:div/h:p[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[3]/h:h[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[3]/h:div/h:p[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[4]/h:h[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[4]/h:div/h:p[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[5]/h:h[1])"/>
+	  <xi:include href="../data/sfs/generated/news/lagar.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[5]/h:div/h:p[1])"/>
+	</div>
 
-	<h2>
-	  <a href="/dom/nyheter/allmanna.atom"><img src="img/feed.png" title="Atom-flöde för domslut från HD"/></a>
-	  <a href="/dom/nyheter/allmanna.html">Domslut från de allmänna domstolarna</a>
-	</h2>
-	<!-- xinclude:a bara de fem senaste -->
-	<xi:include href="generated/sfs/hd.xht2"/>
+	<div class="sidoruta">
+	  <h2>
+	    <a href="/dom/nyheter/allmanna.atom"><img src="img/feed.png" title="Atom-flöde för domslut från HD" alt="Atom-flöde"/></a>
+	    <a href="/dom/nyheter/allmanna.html">Domslut från de allmänna domstolarna</a>
+	  </h2>
+	  <xi:include href="../data/dv/generated/news/allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[1]/*)"/>
+	  <xi:include href="../data/dv/generated/news/allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[2]/*)"/>
+	  <xi:include href="../data/dv/generated/news/allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[3]/*)"/>
+	  <xi:include href="../data/dv/generated/news/allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[4]/*)"/>
+	  <xi:include href="../data/dv/generated/news/allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[5]/*)"/>
+	</div>
     </div>
   </body>
 </html>

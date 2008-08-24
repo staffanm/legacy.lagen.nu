@@ -11,28 +11,30 @@
         padding: 0;
 	font: 12pt Palatino;
     }
-    strong {
+    strong,b {
 	font-weight: bold;
     }
+    em, i {
+	font-style: italic
+   }
+   tt, code, kbd, samp { font-family: monospace }
+    
     #kommentarer, #referenser {
 	font-size: 10pt;
-	}
-   
-    #referenser p, #referenser dl, .refbox {
-	background: #ddf;
-        border: solid 1px darkblue;
-        margin-bottom: 5px;
-	font-size: 10pt;
-        padding: 3pt;
-	margin-bottom: 12pt;
     }
+
     .entry {
 	border: solid 1px #ddd;
         margin-bottom: 12pt;
     }
-    .sidoruta p, .sidoruta dl {
+    .sidoruta {
       padding: 3pt;
       margin-top: 0;
+      background: #ddf;
+      border: solid 1px darkblue;
+      margin-bottom: 5px;
+      font-size: 10pt;
+      margin-bottom: 12pt;
     }
     
     .verticalalign p {
@@ -224,7 +226,12 @@
     .paragrafbeteckning {
 	font-weight: bold;
     }
-    .andringsnot, .upphavd {
+    .andringsnot, .upphavd, {
 	font-style: italic;
     } 
-    
+
+    .timestamp {
+	font-style: italic;
+ font-size:small;
+ margin:0;
+    }

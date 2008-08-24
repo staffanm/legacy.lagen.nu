@@ -8,6 +8,7 @@
   <body>
     <div role="main">
     <h1>Vem ligger bakom lagen.nu?</h1>
+
     <p>Hej, jag heter Staffan Malmgren, och jag startade lagen.nu som
     en del i förberedandet av mina juridikstudier. När jag försökte
     sätta mig in i rättsfrågor irriterades jag över att de
@@ -24,15 +25,8 @@
     lagtexter och började skriva program för att analysera
     texterna.</p>
 
-    <p>Det ledde fram till lagen.nu, som jag hoppas ska kunna bli en
-    bra resurs för alla som vill förstå svensk lag och
-    rättsskipning. Den är i första hand till för mig själv, därför
-    kommer fokuset ligga på sånt som en juridikstudent behöver. Men om
-    det är någon speciell funktionalitet du skulle vilja se, hör gärna
-    av dig!</p>
-
-    <p>Lagen.nu drivs idag ideellt, men det kanske ändras om jag
-    kommer på någon bra affärsidé.</p>
+    <p>Det ledde fram till lagen.nu, som jag hoppas ska vara en bra
+    resurs för alla som vill förstå svensk lag och rättsskipning.</p>
 
     <p>Vill du veta mer om vad jag gör kanske du vill besöka <a
     href="http://blog.tomtebo.org/">min blogg</a>?</p>

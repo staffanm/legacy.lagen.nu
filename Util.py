@@ -130,7 +130,7 @@ def tidyHtmlFile(filename):
     # os.system("xmllint --format %s > tmp.xml" % filename)
     robustRename("tmp.xml", filename)
 
-def transform(stylesheet,infile,outfile,parameters={},validate=True):
+def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
     param_str = ""
     for p in parameters.keys():
@@ -138,6 +138,15 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
         # using the tagname parameter on macos. Maybe for other
         # reasons as well, I dunno
         param_str += "--param %s \"'%s'\" " % (p,parameters[p])
+
+    if xinclude:
+        tmpfile = mktemp()
+        cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
+        # print cmdline
+        (ret,stdout,stderr) = runcmd(cmdline)
+        if (ret != 0):
+            raise TransformError(stderr)
+        infile = tmpfile
 
     tmpfile = mktemp()
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
@@ -153,6 +162,10 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True):
     # indentXmlFile(outfile)
 
     replace_if_different(tmpfile, outfile)
+    if os.path.exists(tmpfile):
+        os.unlink(tmpfile)
+    if xinclude:
+        os.unlink(infile)
     if validate:
         cmdline = "xmllint --noout --nonet --nowarning --dtdvalid %s/dtd/xhtml1-strict.dtd %s" % (basepath,outfile)
         (ret,stdout,stderr) = runcmd(cmdline)

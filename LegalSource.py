@@ -324,10 +324,13 @@ class Manager(object):
     def News(self):
         """Creates one or more pages containing updated and new documents for the datasource"""
         startdate = datetime.datetime.now() - datetime.timedelta(7)
-        log = codecs.open("%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir),
-                          encoding = "utf-8")
+        logfilename = "%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir)
+        if not os.path.exists(logfilename):
+            log.warning("Could not find download log %s" % logfilename)
+            return 
+        logfp = codecs.open(logfilename, encoding = "utf-8")
         entries = []
-        for line in log:
+        for line in logfp:
             (timestr, message) = line.strip().split(": ", 1)
             timestamp = datetime.datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S")
             if timestamp > startdate:
@@ -483,7 +486,9 @@ class Manager(object):
         tmpl = loader.load("etc/newspage.template.xht2")
         stream = tmpl.generate(title=title,
                                entries=entries)
-        tmpfilename = mktemp()
+        # tmpfilename = mktemp()
+        tmpfilename = htmlfile.replace(".html",".xht2")
+        assert(tmpfilename != htmlfile)
         fp = open(tmpfilename,"w")
         fp.write(stream.render())
         fp.close()
