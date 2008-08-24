@@ -3,15 +3,19 @@
 """High-level classes that coordinates various Downloaders, Parsers
 and Generators (Renderers?) to create the static HTML files and other stuff"""
 
-import os,sys
-import shutil
+from datetime import datetime
 import codecs
 import inspect
+import os,sys
+import re
+import shutil
 import time
 import logging
+from tempfile import mktemp
 
 # 3rd party modules
 from configobj import ConfigObj
+from genshi.template import TemplateLoader
 
 # my libs
 from DispatchMixin import DispatchMixin
@@ -172,6 +176,12 @@ class Manager:
         if module in ('all','site'):
             self._static_indexpages()
 
+    def News(self,module='all'):
+        if module != 'site':
+            self._doAction('Indexpages', module)
+        if module in ('all','site'):
+            self._static_newspages()
+
     def _static_indexpages(self):
         # make the front page and other static pages
         log.info("Generating site global static pages")
@@ -182,6 +192,7 @@ class Manager:
             Util.ensureDir(outfile)
             Util.transform("xsl/static.xsl", f, outfile,validate=False)
 
+        # copy everything in img to basedir site generated img
         for dirname in ['css','js','img', 'img/treeview']:
             for f in os.listdir(dirname):
                 srcfile = dirname+os.path.sep+f
@@ -190,8 +201,64 @@ class Manager:
                     Util.ensureDir(destfile)
                     shutil.copy2(srcfile, destfile)
 
+    # FIXME: Maybe Manager should derive from LegalSource.Manager, in
+    # order to make use of _render_newspage?
+    re_news_subjectline = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (.*)').match
+    def _static_newspages(self):
+        entries = []
+        entry = None
+        for line in codecs.open("static/nyheter/site.txt", encoding="iso-8859-1").read().splitlines():
+            m = self.re_news_subjectline(line)
+            if m:
+                if entry:
+                    paras = entry['content'].strip().split("\n\n")
+                    entry['shortdesc'] = paras[0]
+                    if len(paras) > 1:
+                        entry['shortdesc'] += u'<p><a href="%s">Las mer...</a></p>' % entry['uri']
+                    entries.append(entry)
 
-        # copy everything in img to basedir site generated img
+                timestamp = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
+                # we use YY-MM-DD, not YYYY-MM-DD, to be compatible with lagen.nu 1.0-style urls
+                timefmt = datetime.strftime(timestamp,"%y-%m-%d")
+                title = m.group(2)
+                entry = {'title': title,
+                         'timestamp':timestamp,
+                         'timefmt':timefmt,
+                         'uri':'/nyheter/%s.html' % timefmt,
+                         'id':'/nyheter/%s' % timefmt,
+                         'content':''}
+            else:
+                entry['content'] += line+"\n"
+
+        if entry:
+            paras = entry['content'].strip().split("\n\n")
+            entry['shortdesc'] = paras[0]
+            if len(paras) > 1:
+                entry['shortdesc'] += u'<p><a href="%s">Läs mer...</a></p>' % entry.uri
+            entries.append(entry)
+
+        outfile = "%s/site/generated/nyheter/site.html" % self.baseDir
+        self._render_page(outfile,'etc/newspage.template.xht2','xsl/static.xsl','Nyheter',entries)
+        outfile = "%s/site/generated/nyheter/site.atom" % self.baseDir
+        self._render_page(outfile,'etc/newspage.template.atom',None,'Nyheter',entries)
+
+    def _render_page(self,outfile,template,transform,title,entries):
+        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
+                                variable_lookup='lenient') 
+        tmpl = loader.load(template)
+        stream = tmpl.generate(title=title,
+                               entries=entries)
+        tmpfilename = mktemp()
+        fp = open(tmpfilename,"w")
+        fp.write(stream.render())
+        fp.close()
+
+        if transform:
+            Util.transform(transform, tmpfilename, outfile, validate=False)
+        else:
+            Util.replace_if_different(tmpfilename, outfile)
+            
+        
     
     def Publish(self):
         self._make_zipfiles()

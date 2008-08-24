@@ -22,8 +22,8 @@
     <div role="main">
       <h property="dct:title" py:content="title">Feedtitel</h>
       <py:for each="entry in entries">
-	<section id="${entry.id}">
-	  <h py:content="entry.title" class="entry-title">Entrytitel</h>
+	<section class="entry" id="${entry.id}">
+	  <h py:content="entry.title">Entrytitel</h>
 	  <div>
 	    ${Markup(entry.content)}
 	  </div>

@@ -533,16 +533,16 @@ class DVManager(LegalSource.Manager):
     def _get_module_dir(self):
         return __moduledir__
 
+    publikationer = {u'http://rinfo.lagrummet.se/ref/rff/nja': u'Högsta domstolen',
+                     u'http://rinfo.lagrummet.se/ref/rff/rh':  u'Hovrätterna',
+                     u'http://rinfo.lagrummet.se/ref/rff/ra':  u'Regeringsrätten',
+                     u'http://rinfo.lagrummet.se/ref/rff/ad':  u'Arbetsdomstolen',
+                     u'http://rinfo.lagrummet.se/ref/rff/fod': u'Försäkringsöverdomstolen',
+                     u'http://rinfo.lagrummet.se/ref/rff/md':  u'Marknadsdomstolen',
+                     u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
+                     u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
+                     }
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
-        publikationer = {u'http://rinfo.lagrummet.se/ref/rff/nja': u'Högsta domstolen',
-                         u'http://rinfo.lagrummet.se/ref/rff/rh':  u'Hovrätterna',
-                         u'http://rinfo.lagrummet.se/ref/rff/ra':  u'Regeringsrätten',
-                         u'http://rinfo.lagrummet.se/ref/rff/ad':  u'Arbetsdomstolen',
-                         u'http://rinfo.lagrummet.se/ref/rff/fod': u'Försäkringsöverdomstolen',
-                         u'http://rinfo.lagrummet.se/ref/rff/md':  u'Marknadsdomstolen',
-                         u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
-                         u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
-                         }
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}
         pagelabels = {}
@@ -552,7 +552,7 @@ class DVManager(LegalSource.Manager):
         desc_pred = Util.ns['dct']+'description'
         subj_pred = Util.ns['dct']+'subject'
         for obj in by_pred_obj[publ_pred]:
-            label = publikationer[obj]
+            label = self.publikationer[obj]
             for subject in by_pred_obj[publ_pred][obj]:
                 year = by_subj_pred[subject][year_pred]
                 identifier = by_subj_pred[subject][id_pred]
@@ -593,7 +593,14 @@ class DVManager(LegalSource.Manager):
 
 
     def _build_newspages(self,messages):
-        entries = []
+        basefile = {u'de allmänna domstolarna': 'allmanna',
+                    u'förvaltningsdomstolarna': 'forvaltning',
+                    u'Arbetsdomstolen': 'ad',
+                    u'Marknadsdomstolen': 'md',
+                    u'Migrationsöverdomstolen': 'mig',
+                    u'Miljööverdomstolen': 'mod'}
+
+        entries = defaultdict(list)
         for (timestamp,message) in messages:
             f = message.replace('intermediate\word','parsed').replace('.doc','.xht2')
             if not os.path.exists(f):
@@ -601,25 +608,45 @@ class DVManager(LegalSource.Manager):
                 log.warning("File %s not found" % f)
                 continue
 
+            print "reading %s" % f
             tree,ids = ET.XMLID(open(f).read())
-            title = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}title").text
             metadata = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}dl")
+            sokord = []
             for e in metadata:
                 if 'property' in e.attrib and e.attrib['property'] == "dct:description":
                     content = '<p>%s</p>' % e.text
+                if 'property' in e.attrib and e.attrib['property'] == "dct:identifier":
+                    title = e.text
+                if 'property' in e.attrib and e.attrib['property'] == "dct:subject":
+                    if e.text:
+                        print u'\tadding sökord %s' % e.text
+                        sokord.append(e.text)
+                if 'property' in e.attrib and e.attrib['property'] == "rinfo:rattsfallspublikation":
+                    if e.text in ('http://rinfo.lagrummet.se/ref/rff/nja',
+                                  'http://rinfo.lagrummet.se/ref/rff/rh'):
+                        slot = u'de allmänna domstolarna'
+                    elif e.text == 'http://rinfo.lagrummet.se/ref/rff/ra':
+                        slot = u'förvaltningsdomstolarna'
+                    else:
+                        slot = self.publikationer[e.text]
                 if e.text and e.text.startswith(u'http://rinfo.lagrummet.se/publ/rattsfall'):
                     uri = e.text.replace('http://rinfo.lagrummet.se/publ/rattsfall','/dom')
+                    
+            if sokord:
+                title += " (%s)" % ", ".join(sokord)
 
             entry = {'title':title,
                      'timestamp':timestamp,
                      'id':uri,
                      'uri':uri,
                      'content':u'%s<p><a href="%s">Referat i fulltext</a></p>' % (content,uri)}
-            entries.append(entry)
-            
-        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
-        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya rättsfall', entries)
+            entries[slot].append(entry)
+
+        for slot in entries.keys():
+            base = basefile[slot]
+            htmlfile = "%s/%s/generated/news/%s.html" % (self.baseDir, self.moduleDir, base)
+            atomfile = "%s/%s/generated/news/%s.atom" % (self.baseDir, self.moduleDir, base)
+            self._render_newspage(htmlfile, atomfile, u'Nya rättsfall från %s'%slot, entries[slot])
 
 
     ####################################################################

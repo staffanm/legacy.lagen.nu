@@ -38,7 +38,12 @@
   </xsl:template>
 
   <xsl:template match="xht2:section">
-    <div><xsl:apply-templates/></div>
+    <div>
+      <xsl:for-each select="@*">
+	<xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+      </xsl:for-each>
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 
   <xsl:template match="xht2:a">

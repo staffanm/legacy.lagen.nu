@@ -26,6 +26,10 @@
         padding: 3pt;
 	margin-bottom: 12pt;
     }
+    .entry {
+	border: solid 1px #ddd;
+        margin-bottom: 12pt;
+    }
     .sidoruta p, .sidoruta dl {
       padding: 3pt;
       margin-top: 0;
@@ -45,25 +49,25 @@
 
     /* olika sätt att formattera dl-listor:
        side-by-side, bred högerspalt */
-    .andringar dl {
+    .andringar dl, .entry dl {
 	margin-bottom: 18pt;
     }
     
-    .andringar dt {
+    .andringar dt,.entry dt {
 	float: left;
         clear: left;
 	width: 10em;
-        /* font-weight: bold; */
+        font-weight: bold;
     }
 
-    .andringar dt:after { content: ":"; }
+    .andringar dt:after, .entry dt:after { content: ":"; }
 
-    .andringar dd {
+    .andringar dd, .entry dd {
 	margin: 0 0 0 10.5em;
         padding: 0;
 	clear: right;
     }
-    .andringar dd:after {
+    .andringar dd:after, .entry dd:after {
 	clear: left;
 	}
 

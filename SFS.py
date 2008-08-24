@@ -2243,8 +2243,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
     re_message = re.compile(r'(\d+:\d+) \[([^\]]*)\]')
     re_qname = re.compile(r'(\{.*\})(\w+)')
+    re_sfsnr = re.compile(r'\s*(\(\d+:\d+\))')
     def _build_newspages(self,messages):
-        entries = []
+        all_entries = []
+        lag_entries = []
+        ovr_entries = []
         for (timestamp,message) in messages:
             m = self.re_message.match(message)
             change = m.group(1)
@@ -2265,7 +2268,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             else:
                 title = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}title").text
 
-            print "%s: %s" % (change, title)
 
             # use relative, non-rinfo uri:s here - since the atom
             # transform wont go through xslt and use uri.xslt
@@ -2281,15 +2283,32 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                      'id':change,
                      'uri':uri,
                      'content':u'<p><a href="%s">Författningstext</a></p>%s' % (uri, content)}
-            entries.append(entry)
+            all_entries.append(entry)
 
-        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
-        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade författningar', entries)
+            basetitle = self.re_sfsnr.sub('',title)
+            # print "%s: %s" % (change, basetitle)
+            if (basetitle.startswith('Lag ') or
+                basetitle.endswith('lag') or
+                basetitle.endswith('balk')):
+                lag_entries.append(entry)
+            else:
+                ovr_entries.append(entry)
+
+        htmlfile = "%s/%s/generated/news/all.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/all.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ndrade frfattningar', all_entries)
+
+        htmlfile = "%s/%s/generated/news/lagar.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/lagar.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade lagar', lag_entries)
+
+        htmlfile = "%s/%s/generated/news/forordningar.html" % (self.baseDir, self.moduleDir)
+        atomfile = "%s/%s/generated/news/forordningar.atom" % (self.baseDir, self.moduleDir)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade förordningar och övriga författningar', ovr_entries)
 
     def _element_to_string(self,e):
-        """Creates a string from a elementtree.Element, removing
-        namespaces and rel/propery attributes"""
+        """Creates a XHTML1 string from a elementtree.Element,
+        removing namespaces and rel/propery attributes"""
         m = self.re_qname.match(e.tag)
         tag = m.group(2)
 
