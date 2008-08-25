@@ -23,27 +23,15 @@ $(document).ready(function(){
 	persist: "location",
         collapsed: true
 	});
-var data = [ {t:'Link A', l:'/page1'}, {t:'Link B', l: '/page2'} ];
-$("#q").autocomplete(docs, {
-  matchContains: true,
-  selectFirst: false,
-  formatItem: function(item) {
-    return item.t;
-  }
-}).result(function(event, item) {
-  location.href = item.l;
-});
-/*
+    /*
     $("#q").autocomplete(docs, {
-	minChars: 0,
-        width: 310,
-	formatItem: function(item) {
-          return item.t;
+        matchContains: true,
+        selectFirst: false,
+        formatItem: function(item) {
+            return item.t;
         }
-	matchContains: "word",
-        autoFill: false,
-    }).result(function(event, item) {
-	location.href = item.l;
+        }).result(function(event, item) {
+            location.href = item.l;
     });
-*/
+    */
 });

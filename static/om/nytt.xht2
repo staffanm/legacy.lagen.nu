@@ -3,19 +3,20 @@
       xmlns:xi="http://www.w3.org/2001/XInclude"
       xml:lang="sv">
   <head>
-    <title>Välkommen</title>
+    <title>Vad är nytt?</title>
   </head>
   <body>
     <div role="main">
     <h1>Vad är nytt?</h1>
 
-    <p>Den stora nyheten i den här versionen är att rättsfall nu finns
-    i fulltext. Informationen kommer från domstolsverket, och är i
-    stort identisk med den som finns på <a
+    <p>Den stora nyheten i den här versionen är att <a
+    href="/dom/">rättsfall</a> nu finns i fulltext. Informationen
+    kommer från domstolsverket, och är i stort identisk med den som
+    finns på <a
     href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">domstolsväsendets
     rättsinformation</a>.</p>
 
-    <p>Den grafiska formgivningen av textern har också ändrats --
+    <p>Den grafiska formgivningen av texterna har också ändrats --
     varje sida har nu en struktur med tre spalter, där den stora
     mittenspalten innehåller själva dokumentet (lagtext eller
     rättsfallsreferat). I högerspalten finns mer information om

@@ -1,6 +1,17 @@
 <Forfattning>
+  <Kapitel id="K2" ordinal="2" rubrik="2 kap. Bildande av aktiebolag">
+    <Paragraf id="K2P1" ordinal="1">
+      <Stycke id="K2P1S1">
+        <unicode>Ett aktiebolag bildas av...</unicode>
+      </Stycke>
+    </Paragraf>
+  </Kapitel>
   <Kapitel id="K3" ordinal="3" rubrik="3 kap. Bolagsordning">
-    <Paragraf id="K3P11" ordinal="11">
+    <Paragraf id="K3P1" ordinal="1">
+      <Stycke id="K3P1S1">
+        <unicode>Bolagsordningen skall ange...</unicode>
+      </Stycke>
+    </Paragraf><Paragraf id="K3P11" ordinal="11">
       <Stycke id="K3P11S1">
         <unicode>I fråga om publika aktiebolag...</unicode>
       </Stycke>

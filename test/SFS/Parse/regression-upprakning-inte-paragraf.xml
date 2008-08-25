@@ -1,0 +1,32 @@
+<Forfattning>
+  <Paragraf id="P2" ordinal="2">
+    <Stycke id="P2S1">
+      <unicode>Följande föreskrifter i lagen gäller också arbetstagare hos kommuner, landsting och kommunalförbund, nämligen</unicode>
+    </Stycke><Stycke id="P2S2">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P7">7</LinkSubject>
+      <unicode>-</unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P7c">7 c §§</LinkSubject>
+      <unicode> om bisysslor,</unicode>
+    </Stycke><Stycke id="P2S3">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P23">23</LinkSubject>
+      <unicode>-</unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P29">29 §§</LinkSubject>
+      <unicode> om arbetskonflikter,</unicode>
+    </Stycke><Stycke id="P2S4">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P38">38 §</LinkSubject>
+      <unicode> om interimistiskt beslut,</unicode>
+    </Stycke><Stycke id="P2S5">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P42S1">42 § första</LinkSubject>
+      <unicode> och </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P42S2">andra styckena</LinkSubject>
+      <unicode> om vissa undantag från lagen (</unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1976:580">1976:580</LinkSubject>
+      <unicode>) om medbestämmande i arbetslivet.</unicode>
+    </Stycke><Stycke id="P2S6">
+      <unicode>Föreskrifterna i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P30">30 §</LinkSubject>
+      <unicode> om periodiska hälsoundersökningar gäller också arbetstagare hos kommuner och landsting. </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#L2001:1016">Lag (2001:1016).</LinkSubject>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

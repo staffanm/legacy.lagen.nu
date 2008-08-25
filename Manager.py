@@ -195,11 +195,11 @@ class Manager:
         # copy everything in img to basedir site generated img
         for dirname in ['css','js','img', 'img/treeview']:
             for f in os.listdir(dirname):
-                srcfile = dirname+os.path.sep+f
-                if os.path.isfile(srcfile):
-                    destfile = os.path.sep.join([self.baseDir, 'site', 'generated', dirname, f])
-                    Util.ensureDir(destfile)
-                    shutil.copy2(srcfile, destfile)
+                src = dirname+os.path.sep+f
+                if os.path.isfile(src):
+                    dest = os.path.sep.join([self.baseDir, 'site', 'generated', dirname, f])
+                    Util.copy_if_different(src,dest)
+
 
     # FIXME: Maybe Manager should derive from LegalSource.Manager, in
     # order to make use of _render_newspage?

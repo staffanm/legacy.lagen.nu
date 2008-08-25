@@ -19,7 +19,7 @@ from datetime import datetime
   <xi:include href="base.template.xht2"/>
     <head about="${meta['xml:base']}">
       <title py:content="meta[u'Rubrik']">Författningsrubrik</title>
-      <!-- ! base is not valid in xhtml2 - but we need it to set the
+      <!--! base is not valid in xhtml2 - but we need it to set the
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>

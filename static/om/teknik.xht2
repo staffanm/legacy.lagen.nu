@@ -9,72 +9,42 @@
     <div role="main">
     <h1>Hur ser det ut bakom kulisserna?</h1>
 
-    <p>Allt började med ett litet pythonscript för att ladda hem
-    lagtexter från Regeringskansliets rättsdatabaser. Jag hade tänkt
-    använda mig av Rixlex, men de har en robots.txt som inte tillåter
-    detta. Det har nu svällt upp till ca 4200 rader pythonkod,
-    EBNF-grammatik, XSLT-stylesheets och testfall.</p>
+    <p>Lagen.nu består av ca 15000 html-sidor med lagtexter och
+    rättsfall. För att kunna hantera en sån stor informationsmängd på
+    mycket begränsad tid är nästan allt automatiserat.</p>
 
-    <p>För att publicera en lagtext är arbetsflödet ungefär såhär:</p>
+    <p>Lagtexter hämtas från Regeringskansliets webbserver. Den oformatterade och
+    ostrukturerade textmassan som finns där konverteras till en
+    strukturerad XML-version (XHTML2 med RDFa).</p>
 
-	<ul>
-	  <li>Lagen laddas ned från regeringskansliet</li>
-	  <li>Det faktiska textinnehållet extraheras</li>
-	  <li>Texten konvereras till en XML-dialekt som via mer eller
-	  mindre avancerad heuristik lägger på så mycket semantik som
-	  det bara är möjligt: Uppdelning i kapitel,paragrafer och
-	  stycken, referenser till andra lagar, etc.</li>
-	  <li>XML-filen konverteras till HTML via en
-	  XSLT-transformation från helvetet.</li>
-	</ul>
+    <p>På samma sätt hämtas rättsfall från Domstolsverkets FTP-server,
+    och konverteras, först från Word-format till en formatterad, men
+    semantiskt ostrukturerad HTML (genom Microsoft Words "Spara som
+    HTML"-funktion), och sedan till en strukturerad XML-version (även
+    här XHTML2 med RDFa).</p>
 
-	<p>För andra dokumenttyper (förarbeten, vägledande domar) är arbetsgången likartad.</p>
+    <p>I nästa steg sammanställs all metadata från samtliga dokument i
+    en stor s.k. RDF-graf. Denna används sedan tillsammans med en
+    uppsättning XSLT-stylesheets för att skapa XHTML1.0-sidor, som är
+    redo att visas direkt i en webbläsare.</p>
 
-	<p>Om du vill veta mer om hur lagen.nu funkar, kolla mina
-	bloggpostningar om ämnet: <a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_1.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_2.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_3.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_4.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_5.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_6.html">här</a>,
-	<a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_7.html">här</a>
-	och <a
-	href="http://blog.tomtebo.org/programming/lagen.nu_tech_8.html">här</a>
-	(bland annat).
-	</p>
+    <p>I ett avslutande steg skapas sedan inehållsförteckningar över
+    samtliga dokument i tjänsten, samt sidor som listar nytillkomna
+    och uppdaterade dokument.</p>
 
-	
-	<h2>Frågor och svar:</h2>
-	<dl class="regular">
-	  <dt>Kan man ladda ner XML-versionerna av lagtexterna?</dt>
-	  <dd>Jajjemen, ladda ned <a href="/all-xml.zip">här</a>! Eller, om du 
-	  Enligt <a href="/1960:729#P9">§ 9 upphovsrättslagen</a>
-	  lyder dessa inte under upphovsrätt, så gör vad du vill med
-	  dem. Hör gärna av dig om du gör något kul.</dd>
+    <p>Webbsidorna görs sedan tillgängliga genom en vanlig Apache
+    2-server, som med hjälp av mod_rewrite översätter de enkla
+    URL:erna (som <samp>https://lagen.nu/1960:729</samp>) till de
+    faktiska filerna (som
+    <samp>sfs/generated/1960/729.html</samp>)</p>.
 
-	  <dt>Finns det någon dokumenterad DTD eller liknande för
-	  XML-filerna?</dt>
-	  <dd>Inte än. Det kanske kommer, om jag hittar någon riktig
-	  nytta med det. Annars väntar jag tills LawML eller LEXML är
-	  färdigt och ser om det går att använda.</dd>
+    <p>Koden är skriven i python, med vissa delar i XSLT. Den finns
+    tillgänglig via subversion från
+    <samp>http://svn.lagen.nu/svnroot</samp>, och mer information
+    finns på <a href="http://trac.lagen.nu/">utvecklingswikin</a>.</p>
 
-	  <dt>Är koden släppt under någon open source-licens?</dt>
-	  <dd>Inte just nu. Finns det något kul du vill göra som du
-	  skulle kunna om du hade koden (som du inte kan göra med
-	  XML-filerna)? Hör av dig, så kanske vi kan lösa det.</dd>
-
-	  <dt>Har lagen.nu några Web services?</dt>
-	  <dd>Nej, men det finns med i planeringen. Det vore schysst
-	  om det gick att göra ett XML-RPC- eller SOAP-anrop för att
-	  få tag i en viss paragraf, exempelvis.</dd>
-	</dl>
+    <p>Mer bakgrundsinformation finns i "lagen.nu"-kategorin på min<a
+    href="http://blog.tomtebo.org/tag/lagennu/">blogg</a>.</p>
       
     </div>
   </body>

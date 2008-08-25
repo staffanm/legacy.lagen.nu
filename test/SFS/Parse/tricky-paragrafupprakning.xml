@@ -1,0 +1,22 @@
+<Forfattning>
+  <Rubrik id="R1">Undantag från myndighetsförordningen</Rubrik>
+  <Paragraf id="P19" ordinal="19">
+    <Stycke id="P19S1">
+      <unicode>Följande bestämmelser i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/2007:515">myndighetsförordningen (2007:515)</LinkSubject>
+      <unicode> ska enbart tillämpas på myndigheten i administrativa ärenden:</unicode>
+    </Stycke><Stycke id="P19S2">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P20">20 §</LinkSubject>
+      <unicode> om föredragning,</unicode>
+    </Stycke><Stycke id="P19S3">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P21">21 §</LinkSubject>
+      <unicode> om myndighetens beslut,</unicode>
+    </Stycke><Stycke id="P19S4">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P27">27 §</LinkSubject>
+      <unicode> om myndighetens rätt att företräda staten vid domstol, och</unicode>
+    </Stycke><Stycke id="P19S5">
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P29">29 §</LinkSubject>
+      <unicode> om ärendeförteckning.</unicode>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

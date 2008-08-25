@@ -1541,12 +1541,21 @@ class SFSParser(LegalSource.Parser):
         # section is probably just a reference and not really the
         # start of a new section. One example of that is
         # /1991:1469#K1P7S1.
-        if Util.numcmp(paragrafnummer, self.current_section) >= 0:
-            self.trace['paragraf'].debug("isParagraf: section numbering compare succeded (%s > %s)" % (paragrafnummer, self.current_section))
-            return True
-        else:
+        if Util.numcmp(paragrafnummer, self.current_section) < 0:
             self.trace['paragraf'].debug("isParagraf: section numbering compare failed (%s <= %s)" % (paragrafnummer, self.current_section))
             return False
+
+        # a similar case exists in 1994:260 and 2007:972, but there
+        # the referenced section has a number larger than last section
+        # id. Try another way to detect this by looking at the first
+        # character in the paragraph - if it's in lower case, it's
+        # probably not a paragraph.
+        if p[len(paragrafnummer) + len(' § ')].islower():
+            self.trace['paragraf'].debug("isParagraf: section '%s' did not start with uppercase" % p[len(paragrafnummer) + len(' § '):30])
+            return False
+        return True
+                                         
+            
 
     def idOfParagraf(self, p):
         match = self.re_SectionId.match(p)
@@ -2137,7 +2146,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         elements = p._count_elements(b)
         if 'K' in elements and elements['K'] > 1 and  elements['P1'] < 2:
             # should be "skipfragments = ['A','K']", but this breaks test cases
-            skipfragments = ['A']
+            skipfragments = ['A','K']
         else:
             skipfragments = ['A']
         p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999', skipfragments)

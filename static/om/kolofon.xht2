@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Kolofon</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Kolofon</h1>
+
+    <p>Den här webbplatsen använder XHTML 1.0 Strict. Basen för den
+    CSS-baserade layouten kommer från <a
+    href="http://matthewjamestaylor.com/blog/perfect-3-column.htm">Matthew
+    James Taylor</a>. För de dynamiska delarna används
+    Javascript-biblioteket <a
+    href="http://jquery.com/">jquery</a>. Trädkontrollen för
+    innehållsförteckningar använder <a
+    href="http://bassistance.de/jquery-plugins/jquery-plugin-treeview/">treeview</a>. Fotografiet
+    i sidhuvudet är taget av <a
+    href="http://flickr.com/photos/running-for-home/2539523777/in/set-72157605916921266/">marina~</a>.</p>
+    <p>Koden som bygger sidorna finns <a href="teknik.html">beskriven
+    här</a>.</p>
+  </div>
+  </body>
+</html>

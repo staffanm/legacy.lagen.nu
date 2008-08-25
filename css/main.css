@@ -9,7 +9,11 @@
     body {
 	margin: 0;
         padding: 0;
-	font: 12pt Palatino;
+	font: 12pt 'Times New Roman', Times, serif;
+	/* font: 13pt Garamond, serif; */
+	/* font: 12pt 'Palatino Linotype', 'Book Antiqua', Palatino, serif; */
+	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
+	/* font: 12pt Arial, Helvetica, sans-serif; */
     }
     strong,b {
 	font-weight: bold;
@@ -19,8 +23,8 @@
    }
    tt, code, kbd, samp { font-family: monospace }
     
-    #kommentarer, #referenser {
-	font-size: 10pt;
+    #kommentarer  {
+	font-size: smaller;
     }
 
     .entry {
@@ -33,7 +37,8 @@
       background: #ddf;
       border: solid 1px darkblue;
       margin-bottom: 5px;
-      font-size: 10pt;
+      font-size: smaller;
+      //font-size: 10pt;
       margin-bottom: 12pt;
     }
     
@@ -207,13 +212,16 @@
     }
 
     h1 {
-	font: bold 20pt Palatino;
+	font-size: 20pt;
+        font-weight: bold;
     }
     h2 {
-	font: bold 14pt Palatino;
+	font-size: 14pt;
+        font-weight: bold;
     }
     h3 {
-	font: italic 12pt Palatino;
+	font-size: 12pt;
+        font-style: italic;
     }
     ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
 	list-style-type: none;
@@ -232,6 +240,6 @@
 
     .timestamp {
 	font-style: italic;
- font-size:small;
- margin:0;
+        font-size:small;
+        margin:0;
     }

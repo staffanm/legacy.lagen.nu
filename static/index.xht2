@@ -31,7 +31,7 @@
 	  För den som är extra intresserad finns en <a
 	  href="http://trac.lagen.nu/query?status=assigned&amp;status=new&amp;status=reopened&amp;group=status&amp;milestone=1.5">lista
 	  över kända buggar</a> och andra saker som måste fixas innan
-	  den här versionen kan lanseras. Om du kan programmera python
+	  den här versionen kan lanseras. Om du kan programmera python, XSLT
 	  eller javascript kan du <a href="http://trac.lagen.nu/">till
 	  och med hjälpa till</a>. <a
 	  href="http://trac.lagen.nu/browser/trunk">Källkoden</a> till
@@ -40,7 +40,7 @@
 	<p>
 	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
 	</p>
-	<h1>Några av de viktigaste lagarna:</h1>
+	<h>Några av de viktigaste lagarna:</h>
 	<dl class="tablestyle">
 	  <dt>Straffrätt</dt>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1951:649">Trafikbrottslag</a></dd>
@@ -180,7 +180,7 @@
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1981:774">Utsökningsbalk</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1987:672">Konkurslag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1990:746">Lag om betalningsföreläggande och handräckning</a></dd>
-	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1994:334">Skuldsaneringslag</a></dd>
+	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/2006:548">Skuldsaneringslag</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1996:764">Lag om företagsrekonstruktion</a></dd>
 	  <dd><a href="http://rinfo.lagrummet.se/publ/sfs/1999:116">Lag om skiljeförfarande</a></dd>
 

@@ -4,6 +4,7 @@
 
 import os, sys, subprocess, codecs, shutil, locale
 from tempfile import mktemp
+import filecmp
 import BeautifulSoup
 
 
@@ -304,17 +305,24 @@ def indent_node(elem, level=0):
             elem.tail = i
 
 def replace_if_different(newfile,oldfile):
-    import filecmp
-
     if not os.path.exists(oldfile):
-        # print "%s does not exist, replacing" % oldfile
         robustRename(newfile,oldfile)
     elif not filecmp.cmp(newfile,oldfile):
-        # print "%s and %s are different, replacing" % (newfile,oldfile)
         robustRename(newfile,oldfile)
     else:
-        # print "%s and %s are identical, removing the former" % (newfile,oldfile)
         os.unlink(newfile)
+
+def copy_if_different(src,dest):
+    if not os.path.exists(dest):
+        ensureDir(dest)
+        shutil.copy2(src,dest)
+    elif not filecmp.cmp(src,dest):
+        os.unlink(dest)
+        shutil.copy2(src,dest)
+    else:
+        pass
+    
+
 
 #print "indenting"
 #indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')

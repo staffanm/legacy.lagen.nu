@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xml:lang="sv">
+  <head>
+    <title>Kontaktinformation</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Kontakt</h1>
+
+    <p>Lagen.nu drivs av Staffan Malmgren, som kan nås på <a
+    href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a> eller,
+    om det brådskar, på telefon 0733 - 118 506, och som även är
+    personuppgiftsansvarig för den personuppgiftsbehandling (hantering
+    av rättsfallsinformation) som sker på lagen.nu.</p>
+
+    <p>Var vänlig observera att jag inte kan ge någon juridisk
+    vägledning, eller överhuvudtaget några svar på materiella
+    juridiska frågor. Om du har juridiska frågor kan du istället vända
+    dig till <a href="http://www.lawline.se/">Lawline</a>, som ger
+    gratis juridisk vägledning. Jag kan däremot (i mån av tid) hjälpa
+    till med frågor om rättsinformation.</p>
+
+    </div>
+  </body>
+</html>
