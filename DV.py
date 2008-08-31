@@ -497,13 +497,6 @@ class DVManager(LegalSource.Manager):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
 
-        Util.mkdir(os.path.dirname(outfile))
-        log.info(u'Transformerar %s > %s' % (infile,outfile))
-        Util.transform("xsl/dv.xsl",
-                       infile,
-                       outfile,
-                       {},
-                       validate=False)
         # get URI from basefile as fast as possible
         head = codecs.open(infile,encoding='utf-8').read(1024)
         m = self.re_xmlbase(head)
@@ -513,6 +506,18 @@ class DVManager(LegalSource.Manager):
             f.write(u"%s\t%s\n" % (m.group(1),basefile))
         else:
             log.warning("could not find xml:base in %s" % infile)
+
+        force = (self.config[__moduledir__]['generate_force'] == 'True')
+        if not force and self._outfile_is_newer([infile], outfile):
+            log.debug(u"%s: Överhoppad", basefile)
+            return
+        Util.mkdir(os.path.dirname(outfile))
+        log.info(u'Transformerar %s > %s' % (infile,outfile))
+        Util.transform("xsl/dv.xsl",
+                       infile,
+                       outfile,
+                       {},
+                       validate=False)
         
 
     def GenerateAll(self):

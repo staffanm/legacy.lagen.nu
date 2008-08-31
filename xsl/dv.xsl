@@ -3,7 +3,8 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dct="http://dublincore.org/documents/dcmi-terms/">
+		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
+		exclude-result-prefixes="xht2 dct">
 
   <xsl:import href="uri.xsl"/>
   <xsl:include href="base.xsl"/>

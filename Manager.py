@@ -185,12 +185,30 @@ class Manager:
     def _static_indexpages(self):
         # make the front page and other static pages
         log.info("Generating site global static pages")
+
+        # we need to copy the following three file to the base dir,
+        # temporarily, in order to avoid spurious xml:base elements 
+        # (http://norman.walsh.name/2005/04/01/xinclude#comment0005)
+        includes = [os.path.sep.join([self.baseDir,'site','generated','nyheter','site.xht2']),
+                    os.path.sep.join([self.baseDir,'sfs','generated','news','lagar.xht2']),
+                    os.path.sep.join([self.baseDir,'dv','generated','news','allmanna.xht2'])]
+        
+
+        for f in includes:
+            shutil.copy2(f,'static')
+
         for f in Util.listDirs(u'static', '.xht2'):
             basefile = f.replace('static'+os.path.sep,'')
             outfile = os.path.sep.join([self.baseDir, 'site', 'generated', basefile.replace(".xht2",".html")])
             log.info("Generating %s" % outfile)
             Util.ensureDir(outfile)
             Util.transform("xsl/static.xsl", f, outfile,validate=False,xinclude=True)
+
+        for f in includes:
+            Util.robust_remove(os.path.sep.join([self.baseDir,'static',os.path.split(f)[1]]))
+            Util.robust_remove(os.path.sep.join([self.baseDir,'site','generated',os.path.split(f)[1].replace(".xht2", ".html")]))
+
+
 
         # copy everything in img to basedir site generated img
         for dirname in ['css','js','img', 'img/treeview']:
@@ -330,8 +348,8 @@ class Manager:
     
     def DoAll(self,module='all'):
         start = time.time()
-        self._doAction('DownloadNew',module)
-        self._doAction('ParseAll',module)
+        #self._doAction('DownloadNew',module)
+        #self._doAction('ParseAll',module)
         self._doAction('RelateAll',module)
         self._doAction('GenerateAll',module)
         self.Indexpages(module)

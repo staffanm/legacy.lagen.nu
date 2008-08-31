@@ -328,7 +328,7 @@ class Manager(object):
 
     def News(self):
         """Creates one or more pages containing updated and new documents for the datasource"""
-        startdate = datetime.datetime.now() - datetime.timedelta(7)
+        startdate = datetime.datetime.now() - datetime.timedelta(30)
         logfilename = "%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir)
         if not os.path.exists(logfilename):
             log.warning("Could not find download log %s" % logfilename)
@@ -349,6 +349,7 @@ class Manager(object):
 
     def _do_for_all(self,dir,suffix,method):
         for f in Util.listDirs(dir, suffix, reverse=True):
+            #print "listdirs: %s" % f
             basefile = self._file_to_basefile(f)
             if not basefile:
                 continue
@@ -383,12 +384,16 @@ class Manager(object):
         return "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
 
     def _outfile_is_newer(self,infiles,outfile):
-        """check to see if the outfile is newer than all ingoing files"""
+        """check to see if the outfile is newer than all ingoing files
+        (which means there's no need to regenerate outfile)"""
         if not os.path.exists(outfile): return False
         outfile_mtime = os.stat(outfile).st_mtime
         for f in infiles:
+            # print "Testing whether %s is newer than %s" % (f, outfile)
             if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
+                # print "%s was newer than %s" % (f, outfile)
                 return False
+        # print "%s is newer than %r" % (outfile, infiles)
         return True
 
     def _htmlFileName(self,basefile):

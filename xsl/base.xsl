@@ -3,12 +3,15 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dct="http://dublincore.org/documents/dcmi-terms/">
+		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
+		exclude-result-prefixes="xht2 dct">
   <!-- fixme: change dc to dct -->
 
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
-  	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"  	    />
+  	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+	    indent="yes"
+	    />
   
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
@@ -34,8 +37,8 @@
       -->
       <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" href="/css/screen.css" media="screen" /> 
-      <link rel="stylesheet" href="/css/print.css" media="print" /> 
+      <link rel="stylesheet" href="/css/screen.css" media="screen" type="text/css"/> 
+      <link rel="stylesheet" href="/css/print.css" media="print" type="text/css"/> 
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
@@ -52,12 +55,14 @@
 	  <li><a href="/dom/index/">Domar</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
-	<form method="get" action="http://www.google.com/custom" style="display:inline;" autocomplete="off">
-	  <u>S</u>ök:
-	  <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
-	  <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
-	  <input type="hidden" name="domains" value="lagen.nu"/>
-	  <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
+	<form method="get" action="http://www.google.com/custom">
+	  <p>
+	    <span class="accelerator">S</span>ök:
+	    <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
+	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
+	    <input type="hidden" name="domains" value="lagen.nu"/>
+	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
+	  </p>
 	</form>
       </div>
       <div id="colmask" class="threecol">

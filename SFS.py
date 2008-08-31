@@ -240,7 +240,7 @@ class SFSDownloader(LegalSource.Downloader):
             except LinkNotFoundError:
                 log.info(u'Ingen nästa sida-länk, vi är nog klara')
                 done = True
-        self._setLastSFSnr(self)
+        self._setLastSFSnr()
 
     def _get_module_dir(self):
         return __moduledir__
@@ -335,6 +335,7 @@ class SFSDownloader(LegalSource.Downloader):
         """Laddar ner senaste konsoliderade versionen av
         grundförfattningen med angivet SFS-nr. Om en tidigare version
         finns på disk, arkiveras den."""
+        sfsnr = sfsnr.replace("/", ":")
         log.info(u'    Laddar ner %s' % sfsnr)
         # enc_sfsnr = sfsnr.replace(" ", "+")
         # Div specialhack för knepiga författningar
@@ -2025,7 +2026,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # 2: check to see if the outfile is newer than all ingoing
             # files. If it is (and force is False), don't parse
             force = (self.config[__moduledir__]['parse_force'] == 'True')
-            if not force and self._outfile_is_newer(files,filename):
+            filelist = []
+            [filelist.extend(files[x]) for x in files.keys()]
+            if not force and self._outfile_is_newer(filelist,filename):
                 log.info(u"%s: Överhoppad", basefile)
                 return
 
@@ -2057,10 +2060,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.info(u'%s: Upphävd', basefile)
+            log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
-            log.info(u'%s: Ingen SFS', basefile)
+            log.debug(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
                      
     def ParseAll(self):
@@ -2070,6 +2073,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
+        force = (self.config[__moduledir__]['generate_force'] == 'True')
+        if not force and self._outfile_is_newer([infile],outfile):
+            log.debug(u"%s: Överhoppad", basefile)
+            return
         Util.mkdir(os.path.dirname(outfile))
         start = time()
         Util.transform("xsl/sfs.xsl",
@@ -2262,6 +2269,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             change = m.group(1)
             bases = m.group(2).split(", ")
             basefile = "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir, SFSnrToFilename(bases[0]))
+            print "opening %s" % basefile
             if not os.path.exists(basefile):
                 # om inte den parseade filen finns kan det bero på att
                 # författningen är upphävd _eller_ att det blev något

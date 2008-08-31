@@ -216,7 +216,7 @@ def listDirs(d,suffix=None,reverse=False):
     while directories:
         d = directories.pop()
         for f in sorted(os.listdir(d),cmp=numcmp,reverse=reverse):
-            
+            #print "f is %s" % f
             f = "%s%s%s" % (d,os.path.sep,f)
             if os.path.isdir(f):
                 directories.insert(0,f)
@@ -224,6 +224,7 @@ def listDirs(d,suffix=None,reverse=False):
                 if suffix and not f.endswith(suffix):
                     continue
                 else:
+                    #print "yielding %s" % f
                     yield f
 
 def loadSoup(filename,encoding='iso-8859-1'):
@@ -305,6 +306,7 @@ def indent_node(elem, level=0):
             elem.tail = i
 
 def replace_if_different(newfile,oldfile):
+    assert os.path.exists(newfile)
     if not os.path.exists(oldfile):
         robustRename(newfile,oldfile)
     elif not filecmp.cmp(newfile,oldfile):

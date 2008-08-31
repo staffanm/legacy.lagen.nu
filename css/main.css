@@ -1,4 +1,9 @@
     /* Typografi, ramar, färger etc */
+    a:link    {color: #665312; text-decoration: none; }
+    a:visited {color: #b29220; text-decoration: none; }
+    a:hover   {color: #665312; text-decoration: underline; }
+    a:active  {color: #ffc600; text-decoration: underline; }
+    
     .positioned {
 	position: absolute;
         color: #f00;
@@ -9,9 +14,9 @@
     body {
 	margin: 0;
         padding: 0;
-	font: 12pt 'Times New Roman', Times, serif;
-	/* font: 13pt Garamond, serif; */
-	/* font: 12pt 'Palatino Linotype', 'Book Antiqua', Palatino, serif; */
+	font: 12pt 'Times New Roman', Times, serif; 
+  	/* font: 13pt Garamond, serif; */
+	/* font: 12pt 'Palatino Linotype', 'Book Antiqua', Palatino, serif; */ 
 	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
 	/* font: 12pt Arial, Helvetica, sans-serif; */
     }
@@ -34,8 +39,9 @@
     .sidoruta {
       padding: 3pt;
       margin-top: 0;
-      background: #ddf;
-      border: solid 1px darkblue;
+      /* background: #ddf; */
+      background: #f4ecd2;
+      border: solid 1px #876e18;
       margin-bottom: 5px;
       font-size: smaller;
       //font-size: 10pt;
@@ -149,7 +155,7 @@
  
     #vinjett {
  	height: 120px;
-        background-image: url('/img/banner.jpg');
+        background-image: url('/img/banner2.jpg');
 	position:relative;
         font-size: 14pt;
 	margin-bottom: 10pt;
@@ -158,8 +164,9 @@
 	text-decoration: none;
          font-style: italic;
 	 color: #fff;
-         font-size: 24pt;
-	 margin: 6pt;
+         font-size: 28pt;
+	 padding: 30pt;
+         
 	}
     #navigation {
         position: absolute;
@@ -191,6 +198,10 @@
  
         bottom: 0;
     } 
+
+    .accelerator {
+	text-decoration: underline;
+    }
 
     #sidfot {
 	border-top: solid thin #aaa;

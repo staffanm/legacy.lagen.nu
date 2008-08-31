@@ -84,7 +84,6 @@
 <http://rinfo.lagrummet.se/publ/sfs/1994:448> dct:alternate "PbrL" .
 <http://rinfo.lagrummet.se/publ/sfs/1994:847> dct:alternate "BVL" .
 <http://rinfo.lagrummet.se/publ/sfs/1995:1322> dct:alternate "VerksF" .
-<http://rinfo.lagrummet.se/publ/sfs/1995:450> dct:alternate "MFL" .
 <http://rinfo.lagrummet.se/publ/sfs/1997:192> dct:alternate "LIF" .
 <http://rinfo.lagrummet.se/publ/sfs/1997:857> dct:alternate "EL" .
 <http://rinfo.lagrummet.se/publ/sfs/1998:204> dct:alternate "PUL" .
@@ -104,3 +103,4 @@
 <http://rinfo.lagrummet.se/publ/sfs/2005:551> rdfs:label "aktiebolagslagen"; dct:alternate "ABL" .
 <http://rinfo.lagrummet.se/publ/sfs/2005:716> dct:alternate "UtlL" .
 <http://rinfo.lagrummet.se/publ/sfs/2006:304> rdfs:label "rättsprövningslagen"; dct:alternate "RpL" ; dct:alternate "RättsprL" .
+<http://rinfo.lagrummet.se/publ/sfs/2008:486> dct:alternate "MFL" .

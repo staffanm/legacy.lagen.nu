@@ -3,7 +3,8 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dct="http://dublincore.org/documents/dcmi-terms/">
+		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
+		exclude-result-prefixes="xht2 dct">
 
   <xsl:import href="uri.xsl"/>
   <xsl:include href="base.xsl"/>
@@ -16,23 +17,20 @@
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
 
-  <!--
-  <xsl:template match="/">
-    <div class="middle">
-      <xsl:apply-templates/>
-    </div>  
-  </xsl:template>
-  -->
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
 	<h1><xsl:value-of select="."/></h1>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
-	<h3 id="{@id}"><xsl:value-of select="."/></h3>
+	<h3><xsl:for-each select="@*">
+	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	  </xsl:for-each><xsl:value-of select="."/></h3>
       </xsl:when>
       <xsl:otherwise>
-	<h3 id="{@id}"><xsl:value-of select="."/></h3>
+	<h2><xsl:for-each select="@*">
+	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	  </xsl:for-each><xsl:value-of select="."/></h2>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

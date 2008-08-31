@@ -5,7 +5,8 @@
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
-		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#">
+		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+		exclude-result-prefixes="xht2 dct rinfo rdf">
 
   <xsl:import href="uri.xsl"/>
   <xsl:import href="tune-width.xsl"/>
@@ -24,22 +25,14 @@
     | Lagen.nu
   </xsl:template>
 
-  <!-- FIXME: anpassa till xht2-datat -->
-  <xsl:template name="metarobots">
-    <xsl:if test="preamble/revoked">
-      <xsl:if test="number(translate($today,'-','')) > number(translate(/preamble/revoked,'-',''))">
-	<meta name="robots" content="noindex,follow"/>
-      </xsl:if>
-    </xsl:if>
-  </xsl:template>
+  <xsl:template name="metarobots"/>
 
-  <!-- FIXME: anpassa till xht2-datat -->
   <xsl:template name="linkalternate">
     <link rel="alternate" type="text/plain" title="Plain text">
-      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.txt</xsl:attribute>
+      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']"/>.txt</xsl:attribute>
     </link>
-    <link rel="alternate" type="application/xml" title="XML">
-      <xsl:attribute name="href">/<xsl:value-of select="/law/preamble/sfsid"/>.xml</xsl:attribute>
+    <link rel="alternate" type="application/xml" title="XHTML2">
+      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']"/>.xht2</xsl:attribute>
     </link>
   </xsl:template>
 
@@ -53,10 +46,14 @@
 	<h1><xsl:value-of select="."/></h1>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
-	<h3 id="{@id}"><xsl:value-of select="."/></h3>
+	<h3><xsl:for-each select="@*">
+	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	  </xsl:for-each><xsl:value-of select="."/></h3>
       </xsl:when>
       <xsl:otherwise>
-	<h2 id="{@id}"><xsl:value-of select="."/></h2>
+	<h2><xsl:for-each select="@*">
+	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	  </xsl:for-each><xsl:value-of select="."/></h2>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -127,21 +124,18 @@
   <xsl:template name="rattsfall">
     <xsl:param name="rattsfall"/>
       <xsl:for-each select="$rattsfall">
+	<xsl:sort select="@rdf:about"/>
 	<xsl:variable name="tuned-width">
 	  <xsl:call-template name="tune-width">
 	    <xsl:with-param name="txt" select="dct:description"/>
-	    <xsl:with-param name="width" select="95"/>
-	    <xsl:with-param name="def" select="95"/>
+	    <xsl:with-param name="width" select="90"/>
+	    <xsl:with-param name="def" select="90"/>
 	  </xsl:call-template>
 	</xsl:variable>
-	<xsl:variable name="localurl">
-	  <xsl:call-template name="localurl">
-	    <xsl:with-param name="uri" select="@rdf:about"/>
-	  </xsl:call-template>
-	</xsl:variable>
+	<xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
 	<a href="{$localurl}"><b><xsl:value-of select="dct:identifier"/></b></a>:
 	<xsl:choose>
-	  <xsl:when test="string-length(dct:description) > 95">
+	  <xsl:when test="string-length(dct:description) > 90">
 	    <xsl:value-of select="normalize-space(substring(dct:description, 1, $tuned-width - 1))" />...
 	  </xsl:when>
 	  <xsl:otherwise>
@@ -173,7 +167,33 @@
     <xsl:apply-templates/>
   </xsl:template>
 
-  
+
+  <!-- FIXME: in order to be valid xhtml1, we must remove unordered
+       lists from within paragraphs, and place them after the
+       paragraph. This turns out to be tricky in XSLT, the following
+       is a non-working attempt -->
+  <!--
+  <xsl:template match="xht2:p">
+    <p>
+      <xsl:if test="@id">
+	<xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
+      </xsl:if>
+      <xsl:for-each select="text()|*">
+	<xsl:if test="not(name()='ul')">
+	  <xsl:element name="XX{name()}">
+	    <xsl:apply-templates select="text()|*"/>
+	  </xsl:element>
+	</xsl:if>
+	<xsl:if test="not(name(node()[1]))">
+	  TXT:<xsl:value-of select="."/>END
+	</xsl:if>
+      </xsl:for-each>
+    </p>
+    <xsl:if test="ul">
+      <xsl:apply-templates select="ul"/>
+    </xsl:if>
+  </xsl:template>
+  -->
   
   <!-- defaultregler: översätt allt från xht2 till xht1-namespace, men inga ändringar i övrigt
   -->
