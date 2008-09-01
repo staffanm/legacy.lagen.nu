@@ -4,15 +4,26 @@
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
-		exclude-result-prefixes="xht2 dct">
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+		xmlns:rinfoex="http://lagen.nu/terms#"
+		exclude-result-prefixes="xht2">
   <!-- fixme: change dc to dct -->
 
+  <!--
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
 	    indent="yes"
 	    />
-  
+  -->
+  <xsl:output method="xml"
+  	    doctype-public="-//W3C//DTD XHTML+RDFa 1.0 Strict//EN"
+  	    doctype-system="http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd"
+	    indent="yes"
+	    />
+
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
     <xsl:apply-templates/>
@@ -20,7 +31,7 @@
 
   <xsl:template match="xht2:html">
     <!--<xsl:message>base/root</xsl:message>-->
-    <html><xsl:apply-templates/></html>
+    <html xml:lang="sv"><xsl:apply-templates/></html>
   </xsl:template>
     
   <xsl:template match="xht2:head">
@@ -47,6 +58,12 @@
   <xsl:template match="xht2:body">
     <!--<xsl:message>base/body</xsl:message>-->
     <body>
+      <xsl:if test="//xht2:html/@about">
+	<xsl:attribute name="about"><xsl:value-of select="//xht2:html/@about"/></xsl:attribute>
+      </xsl:if>
+
+      <xsl:attribute name="typeof"><xsl:value-of select="@typeof"/></xsl:attribute>
+
       <div id="vinjett">
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
@@ -57,8 +74,7 @@
 	</ul>
 	<form method="get" action="http://www.google.com/custom">
 	  <p>
-	    <span class="accelerator">S</span>ök:
-	    <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
+	    <span class="accelerator">S</span>ök:<input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
 	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
 	    <input type="hidden" name="domains" value="lagen.nu"/>
 	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>

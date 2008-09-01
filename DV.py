@@ -525,6 +525,10 @@ class DVManager(LegalSource.Manager):
         parsed_dir = os.path.sep.join([self.baseDir, u'dv', 'parsed'])
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
         
+    def ParseGen(self,basefile):
+        self.Parse(basefile)
+        self.Generate(basefile)
+
     def DownloadAll(self):
         sd = DVDownloader(self.config)
         sd.DownloadAll()

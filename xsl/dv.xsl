@@ -3,8 +3,11 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
-		exclude-result-prefixes="xht2 dct">
+		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+		xmlns:rinfoex="http://lagen.nu/terms#"
+		exclude-result-prefixes="xht2 rdf">
 
   <xsl:import href="uri.xsl"/>
   <xsl:include href="base.xsl"/>
@@ -30,8 +33,8 @@
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
     <!-- plocka ut det gottaste från metadatat -->
-    <h1><xsl:value-of select="xht2:dd[@property='dct:identifier']"/></h1>
-    <p><b><xsl:value-of select="xht2:dd[@property='dct:description']"/></b></p>
+    <h1 property="dct:identifier"><xsl:value-of select="xht2:dd[@property='dct:identifier']"/></h1>
+    <p property="dct:description" class="rattsfallsrubrik"><xsl:value-of select="xht2:dd[@property='dct:description']"/></p>
   </xsl:template>
 
   <!-- defaultregel: kopierar alla element från xht2 till
@@ -55,13 +58,13 @@
     <div class="sidoruta">
       <dl>
 	<dt>Domstol</dt>
-	<dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
+	<dd rel="dct:creator" resource="{xht2:dd[@rel='dct:creator']/@href}"><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
 	<dt>Avgörandedatum</dt>
-	<dd><xsl:value-of select="xht2:dd[@property='rinfo:avgorandedatum']"/></dd>
+	<dd property="rinfo:avgorandedatum"><xsl:value-of select="xht2:dd[@property='rinfo:avgorandedatum']"/></dd>
 	<dt>Målnummer</dt>
-	<dd><xsl:value-of select="xht2:dd[@property='rinfo:malnummer']"/></dd>
+	<dd property="rinfo:malnummer"><xsl:value-of select="xht2:dd[@property='rinfo:malnummer']"/></dd>
 	<!-- <xsl:if test="xht2:a[@rel='rinfo:lagrum']">  -->
-	<dt>Lagrum</dt>
+	<dt >Lagrum</dt>
 	<xsl:for-each select="xht2:dd[xht2:a[@rel='rinfo:lagrum']]">
 	  <dd><xsl:apply-templates select="."/></dd>
 	</xsl:for-each>
@@ -77,19 +80,19 @@
 	<xsl:if test="xht2:dd[@property='dct:relation']">
 	  <dt>Litteratur</dt>
 	  <xsl:for-each select="xht2:dd[@property='dct:relation']">
-	    <dd><xsl:value-of select="."/></dd>
+	    <dd property="dct:relation"><xsl:value-of select="."/></dd>
 	  </xsl:for-each>
 	</xsl:if>
 	
 	<xsl:if test="xht2:dd[@property='dct:subject']">
 	  <dt>Sökord</dt>
 	  <xsl:for-each select="xht2:dd[@property='dct:subject']">
-	    <dd><xsl:value-of select="."/></dd>
+	    <dd property="dct:subject"><xsl:value-of select="."/></dd>
 	  </xsl:for-each>
 	</xsl:if>
 	
 	<dt>Källa</dt>
-	<dd><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
+	<dd property="dct:publisher" resource="http://rdf.kb.se/ap/20080315191400"><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
       </dl>
     </div>
   </xsl:template>

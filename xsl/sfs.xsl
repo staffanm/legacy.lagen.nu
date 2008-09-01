@@ -6,7 +6,8 @@
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
-		exclude-result-prefixes="xht2 dct rinfo rdf">
+		xmlns:rinfoex="http://lagen.nu/terms#"
+		exclude-result-prefixes="xht2 rdf">
 
   <xsl:import href="uri.xsl"/>
   <xsl:import href="tune-width.xsl"/>
@@ -19,31 +20,25 @@
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
     <xsl:value-of select="//xht2:title"/>
-    <xsl:if test="//xht2:meta[@property='dct:alternate']/@content">
-      (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>)
-    </xsl:if>
-    | Lagen.nu
-  </xsl:template>
+    <xsl:if test="//xht2:meta[@property='dct:alternate']/@content"> (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>) </xsl:if> | Lagen.nu</xsl:template>
 
   <xsl:template name="metarobots"/>
 
   <xsl:template name="linkalternate">
     <link rel="alternate" type="text/plain" title="Plain text">
-      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']"/>.txt</xsl:attribute>
+      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']/@content"/>.txt</xsl:attribute>
     </link>
     <link rel="alternate" type="application/xml" title="XHTML2">
-      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']"/>.xht2</xsl:attribute>
+      <xsl:attribute name="href">/<xsl:value-of select="//xht2:meta[@property='rinfo:fsNummer']/@content"/>.xht2</xsl:attribute>
     </link>
   </xsl:template>
 
-  <xsl:template name="headmetadata">
-      <xsl:comment>all övrig metadata</xsl:comment>
-  </xsl:template>
+  <xsl:template name="headmetadata"/>
 
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
-	<h1><xsl:value-of select="."/></h1>
+	<h1 property="dct:title"><xsl:value-of select="."/></h1>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
 	<h3><xsl:for-each select="@*">
@@ -63,7 +58,7 @@
   </xsl:template>
 
   <xsl:template match="xht2:section">
-    <div class="{@class}" id="{@id}"><xsl:apply-templates/></div>
+    <div class="{@class}" id="{@id}" about="{//xht2:html/@about}#{@id}"><xsl:apply-templates/></div>
   </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
@@ -71,7 +66,7 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
-    <div id="{@id}">
+    <div id="{@id}" about="{//xht2:html/@about}#{@id}">
       <xsl:apply-templates/>
     </div>
 
@@ -155,8 +150,9 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@role='secondary']/xht2:section">
-    <!-- titel eller sfsnummer, om ingen titel finns -->
-    <h2><xsl:choose>
+    <div class="andring" id="{concat(substring-before(@id,':'),'-',substring-after(@id,':'))}" about="{@about}">
+      <!-- titel eller sfsnummer, om ingen titel finns -->
+      <h2><xsl:choose>
 	<xsl:when test="xht2:dl/xht2:dd[@property='dct:title']">
 	  <xsl:value-of select="xht2:dl/xht2:dd[@property='dct:title']"/>
 	</xsl:when>
@@ -164,9 +160,13 @@
 	  <xsl:value-of select="xht2:dl/xht2:dd[@property='rinfo:fsNummer']"/>
 	</xsl:otherwise>
       </xsl:choose></h2>
-    <xsl:apply-templates/>
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 
+  <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
+    <p id="{@id}" about="{//xht2:html/@about}#{@id}"><xsl:apply-templates/></p>
+  </xsl:template>
 
   <!-- FIXME: in order to be valid xhtml1, we must remove unordered
        lists from within paragraphs, and place them after the
@@ -213,15 +213,15 @@
          de intressanta bitarna -->
     <dl id="refs-dokument" class="sidoruta">
       <dt>Departement</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
+      <dd rel="dct:creator" resource="{xht2:dd[@rel='dct:creator']/@href}"><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
       <dt>Utfärdad</dt>
-      <dd><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
+      <dd property="rinfo:utfardandedatum" datatype="xsd:date"><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
       <dt>Ändring införd</dt>
-      <dd><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
+      <dd rel="rinfo:konsolideringsunderlag" href="{xht2:dd[@rel='rinfo:konsolideringsunderlag']/@href}"><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
       <dt>Källa</dt>
-      <dd><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
+      <dd rel="dct:publisher" resource="http://rdf.kb.se/ap/20061121145747"><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
       <dt>Senast hämtad</dt>
-      <dd><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+      <dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
     </dl>
   </xsl:template>
 
@@ -282,10 +282,13 @@
 
   <!-- KOMMENTARER MODE -->
   <xsl:template match="xht2:section[@role='main']" mode="kommentarer">
-    <h2>Innehållsförteckning</h2>
-    <ul id="toc">
-      <xsl:apply-templates mode="kommentarer"/>
-    </ul>
+    <xsl:variable name="toc"><xsl:apply-templates mode="kommentarer"/></xsl:variable>
+    <xsl:if test="normalize-space($toc)">
+      <h2>Innehållsförteckning</h2>
+      <ul id="toc">
+	<xsl:apply-templates mode="kommentarer"/>	
+      </ul>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="xht2:section[@typeof='rinfo:Avdelning']" mode="kommentarer">

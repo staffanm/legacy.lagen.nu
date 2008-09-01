@@ -1,8 +1,25 @@
+
+/*
+color scheme, based on a sepia palette made using greyscale, then colorize using
+hue = 21, saturation = 50
+
+#78563a: v.light (background)
+#eae3dd: light (some outlines)
+#6b482c: real dark (outlines, visited links)
+#735e4c: medium dark (unvisited links)
+#bba694: midtone (active links)
+*/
     /* Typografi, ramar, färger etc */
-    a:link    {color: #665312; text-decoration: none; }
-    a:visited {color: #b29220; text-decoration: none; }
+    /*
+    a:link    {color: #b29220; text-decoration: none; }
+    a:visited {color: #665312; text-decoration: none; }
     a:hover   {color: #665312; text-decoration: underline; }
     a:active  {color: #ffc600; text-decoration: underline; }
+    */
+    a:link    { color: #806855; text-decoration: none; }
+    a:visited { color: #6b482c; text-decoration: none; }
+    a:hover   { color: #735e4c; text-decoration: underline; }
+    a:active  { color: #bba694; text-decoration: underline; }
     
     .positioned {
 	position: absolute;
@@ -33,15 +50,15 @@
     }
 
     .entry {
-	border: solid 1px #ddd;
+	border: solid 1px #eae3dd;
         margin-bottom: 12pt;
     }
     .sidoruta {
       padding: 3pt;
       margin-top: 0;
-      /* background: #ddf; */
-      background: #f4ecd2;
-      border: solid 1px #876e18;
+      /* background: #e7dfd8;*/
+      background: #f9f6f5;
+      border: solid 1px #6b482c;
       margin-bottom: 5px;
       font-size: smaller;
       //font-size: 10pt;
@@ -53,10 +70,8 @@
       padding-bottom: 18px;
     }
     
-
-
     td {
-	border: solid 1px #ddd;
+	border: solid 1px #eae3dd;
         vertical-align: top;
     }
 
@@ -155,7 +170,7 @@
  
     #vinjett {
  	height: 120px;
-        background-image: url('/img/banner2.jpg');
+        background-image: url('/img/banner3.jpg');
 	position:relative;
         font-size: 14pt;
 	margin-bottom: 10pt;
@@ -204,7 +219,7 @@
     }
 
     #sidfot {
-	border-top: solid thin #aaa;
+	border-top: solid thin #6b482c;
         text-align: center;
     }
 
@@ -242,7 +257,7 @@
 	padding-left: 1em;
 	padding-bottom: 0.5em;
     }
-    .paragrafbeteckning {
+    .paragrafbeteckning, .rattsfallsrubrik {
 	font-weight: bold;
     }
     .andringsnot, .upphavd {

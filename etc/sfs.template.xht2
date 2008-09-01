@@ -23,7 +23,6 @@ from datetime import datetime
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>
-      <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#KonsolideradGrundforfattning"/>
       <link rel="rinfo:forfattningsamling" href="http://rinfo.lagrummet.se/ref/sfs"/>
       <meta property="rinfo:fsNummer" content="${meta[u'SFS nr']}"/>
       <py:if test="u'Senast hämtad' in meta">
@@ -59,7 +58,7 @@ from datetime import datetime
 	</py:for>
       </py:if>
     </head>
-    <body>
+    <body typeof="rinfo:KonsolideradGrundforfattning">
       <!--! macro definitions -->
       <div py:def="render_rubrik(rubrik)" py:strip="" py:choose="">
 	<h py:when="rubrik.type == 'underrubrik'" py:content="rubrik" id="${rubrik.id}" class="underrubrik">Underrubrik</h>
@@ -124,7 +123,8 @@ from datetime import datetime
             
       <p py:def="render_stycke(stycke,paragrafnummer=None)"
 	 id="${stycke.id}"
-	 about="#${stycke.id}">
+	 about="#${stycke.id}"
+	 typeof="rinfo:Stycke">
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
         <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
       </p>

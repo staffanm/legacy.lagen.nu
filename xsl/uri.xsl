@@ -18,13 +18,13 @@
     </xsl:variable>
     <xsl:choose>
       <xsl:when test="contains($uri, '#L')">
-	<span class="andringsnot"><xsl:apply-templates/></span>
+	<span class="andringsnot" rel="dct:references" resource="{$uri}"><xsl:apply-templates/></span>
       </xsl:when>
       <xsl:when test="$localurl = ''">
 	<xsl:value-of select="."/>
       </xsl:when>
       <xsl:otherwise>
-	<a href="{$localurl}"><xsl:apply-templates/></a>
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:apply-templates/></a>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

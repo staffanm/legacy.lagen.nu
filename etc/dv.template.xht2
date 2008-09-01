@@ -21,7 +21,6 @@
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>
-      <link rel="rdf:type" href="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#Rattsfallsreferat"/>
       <!-- !publisher = auktoritetspost för DV -->
       <!--  <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/> -->
       <!-- !creator = auktoritetspost för aktuell domstol -->
@@ -36,8 +35,7 @@
       </py:for>
     </p>
     
-
-    <body>
+    <body typeof="rinfo:Rattsfallsreferat">
       ${render_metadata(meta)}
       <section role="main">
 	<py:for each="part in body" py:choose="">
