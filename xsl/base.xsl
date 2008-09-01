@@ -9,21 +9,24 @@
 		xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
 		xmlns:rinfoex="http://lagen.nu/terms#"
 		exclude-result-prefixes="xht2">
-  <!-- fixme: change dc to dct -->
 
-  <!--
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
 	    indent="yes"
 	    />
-  -->
+  <!--
+      we'd like to use the following doctype, since we're not valid
+      w/o it, but FF brings up blank pages when using it - wonder how
+      eurlex.nu does it? -->
+  <!--
   <xsl:output method="xml"
-  	    doctype-public="-//W3C//DTD XHTML+RDFa 1.0 Strict//EN"
-  	    doctype-system="http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd"
-	    indent="yes"
+	      doctype-public="-//W3C//DTD XHTML+RDFa 1.0//EN"
+	      doctype-system="http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd"
+	      indent="yes"
 	    />
-
+  -->
+  
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
     <xsl:apply-templates/>

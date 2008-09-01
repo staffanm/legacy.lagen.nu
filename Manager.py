@@ -348,8 +348,8 @@ class Manager:
     
     def DoAll(self,module='all'):
         start = time.time()
-        #self._doAction('DownloadNew',module)
-        #self._doAction('ParseAll',module)
+        self._doAction('DownloadNew',module)
+        self._doAction('ParseAll',module)
         self._doAction('RelateAll',module)
         self._doAction('GenerateAll',module)
         self.Indexpages(module)

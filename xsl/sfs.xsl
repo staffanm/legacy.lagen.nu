@@ -58,7 +58,16 @@
   </xsl:template>
 
   <xsl:template match="xht2:section">
-    <div class="{@class}" id="{@id}" about="{//xht2:html/@about}#{@id}"><xsl:apply-templates/></div>
+    <div>
+      <xsl:if test="@id">
+	<xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
+	<xsl:attribute name="about"><xsl:value-of select="//xht2:html/@about"/>#<xsl:value-of select="@id"/></xsl:attribute>
+      </xsl:if>
+      <xsl:if test="@class">
+	<xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute>
+      </xsl:if>
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
