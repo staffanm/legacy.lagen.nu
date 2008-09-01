@@ -24,7 +24,26 @@
 	<xsl:value-of select="."/>
       </xsl:when>
       <xsl:otherwise>
-	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:apply-templates/></a>
+	<xsl:variable name="rawtitle">
+	  <xsl:value-of select="normalize-space(//*[@id=substring-after($uri,'#')])"/>
+	</xsl:variable>
+	<xsl:variable name="tuned-width">
+	  <xsl:call-template name="tune-width">
+	    <xsl:with-param name="txt" select="$rawtitle"/>
+	    <xsl:with-param name="width" select="150"/>
+	    <xsl:with-param name="def" select="150"/>
+	  </xsl:call-template>
+	</xsl:variable>
+	<xsl:variable name="title">
+	  <xsl:choose>
+	    <xsl:when test="string-length($rawtitle) > 150">
+	      <xsl:value-of select="substring($rawtitle, 1, $tuned-width - 1)" />...</xsl:when>
+	    <xsl:otherwise>
+	      <xsl:value-of select="$rawtitle"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:variable>
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -42,8 +61,7 @@
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
       </xsl:when>
-      <xsl:when test="contains($uri,'/ext/celex')">
-	<!-- http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML-->http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
+      <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
       </xsl:when>
     </xsl:choose>            
   </xsl:template>
