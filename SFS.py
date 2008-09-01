@@ -2029,7 +2029,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             filelist = []
             [filelist.extend(files[x]) for x in files.keys()]
             if not force and self._outfile_is_newer(filelist,filename):
-                log.info(u"%s: Överhoppad", basefile)
+                log.debug(u"%s: Överhoppad", basefile)
                 return
 
             # 3: check to see if the Författning has been revoked using

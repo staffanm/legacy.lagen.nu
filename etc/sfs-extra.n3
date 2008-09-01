@@ -104,3 +104,4 @@
 <http://rinfo.lagrummet.se/publ/sfs/2005:716> dct:alternate "UtlL" .
 <http://rinfo.lagrummet.se/publ/sfs/2006:304> rdfs:label "rättsprövningslagen"; dct:alternate "RpL" ; dct:alternate "RättsprL" .
 <http://rinfo.lagrummet.se/publ/sfs/2008:486> dct:alternate "MFL" .
+<http://rinfo.lagrummet.se/publ/sfs/1976:633> rdfs:label "kungörandelagen" .
