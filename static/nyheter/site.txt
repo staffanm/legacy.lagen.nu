@@ -1,11 +1,19 @@
-2008-08-24 00:59:04 På väg mot lagen.nu 1.5
+2008-09-03 00:59:04 På väg mot lagen.nu 1.5
 
 <p>Sedan årsskiftet har jag jobbat med en ny version av lagen.nu, som
 nu går nu att betatesta på <a
-href="http://ferenda.lagen.nu/">ferenda.lagen.nu</a>.</p>
+href="http://ferenda.lagen.nu/">ferenda.lagen.nu</a>. Utåt sett är de
+stora nyheterna en ny grafisk design och att rättsfallen nu finns med
+i fulltext. Läs mer om <a href="/om/nytt.html">vad som är nytt</a>.</p>
 
-<p>Läs mer om <a href="/om/nytt.html">vad som är nytt</a>, och meddela
-gärna problem och brister till <a
+<p>Bakom kulisserna har i stort sett all kod som skapar sidorna
+skrivits om. Detta har resulterat i att systemet nu är bättre att
+känna igen vad som är vad i en lagtext -- rubriker, paragrafer,
+tabeller, hänvisningar med mera ska nu identifieras mycket säkrare än
+tidigare. Men det finns säkerligen massor av fel kvar! Därför finns
+det ett litet formulär för felanmälan på alla sidor. Använd gärna det
+om du stöter på något som inte ser rätt ut. Eller så kan du meddela
+problem och brister via epost till <a
 href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>.</p>
 
 2008-02-23 13:26:49 Tack för hjälpen!

@@ -2269,7 +2269,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             change = m.group(1)
             bases = m.group(2).split(", ")
             basefile = "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir, SFSnrToFilename(bases[0]))
-            print "opening %s" % basefile
+            # print "opening %s" % basefile
             if not os.path.exists(basefile):
                 # om inte den parseade filen finns kan det bero på att
                 # författningen är upphävd _eller_ att det blev något

@@ -5,7 +5,7 @@
 		xmlns:str="http://exslt.org/strings"
 		extension-element-prefixes="str">
 
-
+  <xsl:import href="tune-width.xsl"/>
   <!-- this is a standalone template for formatting links that use
        rinfo-standard URI:s (mapping those abstract uris to concrete
        uris used by lagen.nu -->

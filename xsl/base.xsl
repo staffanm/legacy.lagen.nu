@@ -9,7 +9,8 @@
 		xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
 		xmlns:rinfoex="http://lagen.nu/terms#"
 		exclude-result-prefixes="xht2">
-
+  <xsl:param name="infile">unknown-infile</xsl:param>
+  <xsl:param name="outfile">unknown-outfile</xsl:param>
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
@@ -92,6 +93,30 @@
 	    </div>
 	    <div id="kommentarer">
 	      <xsl:apply-templates mode="kommentarer"/>
+	      <p class="bugreport-link">Ser sidan konstig ut? Felanmäl gärna!</p>
+	      <form class="bugreport-form" action="http://trac.lagen.nu/newticket" method="post">
+		<p>
+		  <input type="hidden" name="__FORM_TOKEN" value="a994d2f7370a9d57ed52c47c" />
+		  <input type="hidden" name="field_summary" value="Felanmälan {$outfile}" />
+		  
+		  Din epostadress (inte obligatoriskt, men bra om jag ska
+		  kunna meddela dig att felet åtgärdats):<br/>
+		  
+		  <input type="text" id="author" name="author" value="" /><br/>
+		  Beskrivning av problemet: <br/>
+		  <textarea name="field_description" rows="8"></textarea><br/>
+		  
+		  Tips för en bra felanmälan: Skriv <i>var</i> på sidan
+		  problemet är, beskriv det <i>förväntade</i> utseendet, och
+		  det <i>faktiska</i> utseendet.<br/>
+		  
+		  <input type="hidden" name="field_type" value="defect"/>
+		  <input type="hidden" name="field_priority" value="major"/>
+		  <input type="hidden" name="field_status" value="new" />
+		  <input type="submit" name="submit" value="Felanmäl" />
+		</p>
+	      </form>
+	      
 	    </div>
 	    <div id="referenser">
 	      <xsl:apply-templates mode="refs"/>

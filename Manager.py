@@ -195,7 +195,8 @@ class Manager:
         
 
         for f in includes:
-            shutil.copy2(f,'static')
+            if os.path.exists(f):
+                shutil.copy2(f,'static')
 
         for f in Util.listDirs(u'static', '.xht2'):
             basefile = f.replace('static'+os.path.sep,'')
@@ -345,6 +346,11 @@ class Manager:
             # as they should never contain non-ascii chars (FLW...)
             z.write(f.encode(), zipf.encode())
         z.close()
+
+    def DoFinal(self,module='all'):
+        self.Indexpages(module)
+        self.News(module)
+        self.Publish()
     
     def DoAll(self,module='all'):
         start = time.time()
@@ -356,6 +362,8 @@ class Manager:
         self.News(module)
         self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
+
+
 
 if __name__ == "__main__":
     import logging.config

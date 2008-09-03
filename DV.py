@@ -502,6 +502,7 @@ class DVManager(LegalSource.Manager):
         m = self.re_xmlbase(head)
         if m:
             mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map'])
+            Util.ensureDir(mapfile)
             f = codecs.open(mapfile,'a',encoding='iso-8859-1')
             f.write(u"%s\t%s\n" % (m.group(1),basefile))
         else:

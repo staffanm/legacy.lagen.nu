@@ -2,62 +2,62 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<http://rdf.kb.se/ap/20061121145747> rdfs:label "Regeringskansliet" .
-<http://rdf.kb.se/ap/20061121164911> rdfs:label "Justitiedepartementet" .
-<http://rdf.kb.se/ap/20070812184800> rdfs:label "Arbetsmarknadsdepartementet" .
-<http://rdf.kb.se/ap/20070812184801> rdfs:label "Bostadsdepartementet" .
-<http://rdf.kb.se/ap/20070812184802> rdfs:label "Civildepartementet" .
-<http://rdf.kb.se/ap/20070812184803> rdfs:label "Fartygsuttagningskommissionen" .
-<http://rdf.kb.se/ap/20070812184804> rdfs:label "Finansdepartementet" .
-<http://rdf.kb.se/ap/20070812184805> rdfs:label "Finansinspektionen" .
-<http://rdf.kb.se/ap/20070812184806> rdfs:label "Försvarsdepartementet" .
-<http://rdf.kb.se/ap/20070812184807> rdfs:label "Försäkringskassan" .
-<http://rdf.kb.se/ap/20070812184808> rdfs:label "Industridepartementet" .
-<http://rdf.kb.se/ap/20070812184809> rdfs:label "Inrikesdepartementet" .
-<http://rdf.kb.se/ap/20070812184810> rdfs:label "Integrations- och jämställdhetsdepartementet" .
-<http://rdf.kb.se/ap/20070812184811> rdfs:label "Jordbruksdepartementet" .
-<http://rdf.kb.se/ap/20070812184812> rdfs:label "Kammarkollegiet" .
-<http://rdf.kb.se/ap/20070812184813> rdfs:label "Kommunikationsdepartementet" .
-<http://rdf.kb.se/ap/20070812184814> rdfs:label "Kulturdepartementet" .
-<http://rdf.kb.se/ap/20070812184815> rdfs:label "Miljö- och departementet" .
-<http://rdf.kb.se/ap/20070812184816> rdfs:label "Miljö- och energidepartementet" .
-<http://rdf.kb.se/ap/20070812184817> rdfs:label "Miljö- och naturresursdepartementet" .
-<http://rdf.kb.se/ap/20070812184818> rdfs:label "Miljö- och samhällsbyggnadsdepartementet" .
-<http://rdf.kb.se/ap/20070812184819> rdfs:label "Miljödepartementet" .
-<http://rdf.kb.se/ap/20070812184820> rdfs:label "Närings- och handelsdepartementet" .
-<http://rdf.kb.se/ap/20070812184821> rdfs:label "Näringsdepartementet" .
-<http://rdf.kb.se/ap/20070812184822> rdfs:label "Riksbanken" .
-<http://rdf.kb.se/ap/20070812184823> rdfs:label "Riksgäldskontoret" .
-<http://rdf.kb.se/ap/20070812184824> rdfs:label "Riksförsäkringsverket" .
-<http://rdf.kb.se/ap/20070812184825> rdfs:label "Riksrevisionsverket" .
-<http://rdf.kb.se/ap/20070812184826> rdfs:label "Riksskattenämnden" .
-<http://rdf.kb.se/ap/20070812184827> rdfs:label "Riksåklagaren" .
-<http://rdf.kb.se/ap/20070812184828> rdfs:label "Socialdepartementet" .
-<http://rdf.kb.se/ap/20070812184829> rdfs:label "Statens bostadskreditnämnd" .
-<http://rdf.kb.se/ap/20070812184830> rdfs:label "Statens provningsanstalt" .
-<http://rdf.kb.se/ap/20070812184831> rdfs:label "Statistiska centralbyrån" .
-<http://rdf.kb.se/ap/20070812184832> rdfs:label "Statskontoret" .
-<http://rdf.kb.se/ap/20070812184833> rdfs:label "Statsrådsberedningen" .
-<http://rdf.kb.se/ap/20070812184834> rdfs:label "Utbildnings- och kulturdepartementet" .
-<http://rdf.kb.se/ap/20070812184835> rdfs:label "Utbildningsdepartementet" .
-<http://rdf.kb.se/ap/20070812184836> rdfs:label "Utrikesdepartementet" .
+<http://lagen.nu/org/2008/regeringskansliet> rdfs:label "Regeringskansliet" .
+<http://lagen.nu/org/2008/justitiedepartementet> rdfs:label "Justitiedepartementet" .
+<http://lagen.nu/org/2008/arbetsmarknadsdepartementet> rdfs:label "Arbetsmarknadsdepartementet" .
+<http://lagen.nu/org/2008/bostadsdepartementet> rdfs:label "Bostadsdepartementet" .
+<http://lagen.nu/org/2008/civildepartementet> rdfs:label "Civildepartementet" .
+<http://lagen.nu/org/2008/fartygsuttagningskommissionen> rdfs:label "Fartygsuttagningskommissionen" .
+<http://lagen.nu/org/2008/finansdepartementet> rdfs:label "Finansdepartementet" .
+<http://lagen.nu/org/2008/finansinspektionen> rdfs:label "Finansinspektionen" .
+<http://lagen.nu/org/2008/forsvarsdepartementet> rdfs:label "Försvarsdepartementet" .
+<http://lagen.nu/org/2008/forsakringskassan> rdfs:label "Försäkringskassan" .
+<http://lagen.nu/org/2008/industridepartementet> rdfs:label "Industridepartementet" .
+<http://lagen.nu/org/2008/inrikesdepartementet> rdfs:label "Inrikesdepartementet" .
+<http://lagen.nu/org/2008/integrations-och-jamstalldhetsdepartementet> rdfs:label "Integrations- och jämställdhetsdepartementet" .
+<http://lagen.nu/org/2008/jordbruksdepartementet> rdfs:label "Jordbruksdepartementet" .
+<http://lagen.nu/org/2008/kammarkollegiet> rdfs:label "Kammarkollegiet" .
+<http://lagen.nu/org/2008/kommunikationsdepartementet> rdfs:label "Kommunikationsdepartementet" .
+<http://lagen.nu/org/2008/kulturdepartementet> rdfs:label "Kulturdepartementet" .
+<http://lagen.nu/org/2008/miljo-och-departementet> rdfs:label "Miljö- och departementet" .
+<http://lagen.nu/org/2008/miljo-och-energidepartementet> rdfs:label "Miljö- och energidepartementet" .
+<http://lagen.nu/org/2008/miljo-och-naturresursdepartementet> rdfs:label "Miljö- och naturresursdepartementet" .
+<http://lagen.nu/org/2008/miljo-och-samhallsbyggnadsdepartementet> rdfs:label "Miljö- och samhällsbyggnadsdepartementet" .
+<http://lagen.nu/org/2008/miljodepartementet> rdfs:label "Miljödepartementet" .
+<http://lagen.nu/org/2008/narings-och-handelsdepartementet> rdfs:label "Närings- och handelsdepartementet" .
+<http://lagen.nu/org/2008/naringsdepartementet> rdfs:label "Näringsdepartementet" .
+<http://lagen.nu/org/2008/riksbanken> rdfs:label "Riksbanken" .
+<http://lagen.nu/org/2008/riksgaldskontoret> rdfs:label "Riksgäldskontoret" .
+<http://lagen.nu/org/2008/riksforsakringsverket> rdfs:label "Riksförsäkringsverket" .
+<http://lagen.nu/org/2008/riksrevisionsverket> rdfs:label "Riksrevisionsverket" .
+<http://lagen.nu/org/2008/riksskattenamnden> rdfs:label "Riksskattenämnden" .
+<http://lagen.nu/org/2008/riksaklagaren> rdfs:label "Riksåklagaren" .
+<http://lagen.nu/org/2008/socialdepartementet> rdfs:label "Socialdepartementet" .
+<http://lagen.nu/org/2008/statens-bostadskreditnamnd> rdfs:label "Statens bostadskreditnämnd" .
+<http://lagen.nu/org/2008/statens-provningsanstalt> rdfs:label "Statens provningsanstalt" .
+<http://lagen.nu/org/2008/statistiska-centralbyran> rdfs:label "Statistiska centralbyrån" .
+<http://lagen.nu/org/2008/statskontoret> rdfs:label "Statskontoret" .
+<http://lagen.nu/org/2008/statsradsberedningen> rdfs:label "Statsrådsberedningen" .
+<http://lagen.nu/org/2008/utbildnings-och-kulturdepartementet> rdfs:label "Utbildnings- och kulturdepartementet" .
+<http://lagen.nu/org/2008/utbildningsdepartementet> rdfs:label "Utbildningsdepartementet" .
+<http://lagen.nu/org/2008/utrikesdepartementet> rdfs:label "Utrikesdepartementet" .
 
-<http://rdf.kb.se/ap/20080315191300> rdfs:label "Marknadsdomstolen" .
-<http://rdf.kb.se/ap/20080315191301> rdfs:label "Hovrätten för Övre Norrland" . 
-<http://rdf.kb.se/ap/20080315191302> rdfs:label "Hovrätten för Nedre Norrland" .
-<http://rdf.kb.se/ap/20080315191303> rdfs:label "Hovrätten över Skåne och Blekinge" .
-<http://rdf.kb.se/ap/20080315191304> rdfs:label "Svea hovrätt" .
-<http://rdf.kb.se/ap/20080315191305> rdfs:label "Hovrätten för Västra Sverige" .
-<http://rdf.kb.se/ap/20080315191306> rdfs:label "Göta hovrätt" .
-<http://rdf.kb.se/ap/20080315191307> rdfs:label "Kammarrätten i Göteborg" .
-<http://rdf.kb.se/ap/20080315191308> rdfs:label "Kammarrätten i Jönköping" .
-<http://rdf.kb.se/ap/20080315191309> rdfs:label "Kammarrätten i Stockholm" .
-<http://rdf.kb.se/ap/20080315191310> rdfs:label "Kammarrätten i Sundsvall" .
-<http://rdf.kb.se/ap/20080315191311> rdfs:label "Arbetsdomstolen" .
-<http://rdf.kb.se/ap/20080315191312> rdfs:label "Högsta domstolen" .
-<http://rdf.kb.se/ap/20080315191313> rdfs:label "Regeringsrätten" .
-<http://rdf.kb.se/ap/20080315191314> rdfs:label "Patentbesvärsrätten" .
-<http://rdf.kb.se/ap/20080315191315> rdfs:label "Rättshjälpsnämnden" .
-<http://rdf.kb.se/ap/20080315191316> rdfs:label "Miljööverdomstolen" .
-<http://rdf.kb.se/ap/20080315191317> rdfs:label "Migrationsöverdomstolen" .
-<http://rdf.kb.se/ap/20080315191400> rdfs:label "Domstolsverket" .
+<http://lagen.nu/org/2008/marknadsdomstolen> rdfs:label "Marknadsdomstolen" .
+<http://lagen.nu/org/2008/hovratten-for-ovre-norrland> rdfs:label "Hovrätten för Övre Norrland" . 
+<http://lagen.nu/org/2008/hovratten-for-nedre-norrland> rdfs:label "Hovrätten för Nedre Norrland" .
+<http://lagen.nu/org/2008/hovratten-over-skane-och-blekinge> rdfs:label "Hovrätten över Skåne och Blekinge" .
+<http://lagen.nu/org/2008/svea-hovratt> rdfs:label "Svea hovrätt" .
+<http://lagen.nu/org/2008/hovratten-for-vastra-sverige> rdfs:label "Hovrätten för Västra Sverige" .
+<http://lagen.nu/org/2008/Gota hovratt> rdfs:label "Göta hovrätt" .
+<http://lagen.nu/org/2008/Kammarratten i goteborg> rdfs:label "Kammarrätten i Göteborg" .
+<http://lagen.nu/org/2008/Kammarratten i jonkoping> rdfs:label "Kammarrätten i Jönköping" .
+<http://lagen.nu/org/2008/Kammarratten i stockholm> rdfs:label "Kammarrätten i Stockholm" .
+<http://lagen.nu/org/2008/Kammarratten i sundsvall> rdfs:label "Kammarrätten i Sundsvall" .
+<http://lagen.nu/org/2008/arbetsdomstolen> rdfs:label "Arbetsdomstolen" .
+<http://lagen.nu/org/2008/Hogsta domstolen> rdfs:label "Högsta domstolen" .
+<http://lagen.nu/org/2008/regeringsratten> rdfs:label "Regeringsrätten" .
+<http://lagen.nu/org/2008/patentbesvarsratten> rdfs:label "Patentbesvärsrätten" .
+<http://lagen.nu/org/2008/rattshjalpsnamnden> rdfs:label "Rättshjälpsnämnden" .
+<http://lagen.nu/org/2008/miljooverdomstolen> rdfs:label "Miljööverdomstolen" .
+<http://lagen.nu/org/2008/migrationsoverdomstolen> rdfs:label "Migrationsöverdomstolen" .
+<http://lagen.nu/org/2008/domstolsverket> rdfs:label "Domstolsverket" .

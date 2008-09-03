@@ -23,8 +23,8 @@
 	  något som ser fel ut får du jättegärna skicka ett mail till
 	  mig: <a
 	  href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
-	  med en beskrivning av felet och en länk till sidan du
-	  hittade det på.
+	  med en beskrivning av felet. Eller så kan du använda
+	  formuläret som finns till vänster på alla sidor.
 	</p>
 
 	<p>
@@ -299,6 +299,9 @@
 	  <xi:include href="allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[4]/*)"/>
 	  <xi:include href="allmanna.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[5]/*)"/>
 	</div>
+    </div>
+    <div role="navigation">
+<!-- Altering or removing this link is a breach of the Vizu Terms and Conditions --><div style="font-family:Arial, Helvetica, sans-serif; font-size:9px;height:20px;text-align:center;width:100%;margin:0;padding:0;letter-spacing:-.5px"><a href="http://www.vizu.com" target="_blank"><span style="color:#999;text-decoration:underline;font-size:9px;">Online Surveys</span></a><span style="color:#999;"> &amp; </span><a href="http://answers.vizu.com/market-research.htm" target="_blank"><span style="color:#999;text-decoration:underline;font-size:9px;">Market Research</span></a></div><embed src="http://wp.vizu.com/vizu_poll.swf" quality="high" scale="noscale" wmode="transparent" bgcolor="#ffffff" width="230" height="335" name="vizu_poll" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash" FlashVars="js=false&amp;pid=116081&amp;ad=false&amp;vizu=true&amp;links=true&amp;mainBG=bba694&amp;questionText=FFFFFF&amp;answerZoneBG=EEEEEE&amp;answerItemBG=f9f6f5&amp;answerText=000000&amp;voteBG=f9f6f5&amp;voteText=000000"></embed>
     </div>
   </body>
 </html>

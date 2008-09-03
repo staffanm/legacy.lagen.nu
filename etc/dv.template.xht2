@@ -21,10 +21,6 @@
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->
       <base href="${meta['xml:base']}"/>
-      <!-- !publisher = auktoritetspost för DV -->
-      <!--  <link rel="dc:publisher" href="${meta[u'Utgivare'].uri}"/> -->
-      <!-- !creator = auktoritetspost för aktuell domstol -->
-      <!-- <link rel="dc:creator" href="${meta[u'Domstol'].uri}"/> -->
     </head>
 
     <p py:def="render_stycke(stycke)">

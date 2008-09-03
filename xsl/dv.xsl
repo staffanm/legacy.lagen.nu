@@ -16,7 +16,12 @@
     <xsl:value-of select="//xht2:title"/> | Lagen.nu
   </xsl:template>
   <xsl:template name="metarobots"/>
-  <xsl:template name="linkalternate"/>
+  <xsl:template name="linkalternate">
+    <link rel="alternate" type="application/xml" title="XHTML2">
+      <xsl:attribute name="href">/dom/<xsl:value-of select="substring-after(//xht2:html/@about,'publ/rattsfall/')"/>.xht2</xsl:attribute>
+    </link>
+    
+  </xsl:template>
   <xsl:template name="headmetadata"/>
       
   <xsl:template match="xht2:h">
@@ -92,7 +97,7 @@
 	</xsl:if>
 	
 	<dt>Källa</dt>
-	<dd property="dct:publisher" resource="http://rdf.kb.se/ap/20080315191400"><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
+	<dd property="dct:publisher" resource="http://lagen.nu/org/2008/domstolsverket"><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
       </dl>
     </div>
   </xsl:template>

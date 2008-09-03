@@ -133,6 +133,10 @@ def tidyHtmlFile(filename):
 
 def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
+
+    parameters['infile'] = infile;
+    parameters['outfile'] = outfile;
+    
     param_str = ""
     for p in parameters.keys():
         # this double style quoting is needed for lawlist.xsl when
@@ -143,7 +147,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     if xinclude:
         tmpfile = mktemp()
         cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
-        # print cmdline
+        #print cmdline
         (ret,stdout,stderr) = runcmd(cmdline)
         if (ret != 0):
             raise TransformError(stderr)
