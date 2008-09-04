@@ -22,10 +22,10 @@ hue = 21, saturation = 50
     a:active  { color: #bba694; text-decoration: underline; }
 
     
-    textarea { font: 10pt Arial, sans-serif; width: 100% }
-    input { font: 10pt Arial, sans-serif; width: 100%}
     .bugreport-link { margin-top: 18pt; font-weight: bold;}
     .bugreport-form { width: 100% }
+    .bugreport-form textarea { font: 10pt Arial, sans-serif; width: 100% }
+    .bugreport-form input { font: 10pt Arial, sans-serif; width: 100%}
     
     .positioned {
 	position: absolute;
