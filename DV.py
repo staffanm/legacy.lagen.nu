@@ -612,7 +612,10 @@ class DVManager(LegalSource.Manager):
                     u'Migrationsöverdomstolen': 'mig',
                     u'Miljööverdomstolen': 'mod'}
 
-        entries = defaultdict(list)
+        #entries = defaultdict(list)
+        entries = {}
+        for base in basefile.keys():
+            entries[base] = []
         for (timestamp,message) in messages:
             f = message.replace('intermediate\word','parsed').replace('.doc','.xht2')
             if not os.path.exists(f):

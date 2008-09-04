@@ -499,6 +499,7 @@ class Manager(object):
         # tmpfilename = mktemp()
         tmpfilename = htmlfile.replace(".html",".xht2")
         assert(tmpfilename != htmlfile)
+        Util.ensureDir(tmpfilename)
         fp = open(tmpfilename,"w")
         fp.write(stream.render())
         fp.close()

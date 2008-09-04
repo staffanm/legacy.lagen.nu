@@ -358,8 +358,8 @@ class Manager:
         self._doAction('ParseAll',module)
         self._doAction('RelateAll',module)
         self._doAction('GenerateAll',module)
-        self.Indexpages(module)
         self.News(module)
+        self.Indexpages(module)
         self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
