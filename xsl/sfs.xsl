@@ -159,6 +159,8 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@role='secondary']/xht2:section">
+    <xsl:variable name="year" select="substring-before(xht2:dl/xht2:dd[@property='rinfo:fsNummer'],':')"/>
+    <xsl:variable name="nr" select="substring-after(xht2:dl/xht2:dd[@property='rinfo:fsNummer'],':')"/>
     <div class="andring" id="{concat(substring-before(@id,':'),'-',substring-after(@id,':'))}" about="{@about}">
       <!-- titel eller sfsnummer, om ingen titel finns -->
       <h2><xsl:choose>
@@ -169,6 +171,10 @@
 	  <xsl:value-of select="xht2:dl/xht2:dd[@property='rinfo:fsNummer']"/>
 	</xsl:otherwise>
       </xsl:choose></h2>
+      <xsl:if test="(number($year) > 1998) or (number($year) = 1998 and number($nr) >= 306)">
+
+	<p><a href="http://62.95.69.3/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Officiell version (PDF)</a></p>
+      </xsl:if>
       <xsl:apply-templates/>
     </div>
   </xsl:template>

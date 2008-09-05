@@ -61,8 +61,51 @@
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
       </xsl:when>
+      <xsl:when test="contains($uri,'/publ/prop')">
+	<xsl:variable name="year" select="substring(substring-after($uri, '/publ/prop/'),1,4)"/>
+	<xsl:variable name="nr" select="substring-after(substring-after($uri, '/publ/prop/'), ':')"/>
+	<xsl:variable name="int">
+	  <xsl:choose>
+	    <!-- brutet år, exv 1975/76:24 -->
+	    <xsl:when test="contains(substring-after($uri, '/publ/prop/'),'/')">
+	      <xsl:value-of select="number($year)-1400"/>
+	    </xsl:when>
+	    <!-- kalenderår, exv 1975:6 -->
+	    <xsl:otherwise>
+	      <xsl:value-of select="number($year)-1401"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:variable>
+	<xsl:variable name="base36year">
+	  <xsl:call-template name="base36">
+	    <xsl:with-param name="int" select="$int"/>
+	  </xsl:call-template>
+	</xsl:variable>
+	<xsl:if test="number($year) > 1970">http://www.riksdagen.se/Webbnav/index.aspx?nid=37&amp;dok_id=<xsl:value-of select="$base36year"/>03<xsl:value-of select="$nr"/></xsl:if>
+      </xsl:when>
+      <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
+      </xsl:when>
+      <xsl:when test="contains($uri,'/ext/bet/')">
+	<xsl:variable name="year" select="substring(substring-after($uri, '/ext/bet/'),1,4)"/>
+	<xsl:variable name="nr" select="substring-after(substring-after($uri, '/ext/bet/'), ':')"/>
+	<xsl:variable name="int">
+	  <xsl:value-of select="number($year)-1400"/>
+	</xsl:variable>
+	<xsl:variable name="base36year">
+	  <xsl:call-template name="base36">
+	    <xsl:with-param name="int" select="$int"/>
+	  </xsl:call-template>
+	</xsl:variable>
+	<xsl:if test="number($year) > 1990">http://www.riksdagen.se/Webbnav/index.aspx?nid=37&amp;dok_id=<xsl:value-of select="$base36year"/>01<xsl:value-of select="$nr"/></xsl:if>
+      </xsl:when>
       <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
       </xsl:when>
     </xsl:choose>            
   </xsl:template>
+
+  <!-- converts an int to base36 -->
+  <xsl:template name="base36">
+    <xsl:param name="int"/>
+    <xsl:variable name="digits">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable><xsl:value-of select="substring($digits,floor($int div 36) + 1,1)"/><xsl:value-of select="substring($digits, ($int mod 36 + 1),1)"/></xsl:template>
+  
 </xsl:stylesheet>
