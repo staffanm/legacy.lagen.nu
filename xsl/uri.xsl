@@ -2,6 +2,8 @@
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
 		xmlns:str="http://exslt.org/strings"
 		extension-element-prefixes="str">
 
@@ -59,7 +61,8 @@
       <xsl:when test="contains($uri,'/publ/sfs')">
 	<xsl:value-of select="substring-after($uri, '/publ/sfs')"/>
       </xsl:when>
-      <xsl:when test="contains($uri,'/publ/rattsfall')">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/>
+      <xsl:when test="contains($uri,'/publ/rattsfall')">
+	<xsl:if test="document('../data/dv/parsed/rdf.xml')//rinfo:Rattsfallsreferat[@rdf:about=$uri]">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:if>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/prop')">
 	<xsl:variable name="year" select="substring(substring-after($uri, '/publ/prop/'),1,4)"/>

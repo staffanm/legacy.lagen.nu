@@ -50,7 +50,15 @@ a	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
 	font-style: italic
    }
    tt, code, kbd, samp { font-family: monospace }
-    
+
+   ins {
+       background: #efe;
+   }
+
+   del {
+       background: #fee;
+   }
+   
     #kommentarer  {
 	font-size: smaller;
     }

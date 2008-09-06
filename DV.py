@@ -452,6 +452,20 @@ class DVParser(LegalSource.Parser):
 class DVManager(LegalSource.Manager):
     __parserClass = DVParser
     re_xmlbase = re.compile('xml:base="http://rinfo.lagrummet.se/publ/rattsfall/([^"]+)"').search
+    # Converts a NT file to RDF/XML -- needed for uri.xsl to work for legal cases
+    def NTriplesToXML(self):
+        ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
+        xmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']) 
+        log.info("Loading NT file %s" % ntfile)
+        g = Graph()
+        for key, value in Util.ns.items():
+            g.bind(key,  Namespace(value));
+        g.parse(ntfile,format="nt")
+        log.info("Serializing to file %s" % xmlfile)
+        f = open(xmlfile, 'w')
+        f.write(g.serialize(format="pretty-xml"))
+        f.close()
+    
 
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE  
@@ -537,6 +551,10 @@ class DVManager(LegalSource.Manager):
     def DownloadNew(self):
         sd = DVDownloader(self.config)
         sd.DownloadNew()
+
+    def RelateAll(self):
+        super(SFSManager,self).RelateAll()
+        self.NTriplesToXML()
 
     ####################################################################
     # OVERRIDES OF Manager METHODS

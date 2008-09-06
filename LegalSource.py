@@ -256,10 +256,7 @@ class Manager(object):
                 log.info("Related %d documents (%d triples total)" % (c, triples))
 
         log.info("All documents related: %d documents, %d triples" % (c, triples))
-        # f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']),'w')
-        # f.write(graph.serialize(format="pretty-xml"))
-        # f.close()
-        # print unicode(g.serialize(format="nt", encoding="utf-8"), 'utf-8')
+
     
     def Indexpages(self):
         """Creates index pages for all documents for a particular
