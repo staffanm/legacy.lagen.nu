@@ -11,15 +11,18 @@
 		exclude-result-prefixes="xht2">
   <xsl:param name="infile">unknown-infile</xsl:param>
   <xsl:param name="outfile">unknown-outfile</xsl:param>
+
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
 	    indent="yes"
 	    />
+
   <!--
       we'd like to use the following doctype, since we're not valid
-      w/o it, but FF brings up blank pages when using it - wonder how
-      eurlex.nu does it? -->
+      w/o it, but IE brings up blank pages when using it (as do FF if
+      we're not using application/xhtml+xml) - wonder how eurlex.nu
+      does it? -->
   <!--
   <xsl:output method="xml"
 	      doctype-public="-//W3C//DTD XHTML+RDFa 1.0//EN"
