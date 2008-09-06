@@ -686,7 +686,6 @@ class DVManager(LegalSource.Manager):
     ####################################################################
     # CLASS-SPECIFIC HELPER FUNCTIONS
     ####################################################################
-    
     # none for now...
 
 if __name__ == "__main__":
