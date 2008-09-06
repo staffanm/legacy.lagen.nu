@@ -1413,7 +1413,7 @@ class SFSParser(LegalSource.Parser):
             # attempts to filter these out by looking for some typical line endings for those cases
             if (p.endswith(",") or
                 p.endswith(";") or
-                p.endswith(")") or
+                # p.endswith(")") or  # but in some cases, a chapter actually ends in ), eg 1932:131
                 p.endswith(" och") or # in unlucky cases, a chapter heading might span two lines in a way that the first line ends with "och" (eg 1998:808 kap. 3)
                 p.endswith(" om") or
                 p.endswith(" samt") or

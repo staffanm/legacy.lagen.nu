@@ -333,19 +333,29 @@ class Manager:
                 log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
 
     def _make_zipfiles(self):
+        self._make_zipfile(os.path.sep.join([self.baseDir,u'dv','dv.zip']),
+                           os.path.sep.join([self.baseDir,u'dv','parsed']),
+                           ".xht2")
+
+        self._make_zipfile(os.path.sep.join([self.baseDir,u'sfs','sfs.zip']),
+                           os.path.sep.join([self.baseDir,u'sfs','parsed']),
+                           ".xht2")
+        
+        
+
+    def _make_zipfile(self, zipname, directory, extension=None):
         from zipfile import ZipFile, ZIP_DEFLATED
-        basepath = os.path.sep.join([self.baseDir,u'sfs'])
-        # start with this for blendow:
-        zipname = basepath+os.path.sep+'blendow.sfs.zip'
         log.info("Creating zip file %s" % zipname)
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M
-        for f in Util.listDirs(basepath+os.path.sep+'parsed',".xht2"):
-            zipf = f.replace(basepath+os.path.sep+'parsed'+os.path.sep, '')
+        for f in Util.listDirs(directory, extension):
+            zipf = f.replace(directory+os.path.sep, '')
             # it seems the write method can't handle unicode strings
-            # -- convert to bytestrings using default encoding (ascii)
-            # as they should never contain non-ascii chars (FLW...)
-            z.write(f.encode(), zipf.encode())
+            # -- convert to bytestrings using cp437, as that seems to
+            # be the zip standard
+            print "adding %r" % zipf
+            z.write(f, zipf.encode('cp437'))
         z.close()
+        
 
     def DoFinal(self,module='all'):
         self.Indexpages(module)
