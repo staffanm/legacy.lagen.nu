@@ -119,7 +119,7 @@
       <xsl:for-each select="$andringar">
 	<!-- här kan man tänka sig göra uppslag i en xml-fil som mappar
 	     förarbetsid:n till förarbetsrubriker -->
-	<a href="#{../../../@id}"><xsl:value-of select="../..//xht2:dd[@property='rinfo:fsNummer']"/></a><xsl:if test="position()!= last()">, </xsl:if>
+	<a href="#{concat(substring-before(../../../@id,':'),'-',substring-after(../../../@id,':'))}"><xsl:value-of select="../..//xht2:dd[@property='rinfo:fsNummer']"/></a><xsl:if test="position()!= last()">, </xsl:if>
       </xsl:for-each>
       <br/>
     </xsl:if>
