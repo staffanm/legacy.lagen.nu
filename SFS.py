@@ -2313,15 +2313,15 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         htmlfile = "%s/%s/generated/news/all.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/all.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ndrade frfattningar', all_entries)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade författningar', 'De senaste 30 dagarna', all_entries)
 
         htmlfile = "%s/%s/generated/news/lagar.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/lagar.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade lagar', lag_entries)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade lagar', 'De senaste 30 dagarna', lag_entries)
 
         htmlfile = "%s/%s/generated/news/forordningar.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/forordningar.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade förordningar och övriga författningar', ovr_entries)
+        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade förordningar och övriga författningar', 'De senaste 30 dagarna', ovr_entries)
 
     def _element_to_string(self,e):
         """Creates a XHTML1 string from a elementtree.Element,

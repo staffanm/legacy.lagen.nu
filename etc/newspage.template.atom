@@ -3,7 +3,7 @@
       xmlns:py="http://genshi.edgewall.org/">
  
  <title py:content="title">Example Feed</title>
- <subtitle>Från lagen.nu</subtitle>
+ <subtitle py:content="subtitle">Från lagen.nu</subtitle>
  <link href="${feeduri}" rel="self"/>
  <link href="${pageuri}"/>
  <updated py:content="timestamp">2003-12-13T18:30:02Z</updated>

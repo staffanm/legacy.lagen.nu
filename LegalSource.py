@@ -484,14 +484,15 @@ class Manager(object):
             entries.append(entry)
         htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nyheter', entries)
+        self._render_newspage(htmlfile, atomfile, u'Nyheter', 'Nyheter de senaste 30 dagarna', entries)
 
-    def _render_newspage(self,htmlfile,atomfile,title,entries):
+    def _render_newspage(self,htmlfile,atomfile,title,subtitle,entries):
         # only look in cwd and this file's directory
         loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
                                 variable_lookup='lenient') 
         tmpl = loader.load("etc/newspage.template.xht2")
         stream = tmpl.generate(title=title,
+                               subtitle=subtitle,
                                entries=entries)
         # tmpfilename = mktemp()
         tmpfilename = htmlfile.replace(".html",".xht2")

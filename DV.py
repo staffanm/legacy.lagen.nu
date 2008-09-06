@@ -680,7 +680,7 @@ class DVManager(LegalSource.Manager):
             base = basefile[slot]
             htmlfile = "%s/%s/generated/news/%s.html" % (self.baseDir, self.moduleDir, base)
             atomfile = "%s/%s/generated/news/%s.atom" % (self.baseDir, self.moduleDir, base)
-            self._render_newspage(htmlfile, atomfile, u'Nya r\xe4ttsfall fr\xe5n %s'%slot, slotentries)
+            self._render_newspage(htmlfile, atomfile, u'Nya r\xe4ttsfall fr\xe5n %s'%slot, 'De senaste 30 dagarna', slotentries)
 
 
     ####################################################################

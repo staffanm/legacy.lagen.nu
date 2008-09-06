@@ -23,6 +23,7 @@ from datetime import datetime
     </div>
     <div role="main">
       <h property="dct:title" py:content="title">Feedtitel</h>
+      <p py:content="subtitle">De senaste 30 dagarna</p>
       <py:for each="entry in entries">
 	<section class="entry" id="${entry.id}">
 	  <h py:content="entry.title">Entrytitel</h>
