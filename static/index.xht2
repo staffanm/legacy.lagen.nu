@@ -8,37 +8,11 @@
     <body>
       <div role="main">
 	<p>
-	  Välkommen till <i>ferenda.lagen.nu</i>, en förhandstitt på
-	  den kommande versionen av <a
-	  href="https://lagen.nu/">lagen.nu</a>. Den här webbplatsen
-	  innehåller alla Sveriges lagar och andra författningar, samt
-	  många vägledande rättsfall. Läs mer om <a
-	  href="/om/nytt.html">vad som är nytt i den här
-	  versionen</a>.
-	</p>
-	<p>
-	  Eftersom det här är en förhandstitt så kan det vara många
-	  saker som strular (länkar som inte funkar, textformattering
-	  som ser konstig ut, text som saknas, etc). Om du hittar
-	  något som ser fel ut får du jättegärna skicka ett mail till
-	  mig: <a
-	  href="mailto:staffan@tomtebo.org">staffan@tomtebo.org</a>
-	  med en beskrivning av felet. Eller så kan du använda
-	  formuläret som finns till vänster på alla sidor.
-	</p>
-
-	<p>
-	  För den som är extra intresserad finns en <a
-	  href="http://trac.lagen.nu/query?status=assigned&amp;status=new&amp;status=reopened&amp;group=status&amp;milestone=1.5">lista
-	  över kända buggar</a> och andra saker som måste fixas innan
-	  den här versionen kan lanseras. Om du kan programmera python, XSLT
-	  eller javascript kan du <a href="http://trac.lagen.nu/">till
-	  och med hjälpa till</a>. <a
-	  href="http://trac.lagen.nu/browser/trunk">Källkoden</a> till
-	  lagen.nu är öppen (BSD-licens), och utvecklare är mycket välkomna!
-	</p>
-	<p>
-	  Läs <a href="/om/">mer om lagen.nu och hur du bäst använder tjänsten</a>.
+	  Välkommen till lagen.nu! Den här webbtjänsten innehåller alla
+	  Sveriges lagar och andra författningar, samt många
+	  vägledande rättsfall. Läs mer om <a href="/om/">hur tjänsten
+	  funkar</a>, samt vad som är <a
+	  href="/om/nytt.html">nytt</a> i den här versionen.
 	</p>
 	<h>Några av de viktigaste lagarna:</h>
 	<dl class="tablestyle">

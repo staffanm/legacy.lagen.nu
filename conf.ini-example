@@ -1,12 +1,25 @@
 datadir = "data"
 
 [sfs]
-next_sfsnr = 2008:720
+# if True, parsing of downloaded files is always performed even if the
+# resulting parsed file already exists and are more recent than the
+# downloaded files. Change this to True when working on the parsing
+# code.
 parse_force = False
+
+# if True, XSLT transformation of parsed files is always performed
+# even if the resulting generated file already exists and are more
+# recent than the parsed file. Change this to True when working on the
+# XSLT transformation
+generate_force = False
 
 [dv]
 # user/pass information for Domstolsverkets FTP server - you have to
-# contact domstolsverket to get your own login
-ftp_user = user
-ftp_pass = pass
+# contact domstolsverket to get your own login. If undefined, data
+# will instead be fetched from lagen.nu, at least when bug #58 has
+# been fixed.
+# ftp_user = user
+# ftp_pass = pass
 parse_force = False
+generate_force = False
+

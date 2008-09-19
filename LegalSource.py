@@ -268,7 +268,6 @@ class Manager(object):
         
         Subclasses can override _build_indexpages to control exactly
         which index pages are created"""
-
         # read the RDF dump (NTriples format) created by RelateAll
         rdf_nt ="%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
         if not os.path.exists(rdf_nt):

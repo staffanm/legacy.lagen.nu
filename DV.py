@@ -553,7 +553,7 @@ class DVManager(LegalSource.Manager):
         sd.DownloadNew()
 
     def RelateAll(self):
-        super(SFSManager,self).RelateAll()
+        super(DVManager,self).RelateAll()
         self.NTriplesToXML()
 
     ####################################################################

@@ -320,7 +320,7 @@ class Manager:
             log.info("No files to publish, we're done!")
         else:
             log.info("Copying to target server")
-            localcmd    = 'tar -cz -T %s --mode a+r -f - ' % publish
+            localcmd    = 'tar -cz -T %s --mode a+rx -f - ' % publish
             transfercmd = 'ssh staffan@vps.tomtebo.org'
             remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
@@ -352,7 +352,7 @@ class Manager:
             # it seems the write method can't handle unicode strings
             # -- convert to bytestrings using cp437, as that seems to
             # be the zip standard
-            print "adding %r" % zipf
+            # print "adding %r" % zipf
             z.write(f, zipf.encode('cp437'))
         z.close()
         

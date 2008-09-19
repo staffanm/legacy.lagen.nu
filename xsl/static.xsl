@@ -68,6 +68,11 @@
     </xsl:element>
   </xsl:template>
 
+
+  <xsl:template match="comment()">
+    <xsl:copy/>
+  </xsl:template>
+
   <xsl:template match="@*">
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
