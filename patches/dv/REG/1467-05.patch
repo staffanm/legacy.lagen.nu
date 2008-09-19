@@ -1,0 +1,14 @@
+diff -u "c:/Users/staffan/wds/ferenda.lagen.nu/data/dv/intermediate/html/REG/1467-05.html" "c:/Users/staffan/wds/ferenda.lagen.nu/data/dv/intermediate/html/REG/1467-05-mod.html"
+--- c:/Users/staffan/wds/ferenda.lagen.nu/data/dv/intermediate/html/REG/1467-05.html	2008-03-14 01:09:52.000000000 +0100
++++ c:/Users/staffan/wds/ferenda.lagen.nu/data/dv/intermediate/html/REG/1467-05-mod.html	2008-09-19 23:41:16.926000000 +0200
+@@ -63,7 +63,7 @@
+   border-left:none;border-bottom:solid windowtext 1.0pt;border-right:none;
+   padding:4.25pt 0cm 4.25pt 0cm;height:5.65pt'>
+   <p class=MsoNormal align=right style='text-align:right'><span
+-  style='font-size:8.0pt'>RÅ 2006 ref 39</span></p>
++  style='font-size:8.0pt'>RÅ 2006 ref. 39</span></p>
+   </td>
+  </tr>
+  <tr style='height:5.65pt'>
+
+Diff finished.  Fri Sep 19 23:41:35 2008

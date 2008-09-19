@@ -243,6 +243,29 @@ class DVParser(LegalSource.Parser):
         htmlfile = docfile.replace('word','html').replace('.doc','.html')
         Util.word_to_html(docfile,htmlfile)
 
+        # FIXME: This is almost identical to the code in
+        # SFSManager.Parse - should be refactored somehow
+        patchfile = 'patches/dv/%s.patch' % id
+        if os.path.exists(patchfile):
+            patchedfile = mktemp()
+            # we don't want to sweep the fact that we're patching under the carpet
+            log.warning(u'%s: Applying patch %s' % (id, patchfile))
+            cmd = 'patch -s %s %s -o %s' % (htmlfile, patchfile, patchedfile)
+            log.debug(u'%s: running %s' % (id, cmd))
+            (ret, stdout, stderr) = Util.runcmd(cmd)
+            if ret == 0: # successful patch
+                # patch from cygwin always seem to produce unix lineendings
+                cmd = 'unix2dos %s' % patchedfile
+                log.debug(u'%s: running %s' % (id, cmd))
+                (ret, stdout, stderr) = Util.runcmd(cmd)
+                if ret == 0: 
+                    htmlfile = patchedfile
+                else:
+                    log.warning(u"%s: Failed lineending conversion: %s" % (id, stderr))
+            else:
+                log.warning(u"%s: Could not apply patch %s: %s" % (id, patchfile, stdout.strip()))
+            
+
         lagrum_parser = LegalRef(LegalRef.LAGRUM)
         rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
 
@@ -264,6 +287,8 @@ class DVParser(LegalSource.Parser):
             node = soup.first('span', style="letter-spacing:2.0pt").findParent('td')
         elif soup.first('span', style="letter-spacing:1.3pt"):
             node = soup.first('span', style="letter-spacing:1.3pt").findParent('td')
+        elif soup.first('span', style="font-family:Verdana;letter-spacing:2.0pt"):
+            node = soup.first('span', style="font-family:Verdana;letter-spacing:2.0pt").findParent('td')
         elif soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt"):
             node = soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt").findParent('td')
         elif soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt"):
@@ -415,10 +440,11 @@ class DVParser(LegalSource.Parser):
                 head['xml:base'] = res[0].uri
 
         if not head['xml:base']:
-            log.warning(log.warning(u'%s: Could not find out URI for this doc automatically' % self.id))
-            attrs = {'domstol':tmp_publikationsid,
-                     'lopnr':head['publikationsordinal']}
-            head['xml:base'] = rattsfall_parser.make_uri(attrs)
+            log.error(u'%s: Could not find out URI for this doc automatically (%s)' % (self.id, head[u'Referat']))
+            #print head.keys()
+            #attrs = {'domstol':tmp_publikationsid,
+            #         'lopnr':head['[publikationsordinal]']}
+            #head['xml:base'] = rattsfall_parser.make_uri(attrs)
         
         # head['xml:base'] = "http://rinfo.lagrummet.se%s%s" % (self.containerid[head['[rattsfallspublikation]']], head['[publikationsordinal]'])
 
@@ -485,10 +511,10 @@ class DVManager(LegalSource.Manager):
         # check to see if the outfile is newer than all ingoing
         # files. If it is, don't parse
         force = (self.config[__moduledir__]['parse_force'] == 'True')
-        # print "Force: %s, infile: %s, outfile: %s" % (force,infile,outfile)
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
+        # print "Force: %s, infile: %s, outfile: %s" % (force,infile,outfile)
 
         p = self.__parserClass()
         p.verbose = verbose

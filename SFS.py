@@ -222,6 +222,7 @@ class SFSDownloader(LegalSource.Downloader):
         super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
                                      
     def DownloadAll(self):
+        self._setLastSFSnr()
         start = 1600
         end = datetime.today().year
         self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
@@ -231,7 +232,10 @@ class SFSDownloader(LegalSource.Downloader):
         while not done:
             log.info(u'Resultatsida nr #%s' % pagecnt)
             for l in (self.browser.links(text_regex=r'\d+:\d+')):
-                self._downloadSingle(l.text)
+                if not l.text.startswith("N"): # Icke-SFS-författningar
+                                               # som ändå finns i
+                                               # databasen
+                    self._downloadSingle(l.text)
                 # self.browser.back()
             try:
                 self.browser.find_link(text='Fler poster')
@@ -250,10 +254,11 @@ class SFSDownloader(LegalSource.Downloader):
             log.info(u'Letar efter senaste SFS-nr i  %s/sfst"' % self.download_dir)
             last_sfsnr = "1600:1"
             for f in Util.listDirs(u"%s/sfst" % self.download_dir, ".html"):
+                if "RFS" in f or "checksum" in f:
+                    continue
 
-                tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.download_dir)+6:-5]), f)
-                # FIXME: RFS1975:6 > 2008:1
-                if tmp > last_sfsnr:
+                tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.download_dir)+6:-5].replace("\\", "/")), f)
+                if Util.numcmp(tmp, last_sfsnr) > 0:
                     log.info(u'%s > %s (%s)' % (tmp, last_sfsnr, f))
                     last_sfsnr = tmp
         self.config[__moduledir__]['next_sfsnr'] = last_sfsnr 
@@ -407,7 +412,7 @@ class SFSDownloader(LegalSource.Downloader):
                 # it as if it didn't exist
                 return sfsnr
         except IOError:
-            return sfsnr
+            return sfsnr # the base SFS nr
 
     def _checksum(self,filename):
         """MD5-checksumman för den angivna filen"""
@@ -2058,7 +2063,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             out = file(tmpfile, "w")
             out.write(parsed)
             out.close()
-            Util.replace_if_different(tmpfile,filename)
+            if force:
+                Util.replace_if_different(tmpfile,filename)
+            else:
+                Util.robustRename(tmpfile,filename)
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
