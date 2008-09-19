@@ -1,3 +1,9 @@
+2008-09-19 18:43:06 Premiär för en ny version av lagen.nu
+
+<p>Efter två veckors testperiod är det nu dags att presentera den nya
+versionen av lagen.nu. <a href="/om/nytt.html">Läs mer här om vad som
+är nytt!</a>
+
 2008-09-03 00:59:04 På väg mot lagen.nu 1.5
 
 <p>Sedan årsskiftet har jag jobbat med en ny version av lagen.nu, som
