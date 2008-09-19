@@ -2218,6 +2218,25 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         type_obj   = Util.ns['rinfo']+'KonsolideradGrundforfattning'
         year_lbl  = u'Ordnade efter utgivningsår'
         title_lbl = u'Ordnade efter titel'
+        # construct the 404 page
+        doc = u'''<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" xmlns:rinfoex="http://lagen.nu/terms#" xml:lang="sv" lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Välkommen | Lagen.nu</title><script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script><script type="text/javascript" src="/js/jquery.treeview.min.js"></script><script type="text/javascript" src="/js/base.js"></script><link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" /><link rel="stylesheet" href="/css/screen.css" media="screen" type="text/css" /><link rel="stylesheet" href="/css/print.css" media="print" type="text/css" /></head><body><div id="vinjett"><h1><a href="/">lagen.nu</a></h1><ul id="navigation"><li><a href="/nyheter/">Nyheter</a></li><li><a href="/index/">Lagar</a></li><li><a href="/dom/index/">Domar</a></li><li><a href="/om/">Om</a></li></ul><form method="get" action="http://www.google.com/custom"><p><span class="accelerator">S</span>ök:<input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S" /><input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;" /><input type="hidden" name="domains" value="lagen.nu" /><input type="hidden" name="sitesearch" value="lagen.nu" checked="checked" /></p></form></div><div id="colmask" class="threecol"><div id="colmid"><div id="colleft"><div id="dokument">
+    
+    <h1>Författningstext saknas</h1>
+    <p>Det verkar inte finnas någon författning med SFS-nummer
+    <!--#echo var="REDIRECT_SFS" -->. Om den har funnits tidigare så
+    kanske den har blivit upphävd?</p>
+    <p>Om den har blivit upphävd kan den finnas i sin sista lydelse på
+    Regeringskansliets rättsdatabaser:
+    <a href='http://62.95.69.15/cgi-bin/thw?${HTML}=sfst_lst&amp;${OOHTML}=sfst_dok&amp;${SNHTML}=sfst_err&amp;${BASE}=SFST&amp;${TRIPSHOW}=format%3DTHW&amp;BET=<!--#echo var="REDIRECT_SFS" -->'>Sök efter SFS <!--#echo var="REDIRECT_SFS" --></a>.</p>
+    
+  </div><div id="kommentarer"></div><div id="referenser"></div></div></div></div><div id="sidfot"><b>Lagen.nu</b> är en privat webbplats. Informationen här är	inte officiell och kan vara felaktig | <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning</a> | <a href="/om/kontakt.html">Kontaktinformation</a></div><script type="text/javascript">var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));</script><script type="text/javascript">var pageTracker = _gat._getTracker("UA-172287-1"); pageTracker._trackPageview();</script></body></html>'''
+        outfile = "%s/%s/generated/notfound.shtml" % (self.baseDir, self.moduleDir)
+        fp = codecs.open(outfile,"w",encoding='utf-8')
+        fp.write(doc)
+        fp.close()
+        print "wrote %s" % outfile
+
 
         # list all subjects that are of rdf:type rinfo:KonsolideradGrundforfattning
         for subj in by_pred_obj[type_pred][type_obj]:
