@@ -210,7 +210,7 @@ hue = 21, saturation = 50
     #navigation li {
 	display: inline;
 	margin: 0 3pt; 
-	padding: 8pt 6pt 6pt 6pt;
+	padding: 6pt 6pt 6pt 6pt;
         background-color: #000;
 	opacity: 0.4;
         filter: alpha(opacity = 40);

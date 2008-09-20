@@ -491,7 +491,6 @@ class Manager(object):
                                 variable_lookup='lenient') 
         tmpl = loader.load("etc/newspage.template.xht2")
         stream = tmpl.generate(title=title,
-                               subtitle=subtitle,
                                entries=entries)
         # tmpfilename = mktemp()
         tmpfilename = htmlfile.replace(".html",".xht2")
@@ -505,7 +504,11 @@ class Manager(object):
         
         tmpl = loader.load("etc/newspage.template.atom")
         stream = tmpl.generate(title=title,
-                               entries=entries)
+                               subtitle=subtitle,
+                               entries=entries,
+                               feeduri=u'https://lagen.nu/%s' % atomfile,
+                               pageuri=u'https://lagen.nu/%s' % htmlfile)
+                               
         tmpfilename = mktemp()
         fp = open(tmpfilename,"w")
         fp.write(stream.render())

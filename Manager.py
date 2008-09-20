@@ -275,7 +275,10 @@ class Manager:
                                 variable_lookup='lenient') 
         tmpl = loader.load(template)
         stream = tmpl.generate(title=title,
-                               entries=entries)
+                               subtitle=u'Från lagen.nu',
+                               entries=entries,
+                               feeduri=u'https://lagen.nu/nyheter/site.atom',
+                               pageuri=u'https://lagen.nu/nyheter/site.html')
         if xht2file:
             tmpfilename = xht2file
         else:
