@@ -370,7 +370,7 @@ class Manager:
         self._doAction('GenerateAll',module)
         self.News(module)
         self.Indexpages(module)
-        self.Publish()
+        # self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
 
 

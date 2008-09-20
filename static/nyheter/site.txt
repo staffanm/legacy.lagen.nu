@@ -2,7 +2,7 @@
 
 <p>Efter två veckors testperiod är det nu dags att presentera den nya
 versionen av lagen.nu. <a href="/om/nytt.html">Läs mer här om vad som
-är nytt!</a>
+är nytt!</a></p>
 
 2008-09-03 00:59:04 På väg mot lagen.nu 1.5
 

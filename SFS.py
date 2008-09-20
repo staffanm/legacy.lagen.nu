@@ -2343,7 +2343,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             basetitle = self.re_sfsnr.sub('',title)
             # print "%s: %s" % (change, basetitle)
             if (basetitle.startswith('Lag ') or
-                basetitle.endswith('lag') or
+                (basetitle.endswith('lag') and not basetitle.startswith(u'Förordning')) or
                 basetitle.endswith('balk')):
                 lag_entries.append(entry)
             else:

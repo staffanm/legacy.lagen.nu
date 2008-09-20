@@ -40,7 +40,7 @@ hue = 21, saturation = 50
 	font: 12pt 'Times New Roman', Times, serif; 
   	/* font: 13pt Garamond, serif; */
 	/* font: 12pt 'Palatino Linotype', 'Book Antiqua', Palatino, serif; */ 
-a	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
+	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
 	/* font: 12pt Arial, Helvetica, sans-serif; */
     }
     strong,b {
@@ -203,18 +203,18 @@ a	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
     #navigation {
         position: absolute;
 	left:6pt;
-        bottom: 6pt;
+        bottom: 0;
 	margin: 0;
-        padding: 0;
-	
+        padding: 6pt;
     }
     #navigation li {
 	display: inline;
-        padding: 0;
-	margin: 0 3pt;
-	padding: 6pt;
+	margin: 0 3pt; 
+	padding: 8pt 6pt 6pt 6pt;
         background-color: #000;
 	opacity: 0.4;
+        filter: alpha(opacity = 40);
+	zoom: 1;
     }
     #navigation li a {
 	text-decoration: none;
@@ -225,11 +225,16 @@ a	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
 	color: #fff;
         padding: 6pt;
 	opacity: 0.4;
+        filter: alpha(opacity = 40);
         position: absolute;
 	right:6pt;
- 
         bottom: 0;
-    } 
+	zoom: 1;
+    }
+    #vinjett form p {
+	margin: 0;
+        padding: 0;
+    }
 
     .accelerator {
 	text-decoration: underline;
