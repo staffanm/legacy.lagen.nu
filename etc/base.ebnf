@@ -64,7 +64,8 @@ digit	     ::= [0-9]
 # * ¼, ½, ¾ are fractions (1/4, 1/2, 3/4 - should these be digits?)
 # * ¡ and ¿ is upside-down exclaimation point and question mark
 # * ¢ is a cent sign
-punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„-]
+# * × is multiplication sign
+punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„×-]
 
 
 # ------------ end of base.ebnf ----------------

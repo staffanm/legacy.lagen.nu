@@ -735,7 +735,7 @@ class SFSParser(LegalSource.Parser):
                                     changecat.startswith(u'ändring ')):
                                     pred = RINFO['ersatter']
                                 elif (changecat.startswith(u'upph.') or
-                                      changecat.startswith(u'utgår ')):
+                                      changecat.startswith(u'utgår')):
                                     pred = RINFO['upphaver']
                                 elif (changecat.startswith(u'ny') or
                                       changecat.startswith(u'ikrafttr.') or
@@ -841,6 +841,7 @@ class SFSParser(LegalSource.Parser):
                         # predicate -- not that meaningful for the
                         # XHTML2 code, but needed to get useful RDF
                         # triples in the RDFa output
+                        # print "Parsing %s" % " ".join(p.split())
                         nodes.extend(self.lagrum_parser.parse(" ".join(p.split()),
                                                               baseuri+prefix,
                                                               "dct:references"))
@@ -1558,7 +1559,10 @@ class SFSParser(LegalSource.Parser):
         # id. Try another way to detect this by looking at the first
         # character in the paragraph - if it's in lower case, it's
         # probably not a paragraph.
-        if p[len(paragrafnummer) + len(' § ')].islower():
+        firstcharidx = (len(paragrafnummer), len(' § '))
+        # print "%r: %s" % (p, firstcharidx)
+        if ((len(p) > firstcharidx) and
+            (p[len(paragrafnummer) + len(' § ')].islower())):
             self.trace['paragraf'].debug("isParagraf: section '%s' did not start with uppercase" % p[len(paragrafnummer) + len(' § '):30])
             return False
         return True
@@ -2070,7 +2074,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # Util.indentXmlFile(filename)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         except UpphavdForfattning:
-            log.info(u'%s: Upphävd', basefile)
+            log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
         except IckeSFS:
             log.debug(u'%s: Ingen SFS', basefile)
