@@ -24,6 +24,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1967:868> dct:alternate "FL" .
 <http://rinfo.lagrummet.se/publ/sfs/1968:64> dct:alternate "NSL" .
 <http://rinfo.lagrummet.se/publ/sfs/1970:979> dct:alternate "FRL" .
+<http://rinfo.lagrummet.se/publ/sfs/1970:988> dct:alternate "FBL" .
 <http://rinfo.lagrummet.se/publ/sfs/1970:994> rdfs:label "jordabalken"; dct:alternate "JB" .
 <http://rinfo.lagrummet.se/publ/sfs/1970:995> dct:alternate "JP" .
 <http://rinfo.lagrummet.se/publ/sfs/1971:289> dct:alternate "AFDL" .
