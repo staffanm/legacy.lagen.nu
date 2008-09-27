@@ -323,9 +323,9 @@ class Manager:
             log.info("No files to publish, we're done!")
         else:
             log.info("Copying to target server")
-            localcmd    = 'tar -cz -T %s --mode a+rx -f - ' % publish
-            transfercmd = 'ssh staffan@vps.tomtebo.org'
-            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xvzf -'
+            localcmd    = 'tar -c -T %s --mode a+rx -f - ' % publish
+            transfercmd = 'ssh -C staffan@vps.tomtebo.org'
+            remotecmd   = 'cd /www/staffan/lagen.nu && tar xf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
             # print "command is '%s'" % cmd
             (ret, stdout, stderr) = Util.runcmd(cmd)
@@ -347,6 +347,11 @@ class Manager:
         
 
     def _make_zipfile(self, zipname, directory, extension=None):
+        files = Util.listDirs(directory, extension)
+        if Util.outfile_is_newer(files,zipname):
+            log.info("Existing zip file %s is newer than all contained files" % zipname)
+            return
+        
         from zipfile import ZipFile, ZIP_DEFLATED
         log.info("Creating zip file %s" % zipname)
         z = ZipFile(zipname, 'w', ZIP_DEFLATED) # shrinks the file from ~130M to ~21M

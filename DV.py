@@ -102,6 +102,18 @@ class DVDownloader(LegalSource.Downloader):
 
     def DownloadAll(self):
         self.download(recurse=True)
+        #zipfiles = []
+        #for d in os.listdir(self.download_dir):
+        #    if os.path.isdir("%s/%s" % (self.download_dir,d)):
+        #        for f in os.listdir("%s/%s" % (self.download_dir,d)):
+        #            if os.path.isfile("%s/%s/%s" % (self.download_dir,d,f)):
+        #                zipfiles.append("%s/%s/%s" % (self.download_dir,d,f))
+        #for f in os.listdir("%s" % (self.download_dir)):
+        #    if os.path.isfile("%s/%s" % (self.download_dir,f)) and f.endswith(".zip"):
+        #        zipfiles.append("%s/%s" % (self.download_dir,f))
+        #
+        #for f in zipfiles:
+        #    self.process_zipfile(f)
 
     def DownloadNew(self):
         self.download(recurse=False)
@@ -141,13 +153,19 @@ class DVDownloader(LegalSource.Downloader):
                     self.process_zipfile(localdir + os.path.sep + filename)
 
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
+    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*)_BYTUT_\d+-\d+-\d+_?(\d*)')
     def process_zipfile(self, zipfilename):
         removed = replaced = created = untouched = 0
         zipf = zipfile.ZipFile(zipfilename, "r")
         for name in zipf.namelist():
             # Namnen i zipfilen använder codepage 437 - retro!
             uname = name.decode('cp437')
-            m = self.re_malnr.match(uname)
+            uname = os.path.split(uname)[1]
+            log.debug("In: %s" % uname)
+            if 'BYTUT' in name:
+                m = self.re_bytut_malnr.match(uname)
+            else:
+                m = self.re_malnr.match(uname)
             if m:
                 (court, malnr, referatnr) = (m.group(1), m.group(2), m.group(3))
                 if referatnr:
@@ -162,8 +180,11 @@ class DVDownloader(LegalSource.Downloader):
                     os.unlink(outfilename)
                     removed += 1
                 else:
-                    log.debug(u'%s: Packar upp %s' % (zipfilename, outfilename))
+                    # log.debug(u'%s: Packar upp %s' % (zipfilename, outfilename))
                     if "BYTUT" in name:
+                        log.info(u'Byter ut befintligt referat %s %s' % (court,malnr))
+                        if not os.path.exists(outfilename):
+                            log.warning(u'Filen %s som ska bytas ut fanns inte' % outfilename)
                         self.download_log.info(outfilename)
                         replaced += 1
                     else:
@@ -179,6 +200,7 @@ class DVDownloader(LegalSource.Downloader):
                     outfile = open(outfilename,"wb")
                     outfile.write(data)
                     outfile.close()
+                    log.debug("Out: %s" % outfilename)
             else:
                 log.warning(u'Kunde inte tolka filnamnet %s i %s' % (name, zipfilename))
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))

@@ -62,6 +62,7 @@
 	<xsl:value-of select="substring-after($uri, '/publ/sfs')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">
+	<!-- fixme: this gets pretty slow when handling 100+ links in a document (DV.py/Indexpages) -->
 	<xsl:if test="document('../data/dv/parsed/rdf.xml')//rinfo:Rattsfallsreferat[@rdf:about=$uri]">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:if>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/prop')">

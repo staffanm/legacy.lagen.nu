@@ -149,13 +149,13 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
         #print cmdline
         (ret,stdout,stderr) = runcmd(cmdline)
-        if (ret != 0):
-            raise TransformError(stderr)
+        #if (ret != 0):
+        #    raise TransformError(stderr)
         infile = tmpfile
 
     tmpfile = mktemp()
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    # print cmdline
+    #print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
@@ -327,7 +327,20 @@ def copy_if_different(src,dest):
         shutil.copy2(src,dest)
     else:
         pass
-    
+
+def outfile_is_newer(infiles,outfile):
+    """check to see if the outfile is newer than all ingoing files
+    (which means there's no need to regenerate outfile)"""
+    if not os.path.exists(outfile): return False
+    outfile_mtime = os.stat(outfile).st_mtime
+    for f in infiles:
+        # print "Testing whether %s is newer than %s" % (f, outfile)
+        if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
+            # print "%s was newer than %s" % (f, outfile)
+            return False
+    # print "%s is newer than %r" % (outfile, infiles)
+    return True
+
 
 
 #print "indenting"
