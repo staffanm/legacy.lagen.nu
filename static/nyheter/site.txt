@@ -1,3 +1,14 @@
+2008-09-24 22:15:44 Vill du hjälpa till med lagen.nu?
+
+<p>Nu när den nya versionen är ute är det dags att börja fundera på
+vad nästa version ska innehålla. Eftersom projektet, information och
+källkoden är öppna är alla välkommna att hjälpa till -- just nu behövs
+framförallt utvecklare, men även folk med juridisk kunskap, eller bara
+bra idéer. Första steget är att <a
+href="http://groups.google.com/group/lagennu-utveckling/subscribe">gå
+med i den epostlista</a> där vi diskuterar den framtida
+utvecklingen. Listan är öppen för alla.</p>
+
 2008-09-19 18:43:06 Premiär för en ny version av lagen.nu
 
 <p>Efter två veckors testperiod är det nu dags att presentera den nya
