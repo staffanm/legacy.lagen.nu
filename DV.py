@@ -8,7 +8,7 @@ import sys, os, re
 import pprint
 import types
 import codecs
-from time import time
+from time import time, mktime
 from tempfile import mktemp
 from datetime import datetime
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
@@ -17,6 +17,7 @@ import zipfile
 import traceback
 from collections import defaultdict
 from operator import itemgetter
+import cgi
 
 # 3rdparty libs
 from genshi.template import TemplateLoader
@@ -101,19 +102,23 @@ class DVDownloader(LegalSource.Downloader):
         return __moduledir__
 
     def DownloadAll(self):
-        self.download(recurse=True)
-        #zipfiles = []
-        #for d in os.listdir(self.download_dir):
-        #    if os.path.isdir("%s/%s" % (self.download_dir,d)):
-        #        for f in os.listdir("%s/%s" % (self.download_dir,d)):
-        #            if os.path.isfile("%s/%s/%s" % (self.download_dir,d,f)):
-        #                zipfiles.append("%s/%s/%s" % (self.download_dir,d,f))
-        #for f in os.listdir("%s" % (self.download_dir)):
-        #    if os.path.isfile("%s/%s" % (self.download_dir,f)) and f.endswith(".zip"):
-        #        zipfiles.append("%s/%s" % (self.download_dir,f))
-        #
-        #for f in zipfiles:
-        #    self.process_zipfile(f)
+        unpack_all = False
+        if unpack_all:
+            zipfiles = []
+            for d in os.listdir(self.download_dir):
+                if os.path.isdir("%s/%s" % (self.download_dir,d)):
+                    for f in os.listdir("%s/%s" % (self.download_dir,d)):
+                        if os.path.isfile("%s/%s/%s" % (self.download_dir,d,f)):
+                            zipfiles.append("%s/%s/%s" % (self.download_dir,d,f))
+            for f in os.listdir("%s" % (self.download_dir)):
+                if os.path.isfile("%s/%s" % (self.download_dir,f)) and f.endswith(".zip"):
+                   zipfiles.append("%s/%s" % (self.download_dir,f))
+
+            for f in zipfiles:
+                self.process_zipfile(f)
+        else:
+            self.download(recurse=True)
+
 
     def DownloadNew(self):
         self.download(recurse=False)
@@ -161,7 +166,7 @@ class DVDownloader(LegalSource.Downloader):
             # Namnen i zipfilen använder codepage 437 - retro!
             uname = name.decode('cp437')
             uname = os.path.split(uname)[1]
-            log.debug("In: %s" % uname)
+            #log.debug("In: %s" % uname)
             if 'BYTUT' in name:
                 m = self.re_bytut_malnr.match(uname)
             else:
@@ -195,12 +200,18 @@ class DVDownloader(LegalSource.Downloader):
                             self.download_log.info(outfilename)
                             created += 1
                     data = zipf.read(name)
+                    
                     Util.ensureDir(outfilename)
                     # sys.stdout.write(".")
                     outfile = open(outfilename,"wb")
                     outfile.write(data)
                     outfile.close()
-                    log.debug("Out: %s" % outfilename)
+                    # Make the unzipped files have correct timestamp
+                    zi = zipf.getinfo(name)
+                    dt = datetime(*zi.date_time)
+                    ts = mktime(dt.timetuple())
+                    os.utime(outfilename, (ts,ts))
+                    #log.debug("Out: %s" % outfilename)
             else:
                 log.warning(u'Kunde inte tolka filnamnet %s i %s' % (name, zipfilename))
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
@@ -695,7 +706,7 @@ class DVManager(LegalSource.Manager):
             for e in metadata:
                 if 'property' in e.attrib:
                     if e.attrib['property'] == "dct:description":
-                        content = '<p>%s</p>' % e.text
+                        content = '<p>%s</p>' % cgi.escape(e.text)
                     elif e.attrib['property'] == "dct:identifier":
                         title = e.text
                     elif e.attrib['property'] == "rinfo:avgorandedatum":
