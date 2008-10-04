@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/2002/06/xhtml2/"
+      xml:lang="sv">
+  <head>
+    <title>Konfiguration</title>
+  </head>
+  <body>
+    <div role="main">
+    <h1>Inställningar</h1>
+    <p>
+      Du kan välja vilket typsnitt du vill ha lagen.nu presenterad i nedan:
+    </p>
+    <ul>
+      <li><a href="#" class="styleswitch" rel="Times">Times</a></li>
+      <li><a href="#" class="styleswitch" rel="Georgia">Georgia</a></li>
+      <li><a href="#" class="styleswitch" rel="Verdana">Verdana</a></li>
+      <li><a href="#" class="styleswitch" rel="Calibri">Calibri</a></li>
+      <li><a href="#" class="styleswitch" rel="Cambria">Cambria</a></li>
+    </ul>
+    <p>
+      Nedan följer lite exempeltext, så du kan se hur en typisk
+      lagtext ser ut med ditt valda typsnitt.
+    </p>
+    <hr/>
+    <h1>Rättsinformationsförordning (1999:175)</h1>
+      
+      <div class="konsolideradtext">
+	<h2 id="R1">Ett offentligt rättsinformationssystem</h2>
+	<div id="P1" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P1">
+        <p id="P1S1" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P1S1">
+        <span class="paragrafbeteckning">1 §</span>
+        I syfte att tillförsäkra den offentliga förvaltningen och enskilda tillgång till grundläggande rättsinformation i elektronisk form skall det finnas ett offentligt rättsinformationssystem.
+      </p>
+	  <p id="P1S2" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P1S2">
+        Rättsinformationssystemet skall föras med hjälp av informationsteknik och finnas tillgängligt genom ett allmänt nätverk. Innehållet i systemet skall vara tillgängligt på ett enhetligt sätt.
+      </p>
+      </div>
+	<div id="P2" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P2">
+        <p id="P2S1" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P2S1">
+        <span class="paragrafbeteckning">2 §</span>
+        I denna förordning föreskrivs<ul about="#" class="numreradlista">
+          <li id="P2S1N1" about="#P2S1N1">
+      1. vilket innehåll rättsinformationssystemet skall ha (<a href="/1999:175#P3" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P3" title="3 &#xA7; R&#xE4;ttsinformationssystemet skall inneh&#xE5;lla 1. Svensk f&#xF6;rfattningssamling som den kung&#xF6;rs, 2. referensregister &#xF6;ver f&#xF6;rfattningar i Svensk...">3</a>-<a href="/1999:175#P9" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P9" title="(Upph&#xF6;r att g&#xE4;lla 2010-07-01) 9 &#xA7; R&#xE4;ttsinformationssystemet f&#xE5;r ut&#xF6;ver vad som framg&#xE5;r av 3-8 &#xA7;&#xA7; inneh&#xE5;lla annan r&#xE4;ttslig information. Den...">9 §§</a>),
+      </li>
+          <li id="P2S1N2" about="#P2S1N2">
+      2. vem som har informationsansvar (<a href="/1999:175#P10" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P10" title="10 &#xA7; Informationsansvar enligt denna f&#xF6;rordning inneb&#xE4;r en skyldighet att se till att informationen g&#xF6;rs elektroniskt tillg&#xE4;nglig och sprids....">10</a>-<a href="/1999:175#P14" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P14" title="14 &#xA7; Om det finns s&#xE4;rskilda sk&#xE4;l f&#xE5;r samordningsmyndigheten p&#xE5; beg&#xE4;ran av den informationsansvariga myndigheten &#xF6;verta ansvaret f&#xF6;r att informationen...">14 §§</a>),
+      </li>
+          <li id="P2S1N3" about="#P2S1N3">
+      3. vem som skall samordna systemet (<a href="/1999:175#P15" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P15" title="15 &#xA7; Verket f&#xF6;r f&#xF6;rvaltningsutveckling skall vara samordningsmyndighet f&#xF6;r r&#xE4;ttsinformationssystemet. F&#xF6;rordning (2005:800).">15</a>-<a href="/1999:175#P19" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P19" title="19 &#xA7; Innan samordningsmyndigheten fattar beslut som &#xE4;r av principiell betydelse f&#xF6;r dem som deltar med information i r&#xE4;ttsinformationssystemet skall...">19 §§</a>), och
+      </li>
+          <li id="P2S1N4" about="#P2S1N4">
+      4. vilken information som skall finnas tillgänglig utan avgift (<a href="/1999:175#P20" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P20" title="20 &#xA7; Den information som avses i 3-5 och 8 &#xA7;&#xA7; skall finnas tillg&#xE4;nglig utan avgift.">20 §</a>).
+      </li>
+      </ul>
+      </p>
+	  <p id="P2S2" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P2S2">
+        Dessutom finns bestämmelser om personuppgifter (<a href="/1999:175#P21" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P21" title="21 &#xA7; Den myndighet som har informationsansvar enligt denna f&#xF6;rordning &#xE4;r personuppgiftsansvarig enligt personuppgiftslagen (1998:204) f&#xF6;r den...">21</a>-<a href="/1999:175#P23" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P23" title="23 &#xA7; De personuppgifter som finns i r&#xE4;ttsinformationssystemet f&#xE5;r f&#xF6;ras &#xF6;ver till en stat som inte ing&#xE5;r i Europeiska unionen eller &#xE4;r ansluten till...">23 §§</a>).
+      </p>
+      </div>
+	<h2 id="R2">Obligatoriskt innehåll</h2>
+	<h3 id="R3" class="underrubrik">Föreskrifter</h3>
+	<div id="P3" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P3">
+        <p id="P3S1" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P3S1">
+        <span class="paragrafbeteckning">3 §</span>
+        Rättsinformationssystemet skall innehålla<ul about="#" class="numreradlista">
+          <li id="P3S1N1" about="#P3S1N1">
+      1. Svensk författningssamling som den kungörs,
+      </li>
+          <li id="P3S1N2" about="#P3S1N2">
+      2. referensregister över författningar i Svensk författningssamling, och
+      </li>
+          <li id="P3S1N3" about="#P3S1N3">
+      3. grundförfattningarna i Svensk författningssamling i deras lydelse med införda ändringar.
+      </li>
+      </ul>
+      </p>
+	  <p id="P3S2" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P3S2">
+        En bestämmelse i Svensk författningssamling som upphävs skall sparas elektroniskt på ett sådant sätt att det blir möjligt att få fram grundförfattningarna i deras lydelse med införda ändringar vid tidigare tidpunkter.
+      </p>
+      </div>
+	<div id="P4" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P4">
+	<span class="upphor">(Upphör att gälla 2010-07-01)</span>
+        <p id="P4S1" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P4S1">
+        <span class="paragrafbeteckning">4 §</span>
+        Rättsinformationssystemet skall innehålla de gällande förordningar som kungörs i andra författningssamlingar än Svensk författningssamling.
+      </p>
+	  <p id="P4S2" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P4S2">
+        Systemet skall även innehålla sådana gällande föreskrifter som är beslutade av myndigheter under regeringen och som skall kungöras enligt lagen (<a href="/1976:633" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1976:633" title="">1976:633</a>) om kungörande av lagar och andra författningar. När föreskrifter som har beslutats av myndigheter under regeringen återges elektroniskt skall de uppfylla de krav som anges i lagen (<a href="/1976:633" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1976:633" title="">1976:633</a>) om kungörande av lagar och andra författningar och i <a href="/1976:725" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1976:725" title="">författningssamlingsförordningen (1976:725)</a>.
+      </p>
+	  <p id="P4S3" about="http://rinfo.lagrummet.se/publ/sfs/1999:175#P4S3">
+        De författningar som avses i första och <a href="/1999:175#P4S2" rel="dct:references" resource="http://rinfo.lagrummet.se/publ/sfs/1999:175#P4S2" title="Systemet skall &#xE4;ven inneh&#xE5;lla s&#xE5;dana g&#xE4;llande f&#xF6;reskrifter som &#xE4;r beslutade av myndigheter under regeringen och som skall kung&#xF6;ras enligt lagen...">andra styckena</a> skall återges i den form som de kungörs.
+      </p>
+      </div><p id="refs-P4" class="sidoruta">Ändrad: SFS
+      <a href="#L2007-293">2007:293</a><br /></p>
+    </div>
+  </div>
+  </body>
+</html>

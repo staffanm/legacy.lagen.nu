@@ -45,7 +45,7 @@
 	    </xsl:otherwise>
 	  </xsl:choose>
 	</xsl:variable>
-	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
