@@ -60,7 +60,7 @@ if __name__ == "__main__":
     lagen_ns = Namespace('http://lagen.nu/')
     rinfo_ns = Namespace('http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#')
     dc_ns   = Namespace('http://purl.org/dc/elements/1.1/')
-    dct_ns   = Namespace('http://dublincore.org/documents/dcmi-terms/')
+    dct_ns   = Namespace('http://purl.org/dc/terms/')
     foaf_ns  = Namespace('http://xmlns.com/foaf/0.1/')
     default_graph_uri = "http://lagen.nu/rdfstore"
     examplequery = 'SELECT ?a WHERE { ?a dct:subject "Sekretess" . ?a dct:identifier ?aid }'

@@ -3,7 +3,7 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
-		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
+		xmlns:dct="http://purl.org/dc/terms/"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
 		xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
@@ -30,7 +30,7 @@
 	      indent="yes"
 	    />
   -->
-  
+  <xsl:variable name="rattsfall" select="document('../data/dv/parsed/rdf-mini.xml')/rdf:RDF"/>
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
     <xsl:apply-templates/>
@@ -55,6 +55,12 @@
       -->
       <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+      <link rel="stylesheet" href="/css/screen.css" title="Times" media="screen" type="text/css"/> 
+      <link rel="alternate stylesheet" href="/css/alt-georgia.css" title="Georgia" media="screen" type="text/css"/> 
+      <link rel="alternate stylesheet" href="/css/alt-verdana.css" title="Verdana" media="screen" type="text/css"/> 
+      <link rel="alternate stylesheet" href="/css/alt-calibri.css" title="Calibri" media="" type="text/css"/> 
+      <link rel="alternate stylesheet" href="/css/alt-cambria.css" title="Cambria" media="" type="text/css"/> 
+
       <link rel="stylesheet" href="/css/screen.css" media="screen" type="text/css"/> 
       <link rel="stylesheet" href="/css/print.css" media="print" type="text/css"/> 
       <xsl:call-template name="linkalternate"/>

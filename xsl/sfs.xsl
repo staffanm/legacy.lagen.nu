@@ -4,7 +4,7 @@
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns:dct="http://dublincore.org/documents/dcmi-terms/"
+		xmlns:dct="http://purl.org/dc/terms/"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
 		xmlns:rinfoex="http://lagen.nu/terms#"
 		exclude-result-prefixes="xht2 rdf">
@@ -13,7 +13,7 @@
   <xsl:import href="tune-width.xsl"/>
   <xsl:include href="base.xsl"/>
   
-  <xsl:variable name="alla_rattsfall"
+  <xsl:variable name="rattsfall_efter_sfs"
 		select="document('../data/sfs/parsed/dv-rdf.xml')"/>
   <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
   
@@ -81,7 +81,7 @@
 
     <!-- plocka fram referenser kring/till denna paragraf -->
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
-    <xsl:variable name="rattsfall" select="document('../data/sfs/parsed/dv-rdf.xml')/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
+    <xsl:variable name="rattsfall" select="$rattsfall_efter_sfs/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
     <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
     <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
     <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
@@ -132,14 +132,14 @@
 	<xsl:variable name="tuned-width">
 	  <xsl:call-template name="tune-width">
 	    <xsl:with-param name="txt" select="dct:description"/>
-	    <xsl:with-param name="width" select="90"/>
-	    <xsl:with-param name="def" select="90"/>
+	    <xsl:with-param name="width" select="80"/>
+	    <xsl:with-param name="def" select="80"/>
 	  </xsl:call-template>
 	</xsl:variable>
 	<xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
 	<a href="{$localurl}"><b><xsl:value-of select="dct:identifier"/></b></a>:
 	<xsl:choose>
-	  <xsl:when test="string-length(dct:description) > 90">
+	  <xsl:when test="string-length(dct:description) > 80">
 	    <xsl:value-of select="normalize-space(substring(dct:description, 1, $tuned-width - 1))" />...
 	  </xsl:when>
 	  <xsl:otherwise>

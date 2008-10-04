@@ -1,4 +1,3 @@
-
 /*
 color scheme, based on a sepia palette made using greyscale, then colorize using
 hue = 21, saturation = 50
@@ -10,46 +9,27 @@ hue = 21, saturation = 50
 #bba694: midtone (active links)
 */
     /* Typografi, ramar, färger etc */
-    /*
-    a:link    {color: #b29220; text-decoration: none; }
-    a:visited {color: #665312; text-decoration: none; }
-    a:hover   {color: #665312; text-decoration: underline; }
-    a:active  {color: #ffc600; text-decoration: underline; }
-    */
     a:link    { color: #806855; text-decoration: none; }
     a:visited { color: #6b482c; text-decoration: none; }
     a:hover   { color: #735e4c; text-decoration: underline; }
     a:active  { color: #bba694; text-decoration: underline; }
 
-    
-    .bugreport-link { margin-top: 18pt; font-weight: bold;}
-    .bugreport-form { width: 100% }
-    .bugreport-form textarea { font: 10pt Arial, sans-serif; width: 100% }
-    .bugreport-form input { font: 10pt Arial, sans-serif; width: 100%}
-    
-    .positioned {
-	position: absolute;
-        color: #f00;
-    }
-    .positioned .refboxlabel {
-	font-weight: bold;
-    } 
     body {
 	margin: 0;
         padding: 0;
-	font: 12pt 'Times New Roman', Times, serif; 
-  	/* font: 13pt Garamond, serif; */
-	/* font: 12pt 'Palatino Linotype', 'Book Antiqua', Palatino, serif; */ 
-	/* font: 12pt 'Trebuchet MS', Helvetica, sans-serif; */
-	/* font: 12pt Arial, Helvetica, sans-serif; */
+	font: 13pt 'Times New Roman', Times, serif;
+ 	// Avoid using absolute point sizes for fonts in the rest of the file -- use
+        // 'smaller', 'larger' or '1.5em' or similar
     }
+
     strong,b {
 	font-weight: bold;
     }
+
     em, i {
 	font-style: italic
-   }
-   tt, code, kbd, samp { font-family: monospace }
+    }
+    tt, code, kbd, samp { font-family: monospace }
 
    ins {
        background: #efe;
@@ -60,7 +40,7 @@ hue = 21, saturation = 50
    }
    
     #kommentarer  {
-	font-size: smaller;
+	//font-size: smaller;
     }
 
     .entry {
@@ -75,11 +55,10 @@ hue = 21, saturation = 50
       border: solid 1px #6b482c;
       margin-bottom: 5px;
       font-size: smaller;
-      //font-size: 10pt;
       margin-bottom: 12pt;
     }
     .sidoruta h2 {
-	font-size: 10pt;
+	//font-size: smaller;
         font-weight: bold;
     }
     .verticalalign p {
@@ -87,6 +66,18 @@ hue = 21, saturation = 50
       padding-bottom: 18px;
     }
     
+    .bugreport-link { margin-top: 18pt; font-weight: bold;}
+    .bugreport-form { width: 100% }
+    .bugreport-form textarea { font: 10pt Arial, sans-serif; width: 100% }
+    .bugreport-form input { font: 10pt Arial, sans-serif; width: 100%}
+    
+    .positioned {
+	position: absolute;
+        color: #f00;
+    }
+    .positioned .refboxlabel {
+	font-weight: bold;
+    }
     td {
 	border: solid 1px #eae3dd;
         vertical-align: top;
@@ -141,14 +132,14 @@ hue = 21, saturation = 50
     .tablestyle dt {
 	float: left;
         clear: left;
-	width: 8em;
+	width: 8.5em;
         font-weight: bold;
     }
    
     .tablestyle dt:after { content: ":"; }
 
     .tablestyle dd {
-	margin: 0 0 0 8.1em;
+	margin: 0 0 0 8.6em;
         padding: 0;
 	clear: right;
     }
@@ -189,17 +180,15 @@ hue = 21, saturation = 50
  	height: 120px;
         background-image: url('/img/banner3.jpg');
 	position:relative;
-        font-size: 14pt;
+        font-size: larger;
 	margin-bottom: 10pt;
     }
     #vinjett h1 a {
 	text-decoration: none;
-         font-style: italic;
-	 color: #fff;
-         font-size: 28pt;
-	 padding: 30pt;
-         
-	}
+	color: #fff;
+	font: italic bold 36pt 'Times New Roman', Times, serif;
+	padding: 30pt;
+    }
     #navigation {
         position: absolute;
 	left:6pt;
@@ -212,8 +201,8 @@ hue = 21, saturation = 50
 	margin: 0 3pt; 
 	padding: 6pt 6pt 6pt 6pt;
         background-color: #000;
-	opacity: 0.4;
-        filter: alpha(opacity = 40);
+	opacity: 0.65;
+        filter: alpha(opacity = 65);
 	zoom: 1;
     }
     #navigation li a {
@@ -224,8 +213,8 @@ hue = 21, saturation = 50
         background-color: #000;
 	color: #fff;
         padding: 6pt;
-	opacity: 0.4;
-        filter: alpha(opacity = 40);
+	opacity: 0.65;
+        filter: alpha(opacity = 65);
         position: absolute;
 	right:6pt;
         bottom: 0;
@@ -235,7 +224,10 @@ hue = 21, saturation = 50
 	margin: 0;
         padding: 0;
     }
-
+    #vinjett form input {
+	font-weight: bold;
+    }
+    
     .accelerator {
 	text-decoration: underline;
     }
@@ -260,15 +252,15 @@ hue = 21, saturation = 50
     }
 
     h1 {
-	font-size: 20pt;
+	font-size: 1.5em;
         font-weight: bold;
     }
     h2 {
-	font-size: 14pt;
+	font-size: 1.2em;
         font-weight: bold;
     }
     h3 {
-	font-size: 12pt;
+	//font-size: medium;
         font-style: italic;
     }
     ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
@@ -288,6 +280,6 @@ hue = 21, saturation = 50
 
     .timestamp {
 	font-style: italic;
-        font-size:small;
+        font-size: smaller;
         margin:0;
     }

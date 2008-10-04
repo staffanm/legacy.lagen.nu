@@ -281,6 +281,7 @@ class Manager:
                                pageuri=u'https://lagen.nu/nyheter/site.html')
         if xht2file:
             tmpfilename = xht2file
+            Util.ensureDir(tmpfilename)
         else:
             tmpfilename = mktemp()
         fp = open(tmpfilename,"w")

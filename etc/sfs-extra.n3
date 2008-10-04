@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix dct: <http://dublincore.org/documents/dcmi-terms/> .
+@prefix dct: <http://purl.org/dc/terms/> .
 
 <http://rinfo.lagrummet.se/publ/sfs/1736:0123_1> rdfs:label "byggningabalken"; dct:alternate "BB" .
 <http://rinfo.lagrummet.se/publ/sfs/1736:0123_2> rdfs:label "handelsbalken"; dct:alternate "HB" .

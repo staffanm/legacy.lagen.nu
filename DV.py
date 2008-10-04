@@ -515,11 +515,26 @@ class DVManager(LegalSource.Manager):
     def NTriplesToXML(self):
         ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
         xmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']) 
+        minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml']) 
         log.info("Loading NT file %s" % ntfile)
         g = Graph()
         for key, value in Util.ns.items():
             g.bind(key,  Namespace(value));
         g.parse(ntfile,format="nt")
+
+        log.info("Making a minimal graph")
+        mg = Graph()
+        for key, value in Util.ns.items():
+            mg.bind(key,  Namespace(value));
+        for triple in g:
+            if triple[1] == RDF.type:
+                mg.add(triple)
+
+        log.info("Serializing the minimal graph")
+        f = open(minixmlfile, 'w')
+        f.write(mg.serialize(format="pretty-xml"))
+        f.close()
+        
         log.info("Serializing to file %s" % xmlfile)
         f = open(xmlfile, 'w')
         f.write(g.serialize(format="pretty-xml"))

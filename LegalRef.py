@@ -145,7 +145,7 @@ class LegalRef:
             productions = self.load_ebnf("etc/kortlagrum.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.sfs_format_uri
-            DCT = Namespace("http://dublincore.org/documents/dcmi-terms/")
+            DCT = Namespace("http://purl.org/dc/terms/")
             d = self.get_relations(DCT['alternate'])
             self.namedlaws.update(d)
             self.decl += "LawAbbreviation ::= ('%s')\n" % "'/'".join([x.encode(SP_CHARSET) for x in d.keys()])

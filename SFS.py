@@ -1965,7 +1965,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             triples[obj].append(triple)
             if pred == RINFO['lagrum']:
                 lagrum[subj].append(obj)
-        sys.stdout.write("\n")
+        #sys.stdout.write("\n")
 
         # Spara ned RDF-datat "för hand" med xml.etree istf rdflib, så
         # att vi kan se till att det serialiserade datat är lätt för

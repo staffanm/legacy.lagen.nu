@@ -307,7 +307,7 @@ class Manager(object):
                 # most of the triples are dct:references, and these
                 # are not used for indexpage generation - filter these
                 # out to cut down on memory usage
-                if pred != 'http://dublincore.org/documents/dcmi-terms/references':
+                if pred != 'http://purl.org/dc/terms/references':
                     if objLiteral:
                         by_pred_obj[pred][objLiteral].append(subj)
                         by_subj_pred[subj][pred] = objLiteral
@@ -405,9 +405,9 @@ class Manager(object):
         return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
     def _build_indexpages(self,by_pred_obj, by_subj_pred):
-        displaypredicates = {'http://dublincore.org/documents/dcmi-terms/title':
+        displaypredicates = {'http://purl.org/dc/terms/title':
                              u'titel',
-                             'http://dublincore.org/documents/dcmi-terms/identifier':
+                             'http://purl.org/dc/terms/identifier':
                              u'identifierare',
                              'http://www.w3.org/2000/01/rdf-schema#label':
                              u'beteckning'}
@@ -418,7 +418,7 @@ class Manager(object):
         for predicate in by_pred_obj.keys():
             if predicate in displaypredicates.keys():
                 # shorten
-                # 'http://dublincore.org/documents/dcmi-terms/title' to
+                # 'http://purl.org/dc/terms/title' to
                 # 'dct-title' etc for usage in filenames
                 pred_id = predicate
                 for (k,v) in Util.ns.items():
@@ -467,7 +467,9 @@ class Manager(object):
                                currentkeyword=keyword,
                                compactlisting=compactlisting,
                                docsorter=docsorter)
-        tmpfilename = mktemp()
+        #tmpfilename = mktemp()
+        tmpfilename = outfile.replace(".html",".xht2")
+        
         fp = open(tmpfilename,"w")
         fp.write(stream.render())
         fp.close()

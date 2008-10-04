@@ -63,9 +63,9 @@ def build_dotfile(g):
                 fontsize= 10];
 
 """ % sys.argv[1].decode('iso-8859-1').replace("\\", "\\\\"))
-    identifier = URIRef(u'http://dublincore.org/documents/dcmi-terms/identifier')
-    description = URIRef(u'http://dublincore.org/documents/dcmi-terms/description')
-    dctsubject = URIRef(u'http://dublincore.org/documents/dcmi-terms/subject')
+    identifier = URIRef(u'http://purl.org/dc/terms/identifier')
+    description = URIRef(u'http://purl.org/dc/terms/description')
+    dctsubject = URIRef(u'http://purl.org/dc/terms/subject')
 
     rattsfall = URIRef(u'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#rattsfallshanvisning')
     
