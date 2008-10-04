@@ -515,7 +515,9 @@ class DVManager(LegalSource.Manager):
     def NTriplesToXML(self):
         ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
         xmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']) 
-        minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml']) 
+        minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
+        if self._outfile_is_newer([xmlfile,minixmlfile],ntfile):
+            log.info(U"Not regenerating RDF/XML files")
         log.info("Loading NT file %s" % ntfile)
         g = Graph()
         for key, value in Util.ns.items():
