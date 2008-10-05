@@ -30,6 +30,10 @@
 	      indent="yes"
 	    />
   -->
+
+  <!-- this minimal RDF file is only used to know wheter we have a
+       specific case (and therefore should link it) or not - it's used
+       in uri.xsl -->
   <xsl:variable name="rattsfall" select="document('../data/dv/parsed/rdf-mini.xml')/rdf:RDF"/>
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
@@ -78,6 +82,7 @@
       <xsl:attribute name="typeof"><xsl:value-of select="@typeof"/></xsl:attribute>
 
       <div id="vinjett">
+	<img src="/img/blueprint.jpg" alt=""/>
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
 	  <li><a href="/nyheter/">Nyheter</a></li>
@@ -102,6 +107,7 @@
 	    </div>
 	    <div id="kommentarer">
 	      <xsl:apply-templates mode="kommentarer"/>
+	      <!--
 	      <p class="bugreport-link">Ser sidan konstig ut? Hjälp
 	      mig att göra tjänsten bättre genom en felanmälan!</p>
 	      <form class="bugreport-form" action="http://trac.lagen.nu/newticket" method="get">
@@ -121,7 +127,7 @@
 		  <input type="submit" name="submit" value="Felanmäl" />
 		</p>
 	      </form>
-	      
+	      -->
 	    </div>
 	    <div id="referenser">
 	      <xsl:apply-templates mode="refs"/>

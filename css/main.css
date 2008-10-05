@@ -1,23 +1,7 @@
-/*
-color scheme, based on a sepia palette made using greyscale, then colorize using
-hue = 21, saturation = 50
-
-#f9f6f5: v.light (background)
-#eae3dd: light (some outlines)
-#6b482c: real dark (outlines, visited links)
-#735e4c: medium dark (unvisited links)
-#bba694: midtone (active links)
-*/
-    /* Typografi, ramar, färger etc */
-    a:link    { color: #806855; text-decoration: none; }
-    a:visited { color: #6b482c; text-decoration: none; }
-    a:hover   { color: #735e4c; text-decoration: underline; }
-    a:active  { color: #bba694; text-decoration: underline; }
-
     body {
 	margin: 0;
         padding: 0;
-	font: 13pt 'Times New Roman', Times, serif;
+	font: 13pt/1.3em 'Times New Roman', Times, serif;
  	// Avoid using absolute point sizes for fonts in the rest of the file -- use
         // 'smaller', 'larger' or '1.5em' or similar
     }
@@ -50,12 +34,16 @@ hue = 21, saturation = 50
     .sidoruta {
       padding: 3pt;
       margin-top: 0;
+      line-height: 1.2em;
       /* background: #e7dfd8;*/
       background: #f9f6f5;
       border: solid 1px #6b482c;
       margin-bottom: 5px;
       font-size: smaller;
       margin-bottom: 12pt;
+      box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
+      -webkit-box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
     }
     .sidoruta h2 {
 	//font-size: smaller;
@@ -71,13 +59,6 @@ hue = 21, saturation = 50
     .bugreport-form textarea { font: 10pt Arial, sans-serif; width: 100% }
     .bugreport-form input { font: 10pt Arial, sans-serif; width: 100%}
     
-    .positioned {
-	position: absolute;
-        color: #f00;
-    }
-    .positioned .refboxlabel {
-	font-weight: bold;
-    }
     td {
 	border: solid 1px #eae3dd;
         vertical-align: top;
@@ -122,24 +103,42 @@ hue = 21, saturation = 50
         padding: 0;
 	clear: right;
     }
-    .sidoruta dd:after {
-	clear: left;
+    .sidoruta dd:after { clear: left; }
+    .paragraf { position: relative; }
+    .kommentar {
+	position: absolute;
+        width: 50%;
+	left: -54%;
+        top: 0;
 	}
-
+    .referenser {
+	position: absolute;
+        width: 50%;
+	right: -53%;
+        bottom: -1em;
+    }
+    .platsmarkor {
+	position: absolute;
+        left: -3em;
+        font-size: 0.6em;
+	color: #999;
+        font-family: Arial;
+    }
+    .editlink { font-size: smaller; }
     /* side-by-side, statiska sidor */
     dl.tablestyle {
     }
     .tablestyle dt {
 	float: left;
         clear: left;
-	width: 8.5em;
+	width: 8.7em;
         font-weight: bold;
     }
    
     .tablestyle dt:after { content: ":"; }
 
     .tablestyle dd {
-	margin: 0 0 0 8.6em;
+	margin: 0 0 0 9em;
         padding: 0;
 	clear: right;
     }
@@ -177,29 +176,37 @@ hue = 21, saturation = 50
 
  
     #vinjett {
- 	height: 120px;
-        background-image: url('/img/banner3.jpg');
+ 	height: 100px;
 	position:relative;
         font-size: larger;
 	margin-bottom: 10pt;
+    }
+    #vinjett img {
+	position: absolute;
+        z-index: -1;
+        top: 0;
+	left: 0;
     }
     #vinjett h1 a {
 	text-decoration: none;
 	color: #fff;
 	font: italic bold 36pt 'Times New Roman', Times, serif;
 	padding: 30pt;
+        text-shadow: #000 5px 5px 5px;
     }
+    #vinjett h1 a:after { content: "[beta]" }
+	
     #navigation {
         position: absolute;
-	left:6pt;
+	left:8px;
         bottom: 0;
 	margin: 0;
-        padding: 6pt;
+        padding: 9px;
     }
     #navigation li {
 	display: inline;
 	margin: 0 3pt; 
-	padding: 6pt 6pt 6pt 6pt;
+	padding: 8px;
         background-color: #000;
 	opacity: 0.65;
         filter: alpha(opacity = 65);
@@ -212,7 +219,7 @@ hue = 21, saturation = 50
     #vinjett form {
         background-color: #000;
 	color: #fff;
-        padding: 6pt;
+        padding: 8px;
 	opacity: 0.65;
         filter: alpha(opacity = 65);
         position: absolute;
@@ -253,6 +260,7 @@ hue = 21, saturation = 50
 
     h1 {
 	font-size: 1.5em;
+        margin-bottom: 0.5em;
         font-weight: bold;
     }
     h2 {

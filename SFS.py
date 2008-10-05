@@ -25,7 +25,7 @@ import xml.etree.ElementTree as PET
     
 # 3rdparty libs
 from configobj import ConfigObj
-from mechanize import Browser, LinkNotFoundError
+from mechanize import Browser, LinkNotFoundError, urlopen
 from rdflib.Graph import Graph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
@@ -2087,6 +2087,55 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def Generate(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
+        sfsnr = FilenameToSFSnr(basefile)
+        rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
+
+        # Hämta eurlexdata från eurlex.nu
+        eurlex = u'%s/%s/intermediate/%s.eur.xml' % (self.baseDir, self.moduleDir, basefile)
+
+        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
+        url = "http://wiki.lagen.nu/index.php/Special:Exportera/sfs/%s" % sfsnr
+        p = LegalRef(LegalRef.LAGRUM)
+        baseuri = p.parse(sfsnr)[0].uri
+
+        root_node = PET.Element("rdf:RDF")
+        for prefix in Util.ns:
+            # PET._namespace_map[Util.ns[prefix]] = prefix
+            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+
+        tree = ET.parse(urlopen(url))
+        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
+        if not node is None:
+            wikitext = node.text
+            tr = TextReader(ustring=wikitext)
+            while not tr.eof():
+                chunk = tr.readchunk("\n==")
+                pieces = [x.strip() for x in chunk.split("==", 1)]
+                if len(pieces) == 1:
+                    text = pieces[0]
+                    uri = baseuri
+                else:
+                    part = pieces[0]
+                    text = pieces[1]
+                    try:
+                        uri = p.parse(part,baseuri)[0].uri
+                    except:
+                        log.warning("Could not find out URI for '%s'" % part)
+                lagrum_node = PET.SubElement(root_node,"rdf:Description")
+                lagrum_node.set("rdf:about",uri)
+                triple_node = PET.SubElement(lagrum_node, "dct:description")
+                triple_node.text = text
+            Util.indent_et(root_node)
+            tree = PET.ElementTree(root_node)
+            kommentarer = u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile)
+            tree.write(kommentarer, encoding="utf-8")
+            
+                    
+        else:
+            print "No wiki page found"
+        # Hämta förarbetstitlar
+        
+        
         force = (self.config[__moduledir__]['generate_force'] == 'True')
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
@@ -2096,6 +2145,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         Util.transform("xsl/sfs.xsl",
                        infile,
                        outfile,
+                       parameters = {'cases':'../'+rattsfall,
+                                     'kommentarer':'../'+kommentarer},
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
 

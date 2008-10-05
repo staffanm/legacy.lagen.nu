@@ -898,6 +898,8 @@ class LegalRef:
             elif key == 'skrivelse':
                 res += "ext/rskr/%s" % val
             elif key == 'celex':
+                if len(val) == 8: # incorrectly formatted, uses YY instead of YYYY
+                    val = val[0]+'19'+val[1:]
                 res += "ext/celex/%s" % val
         return res
 
@@ -1032,7 +1034,7 @@ class TestLegalRef(FilebasedTester):
         return res
         
     def ParseTestString(self,s, verbose=True):
-        # p = LegalRef(LegalRef.RATTSFALL)
+        # p = LegalRef(LegalRef.FORARBETEN)
         p = LegalRef(LegalRef.LAGRUM)
         p.verbose = verbose
         print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))

@@ -155,7 +155,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
 
     tmpfile = mktemp()
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    #print cmdline
+    # print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)

@@ -659,13 +659,13 @@ class DVManager(LegalSource.Manager):
         subj_pred = Util.ns['dct']+'subject'
         for obj in by_pred_obj[publ_pred]:
             label = self.publikationer[obj]
-            for subject in by_pred_obj[publ_pred][obj]:
+            for subject in list(set(by_pred_obj[publ_pred][obj])):
                 year = by_subj_pred[subject][year_pred]
                 identifier = by_subj_pred[subject][id_pred]
                 
                 desc = by_subj_pred[subject][desc_pred]
-                if len(desc) > 80:
-                    desc = desc[:80].rsplit(' ',1)[0]+'...'
+                if len(desc) > 72:
+                    desc = desc[:72].rsplit(' ',1)[0]+'...'
                 pageid = '%s-%s' % (obj.split('/')[-1], year)
                 pagetitles[pageid] = u'Rättsfall från %s under %s' % (label, year)
                 pagelabels[pageid] = year

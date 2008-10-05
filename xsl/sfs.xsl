@@ -13,14 +13,42 @@
   <xsl:import href="tune-width.xsl"/>
   <xsl:include href="base.xsl"/>
   
-  <xsl:variable name="rattsfall_efter_sfs"
-		select="document('../data/sfs/parsed/dv-rdf.xml')"/>
+  <xsl:param name="cases"/>
+  <xsl:param name="kommentarer"/>
+
   <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
+
+  <xsl:variable name="docmetadata">
+    <dl id="refs-dokument">
+      <dt>Departement</dt>
+      <dd rel="dct:creator" resource="{//xht2:dd[@rel='dct:creator']/@href}"><xsl:value-of select="//xht2:dd[@rel='dct:creator']"/></dd>
+      <dt>Utfärdad</dt>
+      <dd property="rinfo:utfardandedatum" datatype="xsd:date"><xsl:value-of select="//xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
+      <dt>Ändring införd</dt>
+      <dd rel="rinfo:konsolideringsunderlag" href="{//xht2:dd[@rel='rinfo:konsolideringsunderlag']/@href}"><xsl:value-of select="//xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
+      <xsl:if test="//xht2:dd[@property='rinfoex:tidsbegransad']">
+	<dt>Tidsbegränsad</dt>
+	<dd property="rinfoex:tidsbegransad"><xsl:value-of select="//xht2:dd[@property='rinfoex:tidsbegransad']"/></dd>
+      </xsl:if>
+      <dt>Källa</dt>
+      <dd rel="dct:publisher" resource="http://lagen.nu/org/2008/regeringskansliet"><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={//xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
+      <dt>Senast hämtad</dt>
+      <dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+    </dl>
+  </xsl:variable>
+  
+  <xsl:variable name="toc">
+    <xsl:apply-templates mode="kommentarer"/>
+  </xsl:variable>
+
   
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
     <xsl:value-of select="//xht2:title"/>
-    <xsl:if test="//xht2:meta[@property='dct:alternate']/@content"> (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>) </xsl:if> | Lagen.nu</xsl:template>
+    <xsl:if test="//xht2:meta[@property='dct:alternate']/@content">
+      (<xsl:value-of select="//xht2:meta[@property='dct:alternate']/@content"/>)
+    </xsl:if> | Lagen.nu
+  </xsl:template>
 
   <xsl:template name="metarobots"/>
 
@@ -39,6 +67,21 @@
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
 	<h1 property="dct:title"><xsl:value-of select="."/></h1>
+	<div class="sidoruta">
+	  <xsl:copy-of select="$docmetadata"/>
+	  <xsl:if test="normalize-space($toc)">
+	    <ul id="toc">
+	      <li>Innehållsförteckning
+	      <xsl:copy-of select="$toc"/>
+	      </li>
+	    </ul>
+	  </xsl:if>
+	</div>
+	<div class="sidoruta kommentar">
+	  <h2>Kommentarer</h2>
+	  <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=sfs/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
+	  <xsl:value-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description"/>
+	</div>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
 	<h3><xsl:for-each select="@*">
@@ -75,42 +118,48 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
-    <div id="{@id}" about="{//xht2:html/@about}#{@id}">
+    <div class="paragraf" id="{@id}" about="{//xht2:html/@about}#{@id}">
       <xsl:apply-templates/>
+      <!-- plocka fram referenser kring/till denna paragraf -->
+      <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
+      <xsl:variable name="rattsfall" select="document($cases)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
+      <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
+      <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
+      <xsl:variable name="kommentar" select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description"/>
+      <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
+      <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
+	<p id="refs-{@id}" class="sidoruta referenser">
+	  <!--
+	      <span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
+	  -->
+	  <xsl:call-template name="andringsnoteringar">
+	    <xsl:with-param name="typ" select="'Införd'"/>
+	    <xsl:with-param name="andringar" select="$inford"/>
+	  </xsl:call-template>
+	  
+	  <xsl:call-template name="andringsnoteringar">
+	    <xsl:with-param name="typ" select="'Ändrad'"/>
+	    <xsl:with-param name="andringar" select="$andrad"/>
+	  </xsl:call-template>
+	  
+	  <xsl:call-template name="andringsnoteringar">
+	    <xsl:with-param name="typ" select="'Upphävd'"/>
+	    <xsl:with-param name="andringar" select="$upphavd"/>
+	  </xsl:call-template>
+	  
+	  <xsl:call-template name="rattsfall">
+	    <xsl:with-param name="rattsfall" select="$rattsfall"/>
+	  </xsl:call-template>
+	</p>
+      </xsl:if>
+      <xsl:if test="$kommentar">
+	<p id="ann-{@id}" class="sidoruta kommentar">
+	<xsl:value-of select="$kommentar"/>
+	</p>
+      </xsl:if>
     </div>
-
-    <!-- plocka fram referenser kring/till denna paragraf -->
-    <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
-    <xsl:variable name="rattsfall" select="$rattsfall_efter_sfs/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
-    <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
-    <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
-    <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
-    <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-      <p id="refs-{@id}" class="sidoruta">
-	<!--
-	<span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
-	-->
-	<xsl:call-template name="andringsnoteringar">
-	  <xsl:with-param name="typ" select="'Införd'"/>
-	  <xsl:with-param name="andringar" select="$inford"/>
-	</xsl:call-template>
-	
-	<xsl:call-template name="andringsnoteringar">
-	  <xsl:with-param name="typ" select="'Ändrad'"/>
-	  <xsl:with-param name="andringar" select="$andrad"/>
-	</xsl:call-template>
-	
-	<xsl:call-template name="andringsnoteringar">
-	  <xsl:with-param name="typ" select="'Upphävd'"/>
-	  <xsl:with-param name="andringar" select="$upphavd"/>
-	</xsl:call-template>
-	
-	<xsl:call-template name="rattsfall">
-	  <xsl:with-param name="rattsfall" select="$rattsfall"/>
-	</xsl:call-template>
-      </p>
-    </xsl:if>
   </xsl:template>
+  
   <xsl:template name="andringsnoteringar">
     <xsl:param name="typ"/>
     <xsl:param name="andringar"/>
@@ -180,7 +229,20 @@
   </xsl:template>
 
   <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
-    <p id="{@id}" about="{//xht2:html/@about}#{@id}"><xsl:apply-templates/></p>
+    <p id="{@id}" about="{//xht2:html/@about}#{@id}">
+      <span class="platsmarkor">
+	<xsl:choose>
+	  <xsl:when test="substring-after(@id,'S') = '1'">
+	    <xsl:if test="substring-after(@id,'K')">
+	      <xsl:value-of select="substring-before(substring-after(@id,'K'),'P')"/> kap.
+	    </xsl:if>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="substring-after(@id,'S')"/> st.
+	  </xsl:otherwise>
+	</xsl:choose></span>
+      <xsl:apply-templates/>
+    </p>
   </xsl:template>
 
   <!-- FIXME: in order to be valid xhtml1, we must remove unordered
@@ -226,6 +288,7 @@
     <!-- Den stora metadata-definitionslistan innehåller en massa som
          inte är intressant att visa för slutanvändaren. Filtrera ut
          de intressanta bitarna -->
+    <!-- moved to top
     <dl id="refs-dokument" class="sidoruta">
       <dt>Departement</dt>
       <dd rel="dct:creator" resource="{xht2:dd[@rel='dct:creator']/@href}"><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
@@ -237,12 +300,13 @@
 	<dt>Tidsbegränsad</dt>
 	<dd property="rinfoex:tidsbegransad"><xsl:value-of select="xht2:dd[@property='rinfoex:tidsbegransad']"/></dd>
       </xsl:if>
-
       <dt>Källa</dt>
       <dd rel="dct:publisher" resource="http://lagen.nu/org/2008/regeringskansliet"><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
       <dt>Senast hämtad</dt>
       <dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
     </dl>
+
+    -->
   </xsl:template>
 
   <xsl:template match="*" mode="refs">
@@ -255,7 +319,8 @@
       att få till en lösning (vare sig med css eller js) som funkar
       för alla fall. Saker som gör det svårt:
 
-      * lagar med 1000+ sidorutor (inkomstskattelagen) - tar en evighet att 
+      * lagar med 1000+ sidorutor (inkomstskattelagen) - tar en
+      evighet att visa
 
       * paragrafer med väldigt många rättsfall (så att refboxen blir
       högre än sin paragraf, exv marknadsföringslagen 4 §) - boxarna
@@ -302,13 +367,18 @@
 
   <!-- KOMMENTARER MODE -->
   <xsl:template match="xht2:section[@role='main']" mode="kommentarer">
+    <!-- moved to top 
     <xsl:variable name="toc"><xsl:apply-templates mode="kommentarer"/></xsl:variable>
     <xsl:if test="normalize-space($toc)">
-      <h2>Innehållsförteckning</h2>
       <ul id="toc">
-	<xsl:apply-templates mode="kommentarer"/>	
+	<li>Innehållsförteckning
+	<ul>
+	  <xsl:apply-templates mode="kommentarer"/>
+	</ul>
+	</li>
       </ul>
     </xsl:if>
+    -->
   </xsl:template>
 
   <xsl:template match="xht2:section[@typeof='rinfo:Avdelning']" mode="kommentarer">

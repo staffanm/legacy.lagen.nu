@@ -1,0 +1,16 @@
+/*
+color scheme, based on a sepia palette made using greyscale, then colorize using
+hue = 21, saturation = 50
+
+#f9f6f5: v.light (background)
+#eae3dd: light (some outlines)
+#6b482c: real dark (outlines, visited links)
+#735e4c: medium dark (unvisited links)
+#bba694: midtone (active links)
+*/
+/* Typografi, ramar, färger etc */
+a:link    { color: #806855; text-decoration: none; }
+a:visited { color: #6b482c; text-decoration: none; }
+a:hover   { color: #735e4c; text-decoration: underline; }
+a:active  { color: #bba694; text-decoration: underline; }
+
