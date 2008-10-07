@@ -77,7 +77,8 @@ LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordninge
 # 'ref' construct above
 
 
-ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,'.'
+# ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,'.'
+ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,('.'/?-(' '/','))
 
 ExternalRef          ::= GenericRef, Whitespace, ExternalLaw
 
