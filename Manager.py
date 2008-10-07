@@ -326,7 +326,7 @@ class Manager:
             log.info("Copying to target server")
             localcmd    = 'tar -c -T %s --mode a+rx -f - ' % publish
             transfercmd = 'ssh -C staffan@vps.tomtebo.org'
-            remotecmd   = 'cd /www/staffan/lagen.nu && tar xf -'
+            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
             # print "command is '%s'" % cmd
             (ret, stdout, stderr) = Util.runcmd(cmd)

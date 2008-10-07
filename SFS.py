@@ -2088,7 +2088,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
         sfsnr = FilenameToSFSnr(basefile)
+        params = {}
+
         rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
+        if os.path.exists(rattsfall):
+            params['cases'] = "../" + rattsfall
+        else:
+            params['cases'] = "../%s/%s/parsed/dv-rdf.xml" % (self.baseDir, self.moduleDir)
 
         # Hämta eurlexdata från eurlex.nu
         eurlex = u'%s/%s/intermediate/%s.eur.xml' % (self.baseDir, self.moduleDir, basefile)
@@ -2129,13 +2135,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             tree = PET.ElementTree(root_node)
             kommentarer = u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile)
             tree.write(kommentarer, encoding="utf-8")
-            
-                    
+            params['kommentarer'] = "../" + kommentarer
         else:
             print "No wiki page found"
+
         # Hämta förarbetstitlar
-        
-        
+
         force = (self.config[__moduledir__]['generate_force'] == 'True')
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
@@ -2145,8 +2150,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         Util.transform("xsl/sfs.xsl",
                        infile,
                        outfile,
-                       parameters = {'cases':'../'+rattsfall,
-                                     'kommentarer':'../'+kommentarer},
+                       parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
 

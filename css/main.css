@@ -41,9 +41,9 @@
       margin-bottom: 5px;
       font-size: smaller;
       margin-bottom: 12pt;
-      box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
-      -webkit-box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
-      -moz-box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.5);
+      box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
+      -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
     }
     .sidoruta h2 {
 	//font-size: smaller;
@@ -190,7 +190,7 @@
     #vinjett h1 a {
 	text-decoration: none;
 	color: #fff;
-	font: italic bold 36pt 'Times New Roman', Times, serif;
+	font: italic bold 30pt 'Times New Roman', Times, serif;
 	padding: 30pt;
         text-shadow: #000 5px 5px 5px;
     }
