@@ -120,15 +120,15 @@ class LegalRef:
     def __init__(self,*args):
         # print repr(args)
         self.graph = Graph()
-        self.graph.load("etc/sfs-extra.n3", format="n3")
+        self.graph.load(os.path.dirname(__file__)+"/etc/sfs-extra.n3", format="n3")
         self.roots = []
         self.uriformatter = {}
         self.decl = ""
         self.namedlaws = {}
-        self.load_ebnf("etc/base.ebnf")
+        self.load_ebnf(os.path.dirname(__file__)+"/etc/base.ebnf")
 
         if self.LAGRUM in args:
-            productions = self.load_ebnf("etc/lagrum.ebnf")
+            productions = self.load_ebnf(os.path.dirname(__file__)+"/etc/lagrum.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.sfs_format_uri
             self.namedlaws.update(self.get_relations(RDFS.label))
@@ -140,9 +140,9 @@ class LegalRef:
             # nu, eftersom kortlagrum.ebnf beror på produktioner som
             # definerats där
             if not self.LAGRUM in args:
-                self.load_ebnf("etc/lagrum.ebnf")
+                self.load_ebnf(os.path.dirname(__file__)+"/etc/lagrum.ebnf")
                 
-            productions = self.load_ebnf("etc/kortlagrum.ebnf")
+            productions = self.load_ebnf(os.path.dirname(__file__)+"/etc/kortlagrum.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.sfs_format_uri
             DCT = Namespace("http://purl.org/dc/terms/")
@@ -152,17 +152,17 @@ class LegalRef:
             self.roots.append("kortlagrumref")
 
         if self.EGLAGSTIFTNING in args:
-            productions = self.load_ebnf("etc/eglag.ebnf")
+            productions = self.load_ebnf(os.path.dirname(__file__)+"/etc/eglag.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.eglag_format_uri
             self.roots.append("eglagref")
         if self.FORARBETEN in args:
-            productions = self.load_ebnf("etc/forarbeten.ebnf")
+            productions = self.load_ebnf(os.path.dirname(__file__)+"/etc/forarbeten.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.forarbete_format_uri
             self.roots.append("forarbeteref")
         if self.RATTSFALL in args:
-            productions = self.load_ebnf("etc/rattsfall.ebnf")
+            productions = self.load_ebnf(os.path.dirname(__file__)+"/etc/rattsfall.ebnf")
             for p in productions:
                 self.uriformatter[p] = self.rattsfall_format_uri
             self.roots.append("rattsfallref")

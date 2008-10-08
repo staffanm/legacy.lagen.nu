@@ -50,25 +50,25 @@ def robustRename(old,new):
     # print "robustRename: %s -> %s" % (old,new)
     ensureDir(new)
     if os.path.exists(new):
-        try:
-            os.unlink(new)
-        except WindowsError:
-            print "Caught WindowsError, sleeping"
-            import time
-            time.sleep(1)
-            os.unlink(new)
+        #try:
+        os.unlink(new)
+        #except WindowsError:
+        #    print "Caught WindowsError, sleeping"
+        #    import time
+        #    time.sleep(1)
+        #    os.unlink(new)
     # os.rename may fail across file systems
     shutil.move(old, new)
    
 def robust_remove(file):
     if os.path.exists(file):
-        try:
-            os.unlink(file)
-        except WindowsError:
-            print "Caught WindowsError, sleeping"
-            import time
-            time.sleep(1)
-            os.unlink(file)
+        #try:
+        os.unlink(file)
+        #except WindowsError:
+        #    print "Caught WindowsError, sleeping"
+        #    import time
+        #    time.sleep(1)
+        #    os.unlink(file)
 
 def numcmp(x,y):
     return cmp(split_numalpha(x),split_numalpha(y))
@@ -154,6 +154,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         infile = tmpfile
 
     tmpfile = mktemp()
+    stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
     print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)

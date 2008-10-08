@@ -171,8 +171,8 @@ class Manager(object):
         stored and handled. moduledir is a sublevel directory that is unique
         for each LegalSource.Manager subclass."""
         self.moduleDir = self._get_module_dir()
-        self.config = ConfigObj("conf.ini")
-        self.baseDir = self.config['datadir']
+        self.config = ConfigObj(os.path.dirname(__file__)+"/conf.ini")
+        self.baseDir = os.path.dirname(__file__)+"/"+self.config['datadir']
 
     re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 

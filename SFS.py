@@ -596,7 +596,7 @@ class SFSParser(LegalSource.Parser):
 
         # hitta eventuella etablerade förkortningar
         g = Graph()
-        g.load("etc/sfs-extra.n3", format="n3")
+        g.load(os.path.dirname(__file__)+"/etc/sfs-extra.n3", format="n3")
         for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
             meta[u'Förkortning'] = unicode(obj)
 
@@ -2092,9 +2092,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
         if os.path.exists(rattsfall):
-            params['cases'] = "../" + rattsfall
+            params['cases'] = os.path.join(os.path.dirname(__file__),rattsfall)
         else:
-            params['cases'] = "../%s/%s/parsed/dv-rdf.xml" % (self.baseDir, self.moduleDir)
+            params['cases'] = os.path.join(os.path.dirname(__file__),"%s/%s/parsed/dv-rdf.xml" % (self.baseDir, self.moduleDir))
 
         # Hämta eurlexdata från eurlex.nu
         eurlex = u'%s/%s/intermediate/%s.eur.xml' % (self.baseDir, self.moduleDir, basefile)
@@ -2109,6 +2109,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # PET._namespace_map[Util.ns[prefix]] = prefix
             root_node.set("xmlns:" + prefix, Util.ns[prefix])
 
+        print "Getting %s" % url
         tree = ET.parse(urlopen(url))
         node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
         if not node is None:
@@ -2133,9 +2134,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 triple_node.text = text
             Util.indent_et(root_node)
             tree = PET.ElementTree(root_node)
-            kommentarer = u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile)
+            kommentarer = os.path.join(os.path.dirname(__file__),u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
             tree.write(kommentarer, encoding="utf-8")
-            params['kommentarer'] = "../" + kommentarer
+            params['kommentarer'] = kommentarer
         else:
             print "No wiki page found"
 
@@ -2446,7 +2447,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
 if __name__ == "__main__":
     import logging.config
-    logging.config.fileConfig('etc/log.conf')
+    logging.config.fileConfig(os.path.dirname(__file__)+'/etc/log.conf')
     SFSManager.__bases__ += (DispatchMixin,)
     mgr = SFSManager()
     mgr.Dispatch(sys.argv)
