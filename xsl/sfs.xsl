@@ -80,7 +80,7 @@
 	<div class="sidoruta kommentar">
 	  <h2>Kommentarer</h2>
 	  <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=sfs/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
-	  <xsl:value-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description"/>
+	  <xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description/*"/>
 	</div>
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
@@ -122,10 +122,11 @@
       <xsl:apply-templates/>
       <!-- plocka fram referenser kring/till denna paragraf -->
       <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
+      
       <xsl:variable name="rattsfall" select="document($cases)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
       <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
       <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
-      <xsl:variable name="kommentar" select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description"/>
+      <xsl:variable name="kommentar" select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
       <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
       <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
 	<p id="refs-{@id}" class="sidoruta referenser">
@@ -154,7 +155,7 @@
       </xsl:if>
       <xsl:if test="$kommentar">
 	<p id="ann-{@id}" class="sidoruta kommentar">
-	<xsl:value-of select="$kommentar"/>
+	<xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description"/>
 	</p>
       </xsl:if>
     </div>

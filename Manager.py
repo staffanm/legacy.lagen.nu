@@ -324,7 +324,7 @@ class Manager:
             log.info("No files to publish, we're done!")
         else:
             log.info("Copying to target server")
-            localcmd    = 'tar -c -T %s --mode a+rx -f - ' % publish
+            localcmd    = 'tar -c -T %s --mode a+rwx -f - ' % publish
             transfercmd = 'ssh -C staffan@vps.tomtebo.org'
             remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xf -'
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)

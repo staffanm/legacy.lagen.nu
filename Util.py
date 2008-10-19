@@ -156,7 +156,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     tmpfile = mktemp()
     stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    print cmdline
+    # print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
@@ -342,7 +342,3 @@ def outfile_is_newer(infiles,outfile):
     # print "%s is newer than %r" % (outfile, infiles)
     return True
 
-
-
-#print "indenting"
-#indentXmlFile('testdata/sfs/parsed/1891/35_s.1.xht2')

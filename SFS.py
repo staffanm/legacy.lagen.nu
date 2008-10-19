@@ -2088,62 +2088,41 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
         sfsnr = FilenameToSFSnr(basefile)
+        p = LegalRef(LegalRef.LAGRUM)
+        baseuri = p.parse(sfsnr)[0].uri
+        alla_rattsfall = os.path.join(os.path.dirname(__file__),"%s/%s/parsed/dv-rdf.xml" %
+                                      (self.baseDir, self.moduleDir))
+        rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
+        rattsfall = rattsfall.replace(os.path.sep,'/')
         params = {}
 
-        rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
-        if os.path.exists(rattsfall):
-            params['cases'] = os.path.join(os.path.dirname(__file__),rattsfall)
+        if not Util.outfile_is_newer([alla_rattsfall],rattsfall):
+            Util.transform("xsl/rdfslice.xsl", alla_rattsfall, rattsfall, {'uri':baseuri}, False)
+        #else:
+        #    print "%s is newer than %s, no need to slice" % (rattsfall, alla_rattsfall)
+
+        if os.path.getsize(rattsfall) < 140: # too small, no results
+            print "No cases (%d)" % os.path.getsice(rattsfall)
+            pass
         else:
-            params['cases'] = os.path.join(os.path.dirname(__file__),"%s/%s/parsed/dv-rdf.xml" % (self.baseDir, self.moduleDir))
+            params['cases'] = rattsfall
+
+        try:
+            tree = self.__get_wiki_annotations("sfs/"+sfsnr, baseuri,p)
+            kommentarer = os.path.join(os.path.dirname(__file__),u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
+            kommentarer = kommentarer.replace(os.path.sep,'/')
+            tree.write(kommentarer, encoding="utf-8")
+            params['kommentarer'] = kommentarer
+        except LegalSource.IdNotFound:
+            print "No wiki page found"
+
 
         # Hämta eurlexdata från eurlex.nu
         eurlex = u'%s/%s/intermediate/%s.eur.xml' % (self.baseDir, self.moduleDir, basefile)
-
-        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
-        url = "http://wiki.lagen.nu/index.php/Special:Exportera/sfs/%s" % sfsnr
-        p = LegalRef(LegalRef.LAGRUM)
-        baseuri = p.parse(sfsnr)[0].uri
-
-        root_node = PET.Element("rdf:RDF")
-        for prefix in Util.ns:
-            # PET._namespace_map[Util.ns[prefix]] = prefix
-            root_node.set("xmlns:" + prefix, Util.ns[prefix])
-
-        print "Getting %s" % url
-        tree = ET.parse(urlopen(url))
-        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
-        if not node is None:
-            wikitext = node.text
-            tr = TextReader(ustring=wikitext)
-            while not tr.eof():
-                chunk = tr.readchunk("\n==")
-                pieces = [x.strip() for x in chunk.split("==", 1)]
-                if len(pieces) == 1:
-                    text = pieces[0]
-                    uri = baseuri
-                else:
-                    part = pieces[0]
-                    text = pieces[1]
-                    try:
-                        uri = p.parse(part,baseuri)[0].uri
-                    except:
-                        log.warning("Could not find out URI for '%s'" % part)
-                lagrum_node = PET.SubElement(root_node,"rdf:Description")
-                lagrum_node.set("rdf:about",uri)
-                triple_node = PET.SubElement(lagrum_node, "dct:description")
-                triple_node.text = text
-            Util.indent_et(root_node)
-            tree = PET.ElementTree(root_node)
-            kommentarer = os.path.join(os.path.dirname(__file__),u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
-            tree.write(kommentarer, encoding="utf-8")
-            params['kommentarer'] = kommentarer
-        else:
-            print "No wiki page found"
-
         # Hämta förarbetstitlar
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-        if not force and self._outfile_is_newer([infile],outfile):
+        if not force and self._outfile_is_newer([infile,rattsfall,kommentarer],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
         Util.mkdir(os.path.dirname(outfile))
@@ -2154,6 +2133,73 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                        parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+
+    re_labeled_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|\]]*?)\|(.*?)\]\]')
+    re_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|]*?)\]\]')
+    re_labeled_wiki_link = re.compile(r'\[\[(.*?)\|(.*?)\]\]')
+    re_wiki_link = re.compile(r'\[\[(.*?)\]\]')
+    re_external_link = re.compile(r'\[([^ ]*?) (.*?)\]')
+    re_bold_italic = re.compile(r"'''''(.*?)'''''")
+    re_bold = re.compile(r"'''(.*?)'''")
+    re_italic = re.compile(r"''(.*?)''")
+
+    def __get_wiki_annotations(self,wikipath,baseuri,parser):
+        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
+        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
+
+        root_node = PET.Element("rdf:RDF")
+        for prefix in Util.ns:
+            # PET._namespace_map[Util.ns[prefix]] = prefix
+            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+        root_node.set("xmlns", "http://www.w3.org/1999/xhtml")
+
+        # print "Getting %s" % url
+        tree = ET.parse(urlopen(url))
+        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
+        if node is None:
+            raise LegalSource.IdNotFound("No wiki text for %s" % wikipath)
+        
+        wikitext = node.text
+        tr = TextReader(ustring=wikitext,linesep=TextReader.UNIX)
+        while not tr.eof():
+            chunk = tr.readchunk("\n==")
+            pieces = [x.strip() for x in chunk.split("==", 1)]
+            if len(pieces) == 1:
+                text = pieces[0]
+                uri = baseuri
+            else:
+                part = pieces[0]
+                text = pieces[1]
+                try:
+                    uri = parser.parse(part,baseuri)[0].uri
+                except:
+                    log.warning("Could not find out URI for '%s'" % part)
+
+            #print text
+            #print "-------"
+            text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
+            text = self.re_typed_link.sub(r'<a class="tl" href="\2" rel="\1">\2</a>', text)
+            text = self.re_labeled_wiki_link.sub(r'<a class="lwl" href="\1">\2</a>', text)
+            text = self.re_wiki_link.sub(r'<a class="wl" href="\1">\1</a>', text)
+            text = self.re_external_link.sub(r'<a class="el" href="\1">\2</a>', text)
+            text = self.re_bold_italic.sub(r'<b><i>\1</i></b>', text)
+            text = self.re_bold.sub(r'<b>\1</b>', text)
+            text = self.re_italic.sub(r'<i>\1</i>', text)
+            text = u'<span xml:lang="sv">%s</span>' % text
+            #if len(pieces) > 1:
+            #    print part
+            #print text
+            #print "====================================================="
+
+            lagrum_node = PET.SubElement(root_node,"rdf:Description")
+            lagrum_node.set("rdf:about",uri)
+            triple_node = PET.SubElement(lagrum_node, "dct:description")
+            triple_node.set("rdf:parseType", "Literal")
+            
+            triple_node.append(PET.XML(text.encode('utf-8')))
+        Util.indent_et(root_node)
+        tree = PET.ElementTree(root_node)
+        return tree
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
@@ -2447,7 +2493,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
 if __name__ == "__main__":
     import logging.config
-    logging.config.fileConfig(os.path.dirname(__file__)+'/etc/log.conf')
+    if not os.path.sep in __file__:
+        scriptdir = os.getcwd()
+    else:
+        scriptdir = os.path.dirname(__file__)
+    logging.config.fileConfig(scriptdir + '/etc/log.conf')
     SFSManager.__bases__ += (DispatchMixin,)
     mgr = SFSManager()
     mgr.Dispatch(sys.argv)
