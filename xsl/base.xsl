@@ -52,6 +52,7 @@
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
       <script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script>
+      <script type="text/javascript" src="/js/jquery-ui-personalized-1.6rc2.min.js"></script>
       <script type="text/javascript" src="/js/jquery.treeview.min.js"></script>
       <!--
       <script type="text/javascript" src="/js/jquery.autocomplete.min.js"></script>
@@ -98,6 +99,11 @@
 	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
 	  </p>
 	</form>
+	<ul id="sss">
+	  <li><a href="#" class="Times" title="Använd typsnitt: Times" onclick="switchStylestyle('Times'); return false;">Abc</a></li>
+	  <li><a href="#" class="Verdana" title="Använd typsnitt: Verdana" onclick="switchStylestyle('Verdana'); return false;">Abc</a></li>
+	</ul>
+
       </div>
       <div id="colmask" class="threecol">
 	<div id="colmid">

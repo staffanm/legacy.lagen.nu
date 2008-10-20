@@ -32,6 +32,7 @@
         margin-bottom: 12pt;
     }
     .sidoruta {
+	cursor: move;
       padding: 3pt;
       margin-top: 0;
       line-height: 1.2em;
@@ -40,7 +41,7 @@
       border: solid 1px #6b482c;
       margin-bottom: 5px;
       font-size: smaller;
-      margin-bottom: 12pt;
+      /* margin-bottom: 12pt; */
       box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
       -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
       -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
@@ -64,6 +65,15 @@
         vertical-align: top;
     }
 
+    img.inline-icon {
+	vertical-align: text-bottom;
+    } 
+    img.toolbar-icon {
+	float: right;
+        margin: 5px;
+ 
+    } 
+    
     /* olika sätt att formattera dl-listor:
        side-by-side, bred högerspalt */
     .andringar dl, .entry dl {
@@ -88,6 +98,7 @@
 	clear: left;
 	}
 
+
     /* side-by-side, smal högerspalt */
     .sidoruta dt {
 	float: left;
@@ -105,18 +116,31 @@
     }
     .sidoruta dd:after { clear: left; }
     .paragraf { position: relative; }
+
     .kommentar {
+    }
+    .referenser {
+    }
+    // classes for dynamic box layout
+
+    .horizboxleft {
+	border: solid 2px green;
 	position: absolute;
         width: 50%;
 	left: -54%;
         top: 0;
-	}
-    .referenser {
+    }
+    .horizboxright {
+	border: solid 2px red;
 	position: absolute;
         width: 50%;
 	right: -53%;
         bottom: -1em;
     }
+    .hiddenbox {
+	display: none;
+    }
+
     .platsmarkor {
 	position: absolute;
         left: -3em;
@@ -234,6 +258,29 @@
     #vinjett form input {
 	font-weight: bold;
     }
+    #vinjett #sss {
+	position: absolute;
+        top: 3pt;
+	right: 6pt;
+        color: #fff;
+	font: bold 12pt/1.2em serif;
+    }
+    #vinjett #sss li {
+	display: inline;
+        border: solid 1px #fff;
+	margin: 3pt;
+        padding: 0pt 2pt;
+    }
+    #vinjett #sss a {
+	text-decoration: none;
+	color: #fff;
+    }
+    #vinjett #sss a.Times {
+	font-family: 'Times New Roman', Times, serif;
+    }
+    #vinjett #sss a.Verdana {
+	font-family: 'Verdana', sans-serif;
+   }
     
     .accelerator {
 	text-decoration: underline;

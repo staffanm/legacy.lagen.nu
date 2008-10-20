@@ -121,7 +121,9 @@ def tidyHtmlFile(filename):
         tidycmd = "/usr/local/bin/tidy"
     else:
         tidycmd = "tidy"
-    (ret,stdout,stderr) = runcmd("%s -q -n -i -asxhtml -latin1 -w 120 --doctype strict %s > tmp.xml" % (tidycmd,filename))
+
+    cmd = "%s -q -n -i -asxhtml -utf8 -w 120 --doctype strict %s > tmp.xml" % (tidycmd,filename)
+    (ret,stdout,stderr) = runcmd(cmd)
     # tidy always exists with a non-0 return code if there were any
     # hrefs with spaces in them, so let's just silently ignore errors
     # for now
@@ -164,7 +166,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         print stderr
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
-    # tidyHtmlFile(outfile)
+    # tidyHtmlFile(tmpfile)
     # indentXmlFile(outfile)
 
     replace_if_different(tmpfile, outfile)

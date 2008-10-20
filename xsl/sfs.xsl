@@ -37,11 +37,6 @@
     </dl>
   </xsl:variable>
   
-  <xsl:variable name="toc">
-    <xsl:apply-templates mode="kommentarer"/>
-  </xsl:variable>
-
-  
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">
     <xsl:value-of select="//xht2:title"/>
@@ -66,22 +61,31 @@
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
+	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('none'); return false;">
+	  <img src="/img/application.png" class="toolbar-icon" width="16" height="16" title="Visa inte kommentarer och hänvisningar"/>
+	</a>
+	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('horizontal'); return false;">
+	  <img src="/img/application_tile_horizontal.png" class="toolbar-icon" width="16" height="16" title="Visa kommentarer och hänvisningar vid sidan om lagtexten"/>
+	</a>
+	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('vertical'); return false;">
+	  <img src="/img/application_tile_vertical.png" class="toolbar-icon" width="16" height="16" title="Visa kommentarer och hänvisningar under lagtexten"/>
+	</a>
 	<h1 property="dct:title"><xsl:value-of select="."/></h1>
-	<div class="sidoruta">
-	  <xsl:copy-of select="$docmetadata"/>
-	  <xsl:if test="normalize-space($toc)">
-	    <ul id="toc">
-	      <li>Innehållsförteckning
-	      <xsl:copy-of select="$toc"/>
-	      </li>
-	    </ul>
-	  </xsl:if>
-	</div>
 	<div class="sidoruta kommentar">
-	  <h2>Kommentarer</h2>
-	  <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=sfs/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
-	  <xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description/*"/>
+	  <xsl:call-template name="toc"/>
 	</div>
+
+	<div style="position: relative">
+	  <div class="sidoruta">
+	    <xsl:copy-of select="$docmetadata"/>
+	  </div>
+	  <div class="sidoruta kommentar">
+	    <h2><img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till författningen"/>Kommentarer</h2>
+	    <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=sfs/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
+	    <xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description/*"/>
+	  </div>
+	</div>
+
       </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
 	<h3><xsl:for-each select="@*">
@@ -130,6 +134,7 @@
       <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
       <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
 	<p id="refs-{@id}" class="sidoruta referenser">
+	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {@id}"/>
 	  <!--
 	      <span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
 	  -->
@@ -155,7 +160,8 @@
       </xsl:if>
       <xsl:if test="$kommentar">
 	<p id="ann-{@id}" class="sidoruta kommentar">
-	<xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description"/>
+	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {@id}"/>
+	<xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
 	</p>
       </xsl:if>
     </div>
@@ -366,51 +372,46 @@
   </xsl:template>
   -->
 
-  <!-- KOMMENTARER MODE -->
-  <xsl:template match="xht2:section[@role='main']" mode="kommentarer">
-    <!-- moved to top 
-    <xsl:variable name="toc"><xsl:apply-templates mode="kommentarer"/></xsl:variable>
-    <xsl:if test="normalize-space($toc)">
-      <ul id="toc">
-	<li>Innehållsförteckning
-	<ul>
-	  <xsl:apply-templates mode="kommentarer"/>
-	</ul>
-	</li>
+  <!-- TABLE OF CONTENTS (TOC) HANDLING -->
+  <xsl:template name="toc">
+    <ul id="toc">
+      <li><h2>Innehållsförteckning</h2>
+      <ul>
+	<xsl:apply-templates select="//xht2:section[@role='main']" mode="toc"/>
       </ul>
-    </xsl:if>
-    -->
+      </li>
+    </ul>
   </xsl:template>
 
-  <xsl:template match="xht2:section[@typeof='rinfo:Avdelning']" mode="kommentarer">
+  <xsl:template match="xht2:section[@typeof='rinfo:Avdelning']" mode="toc">
     <li class="toc-avdelning"><a href="#{@id}"><xsl:value-of select="xht2:h[@class='avdelningsrubrik']"/>: <xsl:value-of select="xht2:h[@class='avdelningsunderrubrik']"/></a>
-    <ul><xsl:apply-templates mode="kommentarer"/></ul>
+    <ul><xsl:apply-templates mode="toc"/></ul>
     </li>
   </xsl:template>
 
-  <xsl:template match="xht2:section[@typeof='rinfo:Kapitel']" mode="kommentarer">
+  <xsl:template match="xht2:section[@typeof='rinfo:Kapitel']" mode="toc">
     <li class="toc-kapitel"><a href="#{@id}"><xsl:value-of select="xht2:h[@class='kapitelrubrik']"/></a>
     <xsl:if test="xht2:h[@id]">
-      <ul><xsl:apply-templates mode="kommentarer"/></ul>
+      <ul><xsl:apply-templates mode="toc"/></ul>
     </xsl:if>
     </li>
   </xsl:template>
 
-  <xsl:template match="xht2:h[@property='dct:title']" mode="kommentarer">
+  <xsl:template match="xht2:h[@property='dct:title']" mode="toc">
     <!--<li>Not emitting title</li>-->
   </xsl:template>
 
-  <xsl:template match="xht2:h[@class='kapitelrubrik']" mode="kommentarer">
+  <xsl:template match="xht2:h[@class='kapitelrubrik']" mode="toc">
     <!--<li>Not emitting kapitelrubrik</li>-->
   </xsl:template>
-  <xsl:template match="xht2:h[@class='avdelningsrubrik']" mode="kommentarer">
+  <xsl:template match="xht2:h[@class='avdelningsrubrik']" mode="toc">
     <!--<li>Not emitting kapitelrubrik</li>-->
   </xsl:template>
-  <xsl:template match="xht2:h[@class='avdelningsunderrubrik']" mode="kommentarer">
+  <xsl:template match="xht2:h[@class='avdelningsunderrubrik']" mode="toc">
     <!--<li>Not emitting kapitelrubrik</li>-->
   </xsl:template>
   
-  <xsl:template match="xht2:h" mode="kommentarer">
+  <xsl:template match="xht2:h" mode="toc">
     <li class="toc-rubrik"><a href="#{@id}"><xsl:value-of select="."/></a>
     <!-- for proper handling of underrubriker
 	 select ../xht2:h,
@@ -421,29 +422,32 @@
     </li>
   </xsl:template>
 
-  <xsl:template match="xht2:h[@class='underrubrik']" mode="kommentarer">
+  <xsl:template match="xht2:h[@class='underrubrik']" mode="toc">
     <li class="toc-underrubrik"><a href="#{@id}"><xsl:value-of select="."/></a></li>
   </xsl:template>
 
-  <xsl:template match="xht2:section[@typeof='rinfo:Bilaga']" mode="kommentarer">
+  <xsl:template match="xht2:section[@typeof='rinfo:Bilaga']" mode="toc">
     <li class="toc-bilaga"><a href="#{@id}"><xsl:value-of select="xht2:h"/></a></li>
   </xsl:template>
 
   <!-- filter the rest -->
-  <xsl:template match="xht2:dl[@role='contentinfo']" mode="kommentarer">
+  <xsl:template match="xht2:dl[@role='contentinfo']" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  <xsl:template match="xht2:section[@role='secondary']" mode="kommentarer">
+  <xsl:template match="xht2:section[@role='secondary']" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  <xsl:template match="xht2:p" mode="kommentarer">
+  <xsl:template match="xht2:p" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  <xsl:template match="xht2:span" mode="kommentarer">
+  <xsl:template match="xht2:span" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  <xsl:template match="xht2:section[@class='upphavd']" mode="kommentarer">
+  <xsl:template match="xht2:section[@class='upphavd']" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
   
+  <!-- KOMMENTARER MODE -->
+  <xsl:template match="*" mode="kommentarer"/>
+
 </xsl:stylesheet>
