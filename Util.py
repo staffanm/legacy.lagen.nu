@@ -163,7 +163,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     if (ret != 0):
         raise TransformError(stderr)
     if stderr:
-        print stderr
+        print "Transformation error: %s" % stderr
 
     # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
     # tidyHtmlFile(tmpfile)

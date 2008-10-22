@@ -2,8 +2,8 @@
 	margin: 0;
         padding: 0;
 	font: 13pt/1.3em 'Times New Roman', Times, serif;
- 	// Avoid using absolute point sizes for fonts in the rest of the file -- use
-        // 'smaller', 'larger' or '1.5em' or similar
+ 	/* Avoid using absolute point sizes for fonts in the rest of the file -- use */
+        /* 'smaller', 'larger' or '1.5em' or similar */
     }
 
     strong,b {
@@ -24,7 +24,7 @@
    }
    
     #kommentarer  {
-	//font-size: smaller;
+	/*font-size: smaller; */
     }
 
     .entry {
@@ -32,7 +32,7 @@
         margin-bottom: 12pt;
     }
     .sidoruta {
-	cursor: move;
+      /* cursor: move; */
       padding: 3pt;
       margin-top: 0;
       line-height: 1.2em;
@@ -47,7 +47,7 @@
       -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
     }
     .sidoruta h2 {
-	//font-size: smaller;
+	/*font-size: smaller; */
         font-weight: bold;
     }
     .verticalalign p {
@@ -117,29 +117,34 @@
     .sidoruta dd:after { clear: left; }
     .paragraf { position: relative; }
 
-    .kommentar {
-    }
-    .referenser {
-    }
-    // classes for dynamic box layout
 
-    .horizboxleft {
-	border: solid 2px green;
+    /* classes for dynamic box layout */
+
+    /* default: normal placement, directly under the text */
+    .refs {  }
+    .kommentar {  }
+
+    /* alternate 1: boxes go to the sides */
+    .rightbox {
+  	position: absolute;
+        width: 50%;
+	right: -53%;
+        top: 0;
+	/* to anchor at bottom: "bottom: -1em;" */
+	overflow: auto;
+    }
+
+    .leftbox {
 	position: absolute;
         width: 50%;
 	left: -54%;
         top: 0;
+	overflow: auto;
     }
-    .horizboxright {
-	border: solid 2px red;
-	position: absolute;
-        width: 50%;
-	right: -53%;
-        bottom: -1em;
-    }
-    .hiddenbox {
-	display: none;
-    }
+
+    /* alternate 2: boxes are hidden */
+    .hiddenbox { display: none; }
+
 
     .platsmarkor {
 	position: absolute;
@@ -233,7 +238,7 @@
 	padding: 8px;
         background-color: #000;
 	opacity: 0.65;
-        filter: alpha(opacity = 65);
+        filter: alpha(opacity=65);
 	zoom: 1;
     }
     #navigation li a {
@@ -245,7 +250,7 @@
 	color: #fff;
         padding: 8px;
 	opacity: 0.65;
-        filter: alpha(opacity = 65);
+        filter: alpha(opacity=65);
         position: absolute;
 	right:6pt;
         bottom: 0;
@@ -315,7 +320,7 @@
         font-weight: bold;
     }
     h3 {
-	//font-size: medium;
+	/*font-size: medium; */
         font-style: italic;
     }
     ul.numreradlista, ul.bokstavslista, ul.strecksatslista {

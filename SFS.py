@@ -2102,7 +2102,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         #    print "%s is newer than %s, no need to slice" % (rattsfall, alla_rattsfall)
 
         if os.path.getsize(rattsfall) < 140: # too small, no results
-            print "No cases (%d)" % os.path.getsice(rattsfall)
+            # print "No cases (%d)" % os.path.getsize(rattsfall)
             pass
         else:
             params['cases'] = rattsfall
@@ -2114,7 +2114,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             tree.write(kommentarer, encoding="utf-8")
             params['kommentarer'] = kommentarer
         except LegalSource.IdNotFound:
-            print "No wiki page found"
+            pass
+            # print "No wiki page found"
 
 
         # Hämta eurlexdata från eurlex.nu
@@ -2133,6 +2134,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                        parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+        return
 
     re_labeled_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|\]]*?)\|(.*?)\]\]')
     re_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|]*?)\]\]')
@@ -2153,7 +2155,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             root_node.set("xmlns:" + prefix, Util.ns[prefix])
         root_node.set("xmlns", "http://www.w3.org/1999/xhtml")
 
-        # print "Getting %s" % url
         tree = ET.parse(urlopen(url))
         node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
         if node is None:
@@ -2175,8 +2176,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 except:
                     log.warning("Could not find out URI for '%s'" % part)
 
-            #print text
-            #print "-------"
+            # Some quick and dirty "parsing" of the wiki text
             text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
             text = self.re_typed_link.sub(r'<a class="tl" href="\2" rel="\1">\2</a>', text)
             text = self.re_labeled_wiki_link.sub(r'<a class="lwl" href="\1">\2</a>', text)
@@ -2186,10 +2186,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             text = self.re_bold.sub(r'<b>\1</b>', text)
             text = self.re_italic.sub(r'<i>\1</i>', text)
             text = u'<span xml:lang="sv">%s</span>' % text
-            #if len(pieces) > 1:
-            #    print part
-            #print text
-            #print "====================================================="
 
             lagrum_node = PET.SubElement(root_node,"rdf:Description")
             lagrum_node.set("rdf:about",uri)

@@ -16,10 +16,19 @@ $(document).ready(function(){
     */
 	var c = readCookie('style');
 	if (c) switchStylestyle(c);
-	$(".sidoruta").draggable({cursor:"move",zIndex:"10"});
+	//$(".sidoruta").draggable({cursor:"move",zIndex:"10"});
  
 });
 
+jQuery.fn.setHeightLikeParent = function() {
+  return this.each(function(){
+      this_height = $(this).height();
+      parent_height = $(this).parent().height();
+      if (this_height > parent_height) {
+	  $(this).height(parent_height);
+      }
+  });
+};
 
 function switchStylestyle(styleName)
 {
@@ -33,14 +42,20 @@ function switchStylestyle(styleName)
 function switchBoxlayout(layout)
 {
     if (layout == "none") {
-	$(".kommentar").removeClass("horizboxleft").addClass("hiddenbox");
-	$(".referenser").removeClass("horizboxright").addClass("hiddenbox");
+	$(".kommentar").removeClass("leftbox").addClass("hiddenbox");
+	$(".refs").removeClass("rightbox").addClass("hiddenbox");
     } else if (layout == "horizontal") {
-	$(".referenser").removeClass("hiddenbox").addClass("horizboxright");
-	$(".kommentar").removeClass("hiddenbox").addClass("horizboxleft");
+	$(".kommentar").removeClass("hiddenbox").addClass("leftbox");
+	$(".refs").removeClass("hiddenbox").addClass("rightbox");
+        $(".kommentar").setHeightLikeParent();
+        $(".refs").setHeightLikeParent();
     } else if (layout == "vertical") {
-	$(".kommentar").removeClass("horizboxleft").removeClass("hiddenbox");
-	$(".referenser").removeClass("horizboxright").removeClass("hiddenbox");
+	// the default
+	$(".kommentar").removeClass("leftbox").removeClass("hiddenbox");
+	$(".refs").removeClass("rightbox").removeClass("hiddenbox");
+        $(".kommentar").css("height","auto");
+        $(".refs").css("height","auto");
+         
     }
 }
 

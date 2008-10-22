@@ -61,14 +61,20 @@
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
-	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('none'); return false;">
-	  <img src="/img/application.png" class="toolbar-icon" width="16" height="16" title="Visa inte kommentarer och hänvisningar"/>
+	<a href="#" onclick="switchBoxlayout('none'); return false;">
+	  <img src="/img/application.png"
+	       class="toolbar-icon" width="16" height="16"
+	       title="Visa inte kommentarer och hänvisningar"/>
 	</a>
-	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('horizontal'); return false;">
-	  <img src="/img/application_tile_horizontal.png" class="toolbar-icon" width="16" height="16" title="Visa kommentarer och hänvisningar vid sidan om lagtexten"/>
+	<a href="#" onclick="switchBoxlayout('horizontal'); return false;">
+	  <img src="/img/application_tile_horizontal.png"
+	       class="toolbar-icon" width="16" height="16"
+	       title="Visa kommentarer och hänvisningar vid sidan om lagtexten"/>
 	</a>
-	<a href="#" class="boxlayout-switch" onclick="switchBoxlayout('vertical'); return false;">
-	  <img src="/img/application_tile_vertical.png" class="toolbar-icon" width="16" height="16" title="Visa kommentarer och hänvisningar under lagtexten"/>
+	<a href="#" onclick="switchBoxlayout('vertical'); return false;">
+	  <img src="/img/application_tile_vertical.png"
+	       class="toolbar-icon" width="16" height="16" 
+	       title="Visa kommentarer och hänvisningar under lagtexten"/>
 	</a>
 	<h1 property="dct:title"><xsl:value-of select="."/></h1>
 	<div class="sidoruta kommentar">
@@ -78,6 +84,7 @@
 	<div style="position: relative">
 	  <div class="sidoruta">
 	    <xsl:copy-of select="$docmetadata"/>
+	    <div style="clear: both;"/>
 	  </div>
 	  <div class="sidoruta kommentar">
 	    <h2><img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till författningen"/>Kommentarer</h2>
@@ -133,11 +140,8 @@
       <xsl:variable name="kommentar" select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
       <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
       <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-	<p id="refs-{@id}" class="sidoruta referenser">
-	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {@id}"/>
-	  <!--
-	      <span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
-	  -->
+	<p id="refs-{@id}" class="sidoruta refs">
+	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
 	  <xsl:call-template name="andringsnoteringar">
 	    <xsl:with-param name="typ" select="'Införd'"/>
 	    <xsl:with-param name="andringar" select="$inford"/>
@@ -160,7 +164,7 @@
       </xsl:if>
       <xsl:if test="$kommentar">
 	<p id="ann-{@id}" class="sidoruta kommentar">
-	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {@id}"/>
+	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
 	<xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
 	</p>
       </xsl:if>
