@@ -145,14 +145,14 @@
 	<b>Lagen.nu</b> är en privat webbplats. Informationen här är
 	inte officiell och kan vara felaktig | <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning</a> | <a href="/om/kontakt.html">Kontaktinformation</a>
       </div>
-      <script type="text/javascript">
+      <script type="text/javascript"><xsl:comment>
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-      </script>
-      <script type="text/javascript">
+      </xsl:comment></script>
+      <script type="text/javascript"><xsl:comment>
 var pageTracker = _gat._getTracker("UA-172287-1");
 pageTracker._trackPageview();
-      </script>
+      </xsl:comment></script>
     </body>
   </xsl:template>
 

@@ -35,7 +35,7 @@ from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, IntStructure, DateStructure, PredicateType, \
      serialize
 
-__version__   = (0,1)
+__version__   = (1,6)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Domslut (referat)"
 __moduledir__ = "dv"
@@ -648,6 +648,7 @@ class DVManager(LegalSource.Manager):
                      u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
                      }
+
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}
@@ -766,9 +767,6 @@ class DVManager(LegalSource.Manager):
     # none for now...
 
 if __name__ == "__main__":
-    #if not '__file__' in dir():
-    #    print "probably running from within emacs"
-    #    sys.argv = ['DV.py','Parse', '42']
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     DVManager.__bases__ += (DispatchMixin,)

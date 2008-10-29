@@ -16,6 +16,7 @@ import traceback
 import types
 import unicodedata
 import xml.etree.cElementTree as ET
+import xml.dom.minidom
 
 # 3rd party modules
 import BeautifulSoup
@@ -27,9 +28,11 @@ from rdflib import plugin
 from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib.store import Store
 # from rdflib.syntax import NamespaceManager
+import pyRdfa
 
 # my own code
 import Util
+from SesameStore import SesameStore
 
 
 # Do required codec/locale magic right away, since this is included by
@@ -232,26 +235,30 @@ class Manager(object):
 
     def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan
-        och bygger en stor RDF-fil i NTriples-format. """
+        och laddar in det i systemets triplestore"""
         files = list(Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'))
         rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
+        context = "<urn:x-local:%s>" % self.moduleDir
+
         if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
             return
         
+        store = SesameStore(self.config['triplestore'], self.config['repository'],context)
+        for key, value in Util.ns.items():
+            store.bind(key, Namespace(value));
+        store.clear()
+
         c = 0
         triples = 0
-        f = open(rdffile,'w')
-        f.close()
-        for f in Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'):
+
+        for f in files:
             c += 1
-            graph = self.__get_default_graph()
-            self.__load_rdfa(f,graph)
+            graph = self.__extract_rdfa(f)
             triples += len(graph)
-            f = open(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']),'a')
-            f.write(graph.serialize(format="nt"))
-            f.close()
-            # graph.commit()
+            store.add_graph(graph)
+            store.commit()
+
             if c % 100 == 0:
                 log.info("Related %d documents (%d triples total)" % (c, triples))
 
@@ -318,6 +325,7 @@ class Manager(object):
                         pass
             else:
                 log.warning("Couldn't parse line %s" % line)
+        sys.stdout.write("\n")
         log.info("RDF loaded (%.3f sec)", time()-start)
 
         self._build_indexpages(by_pred_obj, by_subj_pred)
@@ -469,7 +477,7 @@ class Manager(object):
                                docsorter=docsorter)
         #tmpfilename = mktemp()
         tmpfilename = outfile.replace(".html",".xht2")
-        
+        Util.ensureDir(tmpfilename)
         fp = open(tmpfilename,"w")
         fp.write(stream.render())
         fp.close()
@@ -537,35 +545,11 @@ class Manager(object):
                 l = Literal(u' '.join(s.split()))
                 graph.add((o,p,l))
 
-    def __get_default_graph(self):
-        """Returns an initialized RDFLib graph object (eg using a
-        in-memory store, or a mysql store, depending on the phase of
-        the moon or whatever)"""
-        use_mysql_store = False
-        if (use_mysql_store):
-            configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
-            store = plugin.get('MySQL', Store)('rdfstore')
-            rt = store.open(configString,create=False)
-            print "MySQL triple store opened: %s" % rt
-            graph = Graph(store, identifier = URIRef("http://lagen.nu/rdfstore"))
-        else: 
-            graph = Graph(identifier = URIRef("http://lagen.nu/rdfstore"))
-        for key, value in Util.ns.items():
-            graph.bind(key,  Namespace(value));
-        return graph
-
-    def __load_rdfa(self, filename, graph=None):
-        import xml.dom.minidom
-        import pyRdfa
+    def __extract_rdfa(self, filename):
         dom  = xml.dom.minidom.parse(filename)
         o = pyRdfa.Options()
         o.warning_graph = None
         g = pyRdfa.parseRDFa(dom, None, options=o)
         self.__tidy_graph(g)
-        if not graph is None:
-            graph += g
-            #print "Adding to graph, now %d triples" % len(graph)
-        else:
-            graph = g
-            #print "New graph, %d triples" % len(g)
-        return graph
+
+        return g

@@ -209,6 +209,7 @@
 	position:relative;
         font-size: larger;
 	margin-bottom: 10pt;
+        overflow: hidden;
     }
     #vinjett img {
 	position: absolute;
