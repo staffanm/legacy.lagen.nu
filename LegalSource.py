@@ -230,7 +230,7 @@ class Manager(object):
     def DumpTriples(self, filename, format="turtle"):
         """Given a XML file (any file), extract RDFa embedded triples
         and display them - useful for debugging"""
-        g = self.__load_rdfa(filename)
+        g = self.__extract_rdfa(filename)
         print unicode(g.serialize(format=format, encoding="utf-8"), "utf-8")
 
     def RelateAll(self,file=None):
@@ -247,6 +247,8 @@ class Manager(object):
         store = SesameStore(self.config['triplestore'], self.config['repository'],context)
         for key, value in Util.ns.items():
             store.bind(key, Namespace(value));
+
+        log.info("Clearing context %s" % context)
         store.clear()
 
         c = 0
@@ -261,6 +263,12 @@ class Manager(object):
 
             if c % 100 == 0:
                 log.info("Related %d documents (%d triples total)" % (c, triples))
+
+        log.info("Serializing to %s" % rdffile)
+        statements = store.get_serialized("nt")
+        fp = open(rdffile,"w")
+        fp.write(statements)
+        fp.close()
 
         log.info("All documents related: %d documents, %d triples" % (c, triples))
 

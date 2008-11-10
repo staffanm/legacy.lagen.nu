@@ -46,6 +46,12 @@ __author__ = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Författningar i SFS"
 __moduledir__ = "sfs"
 log = logging.getLogger(__moduledir__)
+if not os.path.sep in __file__:
+    __scriptdir__ = os.getcwd()
+else:
+    __scriptdir__ = os.path.dirname(__file__)
+
+
 
 # Objektmodellen för en författning är uppbyggd av massa byggstenar
 # (kapitel, paragrafen, stycken m.m.) där de allra flesta är någon
@@ -596,7 +602,7 @@ class SFSParser(LegalSource.Parser):
 
         # hitta eventuella etablerade förkortningar
         g = Graph()
-        g.load(os.path.dirname(__file__)+"/etc/sfs-extra.n3", format="n3")
+        g.load("file:///"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
         for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
             meta[u'Förkortning'] = unicode(obj)
 
@@ -2090,7 +2096,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         sfsnr = FilenameToSFSnr(basefile)
         p = LegalRef(LegalRef.LAGRUM)
         baseuri = p.parse(sfsnr)[0].uri
-        alla_rattsfall = os.path.join(os.path.dirname(__file__),"%s/%s/parsed/dv-rdf.xml" %
+        alla_rattsfall = os.path.join(__scriptdir__,"%s/%s/parsed/dv-rdf.xml" %
                                       (self.baseDir, self.moduleDir))
         rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
         rattsfall = rattsfall.replace(os.path.sep,'/')
@@ -2109,7 +2115,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         try:
             tree = self.__get_wiki_annotations("sfs/"+sfsnr, baseuri,p)
-            kommentarer = os.path.join(os.path.dirname(__file__),u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
+            kommentarer = os.path.join(__scriptdir__,u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
             kommentarer = kommentarer.replace(os.path.sep,'/')
             tree.write(kommentarer, encoding="utf-8")
             params['kommentarer'] = kommentarer
@@ -2200,6 +2206,40 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
         self._do_for_all(parsed_dir,'xht2',self.Generate)
+
+
+    def Convert(self,basefile):
+        infile = self._xmlFileName(basefile)
+        outfile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir, self.moduleDir,basefile)
+        start = time()
+        Util.transform("xsl/xhtml2to1.xsl",
+                       infile,
+                       outfile,
+                       validate=False)
+        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+        
+    def ConvertAll(self):
+        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+        self._do_for_all(parsed_dir,'xht2',self.Convert)
+        
+    def Intertwine(self, basefile):
+        infile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir,
+                                                 self.moduleDir,
+                                                 basefile)
+        outfile = u'%s/%s/xhtml1-combined/%s.html' % (self.baseDir,
+                                                      self.moduleDir,
+                                                      basefile)
+        start = time()
+        Util.transform("xsl/intertwine.xsl",
+                       infile,
+                       outfile,
+                       validate=False)
+        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+
+    def IntertwineAll(self):
+        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+        self._do_for_all(parsed_dir,'xht2',self.Convert)
+        
 
     def ParseGen(self,basefile):
         self.Parse(basefile)
@@ -2489,11 +2529,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
 if __name__ == "__main__":
     import logging.config
-    if not os.path.sep in __file__:
-        scriptdir = os.getcwd()
-    else:
-        scriptdir = os.path.dirname(__file__)
-    logging.config.fileConfig(scriptdir + '/etc/log.conf')
+    logging.config.fileConfig(__scriptdir__ + '/etc/log.conf')
     SFSManager.__bases__ += (DispatchMixin,)
     mgr = SFSManager()
     mgr.Dispatch(sys.argv)

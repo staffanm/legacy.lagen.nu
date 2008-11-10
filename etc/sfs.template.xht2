@@ -88,13 +88,13 @@ from datetime import datetime
 	       id="${kapitel.id}"
 	       typeof="rinfo:Kapitel"
 	       about="#${kapitel.id}">
-
+	<span rel="dct:isPartOf" href="${meta['xml:base']}"/>
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
 	<py:for each="part in kapitel" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)"   py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
-	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part)}</div>
+	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part,kapitel.id)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Kapitel')}</div>
 	</py:for>
       </section>
@@ -105,28 +105,29 @@ from datetime import datetime
 	       ${paragraf}
       </section>
 
-      <section py:def="render_paragraf(paragraf)"
+      <section py:def="render_paragraf(paragraf,isPartOf='parent-to-paragraf')"
 	       id="${paragraf.id}"
 	       typeof="rinfo:Paragraf"
 	       about="#${paragraf.id}">
-	<!--! första stycket måste rendreras tillsammans med
-	     paragrafbeteckningen (inuti samma p-element) -->
-	
+	<span rel="dct:isPartOf" href="${isPartOf}"/>
 	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${datetime.strftime(paragraf.ikrafttrader,'%Y-%m-%d')})</span>
 	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${datetime.strftime(paragraf.upphor,'%Y-%m-%d')})</span>
-        ${render_stycke(paragraf[0], paragraf.ordinal)}
+	<!--! första stycket måste rendreras tillsammans med
+	     paragrafbeteckningen (inuti samma p-element) -->
+        ${render_stycke(paragraf[0], '#'+paragraf.id, paragraf.ordinal)}
         <py:for each="part in paragraf[1:]" py:choose="">
-	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part, '#'+paragraf.id)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Paragraf')}</div>
         </py:for>
       </section>
             
-      <p py:def="render_stycke(stycke,paragrafnummer=None)"
+      <p py:def="render_stycke(stycke,isPartOf='parent-to-stycke',paragrafnummer=None)"
 	 id="${stycke.id}"
 	 about="#${stycke.id}"
 	 typeof="rinfo:Stycke">
+	<span rel="dct:isPartOf" href="${isPartOf}"/>
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
-        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
+        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part, stycke.id)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part, stycke.id)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part, stycke.id)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
       </p>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict
@@ -135,35 +136,35 @@ from datetime import datetime
       that have ten items labeled 1, 2, 3, 4, 4 a, 5, 6, 6 a, 7, and 8.
       Because of this we use <ul> instead of <ol> even for numbered lists.
       -->
-      <ul py:def="render_numreradlista(lista)"
+      <ul py:def="render_numreradlista(lista, isPartOf='parent-to-listelement')"
 	  id="${lista.id}"
 	  about="#${lista.id}"
 	  class="numreradlista"
 	  >
         <py:for each="part in lista" py:choose="">
-          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
+          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part, isPartOf)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Numreradlista')}</div>
         </py:for>
       </ul>
 
-      <ul py:def="render_strecksatslista(lista)"
+      <ul py:def="render_strecksatslista(lista, isPartOf='parent-to-listelement')"
 	  class="strecksatslista"
 	  id="${lista.id}"
 	  about="#${lista.id}"
 	  >
         <py:for each="part in lista" py:choose="">
-          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
+          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part, isPartOf)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Strecksatslista')}</div>
         </py:for>
       </ul>
 
-      <ul py:def="render_bokstavslista(lista)"
+      <ul py:def="render_bokstavslista(lista, isPartOf='parent-to-listelement')"
 	  class="bokstavslista"
 	  id="${lista.id}"
 	  about="#${lista.id}"
 	  >
         <py:for each="part in lista" py:choose="">
-          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part)}</div>
+          <div py:when="isinstance(part, Listelement)" py:strip="">${render_listelement(part, isPartOf)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Bokstavslista')}</div>
         </py:for>
       </ul>
@@ -173,7 +174,8 @@ from datetime import datetime
 	  about="#${listelement.id}"
 	  >
       <!--! for nested lists -->
-      <py:for each="part in listelement" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Listelement')}</div></py:for>
+      <span rel="dct:isPartOf" href="${isPartOf}"/>
+      <py:for each="part in listelement" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part,listelement.id)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part,listelement.id)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part,listelement.id)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Listelement')}</div></py:for>
       </li>
 
       <table py:def="render_tabell(tabell)">
@@ -205,9 +207,9 @@ from datetime import datetime
       <section py:def="render_overgangsbestammelse(ob)">
         <py:for each="part in ob" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
-	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
-	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part)}</div>
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part,'#ob')}</div>
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part,'#ob')}</div>
+	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part,'#ob')}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Overgangsbestammelse')}</div>
         </py:for>
       </section>
@@ -218,11 +220,11 @@ from datetime import datetime
 	<h py:content="bilaga.rubrik">Bilagerubrik</h>
         <py:for each="part in bilaga" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)" py:strip="">${render_rubrik(part)}</div>
-	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	  <div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part,'#'+bilaga.id)}</div>
 	  <div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div>
-	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_numreradlista(part)}</div>
-	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_numreradlista(part)}</div>
+	  <div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part,'#'+bilaga.id)}</div>
+	  <div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_numreradlista(part,'#'+bilaga.id)}</div>
+	  <div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_numreradlista(part,'#'+bilaga.id)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Bilaga')}</div>
         </py:for>
       </section>
@@ -255,7 +257,7 @@ from datetime import datetime
 	<div py:when="isinstance(part, UpphavtKapitel)"  py:strip="">${render_upphavtkapitel(part)}</div>
 	<div py:when="isinstance(part, Kapitel)"         py:strip="">${render_kapitel(part)}</div>
 	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
-	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part)}</div>
+	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part,'unknown')}</div>
 	<div py:when="isinstance(part, Stycke)"          py:strip="">${render_stycke(part)}</div>
 	<div py:when="isinstance(part, NumreradLista)"   py:strip="">${render_numreradlista(part)}</div>
 	<div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part)}</div>
@@ -278,7 +280,7 @@ from datetime import datetime
 	<div py:when="isinstance(part, Kapitel)"         py:strip="">${render_kapitel(part)}</div>
 	<div py:when="isinstance(part, Rubrik)"          py:strip="">${render_rubrik(part)}</div>
 	<div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
-	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part)}</div>
+	<div py:when="isinstance(part, Paragraf)"        py:strip="">${render_paragraf(part,meta['xml:base'])}</div>
 	<div py:when="isinstance(part, Stycke)"          py:strip="">${render_stycke(part)}</div>
 	<div py:when="isinstance(part, NumreradLista)"   py:strip="">${render_numreradlista(part)}</div>
 	<div py:when="isinstance(part, Tabell)"          py:strip="">${render_tabell(part)}</div>
