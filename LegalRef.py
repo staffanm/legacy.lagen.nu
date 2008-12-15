@@ -125,7 +125,11 @@ class LegalRef:
             scriptdir = os.path.dirname(__file__)
 
         n3file = os.path.sep.join([scriptdir,"etc","sfs-extra.n3"])
-        n3url = "file:///" + n3file.replace("\\","/")
+        n3url = "file://" + n3file.replace("\\","/")
+
+        print "scriptdir: %s" % scriptdir
+        print "n3file: %s" % n3file
+        print "n3url: %s" % n3url
 
         self.graph = Graph()
         self.graph.load(n3url, format="n3")
