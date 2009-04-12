@@ -5,14 +5,14 @@
 # riksdagsskrivelser och CELEX-nummer, sånt som anges som förarbeten i
 # en SFS. (obs att SOU/Ds/Regeringssskrivelser etc inte är med)
 
-forarbeteref          ::= (PropRef/BetRef/SkrivelseRef/CelexRef)+
+forarbeteref          ::= (PropRef/BetRef/SkrivelseRef/CelexRef)
 
 # exv "2007/08" eller "1999/2000"
 Riksmote       ::= LangtAr, (Slash, Ar)?
 # Riksmote       ::= digit, digit, digit, digit, (Slash, digit, digit, (digit, digit)?)?
 
 # Propositioner exv "Prop. 1999/2000:100"
-PropRef	       ::= PropPrefix, Whitespace, PropRefID
+PropRef	       ::= PropPrefix, Whitespace, PropRefID, SidnrRef?
 PropPrefix     ::= ('prop.'/'Prop.')
 PropRefID      ::= Riksmote, Colon, number
 
@@ -30,5 +30,9 @@ SkrivelseRefID ::= Riksmote, Colon, number
 # CELEX-hänvisningar
 CelexRef       ::= CelexRefID
 CelexRefID     ::= '3', digit, digit, (digit, digit)?, 'L', digit, digit, digit, digit
+
+# Sidnr-hänvisningar ("prop. 1989/90:89 s. 154")
+SidnrRef       ::= Whitespace, 's.', Period?, Whitespace, SidnrRefID
+SidnrRefID        ::= number
 
 # ------------ end of forarbeten.ebnf ----------------

@@ -97,6 +97,7 @@ class Downloader(object):
         self.download_dir = config['datadir'] + "/%s/downloaded" % moduledir
         self.download_log = logging.getLogger('%s/download' % moduledir)
         logfile = self.download_dir+"/downloaded.log"
+        Util.ensureDir(logfile)
         handler = logging.FileHandler(logfile)
         handler.setFormatter(logging.Formatter("%(asctime)s: %(message)s","%Y-%m-%d %H:%M:%S"))
         self.download_log.addHandler(handler)
@@ -243,7 +244,8 @@ class Manager(object):
         if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
             return
-        
+
+        log.info("Connecting to store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
         store = SesameStore(self.config['triplestore'], self.config['repository'],context)
         for key, value in Util.ns.items():
             store.bind(key, Namespace(value));

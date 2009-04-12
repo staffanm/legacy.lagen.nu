@@ -124,15 +124,15 @@ class LegalRef:
         else:
             scriptdir = os.path.dirname(__file__)
 
-        n3file = os.path.sep.join([scriptdir,"etc","sfs-extra.n3"])
-        n3url = "file://" + n3file.replace("\\","/")
+        #n3file = os.path.sep.join([scriptdir,"etc","sfs-extra.n3"])
+        #n3url = "file://" + n3file.replace("\\","/")
 
-        print "scriptdir: %s" % scriptdir
-        print "n3file: %s" % n3file
-        print "n3url: %s" % n3url
+        #print "scriptdir: %s" % scriptdir
+        #print "n3file: %s" % n3file
+        #print "n3url: %s" % n3url
 
         self.graph = Graph()
-        self.graph.load(n3url, format="n3")
+        self.graph.load("etc/sfs-extra.n3", format="n3")
         self.roots = []
         self.uriformatter = {}
         self.decl = ""
@@ -275,7 +275,6 @@ class LegalRef:
         # tidigare.
         normres = []
         for i in range(len(result)):
-            # print "Doing a %s %s" % (result[i].__class__.__name__, result[i])
             if not self.re_descape.search(result[i]):
                 node = result[i]
             else:
@@ -913,7 +912,15 @@ class LegalRef:
                 if len(val) == 8: # incorrectly formatted, uses YY instead of YYYY
                     val = val[0]+'19'+val[1:]
                 res += "ext/celex/%s" % val
+        if 'sidnr' in attributes:
+            res += "#s%s" % attributes['sidnr']
+
         return res
+
+    def format_ChapterSectionRef(self,root):
+        assert(root.nodes[0].nodes[0].tag == 'ChapterRefID')
+        self.currentchapter = root.nodes[0].nodes[0].text.strip()
+        return [self.format_generic_link(root)]
 
     ################################################################
     # KOD FÖR EGLAGSTIFTNING
@@ -1047,7 +1054,7 @@ class TestLegalRef(FilebasedTester):
         
     def ParseTestString(self,s, verbose=True):
         # p = LegalRef(LegalRef.FORARBETEN)
-        p = LegalRef(LegalRef.LAGRUM)
+        p = LegalRef(LegalRef.LAGRUM, LegalRef.EGLAGSTIFTNING, LegalRef.FORARBETEN)
         p.verbose = verbose
         print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
 

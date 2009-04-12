@@ -87,7 +87,9 @@ from datetime import datetime
       <section py:def="render_kapitel(kapitel)"
 	       id="${kapitel.id}"
 	       typeof="rinfo:Kapitel"
-	       about="#${kapitel.id}">
+	       about="#${kapitel.id}"
+	       property="rinfoex:kapitelnummer"
+	       content="${kapitel.ordinal}">
 	<span rel="dct:isPartOf" href="${meta['xml:base']}"/>
 	<h class="kapitelrubrik" py:content="kapitel.rubrik">Kapitelrubrik</h>
 	
@@ -108,7 +110,9 @@ from datetime import datetime
       <section py:def="render_paragraf(paragraf,isPartOf='parent-to-paragraf')"
 	       id="${paragraf.id}"
 	       typeof="rinfo:Paragraf"
-	       about="#${paragraf.id}">
+	       about="#${paragraf.id}"
+	       property="rinfoex:paragrafnummer"
+	       content="${paragraf.ordinal}">
 	<span rel="dct:isPartOf" href="${isPartOf}"/>
 	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${datetime.strftime(paragraf.ikrafttrader,'%Y-%m-%d')})</span>
 	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${datetime.strftime(paragraf.upphor,'%Y-%m-%d')})</span>

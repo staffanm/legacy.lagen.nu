@@ -47,7 +47,7 @@ def parseSimpleList(s):
 if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
-    m = SFSManager('testdata','sfs')
+    m = SFSManager()
     # for l in parseList(open(sys.argv[1]).read()):
     # res = parseAccessExport(open(sys.argv[1]).read().decode('iso-8859-1'))
     res = parseSimpleList(open(sys.argv[1]).read().decode('iso-8859-1'))

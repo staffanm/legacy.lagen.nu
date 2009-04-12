@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 """Hanterar domslut (detaljer och referat) från Domstolsverket. Data
-hämtas från DV:s (ickepublika) FTP-server"""
+hämtas från DV:s (ickepublika) FTP-server, eller från lagen.nu."""
 
 # system libraries
 import sys, os, re
@@ -18,6 +18,7 @@ import traceback
 from collections import defaultdict
 from operator import itemgetter
 import cgi
+import textwrap
 
 # 3rdparty libs
 from genshi.template import TemplateLoader
@@ -126,9 +127,18 @@ class DVDownloader(LegalSource.Downloader):
     def download(self,dirname='',recurse=False):
         # Download using ncftpls/ncftpget, since we can't get python:s
         # ftplib to play nice w/ domstolsverkets ftp server
+        if 'ftp_user' in self.config[__moduledir__]:
+            try:
+                self.download_ftp(dirname, recurse, self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'])
+            except Util.ExternalCommandError:
+                log.warning("download_ftp failed, not downloading anything")
+        else:
+            self.download_www(dirname, recurse)
+
+    def download_ftp(self,dirname,recurse,user,password):
         url = 'ftp://ftp.dom.se/%s' % dirname
         log.info(u'Listar innehåll i %s' % url)
-        cmd = "ncftpls -m -u %s -p %s %s" % (self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'], url)
+        cmd = "ncftpls -m -u %s -p %s %s" % (user, password, url)
         (ret, stdout, stderr) = Util.runcmd(cmd)
         if ret != 0:
             raise Util.ExternalCommandError(stderr)
@@ -153,9 +163,34 @@ class DVDownloader(LegalSource.Downloader):
                         localdir = self.download_dir
                         
                     log.info(u'Hämtar %s till %s' % (filename, localdir))
-                    os.system("ncftpget -E -u %s -p %s ftp.dom.se %s %s" %
-                              (self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'], localdir, fullname))
+                    os.system("ncftpget -u %s -p %s ftp.dom.se %s %s" %
+                              (user, password, localdir, fullname))
                     self.process_zipfile(localdir + os.path.sep + filename)
+
+    def download_www(self,dirname,recurse):
+        url = 'https://lagen.nu/dv/downloaded/%s' % dirname
+        log.info(u'Listar innehåll i %s' % url)
+        self.browser.open(url)
+        links = list(self.browser.links())
+        for l in links:
+            if l.url.startswith("/"):
+                continue
+            elif l.url.endswith("/") and recurse:
+                self.download_www(l.url,recurse)
+            elif l.url.endswith(".zip"):
+                if dirname:
+                    fullname = dirname + l.url
+                    localdir = self.download_dir + os.path.sep + dirname
+                    Util.mkdir(localdir)
+                else:
+                    fullname = l.url
+                    localdir = self.download_dir
+
+                localfile = "%s/%s" % (self.download_dir, fullname)
+                if not os.path.exists(localfile):
+                    log.info("Downloading %s to %s" % (l.absolute_url, localfile))
+                    self.browser.retrieve(l.absolute_url, localfile)
+                    self.process_zipfile(localfile)
 
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
     re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*)_BYTUT_\d+-\d+-\d+_?(\d*)')
@@ -269,111 +304,173 @@ class DVParser(LegalSource.Parser):
                        u'AD': u'http://rinfo.lagrummet.se/ref/rff/ad',
                        u'MD': u'http://rinfo.lagrummet.se/ref/rff/md',
                        u'FÖD': u'http://rinfo.lagrummet.se/ref/rff/fod'}
-                       
-    def Parse(self,id,docfile):
+
+    domstolsforkortningar = {u'ADO': 'http://lagen.nu/org/2008/arbetsdomstolen',
+                             u'HDO': 'http://lagen.nu/org/2008/hogsta-domstolen',
+                             u'HGO': 'http://lagen.nu/org/2008/gota-hovratt',
+                             u'HNN': 'http://lagen.nu/org/2008/hovratten-for-nedre-norrland',
+                             u'HON': 'http://lagen.nu/org/2008/hovratten-for-ovre-norrland',
+                             u'HSB': 'http://lagen.nu/org/2008/hovratten-over-skane-och-blekinge',
+                             u'HSV': 'http://lagen.nu/org/2008/svea-hovratt',
+                             u'HVS': 'http://lagen.nu/org/2008/hovratten-for-vastra-sverige',
+                             u'MDO': 'http://lagen.nu/org/2008/marknadsdomstolen',
+                             u'MIG': 'http://lagen.nu/org/2008/migrationsoverdomstolen',
+                             u'MÖD': 'http://lagen.nu/org/2008/miljooverdomstolen',
+                             u'REG': 'http://lagen.nu/org/2008/regeringsratten'}
+
+
+    wrapper = textwrap.TextWrapper(break_long_words=False,
+                                   width=72)
+    
+    def Parse(self,id,docfile,config=None):
         import codecs
         self.id = id
-        htmlfile = docfile.replace('word','html').replace('.doc','.html')
-        Util.word_to_html(docfile,htmlfile)
-
+        self.config = config
+        self.lagrum_parser = LegalRef(LegalRef.LAGRUM)
+        self.rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
+        
+        docbookfile = docfile.replace('word','docbook').replace('.doc','.xml')
+        # Util.word_to_html(docfile,docbookfile)
+        self.word_to_docbook(docfile,docbookfile)
+        
         # FIXME: This is almost identical to the code in
         # SFSManager.Parse - should be refactored somehow
+        #
+        # Patches produced for the MS Word HTML export will need to be
+        # modified for the new antiword docbook output...
         patchfile = 'patches/dv/%s.patch' % id
+        descfile = 'patches/dv/%s.desc' % id
+        patchdesc = None
         if os.path.exists(patchfile):
             patchedfile = mktemp()
             # we don't want to sweep the fact that we're patching under the carpet
             log.warning(u'%s: Applying patch %s' % (id, patchfile))
-            cmd = 'patch -s %s %s -o %s' % (htmlfile, patchfile, patchedfile)
+            cmd = 'patch -s %s %s -o %s' % (docbookfile, patchfile, patchedfile)
             log.debug(u'%s: running %s' % (id, cmd))
             (ret, stdout, stderr) = Util.runcmd(cmd)
             if ret == 0: # successful patch
-                # patch from cygwin always seem to produce unix lineendings
-                cmd = 'unix2dos %s' % patchedfile
-                log.debug(u'%s: running %s' % (id, cmd))
-                (ret, stdout, stderr) = Util.runcmd(cmd)
-                if ret == 0: 
-                    htmlfile = patchedfile
-                else:
-                    log.warning(u"%s: Failed lineending conversion: %s" % (id, stderr))
+                docbookfile = patchedfile
+                assert os.path.exists(descfile), "No description of patch %s found" % patchfile
+                patchdesc = codecs.open(descfile,encoding='utf-8').read().strip()
+
+                # Uncomment below if for some reason we need to do a
+                # unix2dos lineending conversion
+                
+                # cmd = 'unix2dos %s' % patchedfile
+                # log.debug(u'%s: running %s' % (id, cmd))
+                # (ret, stdout, stderr) = Util.runcmd(cmd)
+                # if ret == 0: 
+                #     docbookfile = patchedfile
+                # else:
+                #     log.warning(u"%s: Failed lineending conversion: %s" % (id, stderr))
             else:
                 log.warning(u"%s: Could not apply patch %s: %s" % (id, patchfile, stdout.strip()))
             
+        # return self.parse_msword_html(htmlfile)
+        return self.parse_antiword_docbook(docbookfile, patchdesc)
 
-        lagrum_parser = LegalRef(LegalRef.LAGRUM)
-        rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
+    def word_to_docbook(self,indoc,outdoc):
+        from string import Template
+        # assert 'wordconverter' in self.config, "No wordconverter defined in conf.ini"
+        # s = Template(self.config['wordconverter'])
+        # cmd = s.substitute(indoc=indoc, outdoc=outdoc)
+        tmpfile = mktemp()
+        cmd = "antiword -x db %s > %s" % (indoc, tmpfile)
 
-        # Basic parsing
-        soup = Util.loadSoup(htmlfile)
-        head = Metadata()
-        # Worddokumenten är bara mestadels standardiserade...  En
-        # alternativ fallbackmetod vore att söka efter tabellceller
-        # vars enda text är något av de kända domstolsnamnen
-        #
-        # Ibland saknas domstolsnamnet helt eller är felskrivet
-        # (".Högsta Domstolen"). Det löses genom att
-        # find_authority_rec fuzzymatchar.
-        if soup.first('span', 'riDomstolsRubrik'):
-            node = soup.first('span', 'riDomstolsRubrik').findParent('td')
-        elif soup.first('td', 'ritop1'):
-            node = soup.first('td', 'ritop1')
-        elif soup.first('span', style="letter-spacing:2.0pt"):
-            node = soup.first('span', style="letter-spacing:2.0pt").findParent('td')
-        elif soup.first('span', style="letter-spacing:1.3pt"):
-            node = soup.first('span', style="letter-spacing:1.3pt").findParent('td')
-        elif soup.first('span', style="font-family:Verdana;letter-spacing:2.0pt"):
-            node = soup.first('span', style="font-family:Verdana;letter-spacing:2.0pt").findParent('td')
-        elif soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt"):
-            node = soup.first('span', style="font-size:10.0pt;letter-spacing:\r\n  2.0pt").findParent('td')
-        elif soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt"):
-            node = soup.first('span', style="font-family:Verdana;letter-spacing:\r\n  2.0pt").findParent('td')
-        else:
-            raise AssertionError(u"Kunde inte hitta domstolsnamnet i %s" % htmlfile)
-        txt = Util.elementText(node)
-        authrec = self.find_authority_rec(txt),
-        head[u'Domstol'] = LinkSubject(txt,
-                                       uri=unicode(authrec[0]),
-                                       predicate=self.labels[u'Domstol'])
-        
+        Util.ensureDir(outdoc)
+        #if os.path.exists(outdoc) and os.path.getsize(outdoc) > 0:
+        #    log.debug("outdoc %s exists, not converting" % outdoc)
+        #    return
+        if not os.path.exists(indoc):
+            log.warning("indoc %s does not exist" % indoc)
+            return
+        log.debug("Executing %s" % cmd)
+        (ret,stdout,stderr) = Util.runcmd(cmd)
+
+        if ret != 0:
+            log.error("Docbook conversion failed: %s" % stderr)
+            raise Util.ExternalCommandError("Docbook conversion failed: %s" % stderr)
             
-        
+        if not os.path.exists(tmpfile):
+            log.warning("tmp file %s wasn't created, that can't be good?" % tmpfile)
 
-        # Det som står till höger om domstolsnamnet är referatnumret
-        # (exv "NJA 1987 s. 113")
-        node = node.findNextSibling('td')
-        head[u'Referat'] = UnicodeSubject(Util.elementText(node),
+        tree = ET.parse(tmpfile)
+        for element in tree.getiterator():
+            if element.text and element.text.strip() != "":
+                replacement = ""
+                for p in element.text.split("\n"):
+                    if p:
+                        replacement += self.wrapper.fill(p) + "\n\n";
+                
+                element.text = replacement.strip()
+
+        tree.write(outdoc,encoding="utf-8")
+        os.unlink(tmpfile)
+        
+    def parse_antiword_docbook(self,docbookfile,patchdescription=None):
+        soup = Util.loadSoup(docbookfile,encoding='utf-8')
+        head = Metadata()
+        header_elements = soup.first("para")
+        header_text = u''
+        for el in header_elements.contents:
+            if hasattr(el, 'name') and el.name == "informaltable":
+                break
+            else:
+                header_text += el.string
+
+        # Högst uppe på varje domslut står domstolsnamnet ("Högsta
+        # domstolen") följt av referatnumret ("NJA 1987
+        # s. 113"). Beroende på worddokumentet ser dock XML-strukturen
+        # olika ut. Det vanliga är att informationen finns i en
+        # pipeseparerad paragraf:
+
+        parts = [x.strip() for x in header_text.split("|")]
+        if len(parts) > 1:
+            domstol = parts[0]
+            referat = parts[1]
+        else:
+            # alternativ står de på första raden i en informaltable
+            domstol = soup.first("informaltable").tgroup.tbody.row.findAll('entry')[0].string
+            referat = soup.first("informaltable").tgroup.tbody.row.findAll('entry')[1].string
+        
+        domstolsuri = self.domstolsforkortningar[self.id.split("/")[0]]
+        
+        head[u'Domstol'] = LinkSubject(domstol,
+                                       uri=domstolsuri,
+                                       predicate=self.labels[u'Domstol'])
+
+        head[u'Referat'] = UnicodeSubject(referat,
                                           predicate=self.labels[u'Referat'])
         if not head[u'Referat']:
             # För specialdomstolarna kan man lista ut referatnumret
             # från målnumret - det borde vi försöka göra här
-            raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % htmlfile)
+            raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % docbookfile)
 
         # Hitta övriga enkla metadatafält i sidhuvudet
         for key in self.labels.keys():
-            node = soup.firstText(key+u':')
+            node = soup.find(text=re.compile(key+u':'))
             if node:
-                txt = Util.elementText(node.findParent('td').findNextSibling('td'))
+                txt = Util.elementText(node.findParent('entry').findNextSibling('entry'))
                 if txt: # skippa fält med tomma strängen-värden
                     head[key] = UnicodeSubject(txt, predicate=self.labels[key])
 
         # Hitta sammansatta metadata i sidhuvudet
         for key in [u"Lagrum", u"Rättsfall"]:
-            node = soup.firstText(key+u':')
+            node = soup.find(text=re.compile(key+u':'))
             if node:
                 items = []
-                for p in node.findParent('td').findNextSibling('td').findAll('p'):
-                    txt = Util.elementText(p)
-                    if txt.startswith(u'\xb7'):
-                        txt = txt[1:]
-                        items.append(Util.normalizeSpace(txt))
-                    else:
-                        items = [Util.normalizeSpace(x) for x in self.re_delimSplit(txt)]
-                if items != ['']:
+                textchunk = node.findParent('entry').findNextSibling('entry').string
+                #for line in [x.strip() for x in self.re_delimSplit(textchunk)]:
+                for line in [x.strip() for x in textchunk.split("\n\n")]:
+                    if line: 
+                        items.append(Util.normalizeSpace(line))
+                if items and items != ['']:
                     if key == u'Lagrum':
                         containercls = Lagrum
-                        parsefunc = lagrum_parser.parse
+                        parsefunc = self.lagrum_parser.parse
                     elif key == u'Rättsfall':
                         containercls = Rattsfall
-                        parsefunc = rattsfall_parser.parse
+                        parsefunc = self.rattsfall_parser.parse
 
                     head[key] = []
                     for i in items:
@@ -398,19 +495,29 @@ class DVParser(LegalSource.Parser):
         # dissenternas domskäl, ledamöternas namn, hänvisning till
         # rättsfall och lagrum i löpande text...
         body = Referatstext()
-        for p in soup.firstText(u'REFERAT').findParent('tr').findNextSibling('tr').fetch('p'):
-            body.append(Stycke([Util.elementText(p)]))
+        for p in soup.find(text=re.compile('REFERAT')).findParent('tgroup').findNextSibling('tgroup').find('entry').string.strip().split("\n\n"):
+            body.append(Stycke([p]))
 
         # Hitta sammansatta metadata i sidfoten
-        txt = Util.elementText(soup.firstText(u'Sökord:').findParent('td').nextSibling.nextSibling)
+        txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findParent('entry').nextSibling.nextSibling)
         head[u'Sökord'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Sökord'])
                            for x in self.re_delimSplit(txt)]
-        
-        if soup.firstText(u'Litteratur:'):
-            txt = Util.elementText(soup.firstText(u'Litteratur:').findParent('td').nextSibling.nextSibling)
+
+        if soup.find(text=re.compile(u'^\s*Litteratur:\s*$')):
+            n = soup.find(text=re.compile(u'^\s*Litteratur:\s*$')).findParent('entry').nextSibling.nextSibling
+            txt = Util.elementText(n)
             head[u'Litteratur'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Litteratur'])
                                    for x in txt.split(";")]
 
+        self.polish_metadata(head)
+        if patchdescription:
+            head[u'Textändring'] = UnicodeSubject(patchdescription,
+                                                  predicate=RINFOEX['patchdescription'])
+        
+        xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
+        return xhtml
+
+    def polish_metadata(self,head):
         # Putsa upp metadatan på olika sätt
         #
         # Lägg till utgivare
@@ -455,7 +562,6 @@ class DVParser(LegalSource.Parser):
                 head['[referatkortform]'] = UnicodeSubject(m.group(1),
                                                            predicate=self.labels[u'Referat'])
                 head['Referat'] = unicode(head['Referat'])
-            
 
         # Find out correct URI for this case, preferably by leveraging
         # the URI formatting code in LegalRef
@@ -468,18 +574,12 @@ class DVParser(LegalSource.Parser):
             
         head['xml:base'] = None
         if u'Referat' in head:
-            res = rattsfall_parser.parse(head[u'Referat'])
+            res = self.rattsfall_parser.parse(head[u'Referat'])
             if hasattr(res[0], 'uri'):
                 head['xml:base'] = res[0].uri
 
         if not head['xml:base']:
             log.error(u'%s: Could not find out URI for this doc automatically (%s)' % (self.id, head[u'Referat']))
-            #print head.keys()
-            #attrs = {'domstol':tmp_publikationsid,
-            #         'lopnr':head['[publikationsordinal]']}
-            #head['xml:base'] = rattsfall_parser.make_uri(attrs)
-        
-        # head['xml:base'] = "http://rinfo.lagrummet.se%s%s" % (self.containerid[head['[rattsfallspublikation]']], head['[publikationsordinal]'])
 
         # Putsa till avgörandedatum - det är ett date, inte en string
         head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
@@ -488,25 +588,6 @@ class DVParser(LegalSource.Parser):
         
         # OK, färdigputsat!
 
-        # print serialize(head)
-        xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
-        return xhtml
-
-    
-    def add_to_graph(self,objecturi,graph,nodes):
-        for item in nodes:
-            if isinstance(item,list):
-                self.add_to_graph(objecturi,graph,item)
-            elif isinstance(item,PredicateType):
-                if isinstance(item,Link):
-                    # print "adding %s as %s (URIRef)" % (item.uri,item.predicate)
-                    graph.add((objecturi,item.predicate,URIRef(item.uri)))
-                else:
-                   # print "adding %s as %s (Literal)" % (item,item.predicate)
-                    graph.add((objecturi,item.predicate,Literal(item)))
-            else:
-                # probably just a unicode object used for presentation
-                pass
 
 class DVManager(LegalSource.Manager):
     __parserClass = DVParser
@@ -516,8 +597,9 @@ class DVManager(LegalSource.Manager):
         ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
         xmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']) 
         minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
-        if self._outfile_is_newer([xmlfile,minixmlfile],ntfile):
-            log.info(U"Not regenerating RDF/XML files")
+        if self._outfile_is_newer([ntfile],xmlfile) and self._outfile_is_newer([ntfile],minixmlfile):
+            log.info(u"Not regenerating RDF/XML files")
+            return
         log.info("Loading NT file %s" % ntfile)
         g = Graph()
         for key, value in Util.ns.items():
@@ -568,14 +650,14 @@ class DVManager(LegalSource.Manager):
 
         p = self.__parserClass()
         p.verbose = verbose
-        parsed = p.Parse(basefile,infile)
+        parsed = p.Parse(basefile,infile,self.config)
         Util.ensureDir(outfile)
 
         tmpfile = mktemp()
         out = file(tmpfile, "w")
         out.write(parsed)
         out.close()
-        Util.indentXmlFile(tmpfile)
+        # Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
@@ -648,7 +730,6 @@ class DVManager(LegalSource.Manager):
                      u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
                      }
-
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}
@@ -665,8 +746,8 @@ class DVManager(LegalSource.Manager):
                 identifier = by_subj_pred[subject][id_pred]
                 
                 desc = by_subj_pred[subject][desc_pred]
-                if len(desc) > 72:
-                    desc = desc[:72].rsplit(' ',1)[0]+'...'
+                if len(desc) > 80:
+                    desc = desc[:80].rsplit(' ',1)[0]+'...'
                 pageid = '%s-%s' % (obj.split('/')[-1], year)
                 pagetitles[pageid] = u'Rättsfall från %s under %s' % (label, year)
                 pagelabels[pageid] = year
@@ -712,7 +793,7 @@ class DVManager(LegalSource.Manager):
         for base in basefile.keys():
             entries[base] = []
         for (timestamp,message) in messages:
-            f = message.replace('intermediate\word','parsed').replace('.doc','.xht2')
+            f = message.replace('intermediate/word','parsed').replace('.doc','.xht2').replace('\\','/')
             if not os.path.exists(f):
                 # kan hända om parsandet gick snett
                 log.warning("File %s not found" % f)

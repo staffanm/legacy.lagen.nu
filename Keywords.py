@@ -15,11 +15,10 @@ from genshi.template import TemplateLoader
 # my libs
 import Util
 import LegalSource
-import Util
 from DispatchMixin import DispatchMixin
 
 
-log = logging.getLogger(u'ls')
+
 
 __version__   = (1,6)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -32,13 +31,49 @@ class KeywordDownloader(LegalSource.Downloader):
         return __moduledir__
 
     def DownloadAll(self):
-        pass # code to download the Wikipedia dump goes here
+        # Get all "term sets" (used dct:subject Objects, wiki pages
+        # describing legal concepts, swedish wikipedia pages...)
+        #
+        # 1) Query the RDF DB for all dct:subject triples (is this
+        # semantically sensible for a "download" action -- the
+        # content isn't really external?) -- term set "subjects"
+        #
+        # 2) Download the wiki.lagen.nu dump from
+        # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
+        #
+        # 3) Download the Wikipedia dump from
+        # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
+        # -- term set "wikipedia"
+        #
+        # 4) Download all pages from Jureka, probably by starting at
+        # pageid = 1 and incrementing until done -- term set "jureka"
+        #
+        # Possible future term sets: EUROVOC, Rikstermdatabasen (or a
+        # subset thereof), various gov websites... Lawtext also
+        # contains a number of term definitions, maybe marked up as
+        # dct:defines.
+        #
+        # Store all terms under downloaded/[term] (for wikipedia,
+        # store only those terms that occur in any of the other term
+        # sets). The actual content of each text file contains one
+        # line for each term set the term occurs in.
+
+        pass
 
     def DownloadNew():
-        pass # code to download the Wikipedia dump if the current is too old
+        # Same as above, except use http if-modified-since to avoid
+        # downloading swedish wikipedia if not updated. Jureka uses a
+        # page id parameter, so check if there are any new ones.
+        
+        pass 
 
 class KeywordParser(LegalSource.Downloader):
-    pass
+    def Parse(self,basefile,files):
+        # for a base name (term), create a skeleton xht2 file
+        # containing a element of some kind for each term set this
+        # term occurs in.
+        pass
+    
 
 class KeywordManager(LegalSource.Manager):
     transtbl = {ord(u'?'):    None,
@@ -55,9 +90,12 @@ class KeywordManager(LegalSource.Manager):
     def Parse(self,basefile,verbose=False):
         log.info("Not implemented")
 
-    def Generate():
+    def Generate(self,basefile):
         log.info("Not implemented")
-        # or is this the place to generate a page for every single keyword in the system?
+        # Use a SPARQL query to create a rdf graph (to be used by the
+        # xslt transform) containing enough information about all
+        # cases using this term, as well as the wiki authored
+        # dct:description for this term.
     
     __parserClass = KeywordParser
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
@@ -124,10 +162,6 @@ class KeywordManager(LegalSource.Manager):
         Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
         log.info("rendered %s" % outfile)
         
-
-                
-
-
 if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')

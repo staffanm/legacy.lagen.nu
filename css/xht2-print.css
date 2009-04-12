@@ -6,7 +6,7 @@
 
 @page {
     size: a4 portrait;
-    font: 10pt/1.4 Georgia;
+    font: 10pt/1.4 Times;
 }
 
 @page:left {
@@ -67,7 +67,7 @@
 
 /* Grundläggande typografi och utrymme */
 body {
-    font: 10pt/1.4 Georgia;
+    font: 10pt/1.4 Times;
     text-align: justify;
     hyphens: auto;
     prince-hyphenate-patterns: "sv.hyp"; 
@@ -85,6 +85,7 @@ section {
     padding: 1pt;
     margin-top: 5pt;
 }
+td { vertical-align: top; }
 
 /* visa inte metadatablocket i början (plocka ut ev "Ändring införd"-fältet senare) eller */
 *[role="contentinfo"] {
@@ -110,11 +111,13 @@ section > p:first-of-type {
 
 /* Vi använder inte <ol>, men vi kan få <ul class="numreradlista"> att se nästan likadant ut */
 ul { margin: 0; }
-ul.numreradlista > li {
+ul.numreradlista > li, ul.strecksatslista > li, ul.bokstavslista > li {
     list-style: none;
-    text-indent: 12pt hanging;
+    text-indent: 10pt hanging;
     margin: 0;
 }
+
+
 /* typografikutym för paragrafbeteckningen */
 span.paragrafbeteckning {
     font-weight: bold;
@@ -139,9 +142,11 @@ span.ikrafttradande, span.upphor {
 
 
 /* Varje ny lag på en ny sida */
+/*
 body > section > h {
     page-break-before: always;
 } 
+*/
 
 /* Skapa korrekta sidnummershänvisningar i innehållsförteckningen */
 ul.toc { list-style: none; }
@@ -149,6 +154,8 @@ ul.toc a::after {   content: leader('.') target-counter(attr(href), page); }
 
 a[href] {
     text-decoration: none;
+    color: inherit;
+    prince-link: inherit;
 }
 
 .warning {
@@ -159,8 +166,8 @@ a[href] {
 
 /* Sättande av variabler som används i sidhuvudet */
 *[property="dct:alternate"] { string-set: titel attr(content); }
-*[property="rinfo:kapitelnummer"] { string-set: kapitelnr attr(content); } 
-*[property="rinfo:paragrafnummer"] { string-set: paragrafnr attr(content); }
+*[property="rinfoex:kapitelnummer"] { string-set: kapitelnr attr(content); } 
+*[property="rinfoex:paragrafnummer"] { string-set: paragrafnr attr(content); }
 span.paragrafbeteckning { string-set: altparagraf content(); }
 /* Vi använder named pages (class="{kapitel,paragraf}indelning" sätts
    i master.xht2) för att åstadkomma olika sorters sidhuvuden beroende på
@@ -168,7 +175,9 @@ span.paragrafbeteckning { string-set: altparagraf content(); }
 .kapitelindelning  { page: kapitel; }  /* Sidhuvud 'MB 12:2-12:8' */
 .paragrafindelning { page: paragraf; } /* Sidhuvud 'FL 4-6 §§ */
 
-    
+
+
+
     
 
 /* Instruktioner för att generera en vettig hierarki av PDF-bookmarks */ 

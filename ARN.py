@@ -11,126 +11,156 @@ import sys
 import time
 import re
 import os
-import md5
-import datetime
 import urllib
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
+from datetime import datetime
+from time import time
+from tempfile import mktemp
 
 # 3rd party
 import BeautifulSoup
+from mechanize import Browser, LinkNotFoundError, urlopen
+from rdflib import Namespace
 
 # My own stuff
 import LegalSource
+import Util
+from LegalRef import LegalRef,ParseError,Link,LinkSubject
+from DispatchMixin import DispatchMixin
+from DataObjects import UnicodeStructure, CompoundStructure, \
+     MapStructure, IntStructure, DateStructure, PredicateType, \
+     serialize
 
 __version__   = (0,1)
 __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Referat från ARN"
 __moduledir__ = "arn"
 log = logging.getLogger(__moduledir__)
+if not os.path.sep in __file__:
+    __scriptdir__ = os.getcwd()
+else:
+    __scriptdir__ = os.path.dirname(__file__)
+
+
+class UnicodeSubject(PredicateType,UnicodeStructure): pass
+class Stycke(CompoundStructure): pass
 
 class ARNDownloader(LegalSource.Downloader):
     
-    def __init__(self,baseDir="data"):
-        self.dir = baseDir + "/arn/downloaded"
-        if not os.path.exists(self.dir):
-            Util.mkdir(self.dir)
-        self.ids = {}
+    def __init__(self,config):
+        super(ARNDownloader,self).__init__(config)
+
+    def _get_module_dir(self):
+        return __moduledir__
     
     def DownloadAll(self):
-        """Hämtar alla avgöranden"""
-        # we should think about clearing (part of) the cache here, or
-        # make noncached requests -- a stale index page would not be
-        # good. Alternatively just request descisions for the current
-        # year or similar.
-        
-        # this idiom of getting a first page of results, then
-        # iterating until there is no more "next" links, is common -
-        # think about refactoring it to a superclass method
-        html = Robot.Get("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=%40DOCN&s2=&s3=&s4=&s5=&s6=")
-        soup = BeautifulSoup.BeautifulSoup(html)
-        self._downloadDecisions(soup)
-        nexttags = soup.first('img', {'src' : '/netaicon/nxtlspg.gif'})
-        
-        while nexttags:
-            nexturl = urllib.basejoin("http://www.arn.se/",nexttags.parent['href'])
-            html = Robot.Get(nexturl)
-            soup = BeautifulSoup.BeautifulSoup(html)
-            self._downloadDecisions(soup)
-            nexttags = soup.first('img', {'src' : '/netaicon/nxtlspg.gif'})
-            
-        self._saveIndex()
+        self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=%40DOCN&s2=&s3=&s4=&s5=&s6=")
         
     def DownloadNew(self):
-        pass
-        
-    def _downloadDecisions(self,soup):
-        for tag in soup('a', {'href': re.compile(r'/netacgi/brs.pl.*f=G')}):
-            id = tag.string
-            if id != "Ärendenummer saknas":
-                url = "http://www.arn.se" + tag['href']
-                filename = id + ".html"
+        self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=&s2=&s3=&s4=&s5=%s*&s6=" % datetime.now().year)
 
-                resource = DownloadedResource(id)
-                resource.url = url
-                resource.localFile = filename
-                Robot.Store(url, None, self.dir + "/" + id + ".html")
-                resource.fetched = time.localtime()
-                if id in self.ids:
-                    log.warning(u'replacing URL of id %s to %s (was %s)' % (id, url, self.ids[id].url))
-                self.ids[id] = resource
+    def __download(self,url):
+        self.browser.open(url)
+        done = False
+        pagecnt = 1
+        while not done:
+            log.info("Result page #%s" % pagecnt)
+            for l in (self.browser.links(text_regex=r'\d+-\d+')):
+                basefile = l.text.replace("-", "/")
+                filename = "%s/%s.html" % (self.download_dir, basefile)
+                if not os.path.exists(filename):
+                    log.info("    Fetching %s" % basefile)
+                    Util.ensureDir(filename)
+                    self.browser.retrieve(l.absolute_url,filename)
+                    self.download_log.info(basefile)
+                    self.browser.retrieve(l.absolute_url,filename)
+            try:
+                self.browser.follow_link(predicate=lambda x: x.text == '[NEXT_LIST][IMG]')
+                pagecnt += 1
+            except LinkNotFoundError:
+                log.info(u'No next page link found, we must be done')
+                done = True
 
 class ARNParser(LegalSource.Parser):
 
-    def __init__(self,id,file,baseDir):
-        self.id = id
-        self.dir = baseDir + "/arn/parsed"
-        if not os.path.exists(self.dir):
-            Util.mkdir(self.dir)
-        self.file = file
-        log.info('Loading file %s' % file)
-
-    def Parse(self):
+    def Parse(self,basefile,files):
+        parser = LegalRef(LegalRef.LAGRUM, LegalRef.EGLAGSTIFTNING, LegalRef.FORARBETEN)
+        DCT = Namespace(Util.ns['dct'])
+        RINFO = Namespace(Util.ns['rinfo'])
+        RINFOEX = Namespace(Util.ns['rinfoex'])
+        self.id = basefile
         import codecs
-        soup = BeautifulSoup.BeautifulSoup(codecs.open(self.file,encoding="iso-8859-1",errors='replace').read())
-        
-        root = ET.Element("Beslut")
-        meta = ET.SubElement(root,"Metadata")
-        arendenummer = ET.SubElement(meta,u"Ärendenummer")
-        arendenummer.text = soup.first('h2').b.i.string.strip()
-        titel = ET.SubElement(meta,"Titel")
-        titel.text = soup.first('h3').string.strip()
-        arendemening = ET.SubElement(meta,u"Ärendemening")
-        arendemening.text = soup.firstText(u"Ärendemening: ").parent.parent.parent.parent.contents[1].string.strip()
-        avdelning = ET.SubElement(meta,"Avdelning")
-        avdelning.text = soup.firstText('Avdelning: ').parent.parent.parent.parent.contents[1].string.strip()
-        beslutsdatum = ET.SubElement(meta, "Beslutsdatum")
-        beslutsdatum.text = soup.firstText('Beslutsdatum: ').parent.parent.parent.parent.contents[1].string.strip()
-        beslut = ET.SubElement(meta, "Beslut")
-        beslut.text = soup.firstText('Beslut: ').parent.parent.parent.parent.contents[1].string.strip()
-        
-        referat = ET.SubElement(root,"Referat")
-        
-        node = soup.firstText('Referat:').parent.parent.parent.nextSibling
+        soup = Util.loadSoup(files['main'][0])
 
-        while node.name == 'p':
-            stycke = ET.SubElement(referat, "Stycke")
-            stycke.text = node.string
+        # FIXME: Create a better URI pattern
+        meta = {'xml:base': "http://rinfo.lagrummet.se/publ/arn/%s" % basefile}
+        meta[u'Ärendenummer'] = UnicodeSubject(soup.first('h2').b.i.string.strip(),
+                                               predicate=RINFOEX['arendenummer'])
+        meta[u'Rubrik'] = UnicodeSubject(soup.first('h3').string.strip(),
+                                         predicate=DCT['title'])
+        meta[u'Ärendemening'] = UnicodeSubject(soup.firstText(u"Ärendemening: ").parent.parent.parent.parent.contents[1].string.strip(),
+                                               predicate=DCT['subject'])
+        meta[u'Avdelning'] = UnicodeSubject(soup.firstText('Avdelning: ').parent.parent.parent.parent.contents[1].string.strip(),
+                                            predicate=RINFOEX['avdelning'])
+        meta[u'Beslutsdatum'] = UnicodeSubject(soup.firstText('Beslutsdatum: ').parent.parent.parent.parent.contents[1].string.strip(),
+                                              predicate=RINFO['beslutsdatum'])
+                                            
+        meta[u'Beslut'] = UnicodeSubject(soup.firstText('Beslut: ').parent.parent.parent.parent.contents[1].string.strip(),
+                                        predicate=RINFOEX['beslutsutfall'])
+                                         
+        node = soup.firstText('Referat:').parent.parent.parent.nextSibling.nextSibling
+
+        body = []
+        while node and node.name == 'p':
+            if node.string:
+                body.append(Stycke(parser.parse(Util.elementText(node), predicate="rinfo:lagrum")))
             node = node.nextSibling
 
-        tree = ET.ElementTree(root)
-        tree.write(self.dir + "/" + self.id + ".xml", encoding="iso-8859-1")
+        xhtml = self.generate_xhtml(meta, body, None, __moduledir__, globals())
+        return xhtml
 
 class ARNManager(LegalSource.Manager):
-    def DownloadAll(self,id):
-        log.info('DownloadAll not implemented')
-        
+    def DownloadAll(self):
+        ad = ARNDownloader(self.config)
+        ad.DownloadAll() 
+       
     def DownloadNew(self):
-        log.info('DownloadNew not implemented')
+        ad = ARNDownloader(self.config)
+        ad.DownloadAll() 
+
+    def Parse(self,basefile):
+        start = time()
+        infile  = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".html"
+        outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed',     basefile]) + ".xht2"
+
+        
+        force = (self.config[__moduledir__]['parse_force'] == 'True')
+        if not force and self._outfile_is_newer([infile],outfile):
+            log.debug(u"%s: Skipping", basefile)
+            return
+
+        p = ARNParser()
+        parsed = p.Parse(basefile,{'main':[infile]})
+        Util.ensureDir(outfile)
+        tmpfile = mktemp()
+        out = file(tmpfile, "w")
+        out.write(parsed)
+        out.close()
+        Util.indentXmlFile(tmpfile)
+        Util.replace_if_different(tmpfile,outfile)
+        log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        
+    def _file_to_basefile(self,f):
+        """Given a full physical filename, transform it into the
+        logical id-like base of that filename, or None if the filename
+        shouldn't be processed."""
+    
+        return "/".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+
 
     def ParseAll(self):
-        log.info('ParseAll not implemented')
-        return
+        self._do_for_all(unicode(os.path.sep.join([self.baseDir, __moduledir__, 'downloaded'])),'.html',self.Parse)
 
     def IndexAll(self):
         log.info('IndexAll not implemented')
@@ -140,33 +170,19 @@ class ARNManager(LegalSource.Manager):
         log.info('GenerateAll not implemented')
         return
 
-    def RelateAll(self):
-        log.info('ParseAll not implemented')
-        return
+    #def RelateAll(self):
+    #    log.info('ParseAll not implemented')
+    #    return
 
     def _get_module_dir(self):
         return __moduledir__
     
-
-class TestARNCollection(unittest.TestCase):
-    baseDir = "testdata"
-    def testDownloadAll(self):
-        c = ARNDownloader(self.baseDir)
-        c.DownloadAll()
-        # FIXME: come up with some actual tests
-
-    def testParse(self):
-        p = ARNParser("1997-2944", "testdata/arn/downloaded/1997-2944.html", self.baseDir)
-        p.parse()
-        # FIXME: come up with actual test (like comparing the
-        # resulting XML file to a known good file)
-        
 if __name__ == "__main__":
     import logging.config
-    logging.config.fileConfig('etc/log.conf')
-    # unittest.main()
-    suite = unittest.defaultTestLoader.loadTestsFromName("ARN.TestARNCollection.testParse")
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    logging.config.fileConfig(__scriptdir__ + '/etc/log.conf')
+    ARNManager.__bases__ += (DispatchMixin,)
+    mgr = ARNManager()
+    mgr.Dispatch(sys.argv)
     
     
     

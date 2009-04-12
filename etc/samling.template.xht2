@@ -19,25 +19,30 @@
       <title property="dc:title">Lagtext</title>
     </head>
     <body>
-
-      <h>Författningssamling</h>
-      <py:for each="omrade in data.keys()">
-	<h class="avdelningsrubrik" py:content="omrade">Rättsområde</h>
-	<ul class="toc">
-	  <py:for each="forfattning in data[omrade]">
-	    <li><a href="#L${forfattning['sfsnr'].split('#')[0]}" py:content="forfattning['rubrik']">Författning</a></li>
-	  </py:for>
-	</ul>
-      </py:for>
-
+      <section class="kapitelindelning">
+	<h>Författningssamling</h>
+	<py:for each="omrade in data.keys()">
+	  <h class="avdelningsrubrik" py:content="omrade">Rättsområde</h>
+	  <ul class="toc">
+	    <py:for each="forfattning in data[omrade]">
+	      <li><a href="#L${forfattning['sfsnr'].split('#')[0]}" py:content="forfattning['rubrik']">Författning</a></li>
+	    </py:for>
+	  </ul>
+	</py:for>
+      </section>
       <py:for each="omrade in data.keys()">
 	<py:for each="forfattning in data[omrade]">
 	  <section id="L${forfattning['sfsnr'].split('#')[0]}" class="kapitelindelning">
+
+	    <!-- ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:head/h:meta[@property=\'dct:alternate\'])"/&gt;' % forfattning['sfsnr'].replace(':', '/'))} -->
+	    
 	    <py:if test="'#' in forfattning['sfsnr']">
-	      ${Markup('&lt;xi:include href="testdata/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:body/h:h)"/&gt;&lt;xi:include href="testdata/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[@id=\'%s\'])"/&gt;' % (forfattning['sfsnr'].split("#")[0].replace(':', '/'), forfattning['sfsnr'].split("#")[0].replace(':', '/'), forfattning['sfsnr'].split("#")[1]))}
+	      ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:body/h:h)"/&gt;' % forfattning['sfsnr'].split("#")[0].replace(':', '/'))}
+	      ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:section[@id=\'%s\'])"/&gt;' % (forfattning['sfsnr'].split("#")[0].replace(':', '/'), forfattning['sfsnr'].split("#")[1]))}
 	    </py:if>
 	    <py:if test="'#' not in forfattning['sfsnr']">
-	      ${Markup('&lt;xi:include href="testdata/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:body/*)"/&gt;' % forfattning['sfsnr'].replace(':', '/'))}
+	      ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:body/h:h)"/&gt;' % forfattning['sfsnr'].replace(':', '/'))}
+	      ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:body/h:section[@role=\'main\'])"/&gt;' % forfattning['sfsnr'].replace(':', '/'))}
 	    </py:if>
 	  </section>
 	  </py:for>

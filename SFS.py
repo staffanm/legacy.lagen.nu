@@ -351,7 +351,7 @@ class SFSDownloader(LegalSource.Downloader):
         # enc_sfsnr = sfsnr.replace(" ", "+")
         # Div specialhack för knepiga författningar
         if sfsnr == "1723:1016+1": parts = ["1723:1016"]
-        elif sfsnr == "1942:740": parts = ["1942:740 A", "1942:740 B"]
+        # elif sfsnr == "1942:740": parts = ["1942:740 A", "1942:740 B"]
         else: parts = [sfsnr]
 
         uppdaterad_tom = old_uppdaterad_tom = None
@@ -1157,9 +1157,9 @@ class SFSParser(LegalSource.Parser):
         log.debug(u"        Nytt stycke: '%s...'" % self.reader.peekline()[:30])
         s = Stycke([self.reader.readparagraph()])
         while not self.reader.eof():
-            log.debug(u"            makeStycke: calling guess_state ")
+            #log.debug(u"            makeStycke: calling guess_state ")
             state_handler = self.guess_state()
-            log.debug(u"            makeStycke: guess_state returned %s " % state_handler.__name__)
+            #log.debug(u"            makeStycke: guess_state returned %s " % state_handler.__name__)
             if state_handler in (self.makeNumreradLista,
                                  self.makeBokstavslista,
                                  self.makeStrecksatslista,
@@ -1169,7 +1169,7 @@ class SFSParser(LegalSource.Parser):
             elif state_handler == self.blankline:
                 state_handler() # Bara att slänga bort
             else:
-                log.debug(u"            makeStycke: ...we're done")
+                #log.debug(u"            makeStycke: ...we're done")
                 return s
         return s
 
@@ -1435,6 +1435,8 @@ class SFSParser(LegalSource.Parser):
                  (m.span()[1] == len(p) or # if the ENTIRE p is eg "6 kap." (like it is in 1962:700)
                   p.endswith(" m.m.") or
                   p.endswith(" m. m.") or
+                  p.endswith("m.fl.") or 
+                  p.endswith("m. fl.") or
                   self.re_ChapterRevoked(p)))): # If the entire chapter's
                                            # been revoked, we still
                                            # want to count it as a
@@ -1473,7 +1475,7 @@ class SFSParser(LegalSource.Parser):
         self.trace['rubrik'].debug("isRubrik (%s): indirect=%s" % (p[:50], indirect))
 
         # self.trace['rubrik'].debug("isRubrik: p=%s" % p)
-        if len(p) > 100: # it shouldn't be too long
+        if len(p) > 110: # it shouldn't be too long
             self.trace['rubrik'].debug("isRubrik (%s): too long" % (p[:50]))
             return False
 
@@ -2238,7 +2240,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
     def IntertwineAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-        self._do_for_all(parsed_dir,'xht2',self.Convert)
+        self._do_for_all(parsed_dir,'xht2',self.Intertwine)
         
 
     def ParseGen(self,basefile):
@@ -2288,8 +2290,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if verbose == None:
             verbose=False
         if quiet == None:
-            quiet=True
+            #quiet=True
             pass
+
+        verbose = True
         p = SFSParser()
         p.verbose = verbose
         p.id = '(test)'
