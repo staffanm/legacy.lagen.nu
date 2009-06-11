@@ -88,7 +88,7 @@
 	  </div>
 	  <div class="sidoruta kommentar">
 	    <h2><img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till författningen"/>Kommentarer</h2>
-	    <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=sfs/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
+	    <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=SFS/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
 	    <xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description/*"/>
 	  </div>
 	</div>

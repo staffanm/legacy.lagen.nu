@@ -602,7 +602,8 @@ class SFSParser(LegalSource.Parser):
 
         # hitta eventuella etablerade förkortningar
         g = Graph()
-        g.load("file:///"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
+        #print "scriptdir %s" % __scriptdir__
+        g.load("file://"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
         for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
             meta[u'Förkortning'] = unicode(obj)
 
@@ -2115,10 +2116,10 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         else:
             params['cases'] = rattsfall
 
+        kommentarer = os.path.join(__scriptdir__,u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
+        kommentarer = kommentarer.replace(os.path.sep,'/')
         try:
-            tree = self.__get_wiki_annotations("sfs/"+sfsnr, baseuri,p)
-            kommentarer = os.path.join(__scriptdir__,u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
-            kommentarer = kommentarer.replace(os.path.sep,'/')
+            tree = self.__get_wiki_annotations("SFS/"+sfsnr, baseuri,p)
             tree.write(kommentarer, encoding="utf-8")
             params['kommentarer'] = kommentarer
         except LegalSource.IdNotFound:
@@ -2156,7 +2157,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def __get_wiki_annotations(self,wikipath,baseuri,parser):
         # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
         url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
-
+        #print "export URL: %s" % url
         root_node = PET.Element("rdf:RDF")
         for prefix in Util.ns:
             # PET._namespace_map[Util.ns[prefix]] = prefix
@@ -2183,6 +2184,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                     uri = parser.parse(part,baseuri)[0].uri
                 except:
                     log.warning("Could not find out URI for '%s'" % part)
+                    uri = baseuri
 
             # Some quick and dirty "parsing" of the wiki text
             text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
@@ -2199,7 +2201,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             lagrum_node.set("rdf:about",uri)
             triple_node = PET.SubElement(lagrum_node, "dct:description")
             triple_node.set("rdf:parseType", "Literal")
-            
             triple_node.append(PET.XML(text.encode('utf-8')))
         Util.indent_et(root_node)
         tree = PET.ElementTree(root_node)
