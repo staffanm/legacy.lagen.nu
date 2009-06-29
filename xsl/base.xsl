@@ -35,6 +35,8 @@
        specific case (and therefore should link it) or not - it's used
        in uri.xsl -->
   <xsl:variable name="rattsfall" select="document('../data/dv/parsed/rdf-mini.xml')/rdf:RDF"/>
+  <xsl:param name="annotationfile"/>
+  <xsl:variable name="annotations" select="document($annotationfile)/rdf:RDF"/>
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
     <xsl:apply-templates/>

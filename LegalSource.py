@@ -231,7 +231,7 @@ class Manager(object):
     def DumpTriples(self, filename, format="turtle"):
         """Given a XML file (any file), extract RDFa embedded triples
         and display them - useful for debugging"""
-        g = self.__extract_rdfa(filename)
+        g = self._extract_rdfa(filename)
         print unicode(g.serialize(format=format, encoding="utf-8"), "utf-8")
 
     def RelateAll(self,file=None):
@@ -243,37 +243,84 @@ class Manager(object):
 
         if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
-            return
+            # return
+            log.info("Fast-loading store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
+            store = SesameStore(self.config['triplestore'], self.config['repository'],context)
+            for key, value in Util.ns.items():
+                store.bind(key, Namespace(value));
 
-        log.info("Connecting to store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
-        store = SesameStore(self.config['triplestore'], self.config['repository'],context)
-        for key, value in Util.ns.items():
-            store.bind(key, Namespace(value));
+            log.info("Clearing context %s" % context)
+            store.clear()
+            ntriples = open(rdffile).read()
+            log.info("Loading ntriples from %s" % rdffile)
+            store.add_serialized(ntriples)
+            
+        else:
+            log.info("Connecting to store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
+            store = SesameStore(self.config['triplestore'], self.config['repository'],context)
+            for key, value in Util.ns.items():
+                store.bind(key, Namespace(value));
 
-        log.info("Clearing context %s" % context)
-        store.clear()
+            log.info("Clearing context %s" % context)
+            store.clear()
 
-        c = 0
-        triples = 0
+            c = 0
+            triples = 0
 
-        for f in files:
-            c += 1
-            graph = self.__extract_rdfa(f)
-            triples += len(graph)
-            store.add_graph(graph)
-            store.commit()
+            for f in files:
+                c += 1
+                graph = self._extract_rdfa(f)
+                triples += len(graph)
+                store.add_graph(graph)
+                store.commit()
 
-            if c % 100 == 0:
-                log.info("Related %d documents (%d triples total)" % (c, triples))
+                if c % 100 == 0:
+                    log.info("Related %d documents (%d triples total)" % (c, triples))
 
-        log.info("Serializing to %s" % rdffile)
-        statements = store.get_serialized("nt")
-        fp = open(rdffile,"w")
-        fp.write(statements)
-        fp.close()
+            log.info("Serializing to %s" % rdffile)
+            statements = store.get_serialized("nt")
+            fp = open(rdffile,"w")
+            fp.write(statements)
+            fp.close()
 
-        log.info("All documents related: %d documents, %d triples" % (c, triples))
+            log.info("All documents related: %d documents, %d triples" % (c, triples))
 
+#    def _query_store(self,query):
+#        """Send a SPARQL formatted query to the Sesame store. Returns
+#        the result as a RDF/XML-formatted string"""
+#        store = SesameStore(self.config['triplestore'], self.config['repository'])
+#        return store.select(query)
+        
+    def _store_select(self,query):
+        """Send a SPARQL formatted SELECT query to the Sesame
+           store. Returns the result as a list of dicts"""
+        # res will be a list of dicts, like
+        # [{'uri':    u'http://rinfo.lagrummet.se/dom/rh/2004:24',
+        #   'id':     u'RH 2004:24',
+        #   'desc':   u'Beskrivining av rättsfallet',
+        #   'lagrum': u'http://rinfo.lagrummet.se/publ/sfs/1998:204#P7'},
+        #  {'uri': ...}]
+
+        # Note that the difference between uris and string literals
+        # are gone, and that string literals aren't language
+        # typed. Should we use DataObjects instead?
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        results = store.select(query)
+        # print results.decode("utf-8")
+        tree = ET.fromstring(results)
+        #print "iterating rows"
+        res = []
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            d = {}
+            for element in row:
+                #print element.tag # should be "binding"
+                key = element.attrib['name']
+                value = element[0].text
+                d[key] = value
+            res.append(d)
+                
+        # convert the resulting SPARQL-result XML into a list of python dicts
+        return res
     
     def Indexpages(self):
         """Creates index pages for all documents for a particular
@@ -538,6 +585,14 @@ class Manager(object):
 
         log.info("rendered %s (%s)" % (htmlfile, atomfile))
 
+    def _extract_rdfa(self, filename):
+        dom  = xml.dom.minidom.parse(filename)
+        o = pyRdfa.Options()
+        o.warning_graph = None
+        g = pyRdfa.parseRDFa(dom, None, options=o)
+        self.__tidy_graph(g)
+
+        return g
                             
     
     ################################################################
@@ -555,11 +610,3 @@ class Manager(object):
                 l = Literal(u' '.join(s.split()))
                 graph.add((o,p,l))
 
-    def __extract_rdfa(self, filename):
-        dom  = xml.dom.minidom.parse(filename)
-        o = pyRdfa.Options()
-        o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, None, options=o)
-        self.__tidy_graph(g)
-
-        return g

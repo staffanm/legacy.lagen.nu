@@ -15,7 +15,8 @@ ns = {'dc':'http://purl.org/dc/elements/1.1/',
       'rdf':'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       'rinfo':'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#',
       'rinfoex':'http://lagen.nu/terms#',
-      'xsd':'http://www.w3.org/2001/XMLSchema#'}
+      'xsd':'http://www.w3.org/2001/XMLSchema#',
+      'xht2':'http://www.w3.org/2002/06/xhtml2/'}
 
 class ValidationError(Exception):
     def __init__(self, value):
@@ -158,7 +159,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     tmpfile = mktemp()
     stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    # print cmdline
+    print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)

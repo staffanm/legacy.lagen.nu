@@ -27,7 +27,16 @@
       </xsl:when>
       <xsl:otherwise>
 	<xsl:variable name="rawtitle">
-	  <xsl:value-of select="normalize-space(//*[@id=substring-after($uri,'#')])"/>
+	  <!-- FIXME: on large documents this increases processing
+	       time exponentially. wonder if there's a faster XSLT way
+	       to get a node with a particular ID? A better way would
+	       be to get the information dynamically through an AJAX
+	       call. As an added bonus, that would work with cross-law
+	       links. But it requires that this information can be
+	       dynamically queried, maybe if we store the actual
+	       content of the texts in Sesame?  -->
+	  <!--<xsl:value-of select="normalize-space(//*[@id=substring-after($uri,'#')])"/>-->
+	  title support currently disabled
 	</xsl:variable>
 	<xsl:variable name="tuned-width">
 	  <xsl:call-template name="tune-width">
@@ -36,6 +45,7 @@
 	    <xsl:with-param name="def" select="150"/>
 	  </xsl:call-template>
 	</xsl:variable>
+
 	<xsl:variable name="title">
 	  <xsl:choose>
 	    <xsl:when test="string-length($rawtitle) > 150">
@@ -45,7 +55,8 @@
 	    </xsl:otherwise>
 	  </xsl:choose>
 	</xsl:variable>
-	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
+
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><!--<xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute>--></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -62,7 +73,7 @@
 	<xsl:value-of select="substring-after($uri, '/publ/sfs')"/>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">
-	<!-- fixme: this gets pretty slow when handling 100+ links in a document (DV.py/Indexpages) -->
+	<!-- FIXME: this gets pretty slow when handling 100+ links in a document (DV.py/Indexpages) -->
 	<xsl:if test="$rattsfall//rinfo:Rattsfallsreferat[@rdf:about=$uri]">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:if>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/prop')">

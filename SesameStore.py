@@ -3,7 +3,7 @@ from rdflib.Graph import Graph
 from rdflib.syntax.parsers.ntriples import NTriplesParser
 
 from urllib2 import urlopen, Request, HTTPError
-from urllib import urlencode
+import urllib
 
 class SesameStore():
     """Simple wrapper of the Sesame REST HTTP API, for bulk inserts of
@@ -13,6 +13,7 @@ class SesameStore():
     # see Sesame REST API doc at http://www.openrdf.org/doc/sesame2/system/ch08.html
 
     contenttype = {"xml":"application/rdf+xml",
+                   "sparql":"application/sparql-results+xml",
                    "nt":"text/plain",
                    "ttl":"application/x-turtle",
                    "n3":"text/rdf+n3",
@@ -28,15 +29,19 @@ class SesameStore():
         if self.context:
             self.statements_url = ("%s/repositories/%s/statements?context=%s" %
                                    (self.url, self.repository, self.context))
+            self.endpoint_url =  ("%s/repositories/%s?context=%s&" %
+                                   (self.url, self.repository, self.context))
         else:
             self.statements_url = ("%s/repositories/%s/statements" %
                                    (self.url, self.repository))
+            self.endpoint_url = ("%s/repositories/%s" %
+                                   (self.url, self.repository))
 
         # Ping the server and see what we have
-        req = Request(self.url+'/protocol')
-        proto = urlopen(req).read()
-        req = Request(self.url+'/repositories/'+self.repository+'/size')
-        statements = urlopen(req).read()
+        # req = Request(self.url+'/protocol')
+        # proto = urlopen(req).read()
+        # req = Request(self.url+'/repositories/'+self.repository+'/size')
+        # statements = urlopen(req).read()
 
     # print "Connection to %s successful, protocol version %s, %s has %s statements" % (self.url, proto, repository, statements)
 
@@ -63,17 +68,38 @@ class SesameStore():
         req.add_header('Accept',self.contenttype[format])
         return self.__urlopen(req)
 
-    #def get_graph(self):
-    #    """Returns all statements in the store, as a rdflib.Graph"""
-    #    g = Graph()
-    #    g.parse(self.get_serialized("n3"),format="n3")
-    #    return g
+    def select(self,query,format="sparql"):
+        # Tried briefly to use SPARQLtree to get the selected graph as
+        # a nice tree, but never really figured out how to do it --
+        # but below is how you use treeify_results with SPARQLwrapper.
+        # 
+        # import SPARQLWrapper
+        # from oort.sparqltree.autotree import treeify_results
+        # sparql = SPARQLWrapper.SPARQLWrapper(self.endpoint_url)
+        # sparql.setQuery(query)
+        # sparql.setReturnFormat(SPARQLWrapper.JSON)
+        # results = treeify_results(sparql.queryAndConvert())
+
+        # This code instead uses the raw REST API found in SesameStore
+        url = self.endpoint_url + "?query=" + urllib.quote(query.replace("\n", " "))
+        req = Request(url)
         
-    def query(self,query,format="nt"):
-        pass
+        req.add_header('Accept',self.contenttype[format])
+        req.data = query
+        results = self.__urlopen(req)
+
+        #print results.decode('utf-8')
+        return results 
 
     def clear(self):
         print "Deleting all triples from %s" % self.statements_url
+        req = Request(self.statements_url)
+        req.get_method = lambda : "DELETE"
+        return self.__urlopen(req)
+
+    def clear_subject(self, subject):
+        print "Deleting all triples where subject is %s from %s" % (subject, self.statements_url)
+        
         req = Request(self.statements_url)
         req.get_method = lambda : "DELETE"
         return self.__urlopen(req)

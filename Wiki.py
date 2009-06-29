@@ -12,6 +12,7 @@ from tempfile import mktemp
 
 # 3rdparty
 from configobj import ConfigObj
+from rdflib import Namespace
 
 # mine
 import Util
@@ -19,6 +20,7 @@ import LegalSource
 from DispatchMixin import DispatchMixin
 from LegalRef import LegalRef
 from SFS import FilenameToSFSnr
+from SesameStore import SesameStore
 
 log = logging.getLogger(u'ls')
 
@@ -39,7 +41,11 @@ class WikiDownloader(LegalSource.Downloader):
 
     def DownloadAll(self):
         wikinamespaces = []
-        xml = ET.parse(open("pages-articles.xml"))
+        # this file is regenerated nightly
+        url = "http://wiki.lagen.nu/pages-articles.xml"
+        self.browser.open(url)
+        xml = ET.parse(self.browser.response())
+
         for ns_el in xml.findall("//"+MW_NS+"namespace"):
             wikinamespaces.append(ns_el.text)
 
@@ -48,7 +54,7 @@ class WikiDownloader(LegalSource.Downloader):
             if title == "Huvudsida":
                 continue
             if ":" in title and title.split(":")[0] in wikinamespaces:
-                continue
+                continue # only process pages in the main namespace
             outfile = "%s/%s.xml" % (self.download_dir, title.replace(":","/"))
             print "Dumping %s to %s" % (title,outfile)
             Util.ensureDir(outfile)
@@ -61,7 +67,13 @@ class WikiDownloader(LegalSource.Downloader):
 
     def _downloadSingle(self,term):
         # download a single term, for speed
-        pass
+        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % term
+        # FIXME: if outfile already exist, only save if wiki resource is modified since
+        outfile = "%s/%s.xml" % (self.download_dir, term.replace(":","/"))
+        Util.ensureDir(outfile)
+        log.info("Downloading wiki text for term %s" % term)
+        self.browser.retrieve(url,outfile)
+        
 
 class WikiParser(LegalSource.Parser):
     
@@ -94,8 +106,8 @@ class WikiParser(LegalSource.Parser):
             nodes = p.parse(sfs)
             uri = nodes[0].uri
         else:
-            # FIXME: What is the best URI strategy for term URIs?
-            uri = "http://lagen.nu/terms/" + basefile.replace(" ","_")
+            # concept == "begrepp"
+            uri = "http://lagen.nu/concept/" + basefile.replace(" ","_")
 
         log.debug("    URI: %s" % uri)
 
@@ -108,9 +120,10 @@ class WikiParser(LegalSource.Parser):
         title.text = basefile
         body = ET.SubElement(root,"body")
         body.set("about", uri)
-        body.set("property", "dct:desc")
-        body.set("datatype", "rdf:XMLLiteral")
-        current = body
+        main = ET.SubElement(body, "div")
+        main.set("property", "dct:description")
+        main.set("datatype", "rdf:XMLLiteral")
+        current = main
         for child in xhtml:
             if child.tag in ('h1','h2','h3','h4','h5','h6'):
                 nodes = p.parse(child.text,uri)
@@ -121,7 +134,7 @@ class WikiParser(LegalSource.Parser):
                     h.text = child.text
                     current = ET.SubElement(body,"div")
                     current.set("about", suburi)
-                    current.set("property", "dct:desc")
+                    current.set("property", "dct:description")
                     current.set("datatype", "rdf:XMLLiteral")
                 except KeyError:
                     log.warning(u'%s är uppmärkt som en rubrik, men verkar inte vara en lagrumshänvisning' % child.text)
@@ -138,6 +151,10 @@ class WikiManager(LegalSource.Manager):
     def __init__(self):
         super(WikiManager,self).__init__()
         self.moduleDir = "wiki"
+
+    def Download(self,term):
+        d = WikiDownloader(self.config)
+        d._downloadSingle(term)
 
     def DownloadAll(self):
         d = WikiDownloader(self.config)
@@ -174,6 +191,49 @@ class WikiManager(LegalSource.Manager):
         # Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+
+    def Generate(self,basefile):
+        # No pages to generate for this src (pages for
+        # keywords/concepts are done by Keyword.py)
+        pass
+
+    def Relate(self, basefile):
+        context = "<urn:x-local:%s:%s>" % (self.moduleDir, basefile)
+        store = SesameStore(self.config['triplestore'], self.config['repository'],context)
+
+        infile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
+        print "loading triples from %s" % infile
+        graph = self._extract_rdfa(infile)
+        store.clear()
+        triples = 0
+        triples += len(graph)
+        for key, value in Util.ns.items():
+            store.bind(key, Namespace(value));
+        store.add_graph(graph)
+        store.commit()
+        log.info("Related %s: %d triples" % (basefile, triples))
+
+    def RelateAll(self,file=None):
+        # we override LegalSource.RelateAll since we want a different
+        # context for each wiki page
+        """Sammanställer alla wiki-baserade beskrivningstriples och
+        laddar in dem i systemets triplestore"""
+        files = list(Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'))
+        rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
+
+
+        if self._outfile_is_newer(files,rdffile):
+            log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
+            return
+
+        for f in files:
+            basefile = f - self.baseDir - ".xht2"
+            self.Relate(basefile)
+
+        # should we serialize everything to a big .nt file like the
+        # other LegalSources does? It's a bit more difficult since we
+        # have different contexts
+
 
 if __name__ == "__main__":
     import logging.config

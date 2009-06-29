@@ -96,7 +96,7 @@ from datetime import datetime
 	<py:for each="part in kapitel" py:choose="">
 	  <div py:when="isinstance(part, Rubrik)"   py:strip="">${render_rubrik(part)}</div>
 	  <div py:when="isinstance(part, UpphavdParagraf)" py:strip="">${render_upphavdparagraf(part)}</div>
-	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part,kapitel.id)}</div>
+	  <div py:when="isinstance(part, Paragraf)" py:strip="">${render_paragraf(part,'#'+kapitel.id)}</div>
 	  <div py:otherwise="" py:strip="">${dispatch_render(part,'Kapitel')}</div>
 	</py:for>
       </section>
@@ -131,7 +131,7 @@ from datetime import datetime
 	 typeof="rinfo:Stycke">
 	<span rel="dct:isPartOf" href="${isPartOf}"/>
         <span class="paragrafbeteckning" py:if="paragrafnummer">${paragrafnummer} §</span>      
-        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part, stycke.id)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part, stycke.id)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part, stycke.id)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
+        <py:for each="part in stycke" py:choose=""><div py:when="isinstance(part, NumreradLista)" py:strip="">${render_numreradlista(part, '#'+stycke.id)}</div><div py:when="isinstance(part, Bokstavslista)" py:strip="">${render_bokstavslista(part, '#'+stycke.id)}</div><div py:when="isinstance(part, Strecksatslista)" py:strip="">${render_strecksatslista(part, '#'+stycke.id)}</div><div py:when="isinstance(part, Tabell)" py:strip="">${render_tabell(part)}</div><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><div py:otherwise="" py:strip="">${dispatch_render(part,'Stycke')}</div></py:for>
       </p>
 
       <!--! unfortunately, the XHTML2 model for ordered lists is too strict

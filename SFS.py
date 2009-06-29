@@ -41,7 +41,7 @@ from DataObjects import UnicodeStructure, CompoundStructure, \
      PredicateType, DateStructure, serialize, deserialize
 
 
-__version__ = (0, 1)
+__version__ = (1,6)
 __author__ = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Författningar i SFS"
 __moduledir__ = "sfs"
@@ -602,8 +602,7 @@ class SFSParser(LegalSource.Parser):
 
         # hitta eventuella etablerade förkortningar
         g = Graph()
-        #print "scriptdir %s" % __scriptdir__
-        g.load("file://"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
+        g.load("file:///"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
         for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
             meta[u'Förkortning'] = unicode(obj)
 
@@ -2098,45 +2097,231 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         outfile = self._htmlFileName(basefile)
         sfsnr = FilenameToSFSnr(basefile)
         p = LegalRef(LegalRef.LAGRUM)
+
         baseuri = p.parse(sfsnr)[0].uri
-        alla_rattsfall = os.path.join(__scriptdir__,"%s/%s/parsed/dv-rdf.xml" %
-                                      (self.baseDir, self.moduleDir))
-        rattsfall = u'%s/%s/intermediate/%s.dv.xml' % (self.baseDir, self.moduleDir, basefile)
-        rattsfall = rattsfall.replace(os.path.sep,'/')
-        params = {}
+        # Putting togeher a (non-normalized) RDF/XML file, suitable
+        # for XSLT inclusion in six easy steps
+        stuff = {}
+        #
+        # 1. all rinfo:Rattsfallsreferat that has baseuri as a
+        # rinfo:lagrum, either directly or through a chain of
+        # dct:isPartOf statements
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 
-        if not Util.outfile_is_newer([alla_rattsfall],rattsfall):
-            Util.transform("xsl/rdfslice.xsl", alla_rattsfall, rattsfall, {'uri':baseuri}, False)
-        #else:
-        #    print "%s is newer than %s, no need to slice" % (rattsfall, alla_rattsfall)
+SELECT ?uri ?id ?desc ?lagrum
+WHERE {
+   { ?uri rinfo:lagrum <%s> .
+     ?uri dct:identifier ?id .
+     ?uri dct:description ?desc }  
+   UNION { ?uri rinfo:lagrum ?lagrum .
+           ?lagrum dct:isPartOf <%s> .
+           ?uri dct:identifier ?id .
+           ?uri dct:description ?desc } 
+   UNION { ?uri rinfo:lagrum ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf <%s> .
+           ?uri dct:identifier ?id .
+           ?uri dct:description ?desc } 
+   UNION { ?uri rinfo:lagrum ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf <%s> .
+           ?uri dct:identifier ?id .
+           ?uri dct:description ?desc } 
+   UNION { ?uri rinfo:lagrum ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf <%s> .
+           ?uri dct:identifier ?id .
+           ?uri dct:description ?desc } 
+   UNION { ?uri rinfo:lagrum ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf ?e .
+           ?e dct:isPartOf <%s> .
+           ?uri dct:identifier ?id .
+           ?uri dct:description ?desc } 
+}
+""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+        # print sq
+        rattsfall = self._store_select(sq)
 
-        if os.path.getsize(rattsfall) < 140: # too small, no results
-            # print "No cases (%d)" % os.path.getsize(rattsfall)
-            pass
-        else:
-            params['cases'] = rattsfall
+        log.debug(u'%s: %s rättsfall', basefile,len(rattsfall))
 
-        kommentarer = os.path.join(__scriptdir__,u'%s/%s/intermediate/%s.ann.xml' % (self.baseDir, self.moduleDir, basefile))
-        kommentarer = kommentarer.replace(os.path.sep,'/')
-        try:
-            tree = self.__get_wiki_annotations("SFS/"+sfsnr, baseuri,p)
-            tree.write(kommentarer, encoding="utf-8")
-            params['kommentarer'] = kommentarer
-        except LegalSource.IdNotFound:
-            pass
-            # print "No wiki page found"
+        specifics = {}
+        for row in rattsfall:
+            if 'lagrum' not in row:
+                lagrum = baseuri
+            else:
+                lagrum = row['lagrum'] # FIXME: truncate 1998:204#P7S2 to just 1998:204#P7
+                specifics[row['id']] = True
+            # we COULD use a tricky defaultdict for stuff instead of
+            # this initializing code, but defauldicts don't pprint
+            # so pretty...
+            if not lagrum in stuff:
+                stuff[lagrum] = {}
+            if not 'rattsfall' in stuff[lagrum]:
+                stuff[lagrum]['rattsfall'] = []
+            #print "adding %s under %s" % (row['id'],lagrum)
+            stuff[lagrum]['rattsfall'].append({'id':row['id'],
+                                               'desc':row['desc'],
+                                               'uri':row['uri']})
+
+        # remove cases that refer to the law itself and a specific
+        # paragraph (ie only keep cases that only refer to the law
+        # itself)
+        filtered = []
+        for r in stuff[baseuri]['rattsfall']:
+            if r['id'] not in specifics:
+                filtered.append(r)
+        stuff[baseuri]['rattsfall'] = filtered
 
 
-        # Hämta eurlexdata från eurlex.nu
-        eurlex = u'%s/%s/intermediate/%s.eur.xml' % (self.baseDir, self.moduleDir, basefile)
-        # Hämta förarbetstitlar
+        # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
+        # 3. all wikientries that dct:description this
+    
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+
+SELECT ?lagrum ?desc
+WHERE {
+   { <%s> dct:description ?desc }  
+   UNION { ?lagrum dct:isPartOf <%s> . ?lagrum dct:description ?desc } 
+   UNION { ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> . ?lagrum dct:description ?desc} 
+}
+""" % (baseuri,baseuri,baseuri)
+        wikidesc = self._store_select(sq)
+        for row in wikidesc:
+            if not 'lagrum' in row:
+                lagrum = baseuri
+            else:
+                lagrum = row['lagrum']
+                
+            if not lagrum in stuff:
+                stuff[lagrum] = {}
+            stuff[lagrum]['desc'] = row['desc']
+
+        log.debug(u'%s: %s wikikommentarer', basefile,len(wikidesc))
+        
+        # pprint(wikidesc)
+        # (4. eurlex.nu data (mapping CELEX ids to titles))
+        # (5. Propositionstitlar)
+        # 6. change entries for each section
+        # FIXME: we need to differentiate between additions, changes and deletions
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+
+SELECT ?change ?id ?lagrum
+WHERE {
+   { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+   UNION { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+}
+        """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+        changes = self._store_select(sq)
+
+        log.debug(u'%s: %s ändringsposter', basefile,len(changes))
+
+        for row in changes:
+            lagrum = row['lagrum']
+            if not lagrum in stuff:
+                stuff[lagrum] = {}
+            if not 'changes' in stuff[lagrum]:
+                stuff[lagrum]['changes'] = []
+            stuff[lagrum]['changes'].append({'uri':row['change'],
+                                          'id':row['id']})
+        # then, construct a single de-normalized rdf/xml dump, sorted
+        # by root/chapter/section/paragraph URI:s. We do this using
+        # raw XML, not RDFlib, to avoid normalizing the graph -- we
+        # need repetition in order to make the XSLT processing simple.
+        #
+        # The RDF dump looks something like:
+        #
+        # <rdf:RDF>
+        #   <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/1998:204#P1">
+        #     <rinfo:isLagrumFor>
+        #       <rdf:Description about="http://rinfo.lagrummet.se/publ/dom/rh/2004:51">
+        #           <dct:identifier>RH 2004:51</dct:identifier>
+        #           <dct:description>Hemsida på Internet. Fråga om...</dct:description>
+        #       </rdf:Description>
+        #     </rinfo:isLagrumFor>
+        #     <dct:description>Personuppgiftslagens syfte är att skydda...</dct:description>
+        #     <rinfo:isChangedBy>
+        #        <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/2003:104">
+        #           <dct:identifier>SFS 2003:104</dct:identifier>
+        #           <rinfo:proposition>
+        #             <rdf:Description about="http://rinfo.lagrummet.se/publ/prop/2002/03:123">
+        #               <dct:title>Översyn av personuppgiftslagen</dct:title>
+        #               <dct:identifier>Prop. 2002/03:123</dct:identifier>
+        #             </rdf:Description>
+        #           </rinfo:proposition>
+        #        </rdf:Description>
+        #     </rinfo:isChangedBy>
+        #   </rdf:Description>
+        # </rdf:RDF>
+        
+        root_node = PET.Element("rdf:RDF")
+        for prefix in Util.ns:
+            # we need this in order to make elementtree not produce
+            # stupid namespaces like "xmlns:ns0" when parsing an external
+            # string like we do below (the PET.fromstring call)
+            PET._namespace_map[Util.ns[prefix]] = prefix
+            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+
+        for l in sorted(stuff.keys(),cmp=Util.numcmp):
+            lagrum_node = PET.SubElement(root_node, "rdf:Description")
+            lagrum_node.set("rdf:about",l)
+            if 'rattsfall' in stuff[l]:
+                for r in stuff[l]['rattsfall']:
+                    islagrumfor_node = PET.SubElement(lagrum_node, "rinfo:isLagrumFor")
+                    rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
+                    rattsfall_node.set("rdf:about",r['uri'])
+                    id_node = PET.SubElement(rattsfall_node, "dct:identifier")
+                    id_node.text = r['id']
+                    desc_node = PET.SubElement(rattsfall_node, "dct:description")
+                    desc_node.text = r['desc']
+            if 'changes' in stuff[l]:
+                for r in stuff[l]['changes']:
+                    ischanged_node = PET.SubElement(lagrum_node, "rinfo:isChangedBy")
+                    #rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
+                    #rattsfall_node.set("rdf:about",r['uri'])
+                    id_node = PET.SubElement(ischanged_node, "rinfo:fsNummer")
+                    id_node.text = r['id']
+            if 'desc' in stuff[l]:
+                desc_node = PET.SubElement(lagrum_node, "dct:description")
+                xhtmlstr = "<xht2:div xmlns:xht2='%s'>%s</xht2:div>" % (Util.ns['xht2'], stuff[l]['desc'])
+                xhtmlstr = xhtmlstr.replace(' xmlns="http://www.w3.org/2002/06/xhtml2/"','')
+                desc_node.append(PET.fromstring(xhtmlstr.encode('utf-8')))
+                
+        Util.indent_et(root_node)
+        tree = PET.ElementTree(root_node)
+        tmpfile = mktemp()
+        tree.write(tmpfile, encoding="utf-8")
+
+        annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
+        
+        Util.replace_if_different(tmpfile,annotations)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-        if not force and self._outfile_is_newer([infile,rattsfall,kommentarer],outfile):
+        if not force and self._outfile_is_newer([infile,annotations],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
+
         Util.mkdir(os.path.dirname(outfile))
         start = time()
+        #params = {'annotationfile':annotations}
+        # FIXME: create a relative version of annotations, instead of
+        # hardcoding self.baseDir like below
+        params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
         Util.transform("xsl/sfs.xsl",
                        infile,
                        outfile,
@@ -2157,7 +2342,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     def __get_wiki_annotations(self,wikipath,baseuri,parser):
         # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
         url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
-        #print "export URL: %s" % url
+
         root_node = PET.Element("rdf:RDF")
         for prefix in Util.ns:
             # PET._namespace_map[Util.ns[prefix]] = prefix
@@ -2184,7 +2369,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                     uri = parser.parse(part,baseuri)[0].uri
                 except:
                     log.warning("Could not find out URI for '%s'" % part)
-                    uri = baseuri
 
             # Some quick and dirty "parsing" of the wiki text
             text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
@@ -2201,6 +2385,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             lagrum_node.set("rdf:about",uri)
             triple_node = PET.SubElement(lagrum_node, "dct:description")
             triple_node.set("rdf:parseType", "Literal")
+            
             triple_node.append(PET.XML(text.encode('utf-8')))
         Util.indent_et(root_node)
         tree = PET.ElementTree(root_node)
@@ -2294,7 +2479,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             #quiet=True
             pass
 
-        verbose = True
         p = SFSParser()
         p.verbose = verbose
         p.id = '(test)'
@@ -2314,6 +2498,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         else:
             skipfragments = ['A']
         p._construct_ids(b, u'', u'http://rinfo.lagrummet.se/publ/sfs/9999:999', skipfragments)
+        #import simplejson as json
+        #return json.dumps(b)
         return serialize(b)            
 
     def TestSerialize(self, data):

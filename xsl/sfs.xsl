@@ -13,9 +13,6 @@
   <xsl:import href="tune-width.xsl"/>
   <xsl:include href="base.xsl"/>
   
-  <xsl:param name="cases"/>
-  <xsl:param name="kommentarer"/>
-
   <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
 
   <xsl:variable name="docmetadata">
@@ -83,13 +80,20 @@
 
 	<div style="position: relative">
 	  <div class="sidoruta">
+	    
 	    <xsl:copy-of select="$docmetadata"/>
+
+	    <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/rinfo:isLagrumFor/rdf:Description"/>
+	    <xsl:call-template name="rattsfall">
+	      <xsl:with-param name="rattsfall" select="$rattsfall"/>
+	    </xsl:call-template>
+
 	    <div style="clear: both;"/>
 	  </div>
 	  <div class="sidoruta kommentar">
 	    <h2><img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till författningen"/>Kommentarer</h2>
 	    <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=SFS/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
-	    <xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$dokumenturi]/dct:description/*"/>
+	    <xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/dct:description/xht2:div/*"/>
 	  </div>
 	</div>
 
@@ -134,11 +138,13 @@
       <!-- plocka fram referenser kring/till denna paragraf -->
       <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
       
-      <xsl:variable name="rattsfall" select="document($cases)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:isReferencedBy/rdf:Description"/>
-      <xsl:variable name="inford" select="//xht2:a[@rel='rinfo:inforsI' and @href=$paragrafuri]"/>
-      <xsl:variable name="andrad" select="//xht2:a[@rel='rinfo:ersatter' and @href=$paragrafuri]"/>
-      <xsl:variable name="kommentar" select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
-      <xsl:variable name="upphavd" select="//xht2:a[@rel='rinfo:upphaver' and @href=$paragrafuri]"/>
+      <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
+      <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
+
+      <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy/rdf:Description"/>
+      <xsl:variable name="andrad" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isChangedBy/rdf:Description"/>
+      <xsl:variable name="upphavd" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isRemovedBy/rdf:Description"/>
+
       <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
 	<p id="refs-{@id}" class="sidoruta refs">
 	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
@@ -165,7 +171,7 @@
       <xsl:if test="$kommentar">
 	<p id="ann-{@id}" class="sidoruta kommentar">
 	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
-	<xsl:copy-of select="document($kommentarer)/rdf:RDF/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
+	<xsl:copy-of select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
 	</p>
       </xsl:if>
     </div>
@@ -177,9 +183,9 @@
     <xsl:if test="$andringar">
       <xsl:value-of select="$typ"/>: SFS
       <xsl:for-each select="$andringar">
-	<!-- här kan man tänka sig göra uppslag i en xml-fil som mappar
-	     förarbetsid:n till förarbetsrubriker -->
-	<a href="#{concat(substring-before(../../../@id,':'),'-',substring-after(../../../@id,':'))}"><xsl:value-of select="../..//xht2:dd[@property='rinfo:fsNummer']"/></a><xsl:if test="position()!= last()">, </xsl:if>
+	<!--<a href="#{concat(substring-before(../../../@id,':'),'-',substring-after(../../../@id,':'))}"><xsl:value-of select="../..//xht2:dd[@property='rinfo:fsNummer']"/></a><xsl:if test="position()!= last()">, </xsl:if>-->
+	<xsl:value-of select="rinfo:fsNummer"/><xsl:if test="position()!= last()">, </xsl:if>
+	
       </xsl:for-each>
       <br/>
     </xsl:if>
@@ -242,6 +248,7 @@
   <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
     <p id="{@id}" about="{//xht2:html/@about}#{@id}">
       <span class="platsmarkor">
+	<!-- FIXME: do these as img instead to fix alignment + cut'n'paste issues -->
 	<xsl:choose>
 	  <xsl:when test="substring-after(@id,'S') = '1'">
 	    <xsl:if test="substring-after(@id,'K')">
@@ -341,7 +348,8 @@
       * det måste se OK ut även vid utskrift.
 
       Tills vidare får vi köra som lagen.nu 1.0, dvs med sidorutor
-      under paragraferna
+      under paragraferna. En optional JS-funktion repositionerar
+      rutorna vid sidorna on demand.
       
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']" mode="refs">
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
@@ -353,7 +361,7 @@
     <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
       <p id="refs-{@id}" class="refbox">
 	<span class="refboxlabel"><xsl:value-of select="xht2:p/xht2:span[@class='paragrafbeteckning']"/>: </span>
-	<xsl:call-template name="andringsnoteringar">
+	<xsl:call-templatename="andringsnoteringar">
 	  <xsl:with-param name="typ" select="'Införd'"/>
 	  <xsl:with-param name="andringar" select="$inford"/>
 	</xsl:call-template>
