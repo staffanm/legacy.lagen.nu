@@ -13,6 +13,7 @@ ns = {'dc':'http://purl.org/dc/elements/1.1/',
       'dct':'http://purl.org/dc/terms/',
       'rdfs':'http://www.w3.org/2000/01/rdf-schema#',
       'rdf':'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+      'skos':'http://www.w3.org/2008/05/skos#',
       'rinfo':'http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#',
       'rinfoex':'http://lagen.nu/terms#',
       'xsd':'http://www.w3.org/2001/XMLSchema#',
@@ -70,6 +71,40 @@ def robust_remove(file):
         #    import time
         #    time.sleep(1)
         #    os.unlink(file)
+
+# a python 2.6-ism
+def relpath(path, start=os.curdir):
+    """Return a relative version of a path"""
+
+    if not path:
+        raise ValueError("no path specified")
+    start_list = os.path.abspath(start).split(os.path.sep)
+    path_list = os.path.abspath(path).split(os.path.sep)
+
+    if sys.platform == 'win32':
+        if start_list[0].lower() != path_list[0].lower():
+            unc_path, rest = os.path.splitunc(path)
+            unc_start, rest = os.path.splitunc(start)
+            if bool(unc_path) ^ bool(unc_start):
+                raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
+                                                                    % (path, start))
+            else:
+                raise ValueError("path is on drive %s, start on drive %s"
+                                                    % (path_list[0], start_list[0]))
+
+    # Work out how much of the filepath is shared by start and path.
+    for i in range(min(len(start_list), len(path_list))):
+        if start_list[i].lower() != path_list[i].lower():
+            break
+    else:
+        i += 1
+
+    rel_list = [os.pardir] * (len(start_list)-i) + path_list[i:]
+    if not rel_list:
+        return curdir
+    #return join(*rel_list)
+    return os.path.sep.join(rel_list)
+    
 
 def numcmp(x,y):
     return cmp(split_numalpha(x),split_numalpha(y))
@@ -134,6 +169,31 @@ def tidyHtmlFile(filename):
     # os.system("xmllint --format %s > tmp.xml" % filename)
     robustRename("tmp.xml", filename)
 
+def tidy(tagsoup):
+    tmpin = mktemp()
+    tmpout = mktemp()
+    f = open(tmpin, "w")
+    if (isinstance(tagsoup,unicode)):
+        f.write(tagsoup.encode('utf-8'))
+    else:
+        f.write(tagsoup)
+    f.close()
+
+    cmd = "%s -q -asxhtml -utf8 %s > %s" % ("tidy", tmpin, tmpout)
+    (ret, stdout, stderr) = runcmd(cmd)
+    robust_remove(tmpin)
+
+    #if (stderr):
+    #    print "WARN: %s" % stderr
+
+    f = codecs.open(tmpout, encoding="utf-8")
+    result = f.read()
+    f.close()
+    robust_remove(tmpout)
+    
+    return result
+    
+
 def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
 
@@ -156,8 +216,11 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         #    raise TransformError(stderr)
         infile = tmpfile
 
+    if ' ' in infile:
+        infile = '"%s"' % infile
     tmpfile = mktemp()
-    stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
+    # is this really needed?
+    # stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
     print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)

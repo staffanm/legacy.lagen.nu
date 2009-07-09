@@ -82,6 +82,7 @@ class SesameStore():
 
         # This code instead uses the raw REST API found in SesameStore
         url = self.endpoint_url + "?query=" + urllib.quote(query.replace("\n", " "))
+        #print url
         req = Request(url)
         
         req.add_header('Accept',self.contenttype[format])
@@ -98,7 +99,7 @@ class SesameStore():
         return self.__urlopen(req)
 
     def clear_subject(self, subject):
-        print "Deleting all triples where subject is %s from %s" % (subject, self.statements_url)
+        #print "Deleting all triples where subject is %s from %s" % (subject, self.statements_url)
         
         req = Request(self.statements_url)
         req.get_method = lambda : "DELETE"
@@ -117,7 +118,7 @@ class SesameStore():
         if len(self.pending_graph) == 0:
             return
 
-        # print "Committing %s triples to %s" % (len(self.pending_graph), self.statements_url)
+        print "Committing %s triples to %s" % (len(self.pending_graph), self.statements_url)
         data = self.pending_graph.serialize(format="n3")
 
         # reinitialize pending_graph

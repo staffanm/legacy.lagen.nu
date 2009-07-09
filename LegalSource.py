@@ -191,6 +191,11 @@ class Manager(object):
         'NJA 1984 s. 673' or 'SÖ478-84')"""
         raise NotImplementedError
 
+    def DownloadSome(self,listfile):
+        f = codecs.open(listfile,encoding="utf-8")
+        for line in f:
+            self.Download(line.strip())
+
     def DownloadAll(self):
         """Download all documents for this legal source. This is typically a
         very expensive operation that takes hours."""
@@ -212,6 +217,12 @@ class Manager(object):
         resource documents on disk"""
         raise NotImplementedError
 
+    def ParseSome(self,listfile):
+        f = codecs.open(listfile,encoding="utf-8")
+        for line in f:
+            self.Parse(line.strip())
+            
+
     def IndexAll(self):
         raise NotImplementedError
 
@@ -223,6 +234,10 @@ class Manager(object):
         """Generate HTML for all legal source documents"""
         raise NotImplementedError
     
+    def GenerateSome(self,listfile):
+        f = codecs.open(listfile,encoding="utf-8")
+        for line in f:
+            self.Generate(line.strip())
 
     ####################################################################
     # GENERIC DIRECTLY-CALLABLE METHODS - a subclass might want to override some of these
@@ -267,6 +282,7 @@ class Manager(object):
             c = 0
             triples = 0
 
+            log.info("Relating %d documents" % len(files))
             for f in files:
                 c += 1
                 graph = self._extract_rdfa(f)

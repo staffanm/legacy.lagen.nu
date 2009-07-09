@@ -36,7 +36,6 @@
       padding: 3pt;
       margin-top: 0;
       line-height: 1.2em;
-      /* background: #e7dfd8;*/
       background: #f9f6f5;
       border: solid 1px #6b482c;
       margin-bottom: 5px;
@@ -67,6 +66,7 @@
 
     img.inline-icon {
 	vertical-align: text-bottom;
+        float: left;
     } 
     img.toolbar-icon {
 	float: right;
@@ -122,7 +122,7 @@
 
     /* default: normal placement, directly under the text */
     .refs {  }
-    .kommentar {  }
+    .kommentar { background: #e7dfd8; }
 
     /* alternate 1: boxes go to the sides */
     .rightbox {

@@ -309,8 +309,9 @@ class SFSDownloader(LegalSource.Downloader):
         grundforf = []
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
         # FIXME: consider using mechanize
-        self.browser.retrieve(url,"sfs.tmp")
-        t = TextReader("sfs.tmp",encoding="iso-8859-1")
+        tmpfile = mktemp()
+        self.browser.retrieve(url,tmpfile)
+        t = TextReader(tmpfile,encoding="iso-8859-1")
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
         except IOError: # hurra!
@@ -320,9 +321,9 @@ class SFSDownloader(LegalSource.Downloader):
         # Sen efter ändringsförfattning
         log.info(u'    Letar efter ändringsförfattning')
         url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
-        self.browser.retrieve(url, "sfs.tmp")
+        self.browser.retrieve(url, tmpfile)
         # maybe this is better done through mechanize?
-        t = TextReader("sfs.tmp",encoding="iso-8859-1")
+        t = TextReader(tmpfile,encoding="iso-8859-1")
         try:
             t.cue(u"<p>Sökningen gav ingen träff!</p>")
             log.info(u'    Hittade ingen ändringsförfattning')
@@ -358,13 +359,14 @@ class SFSDownloader(LegalSource.Downloader):
         for part in parts:
             sfst_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
             sfst_file = "%s/sfst/%s.html" % (self.download_dir, SFSnrToFilename(part))
-            self.browser.retrieve(sfst_url,"sfst.tmp")
+            sfst_tempfile = mktemp()
+            self.browser.retrieve(sfst_url, sfst_tempfile)
             if os.path.exists(sfst_file):
                 old_checksum = self._checksum(sfst_file)
-                new_checksum = self._checksum("sfst.tmp")
+                new_checksum = self._checksum(sfst_tempfile)
                 if (old_checksum != new_checksum):
                     old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
-                    uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
+                    uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_tempfile)
                     if uppdaterad_tom != old_uppdaterad_tom:
                         log.info(u'        %s har ändrats (%s -> %s)' % (sfsnr,old_uppdaterad_tom,uppdaterad_tom))
                         self._archive(sfst_file, sfsnr, old_uppdaterad_tom)
@@ -374,13 +376,13 @@ class SFSDownloader(LegalSource.Downloader):
 
                     # replace the current file, regardless of wheter
                     # we've updated it or not
-                    Util.robustRename("sfst.tmp", sfst_file)
+                    Util.robustRename(sfst_tempfile, sfst_file)
                 else:
                     log.debug(u'        %s har inte ändrats (gammal checksum %s)' % (sfsnr,old_checksum))
                     pass # leave the current file untouched
                 
             else:
-                Util.robustRename("sfst.tmp", sfst_file)
+                Util.robustRename(sfst_tempfile, sfst_file)
 
         sfsr_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
         sfsr_file = "%s/sfsr/%s.html" % (self.download_dir, SFSnrToFilename(sfsnr))
@@ -1940,80 +1942,6 @@ class SFSParser(LegalSource.Parser):
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
 
-
-    # processes dv/parsed/rdf.nt to get a new xml file suitable for
-    # inclusion by sfs.xslt (something we should be able to do using
-    # SPARQL, TriX export or maybe XSLT itself, but...)
-    #
-    # FIXME: In order for this to be correct, we must make sure that
-    # DV.RelateAll runs before SFS.RelateAll - otherwise we'll process
-    # an old file from last weeks run
-    def IndexDV(self):
-        g = Graph()
-        log.info("Start RDF loading")
-        start = time()
-        rdffile = "%s/dv/parsed/rdf.nt"%self.baseDir
-        assert os.path.exists(rdffile), "RDF file %s doesn't exist" % rdffile
-        # seems like the NTriples parser incorrectly assumes that
-        # input is latin-1. As our NT file is utf-8, adjust
-        # transparently using EncodedFile
-        fp = codecs.EncodedFile(open(rdffile), 'iso-8859-1', 'utf-8')
-        
-        g.parse(fp,format="nt")
-        log.info("RDF loaded (%.3f sec)", time()-start)
-        start = time()
-        triples = defaultdict(list)
-        lagrum  = defaultdict(list)
-        cnt = 0
-        for triple in g:
-            cnt += 1
-            #if cnt % 100 == 0:
-            #    sys.stdout.write(".")
-            (obj, pred, subj) = triple
-            triples[obj].append(triple)
-            if pred == RINFO['lagrum']:
-                lagrum[subj].append(obj)
-        #sys.stdout.write("\n")
-
-        # Spara ned RDF-datat "för hand" med xml.etree istf rdflib, så
-        # att vi kan se till att det serialiserade datat är lätt för
-        # en XSLT-transformation att gräva i (varje rättsfalls
-        # information dupliceras, en gång för varje lagrum det
-        # hänvisas till - detta gör det enkelt att hitta rättsfall
-        # utifrån ett visst lagrum).
-        
-        # create a etree with rdf:RDF as root node (and register
-        # namespaces for rdf, dct, possibly rinfo...)
-        root_node = PET.Element("rdf:RDF")
-        for prefix in Util.ns:
-            # PET._namespace_map[Util.ns[prefix]] = prefix
-            root_node.set("xmlns:" + prefix, Util.ns[prefix])
-
-        for l in sorted(lagrum, cmp=Util.numcmp):
-            # FIXME: Gör sanitychecks så att vi inte får med trasiga
-            # lagnummer-URI:er i stil med "1 §", "1949:105" eller
-            # "http://rinfo.lagrummet.se/publ/sfs/9999:999#K1"
-            lagrum_node = PET.SubElement(root_node,"rdf:Description")
-            lagrum_node.set("rdf:about",l)
-            for r in lagrum[l]:
-                isref_node = PET.SubElement(lagrum_node, "dct:isReferencedBy")
-                rattsfall_node = PET.SubElement(isref_node, "rdf:Description")
-                rattsfall_node.set("rdf:about", r)
-                for triple in triples[r]:
-                    (subj,pred,obj) = triple
-                    if pred in (DCT['description'], DCT['identifier']):
-                        nodename = pred.replace(Util.ns['dct'],'dct:')
-                        triple_node = PET.SubElement(rattsfall_node, nodename)
-                        triple_node.text = Util.normalizeSpace(obj)
-
-        log.info("RDF processed (%.3f sec)", time()-start)
-        Util.indent_et(root_node)
-        tree = PET.ElementTree(root_node)
-        outrdffile = "%s/%s/parsed/dv-rdf.xml" % (self.baseDir,__moduledir__) 
-        tree.write(outrdffile, encoding="utf-8")
-        log.info("New RDF file created")
-        
-
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE
     ####################################################################    
@@ -2025,6 +1953,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 log.setLevel(logging.DEBUG)
 
             start = time()
+            basefile = basefile.replace(":","/")
             files = {'sfst':self.__listfiles('sfst',basefile),
                      'sfsr':self.__listfiles('sfsr',basefile)}
             # sanity check - if no files are returned
@@ -2093,8 +2022,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         self._do_for_all(downloaded_dir,'html',self.Parse)
 
     def Generate(self,basefile):
-        infile = self._xmlFileName(basefile)
-        outfile = self._htmlFileName(basefile)
+        basefile = basefile.replace(":","/")
+        infile = Util.relpath(self._xmlFileName(basefile))
+        outfile = Util.relpath(self._htmlFileName(basefile))
         sfsnr = FilenameToSFSnr(basefile)
         p = LegalRef(LegalRef.LAGRUM)
 
@@ -2151,7 +2081,9 @@ WHERE {
         rattsfall = self._store_select(sq)
 
         log.debug(u'%s: %s rättsfall', basefile,len(rattsfall))
-
+        stuff[baseuri] = {}
+        stuff[baseuri]['rattsfall'] = []
+        
         specifics = {}
         for row in rattsfall:
             if 'lagrum' not in row:
@@ -2330,71 +2262,70 @@ WHERE {
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
         return
 
-    re_labeled_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|\]]*?)\|(.*?)\]\]')
-    re_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|]*?)\]\]')
-    re_labeled_wiki_link = re.compile(r'\[\[(.*?)\|(.*?)\]\]')
-    re_wiki_link = re.compile(r'\[\[(.*?)\]\]')
-    re_external_link = re.compile(r'\[([^ ]*?) (.*?)\]')
-    re_bold_italic = re.compile(r"'''''(.*?)'''''")
-    re_bold = re.compile(r"'''(.*?)'''")
-    re_italic = re.compile(r"''(.*?)''")
-
-    def __get_wiki_annotations(self,wikipath,baseuri,parser):
-        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
-        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
-
-        root_node = PET.Element("rdf:RDF")
-        for prefix in Util.ns:
-            # PET._namespace_map[Util.ns[prefix]] = prefix
-            root_node.set("xmlns:" + prefix, Util.ns[prefix])
-        root_node.set("xmlns", "http://www.w3.org/1999/xhtml")
-
-        tree = ET.parse(urlopen(url))
-        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
-        if node is None:
-            raise LegalSource.IdNotFound("No wiki text for %s" % wikipath)
-        
-        wikitext = node.text
-        tr = TextReader(ustring=wikitext,linesep=TextReader.UNIX)
-        while not tr.eof():
-            chunk = tr.readchunk("\n==")
-            pieces = [x.strip() for x in chunk.split("==", 1)]
-            if len(pieces) == 1:
-                text = pieces[0]
-                uri = baseuri
-            else:
-                part = pieces[0]
-                text = pieces[1]
-                try:
-                    uri = parser.parse(part,baseuri)[0].uri
-                except:
-                    log.warning("Could not find out URI for '%s'" % part)
-
-            # Some quick and dirty "parsing" of the wiki text
-            text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
-            text = self.re_typed_link.sub(r'<a class="tl" href="\2" rel="\1">\2</a>', text)
-            text = self.re_labeled_wiki_link.sub(r'<a class="lwl" href="\1">\2</a>', text)
-            text = self.re_wiki_link.sub(r'<a class="wl" href="\1">\1</a>', text)
-            text = self.re_external_link.sub(r'<a class="el" href="\1">\2</a>', text)
-            text = self.re_bold_italic.sub(r'<b><i>\1</i></b>', text)
-            text = self.re_bold.sub(r'<b>\1</b>', text)
-            text = self.re_italic.sub(r'<i>\1</i>', text)
-            text = u'<span xml:lang="sv">%s</span>' % text
-
-            lagrum_node = PET.SubElement(root_node,"rdf:Description")
-            lagrum_node.set("rdf:about",uri)
-            triple_node = PET.SubElement(lagrum_node, "dct:description")
-            triple_node.set("rdf:parseType", "Literal")
-            
-            triple_node.append(PET.XML(text.encode('utf-8')))
-        Util.indent_et(root_node)
-        tree = PET.ElementTree(root_node)
-        return tree
+#    re_labeled_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|\]]*?)\|(.*?)\]\]')
+#    re_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|]*?)\]\]')
+#    re_labeled_wiki_link = re.compile(r'\[\[(.*?)\|(.*?)\]\]')
+#    re_wiki_link = re.compile(r'\[\[(.*?)\]\]')
+#    re_external_link = re.compile(r'\[([^ ]*?) (.*?)\]')
+#    re_bold_italic = re.compile(r"'''''(.*?)'''''")
+#    re_bold = re.compile(r"'''(.*?)'''")
+#    re_italic = re.compile(r"''(.*?)''")
+#
+#    def __get_wiki_annotations(self,wikipath,baseuri,parser):
+#        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
+#        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
+#
+#        root_node = PET.Element("rdf:RDF")
+#        for prefix in Util.ns:
+#            # PET._namespace_map[Util.ns[prefix]] = prefix
+#            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+#        root_node.set("xmlns", "http://www.w3.org/1999/xhtml")
+#
+#        tree = ET.parse(urlopen(url))
+#        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
+#        if node is None:
+#            raise LegalSource.IdNotFound("No wiki text for %s" % wikipath)
+#        
+#        wikitext = node.text
+#        tr = TextReader(ustring=wikitext,linesep=TextReader.UNIX)
+#        while not tr.eof():
+#            chunk = tr.readchunk("\n==")
+#            pieces = [x.strip() for x in chunk.split("==", 1)]
+#            if len(pieces) == 1:
+#                text = pieces[0]
+#                uri = baseuri
+#            else:
+#                part = pieces[0]
+#                text = pieces[1]
+#                try:
+#                    uri = parser.parse(part,baseuri)[0].uri
+#                except:
+#                    log.warning("Could not find out URI for '%s'" % part)
+#
+#            # Some quick and dirty "parsing" of the wiki text
+#            text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
+#            text = self.re_typed_link.sub(r'<a class="tl" href="\2" rel="\1">\2</a>', text)
+#            text = self.re_labeled_wiki_link.sub(r'<a class="lwl" href="\1">\2</a>', text)
+#            text = self.re_wiki_link.sub(r'<a class="wl" href="\1">\1</a>', text)
+#            text = self.re_external_link.sub(r'<a class="el" href="\1">\2</a>', text)
+#            text = self.re_bold_italic.sub(r'<b><i>\1</i></b>', text)
+#            text = self.re_bold.sub(r'<b>\1</b>', text)
+#            text = self.re_italic.sub(r'<i>\1</i>', text)
+#            text = u'<span xml:lang="sv">%s</span>' % text
+#
+#            lagrum_node = PET.SubElement(root_node,"rdf:Description")
+#            lagrum_node.set("rdf:about",uri)
+#            triple_node = PET.SubElement(lagrum_node, "dct:description")
+#            triple_node.set("rdf:parseType", "Literal")
+#            
+#            triple_node.append(PET.XML(text.encode('utf-8')))
+#        Util.indent_et(root_node)
+#        tree = PET.ElementTree(root_node)
+#        return tree
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
         self._do_for_all(parsed_dir,'xht2',self.Generate)
-
 
     def Convert(self,basefile):
         infile = self._xmlFileName(basefile)
@@ -2450,8 +2381,6 @@ WHERE {
 
     def RelateAll(self):
         super(SFSManager,self).RelateAll()
-        self.IndexDV()
-
         
 
     ################################################################

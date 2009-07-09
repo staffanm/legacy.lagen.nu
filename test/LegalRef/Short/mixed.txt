@@ -1,0 +1,7 @@
+Huvudregeln är att det enligt 10 kap. 1 § ÄB ska upprättas...
+
+<list>
+  <unicode>Huvudregeln är att det enligt </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1958:637#K10P1">10 kap. 1 § ÄB</Link>
+  <unicode> ska upprättas...</unicode>
+</list>

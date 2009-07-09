@@ -161,7 +161,7 @@ class LegalRef:
             d = self.get_relations(DCT['alternate'])
             self.namedlaws.update(d)
             self.decl += "LawAbbreviation ::= ('%s')\n" % "'/'".join([x.encode(SP_CHARSET) for x in d.keys()])
-            self.roots.append("kortlagrumref")
+            self.roots.insert(0,"kortlagrumref")
 
         if self.EGLAGSTIFTNING in args:
             productions = self.load_ebnf(scriptdir+"/etc/eglag.ebnf")
@@ -222,12 +222,15 @@ class LegalRef:
         # print "Called with %r (%s) (%s)" % (indata, h.hexdigest(), self.verbose)
         self.predicate = predicate
         m = self.re_urisegments.match(baseuri)
-        self.baseuri_attributes = {'baseuri':m.group(1),
-                                   'law':m.group(2),
-                                   'chapter':m.group(6),
-                                   'section':m.group(8),
-                                   'piece':m.group(10),
-                                   'item':m.group(12)}
+        if m:
+            self.baseuri_attributes = {'baseuri':m.group(1),
+                                       'law':m.group(2),
+                                       'chapter':m.group(6),
+                                       'section':m.group(8),
+                                       'piece':m.group(10),
+                                       'item':m.group(12)}
+        else:
+            self.baseuri_attributes = {'baseuri':baseuri}
         # Det är svårt att få EBNF-grammatiken att känna igen
         # godtyckliga ord som slutar på ett givet suffix (exv
         # 'bokföringslagen' med suffixet 'lagen'). Därför förbehandlar
@@ -1024,7 +1027,7 @@ class TestLegalRef(FilebasedTester):
         return self.__test_parser(data,p)
 
     def TestParseKortlagrum(self,data):
-        p = LegalRef(LegalRef.KORTLAGRUM)
+        p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM)
         return self.__test_parser(data,p)
 
     def TestParseForarbeten(self,data):

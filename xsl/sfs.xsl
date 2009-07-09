@@ -83,11 +83,13 @@
 	    
 	    <xsl:copy-of select="$docmetadata"/>
 
+	    <!-- Even though this list only includes cases specific to the law itself, it's still too long. Disabled until we get it usable -->
+	    <!--
 	    <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/rinfo:isLagrumFor/rdf:Description"/>
 	    <xsl:call-template name="rattsfall">
 	      <xsl:with-param name="rattsfall" select="$rattsfall"/>
 	    </xsl:call-template>
-
+	    -->
 	    <div style="clear: both;"/>
 	  </div>
 	  <div class="sidoruta kommentar">
@@ -132,6 +134,20 @@
     <!-- emit nothing -->
   </xsl:template>
 
+  <xsl:template match="xht2:h[@class='kapitelrubrik']">
+    <h2><xsl:for-each select="@*">
+      <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+    </xsl:for-each><xsl:value-of select="."/></h2>
+    <xsl:variable name="kapiteluri" select="concat($dokumenturi,'#', ../@id)"/>
+    <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$kapiteluri]/dct:description/xht2:div/*"/>
+    <xsl:if test="$kommentar">
+      <div id="ann-{../@id}" class="sidoruta kommentar">
+	<img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
+	<xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$kapiteluri]/dct:description/xht2:div/*"/>
+      </div>
+    </xsl:if>
+  </xsl:template>
+    
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
     <div class="paragraf" id="{@id}" about="{//xht2:html/@about}#{@id}">
       <xsl:apply-templates/>
@@ -139,14 +155,20 @@
       <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
       
       <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
-      <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/*"/>
+      <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
 
       <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy/rdf:Description"/>
       <xsl:variable name="andrad" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isChangedBy/rdf:Description"/>
       <xsl:variable name="upphavd" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isRemovedBy/rdf:Description"/>
 
+      <xsl:if test="$kommentar">
+	<div id="ann-{@id}" class="sidoruta kommentar">
+	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
+	<xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
+	</div>
+      </xsl:if>
       <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-	<p id="refs-{@id}" class="sidoruta refs">
+	<div id="refs-{@id}" class="sidoruta refs">
 	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
 	  <xsl:call-template name="andringsnoteringar">
 	    <xsl:with-param name="typ" select="'Införd'"/>
@@ -166,13 +188,7 @@
 	  <xsl:call-template name="rattsfall">
 	    <xsl:with-param name="rattsfall" select="$rattsfall"/>
 	  </xsl:call-template>
-	</p>
-      </xsl:if>
-      <xsl:if test="$kommentar">
-	<p id="ann-{@id}" class="sidoruta kommentar">
-	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
-	<xsl:copy-of select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
-	</p>
+	</div>
       </xsl:if>
     </div>
   </xsl:template>

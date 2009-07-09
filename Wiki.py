@@ -9,16 +9,18 @@ import xml.etree.ElementTree as PET
 import logging
 from time import time
 from tempfile import mktemp
+from urllib import quote
 
 # 3rdparty
 from configobj import ConfigObj
 from rdflib import Namespace
+import wikimarkup
 
 # mine
 import Util
 import LegalSource
 from DispatchMixin import DispatchMixin
-from LegalRef import LegalRef
+from LegalRef import LegalRef, Link
 from SFS import FilenameToSFSnr
 from SesameStore import SesameStore
 
@@ -41,7 +43,7 @@ class WikiDownloader(LegalSource.Downloader):
 
     def DownloadAll(self):
         wikinamespaces = []
-        # this file is regenerated nightly
+        # this file is regenerated hourly
         url = "http://wiki.lagen.nu/pages-articles.xml"
         self.browser.open(url)
         xml = ET.parse(self.browser.response())
@@ -49,6 +51,7 @@ class WikiDownloader(LegalSource.Downloader):
         for ns_el in xml.findall("//"+MW_NS+"namespace"):
             wikinamespaces.append(ns_el.text)
 
+        
         for page_el in xml.findall(MW_NS+"page"):
             title = page_el.find(MW_NS+"title").text
             if title == "Huvudsida":
@@ -67,47 +70,122 @@ class WikiDownloader(LegalSource.Downloader):
 
     def _downloadSingle(self,term):
         # download a single term, for speed
-        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % term
+        if isinstance(term,unicode):
+            encodedterm = quote(term.encode('utf-8'))
+        else:
+            encodedterm = quote(term)
+        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % encodedterm
         # FIXME: if outfile already exist, only save if wiki resource is modified since
         outfile = "%s/%s.xml" % (self.download_dir, term.replace(":","/"))
         Util.ensureDir(outfile)
         log.info("Downloading wiki text for term %s" % term)
         self.browser.retrieve(url,outfile)
+
+
+class LinkedWikimarkup(wikimarkup.Parser):
+    def __init__(self, show_toc=True):
+        super(wikimarkup.Parser, self).__init__()
+        self.show_toc = show_toc
+
+    def parse(self,text):
+        #print "Running subclassed parser!"
+        utf8 = isinstance(text, str)
+        text = wikimarkup.to_unicode(text)
+        if text[-1:] != u'\n':
+            text = text + u'\n'
+            taggedNewline = True
+        else:
+            taggedNewline = False
+
+        text = self.strip(text)
+        text = self.removeHtmlTags(text)
+        text = self.doTableStuff(text)
+        text = self.parseHorizontalRule(text)
+        text = self.checkTOC(text)
+        text = self.parseHeaders(text)
+        text = self.parseAllQuotes(text)
+        text = self.replaceExternalLinks(text)
+        if not self.show_toc and text.find(u"<!--MWTOC-->") == -1:
+            self.show_toc = False
+        text = self.formatHeadings(text, True)
+        text = self.unstrip(text)
+        text = self.fixtags(text)
+        text = self.doBlockLevels(text, True)
+        text = self.unstripNoWiki(text)
+        text = self.replaceWikiLinks(text)
         
+        text = text.split(u'\n')
+        text = u'\n'.join(text)
+        if taggedNewline and text[-1:] == u'\n':
+            text = text[:-1]
+        if utf8:
+            return text.encode("utf-8")
+        return text
+        
+    re_labeled_wiki_link = re.compile(r'\[\[([^\]]*?)\|(.*?)\]\](\w*)') # is the trailing group really needed?
+    re_wiki_link = re.compile(r'\[\[([^\]]*?)\]\](\w*)')
+
+    def capitalizedLink(self,m):
+        if m.group(1).startswith('SFS/'):
+            uri = 'http://rinfo.lagrummet.nu/publ/%s' % m.group(1).lower()
+        else:
+            uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+        
+        if len(m.groups()) == 3:
+            # lwl = "Labeled WikiLink"
+            return '<a class="lwl" href="%s">%s%s</a>' % (uri, m.group(2), m.group(3))
+        else:
+            return '<a class="wl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
+        
+    
+    def replaceWikiLinks(self,text):
+        # print "replacing wiki links: %s" % text[:30]
+        # FIXME: Ideally, we should only link those segments that have
+        # defined corresponding pages. Or maybe that could be done in
+        # the XSLT transform?
+        text = self.re_labeled_wiki_link.sub(self.capitalizedLink, text)
+        text = self.re_wiki_link.sub(self.capitalizedLink, text)
+        return text
+
 
 class WikiParser(LegalSource.Parser):
     
     def Parse(self,basefile,infile,config):
         xml = ET.parse(open(infile))
         wikitext = xml.find("//"+MW_NS+"text").text
-        import wikimarkup
-        html = wikimarkup.parse(wikitext,showToc=False)
+
+        # remove links to lagen.nu itself - they are not needed as
+        # they will be automagically inferred, and may mess up things
+        # wikitext = re.sub('\[https?://lagen.nu/(\S*) ([^\]]*)]','\\2',wikitext)
+
+        p = LinkedWikimarkup(show_toc=False)
+        html = p.parse(wikitext)
+
         # the output from wikimarkup is less than ideal...
         html = html.replace("&", "&amp;");
         html = '<div>'+html+'</div>';
         # FIXME: we should also
         #
-        # 1) resolve those wikilinks that lead to defined terms (and
-        # possibly remove those that lead to undefined terms)
-        #
-        # 2) run LegalRef on the textual content of each node (that
-        # isn't a heading)
-        #
-        # 3) Make sure that whatever wikimarkup.parse returns is valid
-        # XHTML2
-        #
         # 4) Separate the trailing [[Kategori:Blahonga]] links
-        xhtml = ET.fromstring(html.encode('utf-8'))
+        try: 
+            xhtml = ET.fromstring(html.encode('utf-8'))
+        except SyntaxError:
+            log.warn("%s: wikiparser did not return well-formed markup (working around)" % basefile)
+            tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','')
+            xhtml = ET.fromstring(tidied.encode('utf-8')).find("body")
 
-        p = LegalRef(LegalRef.LAGRUM)
+        # p = LegalRef(LegalRef.LAGRUM)
+        p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM, LegalRef.FORARBETEN, LegalRef.RATTSFALL)
         # find out the URI that this wikitext describes
         if basefile.startswith("SFS/"):
             sfs = FilenameToSFSnr(basefile.split("/",1)[1])
             nodes = p.parse(sfs)
             uri = nodes[0].uri
+            rdftype = None
         else:
             # concept == "begrepp"
             uri = "http://lagen.nu/concept/" + basefile.replace(" ","_")
+            rdftype = "skos:Concept"
 
         log.debug("    URI: %s" % uri)
 
@@ -115,20 +193,32 @@ class WikiParser(LegalSource.Parser):
         root.set("xmlns", 'http://www.w3.org/2002/06/xhtml2/')
         root.set("xmlns:dct", Util.ns['dct'])
         root.set("xmlns:rdf", Util.ns['rdf'])
+        root.set("xmlns:rdfs", Util.ns['rdfs'])
+        root.set("xmlns:skos", Util.ns['skos'])
+        root.set("xml:lang", "sv")
         head = ET.SubElement(root,"head")
         title = ET.SubElement(head,"title")
         title.text = basefile
         body = ET.SubElement(root,"body")
         body.set("about", uri)
+        if rdftype:
+            body.set("typeof", "skos:Concept")
+            heading = ET.SubElement(body, "h")
+            heading.set("property", "rdfs:label")
+            heading.text = basefile
+            
         main = ET.SubElement(body, "div")
         main.set("property", "dct:description")
         main.set("datatype", "rdf:XMLLiteral")
         current = main
+        currenturi = uri
+
         for child in xhtml:
-            if child.tag in ('h1','h2','h3','h4','h5','h6'):
+            if not rdftype and child.tag in ('h1','h2','h3','h4','h5','h6'):
                 nodes = p.parse(child.text,uri)
                 try:
                     suburi = nodes[0].uri
+                    currenturi = suburi
                     log.debug("    Sub-URI: %s" % suburi)
                     h = ET.SubElement(body, child.tag)
                     h.text = child.text
@@ -136,10 +226,29 @@ class WikiParser(LegalSource.Parser):
                     current.set("about", suburi)
                     current.set("property", "dct:description")
                     current.set("datatype", "rdf:XMLLiteral")
-                except KeyError:
+                except AttributeError:
                     log.warning(u'%s är uppmärkt som en rubrik, men verkar inte vara en lagrumshänvisning' % child.text)
             else:
-                current.append(child)
+                
+                serialized = ET.tostring(child,'latin-1')
+                res = ""
+                # split serialized into tags and pcdata. don't feed tags to p.parse.
+                for groups in re.findall('((?:</?[^>]*>|))([^<*]*)', serialized):
+                    #print "'%s' is a start-or-end tag, not parsing" % groups[0].decode('latin-1')
+                    res += groups[0].decode('latin-1')
+                    #print "'%s' is plain text, parsing" % groups[1].decode('latin-1')
+                    parts = p.parse(groups[1])
+                    for part in parts:
+                        if isinstance(part, Link):
+                            res += u'<a class="lr" href="%s">%s</a>' % (part.uri, part)
+                        else: # just a text fragment
+                            res += part
+
+                res = res.encode('latin-1')
+                #print ET.fromstring(res)
+                #print "RES:\n"
+                #print repr(res)
+                current.append(ET.fromstring(res))
         res = ET.tostring(root,encoding='utf-8')
         return res
     
@@ -173,6 +282,7 @@ class WikiManager(LegalSource.Manager):
             print "Setting verbosity"
             log.setLevel(logging.DEBUG)
         start = time()
+        basefile = basefile.replace(":","/")
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".xml"
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
@@ -198,11 +308,16 @@ class WikiManager(LegalSource.Manager):
         pass
 
     def Relate(self, basefile):
-        context = "<urn:x-local:%s:%s>" % (self.moduleDir, basefile)
+        basefile = basefile.replace(":","/")
+
+        # each wiki page gets a unique context - this is so that we
+        # can easily delete its statements once we re-parse and
+        # re-relate it's content
+        context = "<urn:x-local:%s:%s>" % (self.moduleDir, quote(basefile.encode('utf-8').replace(" ","_")))
         store = SesameStore(self.config['triplestore'], self.config['repository'],context)
 
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-        print "loading triples from %s" % infile
+        # print "loading triples from %s" % infile
         graph = self._extract_rdfa(infile)
         store.clear()
         triples = 0
@@ -227,7 +342,7 @@ class WikiManager(LegalSource.Manager):
             return
 
         for f in files:
-            basefile = f - self.baseDir - ".xht2"
+            basefile = self._file_to_basefile(f)
             self.Relate(basefile)
 
         # should we serialize everything to a big .nt file like the
