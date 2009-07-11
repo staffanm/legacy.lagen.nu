@@ -13,6 +13,10 @@
   <div py:def="render_listvalues(items)" py:strip="" py:choose="">
     <py:for each="item in items" py:choose="">
       <dd py:when="isinstance(item,list)">${render_listvalue(item)}</dd>
+      <dd py:when="isinstance(item,Link)"
+	  py:content="item"
+	  rel="${item.predicate}"
+	  href="${item.uri}">Värde</dd>
       <dd py:otherwise =""
 	  py:content="item"
 	  property="${item.predicate}">Värde</dd>

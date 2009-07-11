@@ -5,6 +5,8 @@ from rdflib.syntax.parsers.ntriples import NTriplesParser
 from urllib2 import urlopen, Request, HTTPError
 import urllib
 
+class SparqlError(Exception): pass
+
 class SesameStore():
     """Simple wrapper of the Sesame REST HTTP API, for bulk inserts of
     RDF statements and queries. It does not implement the RDFlib Store
@@ -87,21 +89,22 @@ class SesameStore():
         
         req.add_header('Accept',self.contenttype[format])
         req.data = query
-        results = self.__urlopen(req)
-
-        #print results.decode('utf-8')
-        return results 
+        try:
+            results = self.__urlopen(req)
+            #print results.decode('utf-8')
+            return results
+        except HTTPError, e:
+            raise SparqlError(e.read())
 
     def clear(self):
-        print "Deleting all triples from %s" % self.statements_url
+        #print "Deleting all triples from %s" % self.statements_url
         req = Request(self.statements_url)
         req.get_method = lambda : "DELETE"
         return self.__urlopen(req)
 
     def clear_subject(self, subject):
         #print "Deleting all triples where subject is %s from %s" % (subject, self.statements_url)
-        
-        req = Request(self.statements_url)
+        req = Request(self.statements_url + "?subj=%s" % subject)
         req.get_method = lambda : "DELETE"
         return self.__urlopen(req)
         
@@ -118,7 +121,7 @@ class SesameStore():
         if len(self.pending_graph) == 0:
             return
 
-        print "Committing %s triples to %s" % (len(self.pending_graph), self.statements_url)
+        # print "Committing %s triples to %s" % (len(self.pending_graph), self.statements_url)
         data = self.pending_graph.serialize(format="n3")
 
         # reinitialize pending_graph

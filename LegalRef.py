@@ -239,9 +239,12 @@ class LegalRef:
         fixedindata = self.re_escape.sub(r'|\1', indata)
         
         # SimpleParse har inget stöd för unicodesträngar, så vi
-        # konverterar intdatat till en bytesträng
+        # konverterar intdatat till en bytesträng. Tyvärr kan vi
+        # ibland få in unicodesträngar med tecken som inte kan
+        # representeras i latin-1, exv u+2013 (endash) och u+2014
+        # (emdash). Ibland får vi dessa i windows-1252-kodning (\x96)
         if isinstance(fixedindata,unicode):
-            fixedindata = fixedindata.encode(SP_CHARSET)
+            fixedindata = fixedindata.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\x96','--').encode(SP_CHARSET)
 
         # Parsea texten med TextTools.tag - inte det enklaste sättet
         # att göra det, men om man gör enligt

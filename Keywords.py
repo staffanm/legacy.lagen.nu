@@ -21,7 +21,7 @@ from genshi.template import TemplateLoader
 import Util
 import LegalSource
 from DispatchMixin import DispatchMixin
-
+from SesameStore import SesameStore
 
 
 
@@ -31,6 +31,7 @@ __shortdesc__ = u"Nyckelord/sökord"
 __moduledir__ = "keyword"
 log = logging.getLogger(__moduledir__)
 
+MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
 class KeywordDownloader(LegalSource.Downloader):
     def _get_module_dir(self):
         return __moduledir__
@@ -38,14 +39,44 @@ class KeywordDownloader(LegalSource.Downloader):
     def DownloadAll(self):
         # Get all "term sets" (used dct:subject Objects, wiki pages
         # describing legal concepts, swedish wikipedia pages...)
-        #
+        terms = defaultdict(dict)
+
         # 1) Query the RDF DB for all dct:subject triples (is this
         # semantically sensible for a "download" action -- the
         # content isn't really external?) -- term set "subjects"
-        #
+        sq = """
+        PREFIX dct:<http://purl.org/dc/terms/>
+        
+        SELECT DISTINCT ?subject  WHERE { ?uri dct:subject ?subject }
+        """
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        results = store.select(sq)
+        tree = ET.fromstring(results)
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            for element in row: # should be only one
+                subj = element[0].text
+                terms[subj][u'subjects'] = True
+
+        log.debug("Retrieved terms from RDF store, got %s terms" % len(terms))
+
         # 2) Download the wiki.lagen.nu dump from
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
-        #
+        self.browser.open("http://wiki.lagen.nu/pages-articles.xml")
+        xml = ET.parse(self.browser.response())
+        wikinamespaces = []
+        for ns_el in xml.findall("//"+MW_NS+"namespace"):
+            wikinamespaces.append(ns_el.text)
+        for page_el in xml.findall(MW_NS+"page"):
+            title = page_el.find(MW_NS+"title").text
+            if title == "Huvudsida":
+                continue
+            if ":" in title and title.split(":")[0] in wikinamespaces:
+                continue # only process pages in the main namespace
+            if title.startswith("SFS/"):
+                continue
+            terms[title][u'wiki'] = True
+
+        log.debug("Retrieved terms from wiki, now have %s terms" % len(terms))
         # 3) Download the Wikipedia dump from
         # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
         # -- term set "wikipedia"
@@ -58,12 +89,25 @@ class KeywordDownloader(LegalSource.Downloader):
         # contains a number of term definitions, maybe marked up as
         # dct:defines.
         #
-        # Store all terms under downloaded/[term] (for wikipedia,
+        # Store all terms under downloaded/[t]/[term] (for wikipedia,
         # store only those terms that occur in any of the other term
         # sets). The actual content of each text file contains one
         # line for each term set the term occurs in.
-
-        pass
+        for term in terms:
+            if not term:
+                continue
+            outfile = "%s/%s/%s.txt" % (self.download_dir, term[0], term)
+            try: 
+                Util.ensureDir(outfile)
+                f = open(outfile,"w")
+                for termset in sorted(terms[term]):
+                    f.write(termset+"\n")
+                f.close()
+            except IOError:
+                log.warning("IOError: Could not write term set file for term '%s'" % term)
+            except WindowsError:
+                log.warning("WindowsError: Could not write term set file for term '%s'" % term)
+            
 
     def DownloadNew():
         # Same as above, except use http if-modified-since to avoid
@@ -95,16 +139,26 @@ class KeywordParser(LegalSource.Parser):
     
 
 class KeywordManager(LegalSource.Manager):
-    transtbl = {ord(u'?'):    None,
-                ord(u' '):    u'_',
-                ord(u'–'): u'-'}
-
+    __parserClass = KeywordParser
+    
     def __init__(self):
         super(KeywordManager,self).__init__()
         # self.moduleDir = "dv" # to fake Indexpages to load dv/parsed/rdf.nt -- will do for now
         
     def _get_module_dir(self):
         return __moduledir__
+
+    def _file_to_basefile(self,f):
+        return os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
+        
+
+    def DownloadAll(self):
+        d = KeywordDownloader(self.config)
+        d.DownloadAll()
+
+    def ParseAll(self):
+        intermediate_dir = os.path.sep.join([self.baseDir, __moduledir__, u'downloaded'])
+        self._do_for_all(intermediate_dir, '.txt',self.Parse)
 
     def Parse(self,basefile,verbose=False):
         if verbose:
@@ -235,73 +289,11 @@ WHERE { ?uri dct:description ?desc .
         log.info(u'%s: OK (%s, %.3f sec)', term, outfile, time()-start)
         return
 
+    def GenerateAll(self):
+        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+        self._do_for_all(parsed_dir,'xht2',self.Generate)
         
-        
-    
-    __parserClass = KeywordParser
-    def _build_indexpages(self, by_pred_obj, by_subj_pred):
-        documents = defaultdict(lambda:defaultdict(list))
-        pagetitles = {}
-        pagelabels = {}
-        lbl = u'Sökord/begrepp'
-        dct_subject = Util.ns['dct']+'subject'
-        dct_identifier = Util.ns['dct']+'identifier'
-        count = 0
-        for keyword in sorted(by_pred_obj[dct_subject]):
-            if len(keyword) > 60:
-                continue
-            count += 1
-            if count % 10 == 0:
-                sys.stdout.write(".")
 
-            letter = keyword[0].lower()
-            if letter.isalpha():
-                pagetitles[letter] = u'Sokord/begrepp som borjar pa "%s"' % letter.upper()
-                pagelabels[letter]= letter.upper()
-                documents[lbl][letter].append({'uri':u'/keyword/generated/%s.html' % keyword.translate(self.transtbl),
-                                               'title':keyword,
-                                               'sortkey':keyword})
-
-            legalcases = {}
-            for doc in list(set(by_pred_obj[dct_subject][keyword])):
-                # print u"\tdoc %s (%s)" % (doc, by_subj_pred[doc][dct_identifier])
-                legalcases[doc] = by_subj_pred[doc][dct_identifier]
-            self._build_single_page(keyword,legalcases)
-
-        sys.stdout.write("\n")
-
-        for pageid in documents[lbl].keys():
-            outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, __moduledir__, pageid)
-            title = pagetitles[pageid]
-            self._render_indexpage(outfile,title,documents,pagelabels,lbl,pageid)
-
-    def _build_single_page(self, keyword, legalcases):
-        # build a xht2 page containing stuff - a link to
-        # wikipedia and/or jureka if they have a page matching
-        # the keyword, the wikitext for the keyword, and of
-        # course a list of legal cases
-        # print "Building a single page for %s (%s cases)" % (keyword, len(legalcases))
-        outfile = "%s/%s/generated/%s.html" % (self.baseDir,
-                                               __moduledir__,
-                                               keyword.translate(self.transtbl))
-
-        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
-                                variable_lookup='lenient') 
-        tmpl = loader.load("etc/keyword.template.xht2")
-
-        stream = tmpl.generate(title=keyword,
-                               legalcases=legalcases)
-        #tmpfilename = mktemp()
-        tmpfilename = outfile.replace(".html",".xht2")
-        Util.ensureDir(tmpfilename)
-        fp = open(tmpfilename,"w")
-        fp.write(stream.render())
-        fp.close()
-
-
-        Util.ensureDir(outfile)
-        Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
-        log.info("rendered %s" % outfile)
         
 if __name__ == "__main__":
     import logging.config

@@ -2327,37 +2327,37 @@ WHERE {
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
         self._do_for_all(parsed_dir,'xht2',self.Generate)
 
-    def Convert(self,basefile):
-        infile = self._xmlFileName(basefile)
-        outfile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir, self.moduleDir,basefile)
-        start = time()
-        Util.transform("xsl/xhtml2to1.xsl",
-                       infile,
-                       outfile,
-                       validate=False)
-        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-        
-    def ConvertAll(self):
-        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-        self._do_for_all(parsed_dir,'xht2',self.Convert)
-        
-    def Intertwine(self, basefile):
-        infile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir,
-                                                 self.moduleDir,
-                                                 basefile)
-        outfile = u'%s/%s/xhtml1-combined/%s.html' % (self.baseDir,
-                                                      self.moduleDir,
-                                                      basefile)
-        start = time()
-        Util.transform("xsl/intertwine.xsl",
-                       infile,
-                       outfile,
-                       validate=False)
-        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-
-    def IntertwineAll(self):
-        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-        self._do_for_all(parsed_dir,'xht2',self.Intertwine)
+#    def Convert(self,basefile):
+#        infile = self._xmlFileName(basefile)
+#        outfile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir, self.moduleDir,basefile)
+#        start = time()
+#        Util.transform("xsl/xhtml2to1.xsl",
+#                       infile,
+#                       outfile,
+#                       validate=False)
+#        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+#        
+#    def ConvertAll(self):
+#        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+#        self._do_for_all(parsed_dir,'xht2',self.Convert)
+#        
+#    def Intertwine(self, basefile):
+#        infile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir,
+#                                                 self.moduleDir,
+#                                                 basefile)
+#        outfile = u'%s/%s/xhtml1-combined/%s.html' % (self.baseDir,
+#                                                      self.moduleDir,
+#                                                      basefile)
+#        start = time()
+#        Util.transform("xsl/intertwine.xsl",
+#                       infile,
+#                       outfile,
+#                       validate=False)
+#        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+#
+#    def IntertwineAll(self):
+#        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+#        self._do_for_all(parsed_dir,'xht2',self.Intertwine)
         
 
     def ParseGen(self,basefile):

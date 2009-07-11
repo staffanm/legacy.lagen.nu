@@ -258,7 +258,8 @@ RINFO = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
 class DVParser(LegalSource.Parser):
     re_NJAref = re.compile(r'(NJA \d{4} s\. \d+) \(alt. (NJA \d{4}:\d+)\)')
-    re_delimSplit = re.compile("[:;,] ?").split
+    # I wonder if we really should have : in this. Let's try without!
+    re_delimSplit = re.compile("[;,] ?").split
 
 
     # Mappar termer för enkel metadata (enstaka
@@ -406,7 +407,11 @@ class DVParser(LegalSource.Parser):
 
         tree.write(outdoc,encoding="utf-8")
         os.unlink(tmpfile)
-        
+
+
+    def _sokord_to_subject(self, sokord):
+        return u'http://lagen.nu/concept/%s' % sokord.capitalize().replace(' ','_')
+    
     def parse_antiword_docbook(self,docbookfile,patchdescription=None):
         soup = Util.loadSoup(docbookfile,encoding='utf-8')
         head = Metadata()
@@ -500,8 +505,31 @@ class DVParser(LegalSource.Parser):
 
         # Hitta sammansatta metadata i sidfoten
         txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findParent('entry').nextSibling.nextSibling)
-        head[u'Sökord'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Sökord'])
-                           for x in self.re_delimSplit(txt)]
+        sokord = []
+        for s in self.re_delimSplit(txt):
+            s = Util.normalizeSpace(s)
+            if not s:
+                continue
+            # terms longer than 72 chars are not legitimate
+            # terms. more likely descriptions. If a term has a - in
+            # it, it's probably a separator between a term and a
+            # description
+            while len(s) >= 72 and " - " in s:
+                h, s = s.split(" - ",1)
+                sokord.append(h)
+            if len(s) < 72:
+                sokord.append(s)
+
+        # Using LinkSubjects (below) is more correct, but we need some
+        # way of expressing the relation:
+        # <http://lagen.nu/concept/Förhandsbesked> rdfs:label "Förhandsbesked"@sv
+        head[u'Sökord'] = [UnicodeSubject(x,
+                                          predicate=self.multilabels[u'Sökord'])
+                           for x in sokord]
+        #head[u'Sökord'] = [LinkSubject(x,
+        #                               uri=self._sokord_to_subject(x),
+        #                               predicate=self.multilabels[u'Sökord'])
+        #                   for x in sokord]
 
         if soup.find(text=re.compile(u'^\s*Litteratur:\s*$')):
             n = soup.find(text=re.compile(u'^\s*Litteratur:\s*$')).findParent('entry').nextSibling.nextSibling
@@ -544,8 +572,9 @@ class DVParser(LegalSource.Parser):
                     if pred == 'rattsfallspublikation':
                         tmp_publikationsid = m.group(1)
                         # head[u'[%s]'%pred] = self.publikationsuri[m.group(1)]
-                        head[u'[%s]'%pred] = UnicodeSubject(self.publikationsuri[m.group(1)],
-                                                            predicate=RINFO[pred])
+                        head[u'[%s]'%pred] = LinkSubject(m.group(1),
+                                                         uri=self.publikationsuri[m.group(1)],
+                                                         predicate=RINFO[pred])
                     else:
                         head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
             if not '[publikationsordinal]' in head: # Workaround för AD-domar
@@ -594,7 +623,7 @@ class DVManager(LegalSource.Manager):
     re_xmlbase = re.compile('xml:base="http://rinfo.lagrummet.se/publ/rattsfall/([^"]+)"').search
     # Converts a NT file to RDF/XML -- needed for uri.xsl to work for legal cases
     def NTriplesToXML(self):
-        ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
+        ntfile = Util.relpath(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']))
         xmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.xml']) 
         minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
         if self._outfile_is_newer([ntfile],xmlfile) and self._outfile_is_newer([ntfile],minixmlfile):
@@ -630,22 +659,27 @@ class DVManager(LegalSource.Manager):
     ####################################################################
     
     def Parse(self,basefile,verbose=False):
-        """'basefile' here is a single digit representing the filename on disc, not
-        any sort of inherit case id or similarly"""
-        if verbose:
-            print "Setting verbosity"
-            log.setLevel(logging.DEBUG)
+        """'basefile' here is a alphanumeric string representing the
+        filename on disc, which may or may not correspond with any ID
+        found in the case itself """
+
+        if verbose: print"Setting verbosity"
+        log.setLevel(logging.DEBUG)
         start = time()
-        # print "Basefile: %s" % basefile
+
+        if '~$' in basefile: # word autosave file
+            log.debug(u"%s: Överhoppad", basefile)
+            return
+
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-        # print "infile: %s" % infile
-        # check to see if the outfile is newer than all ingoing
-        # files. If it is, don't parse
+
+        # check to see if the outfile is newer than all ingoing files and don't parse if so
         force = (self.config[__moduledir__]['parse_force'] == 'True')
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
+
         # print "Force: %s, infile: %s, outfile: %s" % (force,infile,outfile)
 
         p = self.__parserClass()
