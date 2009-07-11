@@ -23,18 +23,26 @@
   <xsl:template match="xht2:h">
       <xsl:if test="@property = 'dct:title'">
 	<h1><xsl:value-of select="."/></h1>
-	<p>Wiki def goes here</p>
-	<xsl:apply-templates select="$annotations/rdf:Description/dct:description/xht2:div/*"/>
+	<xsl:variable name="wikidesc" select="$annotations/rdf:Description/dct:description/xht2:div/*"/>
+	<xsl:if test="$wikidesc">
+	  <div class="mittruta kommentar">
+	    <img src="/img/comment.png" class="inline-icon" width="16" height="16" alt="" title=""/>
+	    <xsl:apply-templates select="$wikidesc"/>
+	  </div>
+	</xsl:if>
+	<xsl:if test="not($wikidesc)">
+	  Det finns ingen beskrivning av "<xsl:value-of select="."/>" än. Du kanske vill <a href="http://wiki.lagen.nu/index.php?title={.}&amp;action=edit">skriva en?</a>
+	</xsl:if>
       </xsl:if>
   </xsl:template>
 
-  <xsl:template match="xht2:a">
+  <xsl:template match="xht2:a|a">
     <xsl:call-template name="link"/>
   </xsl:template>
 
   <!-- defaultregel: kopierar alla element från xht2 till
        default-namespacet -->
-  <xsl:template match="xht2:*">
+  <xsl:template match="xht2:*|*">
     <xsl:element name="{name()}">
       <xsl:apply-templates select="@*|node()"/>
     </xsl:element>
@@ -46,12 +54,11 @@
 
   <!-- refs mode -->
   <xsl:template match="*|@*" mode="refs">
-    <p>References goes here</p>
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
 
     <xsl:if test="$rattsfall">
       <div class="sidoruta">
-	<h2>Rättsfall med detta sökord</h2>
+	<h2>Rättsfall</h2>
 	<xsl:call-template name="rattsfall">
 	  <xsl:with-param name="rattsfall" select="$rattsfall"/>
 	</xsl:call-template>
@@ -88,6 +95,10 @@
   </xsl:template>
 
 
+  <!-- kommentar mode -->
+  <xsl:template match="*|@*" mode="kommentarer">
+    <!-- emit nothing -->
+  </xsl:template>
   
 </xsl:stylesheet>
 

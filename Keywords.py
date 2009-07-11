@@ -16,6 +16,8 @@ import xml.etree.ElementTree as PET
 # 3rdparty libs
 from configobj import ConfigObj
 from genshi.template import TemplateLoader
+from rdflib.Graph import Graph
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
 import Util
@@ -151,6 +153,36 @@ class KeywordManager(LegalSource.Manager):
     def _file_to_basefile(self,f):
         return os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
         
+    def _build_mini_rdf(self):
+        termdir = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed'])
+        minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
+        files = list(Util.listDirs(termdir, ".xht2"))
+
+        if self._outfile_is_newer(files,minixmlfile):
+            log.info(u"Not regenerating RDF/XML files")
+            return
+
+        log.info("Making a mini graph")
+        SKOS = Namespace(Util.ns['skos'])
+        mg = Graph()
+        for key, value in Util.ns.items():
+            mg.bind(key,  Namespace(value));
+        
+        for f in files:
+            basefile = os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
+            termuri = "http://lagen.nu/concept/%s" % basefile.replace(" ", "_")
+            mg.add((URIRef(termuri), RDF.type, SKOS['Concept']))
+
+        log.info("Serializing the minimal graph")
+        f = open(minixmlfile, 'w')
+        f.write(mg.serialize(format="pretty-xml"))
+        f.close()
+        
+    def _htmlFileName(self,basefile):
+        """Returns the generated, browser-ready XHTML 1.0 file name for the given basefile"""
+        if not isinstance(basefile, unicode):
+            raise Exception("WARNING: _htmlFileName called with non-unicode name")
+        return u'%s/%s/generated/%s.html' % (self.baseDir, self.moduleDir,basefile.replace(" ","_"))         
 
     def DownloadAll(self):
         d = KeywordDownloader(self.config)
@@ -188,7 +220,6 @@ class KeywordManager(LegalSource.Manager):
     def Generate(self,term):
         infile = Util.relpath(self._xmlFileName(term))
         outfile = Util.relpath(self._htmlFileName(term))
-        
         # Use SPARQL queries to create a rdf graph (to be used by the
         # xslt transform) containing enough information about all
         # cases using this term, as well as the wiki authored
@@ -196,7 +227,6 @@ class KeywordManager(LegalSource.Manager):
 
         # For proper SPARQL escaping, we need to change å to \u00E5
         # etc (there probably is a neater way of doing this).
-        
         escterm = ''
         for c in term:
             if ord(c) > 127:
@@ -290,9 +320,13 @@ WHERE { ?uri dct:description ?desc .
         return
 
     def GenerateAll(self):
-        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
+        parsed_dir = os.path.sep.join([self.baseDir, __moduledir__, u'parsed'])
         self._do_for_all(parsed_dir,'xht2',self.Generate)
         
+    def RelateAll(self):
+        # This LegalSource have no triples of it's own
+        # super(KeywordManager,self).RelateAll()
+        self._build_mini_rdf()
 
         
 if __name__ == "__main__":

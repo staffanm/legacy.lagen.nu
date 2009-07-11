@@ -92,7 +92,7 @@
 	<xsl:if test="xht2:dd[@property='dct:subject']">
 	  <dt>Sökord</dt>
 	  <xsl:for-each select="xht2:dd[@property='dct:subject']">
-	    <dd property="dct:subject"><xsl:value-of select="."/></dd>
+	    <dd property="dct:subject"><a href="/begrepp/{.}"><xsl:value-of select="."/></a></dd>
 	  </xsl:for-each>
 	</xsl:if>
 	

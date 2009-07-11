@@ -138,15 +138,7 @@ class Manager:
 
 
     def InitializeDB(self):
-        from rdflib.store import Store
-        from rdflib import plugin
-
-        configString = "host=localhost,user=rdflib,password=rdflib,db=rdfstore"
-        store = plugin.get('MySQL', Store)('rdfstore')
-        store.destroy(configString)
-        store.open(configString, create=True)
-        print "MySQL DB store initialized"
-
+        pass
             
     def DownloadAll(self, module='all'):
         self._doAction('DownloadAll',module)
@@ -381,8 +373,6 @@ class Manager:
         self.Indexpages(module)
         # self.Publish()
         log.info(u'DoAll finished in %s' % time.strftime("%H:%M:%S",time.gmtime(time.time() - start)))
-
-
 
 if __name__ == "__main__":
     import logging.config

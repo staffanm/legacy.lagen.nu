@@ -59,7 +59,7 @@ class WikiDownloader(LegalSource.Downloader):
             if ":" in title and title.split(":")[0] in wikinamespaces:
                 continue # only process pages in the main namespace
             outfile = "%s/%s.xml" % (self.download_dir, title.replace(":","/"))
-            print "Dumping %s to %s" % (title,outfile)
+            log.debug("Dumping %s" % (title,outfile))
             Util.ensureDir(outfile)
             f = open(outfile,"w")
             f.write(ET.tostring(page_el,encoding="utf-8"))
@@ -127,7 +127,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
 
     def capitalizedLink(self,m):
         if m.group(1).startswith('SFS/'):
-            uri = 'http://rinfo.lagrummet.nu/publ/%s' % m.group(1).lower()
+            uri = 'http://rinfo.lagrummet.se/publ/%s' % m.group(1).lower()
         else:
             uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
         
@@ -268,6 +268,10 @@ class WikiManager(LegalSource.Manager):
     def DownloadAll(self):
         d = WikiDownloader(self.config)
         d.DownloadAll()
+
+    def DownloadNew(self):
+        d = WikiDownloader(self.config)
+        d.DownloadNew()
 
     def ParseAll(self):
         intermediate_dir = os.path.sep.join([self.baseDir, __moduledir__, u'downloaded'])

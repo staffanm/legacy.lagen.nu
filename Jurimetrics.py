@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 # 1. läs alla triples i dv/parsed/rdf.nt, för varje unik URI:
 #     * hitta rinfo:rattsfallspublikation
 #     * hitta alla rinfo:lagrum (felkälla: hänvisning till EG-rätt,

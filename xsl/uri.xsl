@@ -4,6 +4,7 @@
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+		xmlns:skos="http://www.w3.org/2008/05/skos#"
 		xmlns:str="http://exslt.org/strings"
 		extension-element-prefixes="str">
 
@@ -66,6 +67,9 @@
   <xsl:template name="localurl">
     <xsl:param name="uri"/>
     <xsl:choose>
+      <xsl:when test="substring($uri, 0, 25) = 'http://lagen.nu/concept/'">
+	<xsl:if test="$terms//skos:Concept[@rdf:about=$uri]">/begrepp/<xsl:value-of select="substring-after($uri, '/concept/')"/></xsl:if>
+      </xsl:when>
       <xsl:when test="substring($uri, 0, 26) != 'http://rinfo.lagrummet.se'">
 	<xsl:value-of select="$uri"/>
       </xsl:when>

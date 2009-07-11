@@ -40,11 +40,30 @@
       border: solid 1px #6b482c;
       margin-bottom: 5px;
       font-size: smaller;
-      /* margin-bottom: 12pt; */
       box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
       -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
       -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
     }
+
+    .mittruta {
+      padding: 3pt;
+      margin-top: 0;
+      line-height: 1.2em;
+      background: #f9f6f5;
+      border: solid 1px #6b482c;
+      margin-bottom: 5px;
+      box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
+      -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
+    }
+    .mittruta ul {
+	display: block;
+        margin-left: 40pt;
+	list-style-type: disc;
+        counter-reset: list-item
+    }
+
+
     .sidoruta h2 {
 	/*font-size: smaller; */
         font-weight: bold;
@@ -98,21 +117,22 @@
 	clear: left;
 	}
 
+    /* smal högerspalt */
 
-    /* side-by-side, smal högerspalt */
     .sidoruta dt {
-	float: left;
-        clear: left;
-	width: 8em;
+        display: block;
+	float: none;
+        width: inherit;
         font-weight: bold;
     }
    
     .sidoruta dt:after { content: ":"; }
 
     .sidoruta dd {
-	margin: 0 0 0 8.1em;
-        padding: 0;
-	clear: right;
+        display: block;
+	float: none;
+        width: inherit;
+	margin-left: 22.5pt;
     }
     .sidoruta dd:after { clear: left; }
     .paragraf { position: relative; }

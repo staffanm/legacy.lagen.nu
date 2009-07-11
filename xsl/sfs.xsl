@@ -113,7 +113,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="xht2:a">
+  <xsl:template match="xht2:a|a">
     <xsl:call-template name="link"/>
   </xsl:template>
 
