@@ -23,10 +23,14 @@ import LegalSource
 import Util
 
 log = logging.getLogger('mgr')
+if not os.path.sep in __file__:
+    __scriptdir__ = os.getcwd()
+else:
+    __scriptdir__ = os.path.dirname(__file__)
 
 class Manager:
     def __init__(self):
-        self.config = ConfigObj("conf.ini")
+        self.config = ConfigObj(__scriptdir__ + "/conf.ini")
         self.baseDir = self.config['datadir']
     
     def _pairListToDict(self,pairlist):
@@ -328,6 +332,24 @@ class Manager:
             else:
                 log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
 
+    def WikiUpdate(self, wikipage):
+        import Wiki
+        wikimgr = Wiki.WikiManager()
+        wikimgr.Download(wikipage)
+        wikimgr.Parse(wikipage)
+        wikimgr.Relate(wikipage)
+        if wikipage.startswith("SFS/"):
+            import SFS
+            sfsnr = wikipage.split("/",1)[1]
+            sfsmgr = SFS.SFSManager()
+            sfsmgr.Generate(sfsnr)
+        elif wikipage.startswith("Dom/"):
+            pass
+        else:
+            import Keywords
+            kwmgr = Keywords.KeywordManager()
+            kwmgr.Generate(wikipage)
+
     def _make_zipfiles(self):
         self._make_zipfile(os.path.sep.join([self.baseDir,u'dv','dv.zip']),
                            os.path.sep.join([self.baseDir,u'dv','parsed']),
@@ -376,7 +398,9 @@ class Manager:
 
 if __name__ == "__main__":
     import logging.config
-    logging.config.fileConfig('etc/log.conf')
+    print "loading logging config from %s" % __scriptdir__ + '/etc/log.conf'
+    logging.config.fileConfig(__scriptdir__ + '/etc/log.conf')
     Manager.__bases__ += (DispatchMixin,)
     mgr = Manager()
+    print repr(sys.argv)
     mgr.Dispatch(sys.argv)

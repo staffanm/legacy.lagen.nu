@@ -379,9 +379,11 @@ class DVParser(LegalSource.Parser):
         cmd = "antiword -x db %s > %s" % (indoc, tmpfile)
 
         Util.ensureDir(outdoc)
-        #if os.path.exists(outdoc) and os.path.getsize(outdoc) > 0:
-        #    log.debug("outdoc %s exists, not converting" % outdoc)
-        #    return
+        if (os.path.exists(outdoc) and
+            os.path.getsize(outdoc) > 0 and
+            os.stat(outdoc).st_mtime > os.stat(indoc).st_mtime):
+            log.debug("outdoc %s exists, not converting" % outdoc)
+            return
         if not os.path.exists(indoc):
             log.warning("indoc %s does not exist" % indoc)
             return

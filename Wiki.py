@@ -59,7 +59,7 @@ class WikiDownloader(LegalSource.Downloader):
             if ":" in title and title.split(":")[0] in wikinamespaces:
                 continue # only process pages in the main namespace
             outfile = "%s/%s.xml" % (self.download_dir, title.replace(":","/"))
-            log.debug("Dumping %s" % (title,outfile))
+            log.debug("Dumping %s" % outfile)
             Util.ensureDir(outfile)
             f = open(outfile,"w")
             f.write(ET.tostring(page_el,encoding="utf-8"))
@@ -78,7 +78,7 @@ class WikiDownloader(LegalSource.Downloader):
         # FIXME: if outfile already exist, only save if wiki resource is modified since
         outfile = "%s/%s.xml" % (self.download_dir, term.replace(":","/"))
         Util.ensureDir(outfile)
-        log.info("Downloading wiki text for term %s" % term)
+        log.info("Downloading wiki text for term %s to %s ", term, outfile)
         self.browser.retrieve(url,outfile)
 
 
@@ -311,6 +311,9 @@ class WikiManager(LegalSource.Manager):
         # keywords/concepts are done by Keyword.py)
         pass
 
+    def GenerateAll(self):
+        pass
+    
     def Relate(self, basefile):
         basefile = basefile.replace(":","/")
 

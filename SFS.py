@@ -604,7 +604,11 @@ class SFSParser(LegalSource.Parser):
 
         # hitta eventuella etablerade förkortningar
         g = Graph()
-        g.load("file:///"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
+        if sys.platform == "win32":
+            g.load("file:///"+__scriptdir__+"/etc/sfs-extra.n3", format="n3")
+        else:
+            g.load(__scriptdir__+"/etc/sfs-extra.n3", format="n3")
+            
         for obj in g.objects(URIRef(meta[u'xml:base']), DCT['alternate']):
             meta[u'Förkortning'] = unicode(obj)
 
@@ -2022,9 +2026,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         self._do_for_all(downloaded_dir,'html',self.Parse)
 
     def Generate(self,basefile):
+        start = time()
         basefile = basefile.replace(":","/")
         infile = Util.relpath(self._xmlFileName(basefile))
         outfile = Util.relpath(self._htmlFileName(basefile))
+        start = time()
         sfsnr = FilenameToSFSnr(basefile)
         p = LegalRef(LegalRef.LAGRUM)
 
@@ -2080,7 +2086,7 @@ WHERE {
         # print sq
         rattsfall = self._store_select(sq)
 
-        log.debug(u'%s: %s rättsfall', basefile,len(rattsfall))
+        log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
         stuff[baseuri] = {}
         stuff[baseuri]['rattsfall'] = []
         
@@ -2138,7 +2144,8 @@ WHERE {
                 stuff[lagrum] = {}
             stuff[lagrum]['desc'] = row['desc']
 
-        log.debug(u'%s: %s wikikommentarer', basefile,len(wikidesc))
+        log.debug(u'%s: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
+
         
         # pprint(wikidesc)
         # (4. eurlex.nu data (mapping CELEX ids to titles))
@@ -2161,7 +2168,7 @@ WHERE {
         """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
         changes = self._store_select(sq)
 
-        log.debug(u'%s: %s ändringsposter', basefile,len(changes))
+        log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(wikidesc), time()-start)
 
         for row in changes:
             lagrum = row['lagrum']
@@ -2242,6 +2249,7 @@ WHERE {
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
         
         Util.replace_if_different(tmpfile,annotations)
+        log.debug(u'%s: Serialized annotation (%.3f sec)', basefile, time()-start)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
         if not force and self._outfile_is_newer([infile,annotations],outfile):
@@ -2249,12 +2257,11 @@ WHERE {
             return
 
         Util.mkdir(os.path.dirname(outfile))
-        start = time()
         #params = {'annotationfile':annotations}
         # FIXME: create a relative version of annotations, instead of
         # hardcoding self.baseDir like below
         params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
-        Util.transform("xsl/sfs.xsl",
+        Util.transform(__scriptdir__ + "/xsl/sfs.xsl",
                        infile,
                        outfile,
                        parameters = params,

@@ -32,6 +32,10 @@ __author__    = u"Staffan Malmgren <staffan@tomtebo.org>"
 __shortdesc__ = u"Nyckelord/sökord"
 __moduledir__ = "keyword"
 log = logging.getLogger(__moduledir__)
+if not os.path.sep in __file__:
+    __scriptdir__ = os.getcwd()
+else:
+    __scriptdir__ = os.path.dirname(__file__)
 
 MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
 class KeywordDownloader(LegalSource.Downloader):
@@ -57,6 +61,7 @@ class KeywordDownloader(LegalSource.Downloader):
         for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
             for element in row: # should be only one
                 subj = element[0].text
+                subj = subj[0].upper() + subj[1:] # uppercase first letter and leave the rest alone
                 terms[subj][u'subjects'] = True
 
         log.debug("Retrieved terms from RDF store, got %s terms" % len(terms))
@@ -98,7 +103,9 @@ class KeywordDownloader(LegalSource.Downloader):
         for term in terms:
             if not term:
                 continue
-            outfile = "%s/%s/%s.txt" % (self.download_dir, term[0], term)
+            outfile = u"%s/%s/%s.txt" % (self.download_dir, term[0], term)
+            if sys.platform != "win32":
+                outfile = outfile.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\x96','--').encode("latin-1")
             try: 
                 Util.ensureDir(outfile)
                 f = open(outfile,"w")
@@ -107,8 +114,8 @@ class KeywordDownloader(LegalSource.Downloader):
                 f.close()
             except IOError:
                 log.warning("IOError: Could not write term set file for term '%s'" % term)
-            except WindowsError:
-                log.warning("WindowsError: Could not write term set file for term '%s'" % term)
+            #except WindowsError:
+            #    log.warning("WindowsError: Could not write term set file for term '%s'" % term)
             
 
     def DownloadNew():
@@ -217,9 +224,10 @@ class KeywordManager(LegalSource.Manager):
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
 
-    def Generate(self,term):
-        infile = Util.relpath(self._xmlFileName(term))
-        outfile = Util.relpath(self._htmlFileName(term))
+    def Generate(self,basefile):
+        start = time()
+        infile = Util.relpath(self._xmlFileName(basefile))
+        outfile = Util.relpath(self._htmlFileName(basefile))
         # Use SPARQL queries to create a rdf graph (to be used by the
         # xslt transform) containing enough information about all
         # cases using this term, as well as the wiki authored
@@ -227,12 +235,12 @@ class KeywordManager(LegalSource.Manager):
 
         # For proper SPARQL escaping, we need to change å to \u00E5
         # etc (there probably is a neater way of doing this).
-        escterm = ''
-        for c in term:
+        escbasefile = ''
+        for c in basefile:
             if ord(c) > 127:
-                escterm += '\u%04X' % ord(c)
+                escbasefile += '\u%04X' % ord(c)
             else:
-                escterm += c
+                escbasefile += c
         
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
@@ -241,9 +249,10 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 
 SELECT ?desc
 WHERE { ?uri dct:description ?desc . ?uri rdfs:label "%s"@sv }
-""" % escterm
+""" % escbasefile
 
         wikidesc = self._store_select(sq)
+        log.debug(u'%s: Selected description cases (%.3f sec)', basefile, time()-start)
 
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
@@ -254,9 +263,10 @@ SELECT ?uri ?id ?desc
 WHERE { ?uri dct:description ?desc .
         ?uri dct:identifier ?id .
         ?uri dct:subject "%s"@sv }
-""" % escterm
+""" % escbasefile
         
         rattsfall = self._store_select(sq)
+        log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
 
         root_node = PET.Element("rdf:RDF")
         for prefix in Util.ns:
@@ -264,7 +274,7 @@ WHERE { ?uri dct:description ?desc .
             root_node.set("xmlns:" + prefix, Util.ns[prefix])
 
         main_node = PET.SubElement(root_node, "rdf:Description")
-        main_node.set("rdf:about", "http://lagen.nu/concept/%s" % term.replace(" ","_"))
+        main_node.set("rdf:about", "http://lagen.nu/concept/%s" % basefile.replace(" ","_"))
         
         for d in wikidesc:
             desc_node = PET.SubElement(main_node, "dct:description")
@@ -286,17 +296,16 @@ WHERE { ?uri dct:description ?desc .
         tmpfile = mktemp()
         tree.write(tmpfile, encoding="utf-8")
 
-        annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, term)
+        annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
         
         Util.replace_if_different(tmpfile,annotations)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
         if not force and self._outfile_is_newer([infile,annotations],outfile):
-            log.debug(u"%s: Överhoppad", term)
+            log.debug(u"%s: Överhoppad", basefile)
             return
 
         Util.mkdir(os.path.dirname(outfile))
-        start = time()
 
         # xsltproc silently fails to open files through the document()
         # functions if the filename has non-ascii
@@ -308,7 +317,7 @@ WHERE { ?uri dct:description ?desc .
         # FIXME: create a relative version of annotations, instead of
         # hardcoding self.baseDir like below
         params = {'annotationfile':tmpfile.replace("\\","/")}
-        Util.transform("xsl/keyword.xsl",
+        Util.transform(__scriptdir__ + "/xsl/keyword.xsl",
                        infile,
                        outfile,
                        parameters = params,
@@ -316,7 +325,7 @@ WHERE { ?uri dct:description ?desc .
 
         Util.robust_remove(tmpfile)
         
-        log.info(u'%s: OK (%s, %.3f sec)', term, outfile, time()-start)
+        log.info(u'%s: OK (%s, %.3f sec)', basefile, outfile, time()-start)
         return
 
     def GenerateAll(self):

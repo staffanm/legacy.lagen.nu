@@ -6,6 +6,7 @@ from urllib2 import urlopen, Request, HTTPError
 import urllib
 
 class SparqlError(Exception): pass
+class SesameError(Exception): pass
 
 class SesameStore():
     """Simple wrapper of the Sesame REST HTTP API, for bulk inserts of
@@ -120,23 +121,31 @@ class SesameStore():
     def commit(self):
         if len(self.pending_graph) == 0:
             return
-
         # print "Committing %s triples to %s" % (len(self.pending_graph), self.statements_url)
-        data = self.pending_graph.serialize(format="n3")
+        data = self.pending_graph.serialize(format="nt")
+
+        # RDFlibs nt serializer mistakenly serializes to UTF-8, not
+        # the unicode escape sequence format mandated by the ntriples
+        # spec -- fix this:
+        data = ''.join([ord(c) > 127 and '\u%04X' % ord(c) or c for c in data.decode('utf-8')])
 
         # reinitialize pending_graph
         self.pending_graph = Graph()
         for prefix,namespace in self.namespaces.items():
             self.pending_graph.bind(prefix,namespace)
 
-        return self.add_serialized(data,"n3")
+        return self.add_serialized(data,"nt")
 
     def add_serialized(self,data,format="nt"):
         req = Request(self.statements_url)
         req.get_method = lambda : "POST"
         req.add_header('Content-Type',self.contenttype[format]+";charset=UTF-8")
         req.data = data
-        return self.__urlopen(req)
+        # print data
+        try:
+            return self.__urlopen(req)
+        except HTTPError, e:
+            raise SesameError(e.read())
     
 if __name__ == "__main__":
     store = SesameStore("http://localhost:8080/openrdf-sesame", "lagen.nu")

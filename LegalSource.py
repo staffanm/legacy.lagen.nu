@@ -34,6 +34,10 @@ import pyRdfa
 import Util
 from SesameStore import SesameStore
 
+if not os.path.sep in __file__:
+    __scriptdir__ = os.getcwd()
+else:
+    __scriptdir__ = os.path.dirname(__file__)
 
 # Do required codec/locale magic right away, since this is included by
 # all runnable scripts
@@ -94,7 +98,7 @@ class Downloader(object):
         # it support Robot.ThrottlingProcessor it would be cool
 
         moduledir = self._get_module_dir()
-        self.download_dir = config['datadir'] + "/%s/downloaded" % moduledir
+        self.download_dir = __scriptdir__ + "/" + config['datadir'] + "/%s/downloaded" % moduledir
         self.download_log = logging.getLogger('%s/download' % moduledir)
         logfile = self.download_dir+"/downloaded.log"
         Util.ensureDir(logfile)
@@ -115,7 +119,7 @@ class Parser(object):
     re_NormalizeSpace  = re.compile(r'\s+',).sub
 
     def __init__(self):
-        self.authority_rec = self.load_authority_rec("etc/authrec.n3")
+        self.authority_rec = self.load_authority_rec(__scriptdir__ + "/etc/authrec.n3")
     
     def Parse(self):
         raise NotImplementedError
@@ -289,7 +293,6 @@ class Manager(object):
                 triples += len(graph)
                 store.add_graph(graph)
                 store.commit()
-
                 if c % 100 == 0:
                     log.info("Related %d documents (%d triples total)" % (c, triples))
 
@@ -441,10 +444,18 @@ class Manager(object):
                 # logging module can't handle source code containing
                 # swedish characters (iso-8859-1 encoded).
                 formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-                if isinstance(sys.exc_info()[1].message, unicode):
-                    msg = sys.exc_info()[1].message
+                exception = sys.exc_info()[1]
+                if isinstance(exception.message, unicode):
+                    msg = exception.message
                 else:
-                    msg = unicode(sys.exc_info()[1].message,'iso-8859-1')
+                    msg = unicode(exception.message,'iso-8859-1')
+
+                if not msg:
+                    if isinstance(exception,OSError):
+                        msg = "[Errno %s] %s: %s" % (exception.errno, exception.strerror, exception.filename)
+                    else:
+                        msg = "(Message got lost)"
+
                 log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
                           (basefile,
                            sys.exc_info()[0].__name__, 
@@ -605,7 +616,7 @@ class Manager(object):
         dom  = xml.dom.minidom.parse(filename)
         o = pyRdfa.Options()
         o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, None, options=o)
+        g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
         self.__tidy_graph(g)
 
         return g
