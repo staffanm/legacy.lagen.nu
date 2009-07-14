@@ -56,13 +56,12 @@
       -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
       -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
     }
-    .mittruta ul {
+    .kommentar ul {
 	display: block;
-        margin-left: 40pt;
+        margin-left: 20pt;
 	list-style-type: disc;
         counter-reset: list-item
     }
-
 
     .sidoruta h2 {
 	/*font-size: smaller; */

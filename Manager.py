@@ -345,9 +345,12 @@ class Manager:
             sfsmgr.Generate(sfsnr)
         elif wikipage.startswith("Dom/"):
             pass
+        elif ":" in wikipage: # not in default namespace, probably
+            pass
         else:
             import Keywords
             kwmgr = Keywords.KeywordManager()
+            kwmgr.Parse(wikipage) # needed for new terms
             kwmgr.Generate(wikipage)
 
     def _make_zipfiles(self):
@@ -398,9 +401,8 @@ class Manager:
 
 if __name__ == "__main__":
     import logging.config
-    print "loading logging config from %s" % __scriptdir__ + '/etc/log.conf'
+    # print "loading logging config from %s" % __scriptdir__ + '/etc/log.conf'
     logging.config.fileConfig(__scriptdir__ + '/etc/log.conf')
     Manager.__bases__ += (DispatchMixin,)
     mgr = Manager()
-    print repr(sys.argv)
     mgr.Dispatch(sys.argv)
