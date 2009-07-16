@@ -237,7 +237,7 @@ class WikiParser(LegalSource.Parser):
                     #print "'%s' is a start-or-end tag, not parsing" % groups[0].decode('latin-1')
                     res += groups[0].decode('latin-1')
                     #print "'%s' is plain text, parsing" % groups[1].decode('latin-1')
-                    parts = p.parse(groups[1])
+                    parts = p.parse(groups[1],currenturi)
                     for part in parts:
                         if isinstance(part, Link):
                             res += u'<a class="lr" href="%s">%s</a>' % (part.uri, part)
