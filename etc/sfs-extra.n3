@@ -42,6 +42,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1974:153> rdfs:label "riksdagsordningen"; dct:alternate "RO" .
 <http://rinfo.lagrummet.se/publ/sfs/1976:19> rdfs:label "lagföringslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1976:580> dct:alternate "MBL" .
+<http://rinfo.lagrummet.se/publ/sfs/1976:633> rdfs:label "kungörandelagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1978:304> dct:alternate "HFL" .
 <http://rinfo.lagrummet.se/publ/sfs/1979:1152> dct:alternate "FTL" .
 <http://rinfo.lagrummet.se/publ/sfs/1980:100> dct:alternate "SekrL" .
@@ -105,4 +106,4 @@
 <http://rinfo.lagrummet.se/publ/sfs/2005:716> dct:alternate "UtlL" .
 <http://rinfo.lagrummet.se/publ/sfs/2006:304> rdfs:label "rättsprövningslagen"; dct:alternate "RpL" ; dct:alternate "RättsprL" .
 <http://rinfo.lagrummet.se/publ/sfs/2008:486> dct:alternate "MFL" .
-<http://rinfo.lagrummet.se/publ/sfs/1976:633> rdfs:label "kungörandelagen" .
+<http://rinfo.lagrummet.se/publ/sfs/2009:400> dct:alternate "OSL" .

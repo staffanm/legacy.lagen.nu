@@ -142,10 +142,13 @@ class Parser(object):
             log.error(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
         return res
 
-    def load_authority_rec(self, file):
+    def load_authority_rec(self, n3file):
         """Ladda in en RDF-graf som innehåller auktoritetsposter i n3-format"""
         graph = Graph()
-        graph.load(file, format='n3')
+        n3file = Util.relpath(n3file)
+
+        #print "loadling %s" % n3file
+        graph.load(n3file, format='n3')
         d = {}
         for uri, label in graph.subject_objects(RDFS.label):
             d[unicode(label)] = unicode(uri)
@@ -477,11 +480,11 @@ class Manager(object):
         if not os.path.exists(outfile): return False
         outfile_mtime = os.stat(outfile).st_mtime
         for f in infiles:
-            # print "Testing whether %s is newer than %s" % (f, outfile)
+            #print "Testing whether %s is newer than %s" % (f, outfile)
             if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
-                # print "%s was newer than %s" % (f, outfile)
+                #print "%s was newer than %s" % (f, outfile)
                 return False
-        # print "%s is newer than %r" % (outfile, infiles)
+        #print "%s is newer than %r" % (outfile, infiles)
         return True
 
     def _htmlFileName(self,basefile):

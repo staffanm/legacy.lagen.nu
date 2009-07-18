@@ -10,7 +10,8 @@ import logging
 from time import time
 from tempfile import mktemp
 from urllib import quote
-
+import random
+from pprint import pprint
 # 3rdparty
 from configobj import ConfigObj
 from rdflib import Namespace
@@ -149,7 +150,13 @@ class LinkedWikimarkup(wikimarkup.Parser):
 
 
 class WikiParser(LegalSource.Parser):
-    
+    re_anchors = re.compile('(<a.*?</a>)',re.DOTALL)
+    re_anchor  = re.compile('<a[^>]*>(.*)</a>',re.DOTALL)
+    re_tags    = re.compile('(</?[^>]*>)',re.DOTALL)
+    re_sfs_uri = re.compile('https?://[^/]*lagen.nu/(\d+):(.*)')
+    re_dom_uri = re.compile('https?://[^/]*lagen.nu/dom/(.*)')
+
+    # This is getting complex... we should write some test cases. 
     def Parse(self,basefile,infile,config):
         xml = ET.parse(open(infile))
         wikitext = xml.find("//"+MW_NS+"text").text
@@ -175,6 +182,8 @@ class WikiParser(LegalSource.Parser):
             xhtml = ET.fromstring(tidied.encode('utf-8')).find("body")
 
         # p = LegalRef(LegalRef.LAGRUM)
+        Util.indent_et(xhtml)
+        #print ET.tostring(xhtml,'utf-8').decode('utf-8')
         p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM, LegalRef.FORARBETEN, LegalRef.RATTSFALL)
         # find out the URI that this wikitext describes
         if basefile.startswith("SFS/"):
@@ -213,6 +222,7 @@ class WikiParser(LegalSource.Parser):
         current = main
         currenturi = uri
 
+        
         for child in xhtml:
             if not rdftype and child.tag in ('h1','h2','h3','h4','h5','h6'):
                 nodes = p.parse(child.text,uri)
@@ -229,26 +239,54 @@ class WikiParser(LegalSource.Parser):
                 except AttributeError:
                     log.warning(u'%s är uppmärkt som en rubrik, men verkar inte vara en lagrumshänvisning' % child.text)
             else:
-                
-                serialized = ET.tostring(child,'latin-1')
+                serialized = ET.tostring(child,'utf-8').decode('utf-8')
+                separator = ""
+                while separator in serialized:
+                    separator = "".join(random.sample("ABCDEFGHIJKLMNOPQRSTUVXYZ",6))
+                    
+                markers = {}
                 res = ""
-                # split serialized into tags and pcdata. don't feed tags to p.parse.
-                for groups in re.findall('((?:</?[^>]*>|))([^<*]*)', serialized):
-                    #print "'%s' is a start-or-end tag, not parsing" % groups[0].decode('latin-1')
-                    res += groups[0].decode('latin-1')
-                    #print "'%s' is plain text, parsing" % groups[1].decode('latin-1')
-                    parts = p.parse(groups[1],currenturi)
-                    for part in parts:
-                        if isinstance(part, Link):
-                            res += u'<a class="lr" href="%s">%s</a>' % (part.uri, part)
-                        else: # just a text fragment
-                            res += part
+                # replace all whole <a> elements with markers, then
+                # replace all other tags with markers
+                for (regex,start) in ((self.re_anchors,'<a'),
+                                      (self.re_tags,   '<')):
+                    for match in re.split(regex,  serialized):
+                        if match.startswith(start):
+                            marker = "{%s-%d}" % (separator,len(markers))
+                            markers[marker] = match
+                            res += marker
+                        else:
+                            res += match
+                    serialized = res
+                    res = ""
 
-                res = res.encode('latin-1')
-                #print ET.fromstring(res)
-                #print "RES:\n"
-                #print repr(res)
-                current.append(ET.fromstring(res))
+                #print serialized
+                # Use LegalRef to parse references, then rebuild a
+                # unicode string.
+                parts = p.parse(serialized,currenturi)
+                for part in parts:
+                    if isinstance(part, Link):
+                        res += u'<a class="lr" href="%s">%s</a>' % (part.uri, part)
+                    else: # just a text fragment
+                        res += part
+
+                # restore the replaced markers
+                for marker, replacement in markers.items():
+                    #print "%s: '%s'" % (marker,Util.normalizeSpace(replacement))
+                    # normalize URIs, and remove 'empty' links
+                    if 'href="https://lagen.nu/"' in replacement:
+                        replacement = self.re_anchor.sub('\\1', replacement)
+                    elif self.re_sfs_uri.search(replacement):
+                        replacement = self.re_sfs_uri.sub('http://rinfo.lagrummet.se/publ/sfs/\\1:\\2',replacement)
+                    elif self.re_dom_uri.search(replacement):
+                        replacement = self.re_dom_uri.sub('http://rinfo.lagrummet.se/publ/rattsfall/\\1',replacement)
+                    #print "%s: '%s'" % (marker,Util.normalizeSpace(replacement))
+                    res = res.replace(marker,replacement)
+
+                current.append(ET.fromstring(res.encode('utf-8')))
+
+        Util.indent_et(root)
+        # print ET.tostring(root,'utf-8').decode('utf-8')
         res = ET.tostring(root,encoding='utf-8')
         return res
     

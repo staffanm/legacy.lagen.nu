@@ -2168,7 +2168,7 @@ WHERE {
         """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
         changes = self._store_select(sq)
 
-        log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(wikidesc), time()-start)
+        log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
 
         for row in changes:
             lagrum = row['lagrum']

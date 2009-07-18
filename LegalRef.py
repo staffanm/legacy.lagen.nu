@@ -132,8 +132,9 @@ class LegalRef:
         #print "n3url: %s" % n3url
 
         self.graph = Graph()
-        # this might not work on win32 devel environment -- fix that then if so
-        self.graph.load(scriptdir + "/etc/sfs-extra.n3", format="n3")
+        n3file = Util.relpath(scriptdir + "/etc/sfs-extra.n3")
+        # print "loading n3file %s" % n3file
+        self.graph.load(n3file, format="n3")
         self.roots = []
         self.uriformatter = {}
         self.decl = ""
