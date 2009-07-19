@@ -649,9 +649,12 @@ class LegalRef:
                       }
         attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
 
-        # print "sfs_format_uri: %r" % attributes
-        if 'law' in attributes and attributes['law'].startswith('http://'):
-            res = ''
+        if 'law' in attributes:
+            if attributes['law'].startswith('http://'):
+                res = ''
+            else:
+                res = 'http://rinfo.lagrummet.se/publ/sfs/'
+            
         else:
             res = self.baseuri_attributes['baseuri']
         resolvetobase = True
@@ -1062,7 +1065,7 @@ class TestLegalRef(FilebasedTester):
         
     def ParseTestString(self,s, verbose=True):
         # p = LegalRef(LegalRef.FORARBETEN)
-        p = LegalRef(LegalRef.LAGRUM, LegalRef.EGLAGSTIFTNING, LegalRef.FORARBETEN)
+        p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM, LegalRef.FORARBETEN, LegalRef.RATTSFALL)
         p.verbose = verbose
         print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
 

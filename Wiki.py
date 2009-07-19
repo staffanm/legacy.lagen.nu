@@ -24,6 +24,7 @@ from DispatchMixin import DispatchMixin
 from LegalRef import LegalRef, Link
 from SFS import FilenameToSFSnr
 from SesameStore import SesameStore
+import FilebasedTester
 
 log = logging.getLogger(u'ls')
 
@@ -157,14 +158,13 @@ class WikiParser(LegalSource.Parser):
     re_dom_uri = re.compile('https?://[^/]*lagen.nu/dom/(.*)')
 
     # This is getting complex... we should write some test cases. 
-    def Parse(self,basefile,infile,config):
+    def Parse(self,basefile,infile,config=None):
         xml = ET.parse(open(infile))
         wikitext = xml.find("//"+MW_NS+"text").text
+        return self.parse_wikitext(basefile,wikitext)
 
-        # remove links to lagen.nu itself - they are not needed as
-        # they will be automagically inferred, and may mess up things
-        # wikitext = re.sub('\[https?://lagen.nu/(\S*) ([^\]]*)]','\\2',wikitext)
 
+    def parse_wikitext(self,basefile,wikitext):
         p = LinkedWikimarkup(show_toc=False)
         html = p.parse(wikitext)
 
@@ -260,7 +260,6 @@ class WikiParser(LegalSource.Parser):
                     serialized = res
                     res = ""
 
-                #print serialized
                 # Use LegalRef to parse references, then rebuild a
                 # unicode string.
                 parts = p.parse(serialized,currenturi)
@@ -290,7 +289,7 @@ class WikiParser(LegalSource.Parser):
         res = ET.tostring(root,encoding='utf-8')
         return res
     
-class WikiManager(LegalSource.Manager):
+class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = WikiParser
     def _get_module_dir(self):
         return __moduledir__
@@ -394,6 +393,31 @@ class WikiManager(LegalSource.Manager):
         # other LegalSources does? It's a bit more difficult since we
         # have different contexts
 
+    ################################################################
+    # IMPLEMENTATION OF FilebasedTester interface
+    ################################################################
+    testparams = {'Parse': {'dir': u'test/Wiki',
+                            'testext':'.txt',
+                            'testencoding':'latin-1',
+                            'answerext':'.xht2',
+                            'answerencoding':'utf-8'},
+                  }
+    def TestParse(self,data,verbose=None,quiet=None):
+        # FIXME: Set this from FilebasedTester
+        if verbose == None:
+            verbose=False
+        if quiet == None:
+            #quiet=True
+            pass
+
+        p = WikiParser()
+        p.verbose = verbose
+        res = p.parse_wikitext("Test",data)
+        if isinstance(res,unicode):
+            return res
+        else:
+            return res.decode('utf-8')
+        
 
 if __name__ == "__main__":
     import logging.config
