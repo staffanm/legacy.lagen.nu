@@ -1,4 +1,16 @@
-datadir = "data"
+# The directory in which to place all downloaded, temporary,
+# intermediate and finished files. You will need at least 3 GB space
+# for this data.
+datadir = data
+
+# The URL for your Sesame server (The below is what you get if you use
+# a default Tomcat/Sesame install)
+triplestore = http://localhost:8080/openrdf-sesame
+
+# The repository id on that Sesame server. You'll need to set this
+# up by hand using Sesames Web UI at
+# http://localhost:8080/openrdf-workbench
+repository = lagen.nu
 
 [sfs]
 # if True, parsing of downloaded files is always performed even if the
@@ -20,6 +32,18 @@ generate_force = False
 # been fixed.
 # ftp_user = user
 # ftp_pass = pass
+parse_force = False
+generate_force = False
+
+[arn]
+parse_force = False
+generate_force = False
+
+[wiki]
+parse_force = False
+generate_force = False
+
+[keyword]
 parse_force = False
 generate_force = False
 
