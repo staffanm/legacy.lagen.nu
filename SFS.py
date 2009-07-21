@@ -22,6 +22,8 @@ from collections import defaultdict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
+# python 2.6 required
+import multiprocessing
     
 # 3rdparty libs
 from configobj import ConfigObj
@@ -1951,7 +1953,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     ####################################################################    
 
     def Parse(self, basefile, verbose=False):
+        mlog = multiprocessing.get_logger()
         try:
+            mlog.info(u'%s: Starting' % basefile)
             if verbose:
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
@@ -1964,7 +1968,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             if (not files['sfst'] and not files['sfsr']):
                 raise LegalSource.IdNotFound("No files found for %s" % basefile)
             filename = self._xmlFileName(basefile)
-
+            
             # three sets of tests before proper parsing begins
 
             # 1: check to see if this might not be a proper SFS at all
@@ -1981,6 +1985,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             filelist = []
             [filelist.extend(files[x]) for x in files.keys()]
             if not force and self._outfile_is_newer(filelist,filename):
+                mlog.info(u'%s: Skipping' % basefile)
                 log.debug(u"%s: Överhoppad", basefile)
                 return
 
@@ -1992,6 +1997,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
                 datestr = t.readto(u'</i></b>')
                 if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
+                    mlog.info(u'%s: Expired' % basefile)
                     raise UpphavdForfattning()
             except IOError:
                 pass
@@ -2003,6 +2009,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             if not verbose:
                 for k in p.trace.keys():
                     p.trace[k].setLevel(logging.NOTSET)
+            #parsed = "dummy text"
             parsed = p.Parse(basefile,files)
             tmpfile = mktemp()
             out = file(tmpfile, "w")
@@ -2013,7 +2020,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             else:
                 Util.robustRename(tmpfile,filename)
             # Util.indentXmlFile(filename)
+            mlog.info(u'%s: OK (%.3f sec)', basefile,time()-start)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+            return '(%.3f sec)' % (time()-start)
         except UpphavdForfattning:
             log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
@@ -2023,7 +2032,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                      
     def ParseAll(self):
         downloaded_dir = os.path.sep.join([self.baseDir, u'sfs', 'downloaded', 'sfst'])
-        self._do_for_all(downloaded_dir,'html',self.Parse)
+        self._do_for_all(downloaded_dir,'html',StaticParse)
 
     def Generate(self,basefile):
         start = time()
@@ -2652,7 +2661,16 @@ WHERE {
         parts, returns both files"""
         templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,basename)
         return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
-        
+
+def StaticParse(basefile):
+    mlog = multiprocessing.get_logger()
+    try:
+        mgr = SFSManager()
+        return mgr.Parse(basefile)
+    except:
+        print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
+        # do nothing
+        pass
 
 if __name__ == "__main__":
     import logging.config

@@ -15,8 +15,12 @@ import sys
 import traceback
 import types
 import unicodedata
+# 2.5
 import xml.etree.cElementTree as ET
 import xml.dom.minidom
+# 2.6
+import multiprocessing
+
 
 # 3rd party modules
 import BeautifulSoup
@@ -183,7 +187,7 @@ class Manager(object):
         for each LegalSource.Manager subclass."""
         self.moduleDir = self._get_module_dir()
         self.config = ConfigObj(os.path.dirname(__file__)+"/conf.ini")
-        self.baseDir = os.path.dirname(__file__)+"/"+self.config['datadir']
+        self.baseDir = os.path.dirname(__file__)+os.path.sep+self.config['datadir']
 
     re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 
@@ -430,16 +434,30 @@ class Manager(object):
     # CONVENIENCE FUNCTIONS FOR SUBCLASSES (can be overridden if needed)
     ################################################################
 
-    def _do_for_all(self,dir,suffix,method):
-        for f in Util.listDirs(dir, suffix, reverse=True):
-            #print "listdirs: %s" % f
-            basefile = self._file_to_basefile(f)
+    def _apply_basefile_transform(self,files):
+        for f in files:
+            basefile = self._file_to_basefile(Util.relpath(f))
             if not basefile:
                 continue
-            # regardless of any errors in calling this method, we just
-            # want to log it and go on
+            else:
+                yield basefile
+
+
+        
+    def _do_for_all(self,dir,suffix,method):
+        
+        basefiles = self._apply_basefile_transform(Util.listDirs(dir, suffix, reverse=True))
+        if 'poolsize' in self.config:
+            logger = multiprocessing.log_to_stderr()
+            logger.setLevel(logging.INFO)
+            logger.info("MP logging init")
+
+            p = multiprocessing.Pool(int(self.config['poolsize']))
+            print p.map(method,basefiles,10)
+        else:
             try:
-                method(basefile)
+                for basefile in basefiles:
+                    method(basefile)
             except KeyboardInterrupt:
                 raise
             except:
@@ -448,11 +466,7 @@ class Manager(object):
                 # swedish characters (iso-8859-1 encoded).
                 formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
                 exception = sys.exc_info()[1]
-                if isinstance(exception.message, unicode):
-                    msg = exception.message
-                else:
-                    msg = unicode(exception.message,'iso-8859-1')
-
+                msg = exception
                 if not msg:
                     if isinstance(exception,OSError):
                         msg = "[Errno %s] %s: %s" % (exception.errno, exception.strerror, exception.filename)
@@ -640,3 +654,6 @@ class Manager(object):
                 l = Literal(u' '.join(s.split()))
                 graph.add((o,p,l))
 
+
+
+    
