@@ -68,6 +68,8 @@ class KeywordDownloader(LegalSource.Downloader):
 
         # 2) Download the wiki.lagen.nu dump from
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
+
+        self.browser.set_handle_robots(False) # we can ignore our own robots.txt
         self.browser.open("http://wiki.lagen.nu/pages-articles.xml")
         xml = ET.parse(self.browser.response())
         wikinamespaces = []
@@ -216,7 +218,7 @@ class KeywordManager(LegalSource.Manager):
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):
-            log.debug(u"%s: Överhoppad", basefile)
+            #log.debug(u"%s: Överhoppad", basefile)
             return
         p = self.__parserClass()
         p.verbose = verbose

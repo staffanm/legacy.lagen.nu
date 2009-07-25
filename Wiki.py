@@ -39,7 +39,8 @@ MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
 class WikiDownloader(LegalSource.Downloader):
     def __init__(self,config):
         super(WikiDownloader,self).__init__(config) # sets config, logging, initializes browser
-
+        self.browser.set_handle_robots(False) # we can ignore our own robots.txt
+        
     def _get_module_dir(self):
         return __moduledir__
 
