@@ -163,14 +163,16 @@ class KeywordManager(LegalSource.Manager):
     def _build_mini_rdf(self):
         termdir = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed'])
         minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
+        ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
         files = list(Util.listDirs(termdir, ".xht2"))
 
-        if self._outfile_is_newer(files,minixmlfile):
-            log.info(u"Not regenerating RDF/XML files")
-            return
+        #if self._outfile_is_newer(files,[minixmlfile,ntfile]):
+        #    log.info(u"Not regenerating RDF/XML files")
+        #    return
 
         log.info("Making a mini graph")
         SKOS = Namespace(Util.ns['skos'])
+        DCT = Namespace(Util.ns['dct'])
         mg = Graph()
         for key, value in Util.ns.items():
             mg.bind(key,  Namespace(value));
@@ -179,10 +181,15 @@ class KeywordManager(LegalSource.Manager):
             basefile = os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
             termuri = "http://lagen.nu/concept/%s" % basefile.replace(" ", "_")
             mg.add((URIRef(termuri), RDF.type, SKOS['Concept']))
+            mg.add((URIRef(termuri), DCT['title'], Literal(basefile, lang="sv")))
 
         log.info("Serializing the minimal graph")
         f = open(minixmlfile, 'w')
         f.write(mg.serialize(format="pretty-xml"))
+        f.close()
+
+        f = open(ntfile, 'w')
+        f.write(mg.serialize(format="nt"))
         f.close()
         
     def _htmlFileName(self,basefile):

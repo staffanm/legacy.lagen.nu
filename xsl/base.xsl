@@ -96,6 +96,7 @@
 	  <li><a href="/nyheter/">Nyheter</a></li>
 	  <li><a href="/index/">Lagar</a></li>
 	  <li><a href="/dom/index/">Domar</a></li>
+	  <li><a href="/begrepp/index/">Begrepp</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
 	<form method="get" action="http://www.google.com/custom">

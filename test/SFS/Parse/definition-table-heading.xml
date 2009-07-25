@@ -1,7 +1,7 @@
 <Forfattning>
   <Paragraf id="P1" ordinal="1">
     <Stycke id="P1S1">
-      <unicode>I denna text finns följande ord som betyder saker.</unicode>
+      <unicode>I denna lag används följande beteckningar med nedan angiven betydelse.</unicode>
       <Tabell>
         <Tabellrad>
           <Tabellcell>
@@ -11,15 +11,10 @@
           </Tabellcell>
         </Tabellrad><Tabellrad>
           <Tabellcell>
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Biobank" />
             <unicode>Biobank</unicode>
           </Tabellcell><Tabellcell>
             <unicode>Biologiskt material från en eller flera människor som samlas.</unicode>
-          </Tabellcell>
-        </Tabellrad><Tabellrad>
-          <Tabellcell>
-            <unicode>Huvudman för en biobank</unicode>
-          </Tabellcell><Tabellcell>
-            <unicode>Vårdgivare, forskningsinstitution eller annan som innehar en biobank.</unicode>
           </Tabellcell>
         </Tabellrad>
       </Tabell>

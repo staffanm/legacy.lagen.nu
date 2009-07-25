@@ -3,6 +3,7 @@ $(document).ready(function(){
 	persist: "location",
         collapsed: true
 	});
+     $("#accordion").accordion({ header: "h3" });
     /*
     $("#q").autocomplete(docs, {
         matchContains: true,

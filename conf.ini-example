@@ -17,7 +17,7 @@ repository = lagen.nu
 # resulting parsed file already exists and are more recent than the
 # downloaded files. Change this to True when working on the parsing
 # code.
-parse_force = False
+parse_force = True
 
 # if True, XSLT transformation of parsed files is always performed
 # even if the resulting generated file already exists and are more
@@ -32,7 +32,7 @@ generate_force = False
 # been fixed.
 # ftp_user = user
 # ftp_pass = pass
-parse_force = False
+parse_force = True
 generate_force = False
 
 [arn]

@@ -24,6 +24,7 @@
 #                                 'testsuffix': '.xml',
 #                                 'answersuffix', '.xht2'}}
 import os
+import glob
 import sys
 import re
 import traceback
@@ -41,7 +42,17 @@ class FilebasedTester:
     TEST_OK = "."
     def RunTest(self, method=None, file=None):
         if file:
-            return self.__run_single_test(method, file)
+            if os.path.exists(file):
+                return self.__run_single_test(method, file)
+            else:
+                files = glob.glob(file)
+                if not files:
+                    print "No testfile named %s" % file
+                else:
+                    for f in files:
+                        self.__run_single_test(method, file)
+                    return True
+                    
         elif method:
             return self.__run_single_testclass(method)
         else:

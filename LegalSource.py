@@ -19,7 +19,12 @@ import unicodedata
 import xml.etree.cElementTree as ET
 import xml.dom.minidom
 # 2.6
-import multiprocessing
+try:
+    import multiprocessing
+except:
+    pass
+    #print "Multiprocessing module not available, running single instance"
+
 
 
 # 3rd party modules
@@ -557,9 +562,13 @@ class Manager(object):
 
         for category in documents.keys():
             for pageid in documents[category].keys():
-                outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
+                outfile = Util.relpath("%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid))
                 title = pagetitles[pageid]
                 self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                if pageid.endswith("-a"):
+                    outfile = Util.relpath("%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir))
+                    self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                    
 
     def _render_indexpage(self,outfile,title,documents,pagelabels,category,page,keyword=None,compactlisting=False, docsorter=cmp):
         # only look in cwd and this file's directory

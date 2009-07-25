@@ -222,7 +222,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     # is this really needed?
     # stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    # print cmdline
+    print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)

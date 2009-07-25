@@ -85,7 +85,7 @@ class SesameStore():
 
         # This code instead uses the raw REST API found in SesameStore
         url = self.endpoint_url + "?query=" + urllib.quote(query.replace("\n", " "))
-        #print url
+        # print url
         req = Request(url)
         
         req.add_header('Accept',self.contenttype[format])

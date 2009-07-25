@@ -23,7 +23,11 @@ import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
 # python 2.6 required
-import multiprocessing
+try:
+    import multiprocessing
+except:
+    multiprocessing = None
+    mlog = None
     
 # 3rdparty libs
 from configobj import ConfigObj
@@ -460,11 +464,13 @@ RINFO = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
 class SFSParser(LegalSource.Parser):
     re_SimpleSfsId     = re.compile(r'(\d{4}:\d+)\s*$')
+    re_SearchSfsId     = re.compile(r'\((\d{4}:\d+)\)').search
     re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
     re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
     re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
     re_SectionIdOld    = re.compile(r'^§ (\d+ ?\w?).')     # as used in eg 1810:0926
-    re_DottedNumber    = re.compile(r'^(\d+ ?\w?)\. ').match
+    re_DottedNumber    = re.compile(r'^(\d+ ?\w?)\. ')
+    re_Bullet          = re.compile(ur'^(\-\-?|\x96) ')
     re_NumberRightPara = re.compile(r'^(\d+)\) ').match
     re_Bokstavslista   = re.compile(r'^(\w)\) ').match
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
@@ -472,11 +478,14 @@ class SFSParser(LegalSource.Parser):
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
     re_RevokeDate       = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(\d+)-(\d+)-(\d+)/')
+    re_dehyphenate = re.compile(r'- (?!(och|eller))').sub
+    re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk) (avses med|betyder|används följande)').match
+
     # use this custom matcher to ensure any strings you intend to convert
     # are legal roman numerals (simpler than having from_roman throwing
     # an exception)
     re_roman_numeral_matcher = re.compile('^M?M?M?(CM|CD|D?C?C?C?)(XC|XL|L?X?X?X?)(IX|IV|V?I?I?I?)$').match
-
+    
     swedish_ordinal_list = (u'första', u'andra', u'tredje', u'fjärde', 
                             u'femte', u'sjätte', u'sjunde', u'åttonde', 
                             u'nionde', u'tionde', u'elfte', u'tolfte')
@@ -812,41 +821,80 @@ class SFSParser(LegalSource.Parser):
     def _descapeEntity(self,m):
         return unichr(htmlentitydefs.name2codepoint[m.group(1)])
 
-    # rekurserar igenom dokumentet på jakt efter adresserbara enheter
-    # (kapitel, paragrafer, stycken, punkter) och konstruerar id's
-    # för dem, (på lagen-nu-formen sålänge, dvs K1P2S3N4 för 1 kap. 2
-    # § 3 st. 4 p)
+    def _term_to_subject(self, term):
+        capitalized = term[0].upper() + term[1:]
+        return u'http://lagen.nu/concept/%s' % capitalized.replace(' ','_')
+
+    # Post-processar dokumentträdet rekursivt och gör tre saker:
+    # 
+    # Hittar begreppsdefinitioner i löptexten
     #
-    # Letar även igenom löptexten efter lagrumshänvisningar
-    def _construct_ids(self, element, prefix, baseuri, skipfragments=[]):
+    # Hittar adresserbara enheter (delresurser som ska ha unika URI:s,
+    # dvs kapitel, paragrafer, stycken, punkter) och konstruerar id's
+    # för dem, exv K1P2S3N4 för 1 kap. 2 § 3 st. 4 p
+    #
+    # Hittar lagrumshänvisningar i löptexten
+    def _construct_ids(self, element, prefix, baseuri, skip_fragments=[], find_definitions = False):
+        find_definitions_recursive = find_definitions
         counters = defaultdict(int)
         if isinstance(element, CompoundStructure):
-            # set ids
-            for p in element:
-                counters[type(p)] += 1
+            # Hitta begreppsdefinitioner
+            if isinstance(element, Paragraf):
+                # kolla om första stycket innehåller en text som
+                # antyder att definitioner följer
+                if self.re_definitions(element[0][0]):
+                    find_definitions = True
+                    find_definitions_recursive = True
 
-                if hasattr(p, 'fragment_label'):
-                    elementtype = p.fragment_label
-                    if hasattr(p, 'ordinal'):
-                        elementordinal = p.ordinal.replace(" ","")
-                    elif hasattr(p, 'sfsnr'):
-                        elementordinal = p.sfsnr
-                    else:
-                        elementordinal = counters[type(p)]
-                    fragment = "%s%s%s" % (prefix, elementtype, elementordinal)
-                    p.id = fragment
-                else:
-                    fragment = prefix
-                if ((hasattr(p, 'fragment_label') and
-                     p.fragment_label in skipfragments)):
-                    self._construct_ids(p,prefix,baseuri,skipfragments)
-                else:
-                    self._construct_ids(p,fragment,baseuri,skipfragments)
-            # find references
+            # Hitta lagrumshänvisningar + definitioner
             if (isinstance(element, Stycke)
                 or isinstance(element, Listelement)
                 or isinstance(element, Tabellcell)):
                 nodes = []
+
+                if find_definitions:
+                    term = None
+                    elementtext = element[0]
+                    termdelimiter = ":"
+
+                    if isinstance(element, Tabellcell):
+                        if elementtext != "Beteckning":
+                            term = elementtext
+                            print u'"%s" är nog en definition (1)' % term
+                    elif isinstance(element, Stycke):
+                        # Sometimes, : is not the delimiter between
+                        # the term and the definition, but even in
+                        # those cases, : might figure in the
+                        # definition itself, usually as part of the
+                        # SFS number. Do some hairy heuristics to find
+                        # out what delimiter to use
+                        if not self.re_definitions(elementtext):
+                            if " - " in elementtext:
+                                if (":" in elementtext and
+                                    (elementtext.index(":") < elementtext.index(" - "))):
+                                    termdelimiter = ":"
+                                else:
+                                    termdelimiter = " - "
+                            m = self.re_SearchSfsId(elementtext)
+                            if m and m.start() < elementtext.index(":"):
+                                termdelimiter = " "
+                            term = elementtext.split(termdelimiter)[0]
+                            print u'"%s" är nog en definition (2)' % term
+                    elif isinstance(element, Listelement):
+                        # remove
+                        elementtext = self.re_Bullet.sub('',self.re_DottedNumber.sub('',elementtext))
+                        term = elementtext.split(termdelimiter)[0]
+                        print u'"%s" är nog en definition (3)' % term
+
+                    if term:
+                        # this results in empty/hidden links -- might
+                        # be better to hchange sfs.template.xht2 to
+                        # change these to <span rel="" href=""/>
+                        # instead. Or use another object than LinkSubject.
+                        nodes.append(LinkSubject(u'', uri=self._term_to_subject(term),predicate="dct:subject"))
+                        find_definitions_recursive = False
+
+
                 for p in element: # normally only one, but can be more
                                   # if the Stycke has a NumreradLista
                                   # or similar
@@ -862,6 +910,40 @@ class SFSParser(LegalSource.Parser):
                         # nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix,DCT["references"]))
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
+
+                           
+            # Konstruera IDs
+            for p in element:
+                counters[type(p)] += 1
+
+                if hasattr(p, 'fragment_label'):
+                    elementtype = p.fragment_label
+                    if hasattr(p, 'ordinal'):
+                        elementordinal = p.ordinal.replace(" ","")
+                    elif hasattr(p, 'sfsnr'):
+                        elementordinal = p.sfsnr
+                    else:
+                        elementordinal = counters[type(p)]
+                    fragment = "%s%s%s" % (prefix, elementtype, elementordinal)
+                    p.id = fragment
+                else:
+                    fragment = prefix
+
+                #print u"rekurserar, element är %s, p är %s, find_definitions är %s" % (element.__class__.__name__,
+                #                                                                       p.__class__.__name__,
+                #                                                                       find_definitions)
+                if ((hasattr(p, 'fragment_label') and
+                     p.fragment_label in skip_fragments)):
+                    self._construct_ids(p,prefix,baseuri,skip_fragments, find_definitions_recursive)
+                else:
+                    self._construct_ids(p,fragment,baseuri,skip_fragments, find_definitions_recursive)
+
+                # Efter att första tabellcellen i en rad hanterats,
+                # undvik att leta definitioner i tabellceller 2,3,4...
+                if isinstance(element, Tabellrad):
+                    #print u"släcker definitionsletarflaggan"
+                    find_definitions_recursive = False
+                    
 
     def _count_elements(self, element):
         counters = defaultdict(int)
@@ -1163,7 +1245,7 @@ class SFSParser(LegalSource.Parser):
 
     def makeStycke(self):
         log.debug(u"        Nytt stycke: '%s...'" % self.reader.peekline()[:30])
-        s = Stycke([self.reader.readparagraph()])
+        s = Stycke([Util.normalizeSpace(self.reader.readparagraph())])
         while not self.reader.eof():
             #log.debug(u"            makeStycke: calling guess_state ")
             state_handler = self.guess_state()
@@ -1762,9 +1844,8 @@ class SFSParser(LegalSource.Parser):
         # SFSR-datat (gissningvis på grund av någon trasig
         # tab-till-space-konvertering nånstans).
         def makeTabellcell(text):
-            # Av-avstavning (algoritmen lämnar lite i övrigt att önska)
             if len(text) > 1:
-                text = text.replace("- ", "")
+                text = self.re_dehyphenate("", text)
             return Tabellcell([text.strip()])
 
         cols = [u'',u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än åtta kolumner
@@ -1876,7 +1957,7 @@ class SFSParser(LegalSource.Parser):
             self.trace['numlist'].debug("idOfNumreradLista: called directly (%s)" % p[:30])
         else:
             self.trace['numlist'].debug("idOfNumreradLista: called w/ '%s'" % p[:30])
-        match = self.re_DottedNumber(p)
+        match = self.re_DottedNumber.match(p)
 
         if match != None:
             self.trace['numlist'].debug("idOfNumreradLista: match DottedNumber" )
@@ -1895,6 +1976,7 @@ class SFSParser(LegalSource.Parser):
             p = self.reader.peekline()
 
         return (p.startswith("- ") or
+                p.startswith(u"\x96 ") or 
                 p.startswith("--"))
 
     def isBokstavslista(self):
@@ -1953,9 +2035,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     ####################################################################    
 
     def Parse(self, basefile, verbose=False):
-        mlog = multiprocessing.get_logger()
+        if multiprocessing:
+            mlog = multiprocessing.get_logger()
+        else:
+            mlog = None
         try:
-            mlog.info(u'%s: Starting' % basefile)
+            if mlog:
+                mlog.info(u'%s: Starting' % basefile)
             if verbose:
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
@@ -1985,7 +2071,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             filelist = []
             [filelist.extend(files[x]) for x in files.keys()]
             if not force and self._outfile_is_newer(filelist,filename):
-                mlog.info(u'%s: Skipping' % basefile)
+                if mlog:
+                    mlog.info(u'%s: Skipping' % basefile)
                 log.debug(u"%s: Överhoppad", basefile)
                 return
 
@@ -1997,7 +2084,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
                 datestr = t.readto(u'</i></b>')
                 if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
-                    mlog.info(u'%s: Expired' % basefile)
+                    if mlog:
+                        mlog.info(u'%s: Expired' % basefile)
                     raise UpphavdForfattning()
             except IOError:
                 pass
@@ -2020,7 +2108,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             else:
                 Util.robustRename(tmpfile,filename)
             # Util.indentXmlFile(filename)
-            mlog.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+            if mlog:
+                mlog.info(u'%s: OK (%.3f sec)', basefile,time()-start)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
             return '(%.3f sec)' % (time()-start)
         except UpphavdForfattning:
@@ -2464,20 +2553,28 @@ WHERE {
         return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
 
     # Aktuell teststatus:
-    # ..........N.................FN..N.F........N..N..N..N...N..N. 50/61
+    # C:\Users\staffan\wds\ferenda.lagen.nu>SFS.py RunTest Parse
+    # ..........F...NN.....N.......N...........NFN..FN....F.......N..NNN.....F..N.....F..N. 66/85
     # Failed tests:
+    # test/SFS\Parse\definition-numberlist-trailingparagraph.txt
+    # test/SFS\Parse\definition-paranthesis.txt
+    # test/SFS\Parse\definition-plaintext-basic.txt
     # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
+    # test/SFS\Parse\regression-andrastycke-inte-rubrik.txt
+    # test/SFS\Parse\regression-rubrik-inte-kapitelrubrik.txt
     # test/SFS\Parse\regression-rubrik-inte-vanstercell.txt
     # test/SFS\Parse\regression-stycke-inte-rubrik.txt
+    # test/SFS\Parse\regression-tabell-tomrum.txt
     # test/SFS\Parse\regression-tabell-tva-korta-vansterceller.txt
-    # test/SFS\Parse\regression-tva-tomma-vansterceller.txt
+    # test/SFS\Parse\regression-upprakning-inte-paragraf.txt           *
     # test/SFS\Parse\temporal-kapitelrubriker.txt
     # test/SFS\Parse\temporal-rubriker.txt
-    # test/SFS\Parse\tricky-lopande-numrering.txt
+    # test/SFS\Parse\tricky-bilaga-upphorande.txt
+    # test/SFS\Parse\tricky-felformatterad-tabell.txt
+    # test/SFS\Parse\tricky-lopande-rubriknumrering.txt                *
     # test/SFS\Parse\tricky-okand-aldre-lag.txt
     # test/SFS\Parse\tricky-paragrafupprakning.txt
     # test/SFS\Parse\tricky-tabell-sju-kolumner.txt
-
     ####################################################################
     # OVERRIDES OF Manager METHODS
     ####################################################################    
@@ -2663,10 +2760,15 @@ WHERE {
         return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
 
 def StaticParse(basefile):
-    mlog = multiprocessing.get_logger()
+    if multiprocessing:
+        mlog = multiprocessing.get_logger()
+    else:
+        mlog = None
     try:
         mgr = SFSManager()
         return mgr.Parse(basefile)
+    except KeyboardInterrupt:
+        raise
     except:
         print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
         # do nothing

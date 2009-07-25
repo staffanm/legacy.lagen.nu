@@ -1,0 +1,24 @@
+<Forfattning>
+  <Paragraf id="P4" ordinal="4">
+    <Stycke id="P4S1">
+      <unicode>I denna lag används följande beteckningar med nedan angiven betydelse.</unicode>
+      <Tabell>
+        <Tabellrad>
+          <Tabellcell>
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Detaljhandel" />
+            <unicode>Detaljhandel</unicode>
+          </Tabellcell><Tabellcell>
+            <unicode>Försäljning av läkemedel till konsument, sjukvårdshuvudman, sjukhus eller annan sjukvårdsinrättning eller till den som är behörig att förordna läkemedel.</unicode>
+          </Tabellcell>
+        </Tabellrad><Tabellrad>
+          <Tabellcell>
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Dosdispensering" />
+            <unicode>Dosdispensering</unicode>
+          </Tabellcell><Tabellcell>
+            <unicode>Färdigställande av läkemedel för enskilds behov under viss tid genom uttag ur tillverkarens originalförpackning.</unicode>
+          </Tabellcell>
+        </Tabellrad>
+      </Tabell>
+    </Stycke>
+  </Paragraf>
+</Forfattning>
