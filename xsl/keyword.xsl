@@ -3,7 +3,9 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
+		xmlns:rinfoex="http://lagen.nu/terms#"
 		xmlns:dct="http://purl.org/dc/terms/"
 		exclude-result-prefixes="xht2 dct rdf">
 
@@ -24,6 +26,7 @@
       <xsl:if test="@property = 'dct:title'">
 	<h1><xsl:value-of select="."/></h1>
 	<xsl:variable name="wikidesc" select="$annotations/rdf:Description/dct:description/xht2:div/*"/>
+	<xsl:variable name="legaldefs" select="$annotations/rdf:Description/rinfoex:isDefinedBy/*"/>
 	<xsl:if test="$wikidesc">
 	  <div class="mittruta kommentar">
 	    <img src="/img/comment.png" class="inline-icon" width="16" height="16" alt="" title=""/>
@@ -32,6 +35,16 @@
 	</xsl:if>
 	<xsl:if test="not($wikidesc)">
 	  Det finns ingen beskrivning av "<xsl:value-of select="."/>" än. Du kanske vill <a href="http://wiki.lagen.nu/index.php?title={.}&amp;action=edit">skriva en?</a>
+	</xsl:if>
+	<xsl:if test="$legaldefs">
+	  <div class="mittruta">
+	    <h2>Legaldefinitioner</h2>
+	    <xsl:for-each select="$legaldefs">
+	      <xsl:sort select="@rdf:about"/>
+	      <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
+	      <a href="{$localurl}"><xsl:value-of select="rdfs:label"/></a><br/>
+	    </xsl:for-each>
+	  </div>
 	</xsl:if>
       </xsl:if>
   </xsl:template>

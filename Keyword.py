@@ -38,6 +38,16 @@ else:
     __scriptdir__ = os.path.dirname(__file__)
 
 MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
+
+# module global utility functions
+def keyword_to_uri(keyword):
+    return "http://lagen.nu/concept/%s" % keyword.replace(" ", "_")
+
+def uri_to_keyword(uri):
+    return uri.replace("http://lagen.nu/concept/","").replace("_", " ")
+    
+re_firstchar = re.compile(r'(\w)', re.UNICODE).search
+
 class KeywordDownloader(LegalSource.Downloader):
     def _get_module_dir(self):
         return __moduledir__
@@ -48,8 +58,9 @@ class KeywordDownloader(LegalSource.Downloader):
         terms = defaultdict(dict)
 
         # 1) Query the RDF DB for all dct:subject triples (is this
-        # semantically sensible for a "download" action -- the
-        # content isn't really external?) -- term set "subjects"
+        # semantically sensible for a "download" action -- the content
+        # isn't really external?) -- term set "subjects" (these come
+        # from both court cases and legal definitions in law text)
         sq = """
         PREFIX dct:<http://purl.org/dc/terms/>
         
@@ -61,11 +72,20 @@ class KeywordDownloader(LegalSource.Downloader):
         for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
             for element in row: # should be only one
                 subj = element[0].text
-                subj = subj[0].upper() + subj[1:] # uppercase first letter and leave the rest alone
+                if subj.startswith("http://"):
+                    # we should really select ?uri rdfs:label ?label instead of munging the URI
+                    subj = uri_to_keyword(subj)
+                else:
+                    # legacy triples
+                    subj = subj[0].upper() + subj[1:] # uppercase first letter and leave the rest alone
+
+                # for sanity: set max length of a subject to 100 chars
+                subj = subj[:100] 
+
                 terms[subj][u'subjects'] = True
 
         log.debug("Retrieved terms from RDF store, got %s terms" % len(terms))
-
+        
         # 2) Download the wiki.lagen.nu dump from
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
 
@@ -105,7 +125,8 @@ class KeywordDownloader(LegalSource.Downloader):
         for term in terms:
             if not term:
                 continue
-            outfile = u"%s/%s/%s.txt" % (self.download_dir, term[0], term)
+            firstletter = re_firstchar(term).group(0)
+            outfile = u"%s/%s/%s.txt" % (self.download_dir, firstletter, term)
             if sys.platform != "win32":
                 outfile = outfile.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\x96','--').encode("latin-1")
             try: 
@@ -116,23 +137,22 @@ class KeywordDownloader(LegalSource.Downloader):
                 f.close()
             except IOError:
                 log.warning("IOError: Could not write term set file for term '%s'" % term)
-            #except WindowsError:
-            #    log.warning("WindowsError: Could not write term set file for term '%s'" % term)
+            except WindowsError:
+                log.warning("WindowsError: Could not write term set file for term '%s'" % term)
             
 
-    def DownloadNew():
+    def DownloadNew(self):
         # Same as above, except use http if-modified-since to avoid
         # downloading swedish wikipedia if not updated. Jureka uses a
         # page id parameter, so check if there are any new ones.
-        
-        pass 
+        self.DownloadAll()
 
 class KeywordParser(LegalSource.Parser):
     def Parse(self,basefile,infile,config):
         # for a base name (term), create a skeleton xht2 file
         # containing a element of some kind for each term set this
         # term occurs in.
-        baseuri = "http://lagen.nu/concept/%s" % basefile.replace(" ","_")
+        baseuri = keyword_to_uri(basefile)
         
         root = ET.Element("html")
         root.set("xml:base", baseuri)
@@ -160,7 +180,8 @@ class KeywordManager(LegalSource.Manager):
         return __moduledir__
 
     def _file_to_basefile(self,f):
-        return os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
+        return os.path.splitext(f.split(os.sep,3)[3])[0].replace("\\","/")
+        #return os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
         
     def _build_mini_rdf(self):
         termdir = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed'])
@@ -181,7 +202,7 @@ class KeywordManager(LegalSource.Manager):
         
         for f in files:
             basefile = os.path.splitext(os.path.normpath(f).split(os.sep)[-1])[0]
-            termuri = "http://lagen.nu/concept/%s" % basefile.replace(" ", "_")
+            termuri = keyword_to_uri(basefile)
             mg.add((URIRef(termuri), RDF.type, SKOS['Concept']))
             mg.add((URIRef(termuri), DCT['title'], Literal(basefile, lang="sv")))
 
@@ -204,6 +225,10 @@ class KeywordManager(LegalSource.Manager):
         d = KeywordDownloader(self.config)
         d.DownloadAll()
 
+    def DownloadNew(self):
+        d = KeywordDownloader(self.config)
+        d.DownloadNew()
+
     def ParseAll(self):
         intermediate_dir = os.path.sep.join([self.baseDir, __moduledir__, u'downloaded'])
         self._do_for_all(intermediate_dir, '.txt',self.Parse)
@@ -218,11 +243,11 @@ class KeywordManager(LegalSource.Manager):
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):
-            #log.debug(u"%s: Överhoppad", basefile)
             return
         p = self.__parserClass()
         p.verbose = verbose
-        parsed = p.Parse(basefile,infile,self.config)
+        keyword = basefile.split("/",1)[1]
+        parsed = p.Parse(keyword,infile,self.config)
         Util.ensureDir(outfile)
 
         tmpfile = mktemp()
@@ -235,8 +260,10 @@ class KeywordManager(LegalSource.Manager):
 
     def Generate(self,basefile):
         start = time()
+        keyword = basefile.split("/",1)[1]
+        # note: infile is e.g. parsed/K/Konsument.xht2, but outfile is generated/Konsument.html
         infile = Util.relpath(self._xmlFileName(basefile))
-        outfile = Util.relpath(self._htmlFileName(basefile))
+        outfile = Util.relpath(self._htmlFileName(keyword))
         # Use SPARQL queries to create a rdf graph (to be used by the
         # xslt transform) containing enough information about all
         # cases using this term, as well as the wiki authored
@@ -244,12 +271,14 @@ class KeywordManager(LegalSource.Manager):
 
         # For proper SPARQL escaping, we need to change å to \u00E5
         # etc (there probably is a neater way of doing this).
-        escbasefile = ''
-        for c in basefile:
+        esckeyword = ''
+        for c in keyword:
             if ord(c) > 127:
-                escbasefile += '\u%04X' % ord(c)
+                esckeyword += '\u%04X' % ord(c)
             else:
-                escbasefile += c
+                esckeyword += c
+
+        escuri = keyword_to_uri(esckeyword)
         
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
@@ -258,21 +287,73 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 
 SELECT ?desc
 WHERE { ?uri dct:description ?desc . ?uri rdfs:label "%s"@sv }
-""" % escbasefile
+""" % esckeyword
 
         wikidesc = self._store_select(sq)
-        log.debug(u'%s: Selected description cases (%.3f sec)', basefile, time()-start)
+        log.debug(u'%s: Selected %s descriptions (%.3f sec)', basefile, len(wikidesc), time()-start)
 
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
 PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 
+SELECT DISTINCT ?uri ?label
+WHERE {
+    GRAPH <urn:x-local:sfs> {
+       { ?uri dct:subject <%s> .
+         ?baseuri dct:title ?label .
+         ?uri dct:isPartOf ?x . ?x dct:isPartOf ?baseuri
+       }
+       UNION {
+         ?uri dct:subject <%s> .
+         ?baseuri dct:title ?label .
+         ?uri dct:isPartOf ?x . ?x dct:isPartOf ?y . ?y dct:isPartOf ?baseuri
+       }
+       UNION {
+         ?uri dct:subject <%s> .
+         ?baseuri dct:title ?label .
+         ?uri dct:isPartOf ?x . ?x dct:isPartOf ?y . ?x dct:isPartOf ?z . ?z dct:isPartOf ?baseuri
+       }
+    }
+}
+
+""" % (escuri,escuri,escuri)
+        
+        legaldefinitioner = self._store_select(sq)
+        log.debug(u'%s: Selected %d legal definitions (%.3f sec)', basefile, len(legaldefinitioner), time()-start)
+
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+PREFIX rinfoex:<http://lagen.nu/terms#>
+
 SELECT ?uri ?id ?desc
-WHERE { ?uri dct:description ?desc .
-        ?uri dct:identifier ?id .
-        ?uri dct:subject "%s"@sv }
-""" % escbasefile
+WHERE {
+    {
+        GRAPH <urn:x-local:dv> {
+            {
+                ?uri dct:description ?desc .
+                ?uri dct:identifier ?id .
+                ?uri dct:subject <%s>
+            }
+            UNION {
+                ?uri dct:description ?desc .
+                ?uri dct:identifier ?id .
+                ?uri dct:subject "%s"@sv
+            }
+        }
+    } UNION {
+        GRAPH <urn:x-local:arn> {
+                ?uri dct:title ?desc .
+                ?uri rinfoex:arendenummer ?id .
+                ?uri dct:subject "%s"@sv
+        }
+    }  
+}
+""" % (escuri,esckeyword,esckeyword)
+
+        # Maybe we should handle <urn:x-local:arn> triples here as well?
         
         rattsfall = self._store_select(sq)
         log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
@@ -283,7 +364,7 @@ WHERE { ?uri dct:description ?desc .
             root_node.set("xmlns:" + prefix, Util.ns[prefix])
 
         main_node = PET.SubElement(root_node, "rdf:Description")
-        main_node.set("rdf:about", "http://lagen.nu/concept/%s" % basefile.replace(" ","_"))
+        main_node.set("rdf:about", keyword_to_uri(keyword))
         
         for d in wikidesc:
             desc_node = PET.SubElement(main_node, "dct:description")
@@ -299,6 +380,13 @@ WHERE { ?uri dct:description ?desc .
             id_node.text = r['id']
             desc_node = PET.SubElement(rattsfall_node, "dct:description")
             desc_node.text = r['desc']
+
+        for l in legaldefinitioner:
+            subject_node = PET.SubElement(main_node, "rinfoex:isDefinedBy")
+            rattsfall_node = PET.SubElement(subject_node, "rdf:Description")
+            rattsfall_node.set("rdf:about",l['uri'])
+            id_node = PET.SubElement(rattsfall_node, "rdfs:label")
+            id_node.text = "%s %s" % (l['uri'].split("#")[1], l['label'])
 
         Util.indent_et(root_node)
         tree = PET.ElementTree(root_node)
@@ -321,8 +409,8 @@ WHERE { ?uri dct:description ?desc .
         # characters. Therefore, we copy the annnotation file to a
         # separate temp copy first.
         tmpfile = mktemp()
+
         shutil.copy2(annotations,tmpfile)
-        
         # FIXME: create a relative version of annotations, instead of
         # hardcoding self.baseDir like below
         params = {'annotationfile':tmpfile.replace("\\","/")}

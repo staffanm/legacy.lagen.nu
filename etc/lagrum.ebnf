@@ -86,7 +86,7 @@ ExternalLaw          ::= (AnonymousExternalLaw/NamedExternalLawRef/SameLaw)
 AnonymousExternalLaw ::= (In, Whitespace)?, LawSynonyms, Whitespace, SFSNr
 NamedExternalLawRef     ::= NamedLaw, (Whitespace, SFSNr)?
 NamedLaw		::= word, Pipe, LawSynonyms
-SameLaw			::= 'samma lag'
+SameLaw			::= 'samma lag'/'nämnda lag'
 
 GenericRef            ::= (ChapterSectionPieceItemRef/ChapterSectionPieceRef/ChapterSectionItemRef/ChapterSectionRef/SectionPieceItemRef/SectionElementRef/SectionPieceRef/SectionSentenceRef/SectionItemRef/SectionRef/ChapterRef)
 

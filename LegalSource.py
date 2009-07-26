@@ -196,6 +196,7 @@ class Manager(object):
 
     re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 
+    DCT = Namespace("http://purl.org/dc/terms/")
     ####################################################################
     # Manager INTERFACE DEFINITION - a subclass must implement these
     ####################################################################
@@ -231,7 +232,8 @@ class Manager(object):
     def ParseAll(self):
         """Parse all legal source documents for which we have downloaded
         resource documents on disk"""
-        raise NotImplementedError
+        download_dir = os.path.sep.join([self.baseDir,self.moduleDir, u'downloaded'])
+        self._do_for_all(download_dir,'.html',self.Parse)
 
     def ParseSome(self,listfile):
         f = codecs.open(listfile,encoding="utf-8")
@@ -242,13 +244,14 @@ class Manager(object):
     def IndexAll(self):
         raise NotImplementedError
 
-    def Generate(self):
+    def Generate(self,basefile):
         """Generate displayable HTML from a legal source document in XML form"""
         raise NotImplementedError
     
     def GenerateAll(self):
-        """Generate HTML for all legal source documents"""
-        raise NotImplementedError
+        parsed_dir = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed'])
+        self._do_for_all(parsed_dir, '.xht2',self.Generate)
+        return
     
     def GenerateSome(self,listfile):
         f = codecs.open(listfile,encoding="utf-8")
@@ -315,43 +318,7 @@ class Manager(object):
             fp.close()
 
             log.info("All documents related: %d documents, %d triples" % (c, triples))
-
-#    def _query_store(self,query):
-#        """Send a SPARQL formatted query to the Sesame store. Returns
-#        the result as a RDF/XML-formatted string"""
-#        store = SesameStore(self.config['triplestore'], self.config['repository'])
-#        return store.select(query)
         
-    def _store_select(self,query):
-        """Send a SPARQL formatted SELECT query to the Sesame
-           store. Returns the result as a list of dicts"""
-        # res will be a list of dicts, like
-        # [{'uri':    u'http://rinfo.lagrummet.se/dom/rh/2004:24',
-        #   'id':     u'RH 2004:24',
-        #   'desc':   u'Beskrivining av rättsfallet',
-        #   'lagrum': u'http://rinfo.lagrummet.se/publ/sfs/1998:204#P7'},
-        #  {'uri': ...}]
-
-        # Note that the difference between uris and string literals
-        # are gone, and that string literals aren't language
-        # typed. Should we use DataObjects instead?
-        store = SesameStore(self.config['triplestore'], self.config['repository'])
-        results = store.select(query)
-        # print results.decode("utf-8")
-        tree = ET.fromstring(results)
-        #print "iterating rows"
-        res = []
-        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
-            d = {}
-            for element in row:
-                #print element.tag # should be "binding"
-                key = element.attrib['name']
-                value = element[0].text
-                d[key] = value
-            res.append(d)
-                
-        # convert the resulting SPARQL-result XML into a list of python dicts
-        return res
     
     def Indexpages(self):
         """Creates index pages for all documents for a particular
@@ -364,56 +331,35 @@ class Manager(object):
         Subclasses can override _build_indexpages to control exactly
         which index pages are created"""
         # read the RDF dump (NTriples format) created by RelateAll
-        rdf_nt ="%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir)
-        if not os.path.exists(rdf_nt):
-            log.warning("Could not find RDF dump %s" % rdf_nt)
+        rdffile = Util.relpath("%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir))
+        if not os.path.exists(rdffile):
+            log.warning("Could not find RDF dump %s" % rdffile)
             return
-        # Egentligen vill vi öppna .n3-filen som en riktig RDF-graf med rdflib, like so:
-        #
-        # g = Graph()
-        # log.info("Start RDF loading from %s" % rdffile)
-        # start = time()
-        # g.load(rdffile, format="nt")
-        # log.info("RDF loaded (%.3f sec)", time()-start)
-        #
-        # men eftersom det tar över två minuter att ladda
-        # sfs/parsed/rdf.nt är det inte ett alternativ - det får vänta
-        # tills all RDF-data är i en sesame-db. Ladda bara in alla
-        # triples i två stora dicts (nycklade på predikat + objekt
-        # respektive subjekt + predikat -- det verkar vara de två
-        # strukturerna vi behöver för att skapa alla filer vi behöver)
+
+        g = Graph()
+        log.info("Start RDF loading from %s" % rdffile)
+        start = time()
+        g.load(rdffile, format="nt")
+
+        # Ladda över alla triples i två stora dicts (nycklade på
+        # predikat + objekt respektive subjekt + predikat -- det
+        # verkar vara de två strukturerna vi behöver för att skapa
+        # alla filer vi behöver)
         
         by_pred_obj = defaultdict(lambda:defaultdict(list))
         by_subj_pred = defaultdict(dict)
-        log.info("Reading triples from %s" % rdf_nt)
-        start = time()
-        fp = codecs.open(rdf_nt, encoding='utf-8')
-        count = 0
-        for line in fp:
-            count += 1
-            if count % 10000 == 0:
-                sys.stdout.write(".")
-            m = self.re_ntriple.match(line)
-            if m:
-                subj = m.group(1)
-                pred = m.group(2)
-                objUri = m.group(4)
-                objLiteral = m.group(5)
-                # most of the triples are dct:references, and these
-                # are not used for indexpage generation - filter these
-                # out to cut down on memory usage
-                if pred != 'http://purl.org/dc/terms/references':
-                    if objLiteral:
-                        by_pred_obj[pred][objLiteral].append(subj)
-                        by_subj_pred[subj][pred] = objLiteral
-                    elif objUri:
-                        by_pred_obj[pred][objUri].append(subj)
-                        by_subj_pred[subj][pred] = objUri
-                    else:
-                        pass
-            else:
-                log.warning("Couldn't parse line %s" % line)
-        sys.stdout.write("\n")
+
+        for (subj,pred,obj) in g:
+            # most of the triples are dct:references, and these
+            # are not used for indexpage generation - filter these
+            # out to cut down on memory usage
+            subj = unicode(subj)
+            pred = unicode(pred)
+            obj  = unicode(obj)
+            if pred != self.DCT['references']:
+                by_pred_obj[pred][obj].append(subj)
+                by_subj_pred[subj][pred] = obj
+
         log.info("RDF loaded (%.3f sec)", time()-start)
 
         self._build_indexpages(by_pred_obj, by_subj_pred)
@@ -460,30 +406,30 @@ class Manager(object):
             p = multiprocessing.Pool(int(self.config['poolsize']))
             print p.map(method,basefiles,10)
         else:
-            try:
-                for basefile in basefiles:
+            for basefile in basefiles:
+                try:
                     method(basefile)
-            except KeyboardInterrupt:
-                raise
-            except:
-                # Handle traceback-loggning ourselves since the
-                # logging module can't handle source code containing
-                # swedish characters (iso-8859-1 encoded).
-                formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
-                exception = sys.exc_info()[1]
-                msg = exception
-                if not msg:
-                    if isinstance(exception,OSError):
-                        msg = "[Errno %s] %s: %s" % (exception.errno, exception.strerror, exception.filename)
-                    else:
-                        msg = "(Message got lost)"
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    # Handle traceback-loggning ourselves since the
+                    # logging module can't handle source code containing
+                    # swedish characters (iso-8859-1 encoded).
+                    formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
+                    exception = sys.exc_info()[1]
+                    msg = exception
+                    if not msg:
+                        if isinstance(exception,OSError):
+                            msg = "[Errno %s] %s: %s" % (exception.errno, exception.strerror, exception.filename)
+                        else:
+                            msg = "(Message got lost)"
 
-                log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
-                          (basefile,
-                           sys.exc_info()[0].__name__, 
-                           u''.join(formatted_tb),
-                           sys.exc_info()[0].__name__,
-                           msg))
+                    log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
+                              (basefile,
+                               sys.exc_info()[0].__name__, 
+                               u''.join(formatted_tb),
+                               sys.exc_info()[0].__name__,
+                               msg))
                 
 
     def _file_to_basefile(self,f):
@@ -647,6 +593,36 @@ class Manager(object):
 
         return g
                             
+    def _store_select(self,query):
+        """Send a SPARQL formatted SELECT query to the Sesame
+           store. Returns the result as a list of dicts"""
+        # res will be a list of dicts, like
+        # [{'uri':    u'http://rinfo.lagrummet.se/dom/rh/2004:24',
+        #   'id':     u'RH 2004:24',
+        #   'desc':   u'Beskrivining av rättsfallet',
+        #   'lagrum': u'http://rinfo.lagrummet.se/publ/sfs/1998:204#P7'},
+        #  {'uri': ...}]
+
+        # Note that the difference between uris and string literals
+        # are gone, and that string literals aren't language
+        # typed. Should we use DataObjects instead?
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        results = store.select(query)
+        # print results.decode("utf-8")
+        tree = ET.fromstring(results)
+        #print "iterating rows"
+        res = []
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            d = {}
+            for element in row:
+                #print element.tag # should be "binding"
+                key = element.attrib['name']
+                value = element[0].text
+                d[key] = value
+            res.append(d)
+                
+        # convert the resulting SPARQL-result XML into a list of python dicts
+        return res
     
     ################################################################
     # PURELY INTERNAL FUNCTIONS

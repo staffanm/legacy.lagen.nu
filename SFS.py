@@ -479,7 +479,7 @@ class SFSParser(LegalSource.Parser):
     re_RevokeDate       = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(\d+)-(\d+)-(\d+)/')
     re_dehyphenate = re.compile(r'- (?!(och|eller))').sub
-    re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk) (avses med|betyder|används följande)').match
+    re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk|denna paragraf|detta kapitel) (avses med|betyder|används följande)').match
 
     # use this custom matcher to ensure any strings you intend to convert
     # are legal roman numerals (simpler than having from_roman throwing
@@ -878,8 +878,9 @@ class SFSParser(LegalSource.Parser):
                             m = self.re_SearchSfsId(elementtext)
                             if m and m.start() < elementtext.index(":"):
                                 termdelimiter = " "
-                            term = elementtext.split(termdelimiter)[0]
-                            print u'"%s" är nog en definition (2)' % term
+                            if termdelimiter in elementtext:
+                                term = elementtext.split(termdelimiter)[0]
+                                print u'"%s" är nog en definition (2)' % term
                     elif isinstance(element, Listelement):
                         # remove
                         elementtext = self.re_Bullet.sub('',self.re_DottedNumber.sub('',elementtext))

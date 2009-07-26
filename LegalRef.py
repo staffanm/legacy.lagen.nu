@@ -784,7 +784,7 @@ class LegalRef:
                 samelaw_node = self.find_node(root, 'SameLaw')
                 assert(samelaw_node != None)
                 if self.lastlaw == None:
-                    log.warning("(unknown): found reference to \"samma lag\", but self.lastlaw is not set")
+                    log.warning(u"(unknown): found reference to \"{samma,nämnda} lag\", but self.lastlaw is not set")
 
                 self.currentlaw = self.lastlaw
             else:

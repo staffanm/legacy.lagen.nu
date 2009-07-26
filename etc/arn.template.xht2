@@ -16,7 +16,7 @@
       >
   <xi:include href="base.template.xht2"/>
     <head>
-      <title py:content="body['arendenummer']">Referatnummer</title>
+      <title property="dct:identifier" py:content="meta['dct:identifier']">Ärendenummer</title>
       <!--! base is not valid in xhtml2 - but we need it to set the
       base context for RDFa parsing. Fix this later through pyRDFa
       transforms -->

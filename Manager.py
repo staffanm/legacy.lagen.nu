@@ -69,7 +69,10 @@ class Manager:
             return # specialcase: LegalSource has a LegalSource.Manager class, but should not be directly instansiated
         import LegalSource
         classes = self._pairListToDict(inspect.getmembers(module,inspect.isclass))
+        #print "Finding mangager of mudle %s" % module
         for classname in classes.keys():
+            #print "Checking %s (%s)" % (classname, module.__name__)
+            #print repr(inspect.getmro(classes[classname]))
             if (LegalSource.Manager in inspect.getmro(classes[classname])
                 and classname.startswith(module.__name__)):
                 # print "found a match!"
