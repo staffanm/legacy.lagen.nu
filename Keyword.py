@@ -38,6 +38,7 @@ else:
     __scriptdir__ = os.path.dirname(__file__)
 
 MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
+XHT2_NS = "{http://www.w3.org/2002/06/xhtml2/}"
 
 # module global utility functions
 def keyword_to_uri(keyword):
@@ -61,6 +62,9 @@ class KeywordDownloader(LegalSource.Downloader):
         # semantically sensible for a "download" action -- the content
         # isn't really external?) -- term set "subjects" (these come
         # from both court cases and legal definitions in law text)
+
+        # for the dv and arn contexts, maybe we should only use subjects that
+        # appears more than once
         sq = """
         PREFIX dct:<http://purl.org/dc/terms/>
         
@@ -85,7 +89,7 @@ class KeywordDownloader(LegalSource.Downloader):
                 terms[subj][u'subjects'] = True
 
         log.debug("Retrieved terms from RDF store, got %s terms" % len(terms))
-        
+        # print repr(terms.keys()[:10])
         # 2) Download the wiki.lagen.nu dump from
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
 
@@ -105,11 +109,20 @@ class KeywordDownloader(LegalSource.Downloader):
                 continue
             terms[title][u'wiki'] = True
 
-        log.debug("Retrieved terms from wiki, now have %s terms" % len(terms))
+        log.debug("Retrieved subject terms from wiki, now have %s terms" % len(terms))
         # 3) Download the Wikipedia dump from
         # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
         # -- term set "wikipedia"
-        #
+        #self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+        from gzip import GzipFile
+        wikipediaterms = GzipFile(self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+        for utf8_term in wikipediaterms:
+            term = utf8_term.decode('utf-8').strip()
+            if term in terms:
+                #log.debug(u"%s found in wikipedia" % term)
+                terms[term][u'wikipedia'] = True
+
+        log.debug("Retrieved terms from wikipedia, now have %s terms" % len(terms))
         # 4) Download all pages from Jureka, probably by starting at
         # pageid = 1 and incrementing until done -- term set "jureka"
         #
@@ -153,7 +166,9 @@ class KeywordParser(LegalSource.Parser):
         # containing a element of some kind for each term set this
         # term occurs in.
         baseuri = keyword_to_uri(basefile)
-        
+        fp = open(infile,"r")
+        termsets = fp.readlines()
+        fp.close()
         root = ET.Element("html")
         root.set("xml:base", baseuri)
         root.set("xmlns", 'http://www.w3.org/2002/06/xhtml2/')
@@ -164,13 +179,26 @@ class KeywordParser(LegalSource.Parser):
         body = ET.SubElement(root,"body")
         heading = ET.SubElement(body,"h")
         heading.set("property", "dct:title")
-        
         heading.text = basefile
+        if 'wikipedia\n' in termsets:
+            p =  ET.SubElement(body,"p")
+            p.attrib['class'] = 'wikibox'
+            p.text = 'Begreppet '
+            a = ET.SubElement(p,"a")
+            a.attrib['href'] = 'http://sv.wikipedia.org/wiki/' + basefile.replace(" ","_")
+            a.text = basefile
+            a.tail = ' finns även beskrivet på '
+            a = ET.SubElement(p,"a")
+            a.attrib['href'] = 'http://sv.wikipedia.org/'
+            a.text = 'svenska Wikipedia'
+        
         return ET.tostring(root,encoding='utf-8')
     
 
 class KeywordManager(LegalSource.Manager):
     __parserClass = KeywordParser
+
+    re_tagstrip = re.compile(r'<[^>]*>')
     
     def __init__(self):
         super(KeywordManager,self).__init__()
@@ -205,14 +233,37 @@ class KeywordManager(LegalSource.Manager):
             termuri = keyword_to_uri(basefile)
             mg.add((URIRef(termuri), RDF.type, SKOS['Concept']))
             mg.add((URIRef(termuri), DCT['title'], Literal(basefile, lang="sv")))
+            # Check to see if we have a data/wiki/parsed/[term].xht2 file, and if so, read it's first line
+            wikifile = Util.relpath(os.path.sep.join([self.baseDir, 'wiki', u'parsed', basefile + '.xht2']))
+            if os.path.exists(wikifile):
+                log.debug("%s exists" % wikifile)
+                # use the first <p> of the wiki page as a short description
+                tree = ET.parse(wikifile)
+                firstpara = tree.find("//"+XHT2_NS+"p")
+                if firstpara != None: # redirects and empty pages lack <p> tags alltogether. Which works out just fine
+                    xmldesc = ET.tostring(firstpara, encoding='utf-8').decode('utf-8')
+                    textdesc = Util.normalizeSpace(self.re_tagstrip.sub('',xmldesc))
+                    log.debug(u"%s has desc %s" % (basefile, textdesc))
+                    mg.add((URIRef(termuri), DCT['description'], Literal(textdesc, lang="sv")))
 
         log.info("Serializing the minimal graph")
         f = open(minixmlfile, 'w')
         f.write(mg.serialize(format="pretty-xml"))
         f.close()
-
+        log.info("Serializing to NTriples")
+        
         f = open(ntfile, 'w')
-        f.write(mg.serialize(format="nt"))
+        # The nt serializer is broken (http://code.google.com/p/rdflib/issues/detail?id=78)
+        nt_utf8 = mg.serialize(format="nt").decode('utf-8')
+        #nt_stringliterals = ''
+        for c in nt_utf8:
+            if ord(c) > 127:
+                #nt_stringliterals += '\u%04X' % ord(c)
+                f.write('\u%04X' % ord(c))
+            else:
+                #nt_stringliterals += c
+                f.write(c)
+
         f.close()
         
     def _htmlFileName(self,basefile):
@@ -239,7 +290,7 @@ class KeywordManager(LegalSource.Manager):
             log.setLevel(logging.DEBUG)
         start = time()
         basefile = basefile.replace(":","/")
-        infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".xml"
+        infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".txt"
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):

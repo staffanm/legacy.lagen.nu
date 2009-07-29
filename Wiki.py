@@ -62,11 +62,14 @@ class WikiDownloader(LegalSource.Downloader):
             if ":" in title and title.split(":")[0] in wikinamespaces:
                 continue # only process pages in the main namespace
             outfile = "%s/%s.xml" % (self.download_dir, title.replace(":","/"))
-            log.debug("Dumping %s" % outfile)
-            Util.ensureDir(outfile)
-            f = open(outfile,"w")
+
+            tmpfile = mktemp()
+            f = open(tmpfile,"w")
             f.write(ET.tostring(page_el,encoding="utf-8"))
             f.close()
+            if Util.replace_if_different(tmpfile,outfile):
+                log.debug("Dumping %s" % outfile)
+            
                 
     def DownloadNew(self):
         self.DownloadAll()

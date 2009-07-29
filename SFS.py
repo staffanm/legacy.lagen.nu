@@ -887,11 +887,13 @@ class SFSParser(LegalSource.Parser):
                         term = elementtext.split(termdelimiter)[0]
                         print u'"%s" är nog en definition (3)' % term
 
-                    if term:
+                    # Longest legitimate term found "Valutaväxling, betalningsöverföring och annan finansiell verksamhet"
+                    if term and len(term) < 68:
                         # this results in empty/hidden links -- might
                         # be better to hchange sfs.template.xht2 to
                         # change these to <span rel="" href=""/>
                         # instead. Or use another object than LinkSubject.
+                        term = Util.normalizeSpace(term)
                         nodes.append(LinkSubject(u'', uri=self._term_to_subject(term),predicate="dct:subject"))
                         find_definitions_recursive = False
 
@@ -2194,7 +2196,11 @@ WHERE {
             if 'lagrum' not in row:
                 lagrum = baseuri
             else:
-                lagrum = row['lagrum'] # FIXME: truncate 1998:204#P7S2 to just 1998:204#P7
+                # truncate 1998:204#P7S2 to just 1998:204#P7
+                if "S" in row['lagrum']:
+                    lagrum = row['lagrum'][:row['lagrum'].index("S")]
+                else:
+                    lagrum = row['lagrum']
                 specifics[row['id']] = True
             # we COULD use a tricky defaultdict for stuff instead of
             # this initializing code, but defauldicts don't pprint
@@ -2219,6 +2225,74 @@ WHERE {
 
 
         # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
+        #
+        # FIXME: ?label doesn't select anything (afraid we have
+        # to do a dct:ispartof combinatorial explosion)
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+
+SELECT ?uri ?label ?lagrum
+WHERE {
+   { ?uri dct:references <%s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf <%s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf <%s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf <%s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf <%s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf ?e .
+           ?e dct:isPartOf <%s> }
+}
+""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+
+        inboundlinks = self._store_select(sq)
+        log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+        stuff[baseuri]['inboundlinks'] = []
+        
+        specifics = {}
+        for row in inboundlinks:
+            if 'lagrum' not in row:
+                lagrum = baseuri
+            else:
+                # truncate 1998:204#P7S2 to just 1998:204#P7
+                if "S" in row['lagrum']:
+                    lagrum = row['lagrum'][:row['lagrum'].index("S")]
+                else:
+                    lagrum = row['lagrum']
+                lagrum = row['lagrum'] 
+                specifics[row['uri']] = True
+            # we COULD use a tricky defaultdict for stuff instead of
+            # this initializing code, but defauldicts don't pprint
+            # so pretty...
+            if not lagrum in stuff:
+                stuff[lagrum] = {}
+            if not 'inboundlinks' in stuff[lagrum]:
+                stuff[lagrum]['inboundlinks'] = []
+            #print "adding %s under %s" % (row['id'],lagrum)
+            stuff[lagrum]['inboundlinks'].append({'uri':row['uri']})
+
+        # remove inbound links that refer to the law itself plus at
+        # least one specific paragraph (ie only keep cases that only
+        # refer to the law itself)
+        filtered = []
+        for r in stuff[baseuri]['inboundlinks']:
+            if r['uri'] not in specifics:
+                filtered.append(r)
+        stuff[baseuri]['inboundlinks'] = filtered
+
         # 3. all wikientries that dct:description this
     
         sq = """
@@ -2327,6 +2401,17 @@ WHERE {
                     id_node.text = r['id']
                     desc_node = PET.SubElement(rattsfall_node, "dct:description")
                     desc_node.text = r['desc']
+            if 'inboundlinks' in stuff[l]:
+                for r in stuff[l]['inboundlinks']:
+                    islagrumfor_node = PET.SubElement(lagrum_node, "dct:references")
+                    inbound_node = PET.SubElement(islagrumfor_node, "rdf:Description")
+                    inbound_node.set("rdf:about",r['uri'])
+                    id_node = PET.SubElement(inbound_node, "dct:identifier")
+                    # FIXME: Beautify this
+                    (law, part) = r['uri'].split("#")
+                    law = law.replace("http://rinfo.lagrummet.se/publ/sfs/", "SFS ")
+                    id_node.text = "%s, %s" % (law, part)
+                    # print "Set id_node for %s to %s" % (l,id_node.text)
             if 'changes' in stuff[l]:
                 for r in stuff[l]['changes']:
                     ischanged_node = PET.SubElement(lagrum_node, "rinfo:isChangedBy")
@@ -2486,7 +2571,41 @@ WHERE {
         sd.DownloadNew()
 
     def RelateAll(self):
+        self._build_mini_rdf()
         super(SFSManager,self).RelateAll()
+
+    def _build_mini_rdf(self):
+        # the resulting file contains one triple for each law text
+        # that has comments (should this be in Wiki.py instead?
+        termdir = os.path.sep.join([self.baseDir, u'wiki', u'parsed', u'SFS'])
+        minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
+        files = list(Util.listDirs(termdir, ".xht2"))
+        parser = LegalRef(LegalRef.LAGRUM)
+
+
+        #if self._outfile_is_newer(files,[minixmlfile,ntfile]):
+        #    log.info(u"Not regenerating RDF/XML files")
+        #    return
+
+        log.info("Making a mini graph")
+        RINFO = Namespace(Util.ns['skos'])
+        DCT = Namespace(Util.ns['dct'])
+        mg = Graph()
+        for key, value in Util.ns.items():
+            mg.bind(key,  Namespace(value));
+        
+        for f in files:
+            basefile = ":".join(os.path.split(os.path.splitext(os.sep.join(os.path.normpath(f).split(os.sep)[-2:]))[0]))
+
+            #print "Finding out URI for %s" % basefile
+            uri = parser.parse(basefile)[0].uri
+            mg.add((URIRef(uri), RDF.type, RINFO['KonsolideradGrundforfattning']))
+
+        log.info("Serializing the minimal graph")
+        f = open(minixmlfile, 'w')
+        f.write(mg.serialize(format="pretty-xml"))
+        f.close()
+
         
 
     ################################################################

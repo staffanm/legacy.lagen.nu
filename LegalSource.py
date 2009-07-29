@@ -345,10 +345,10 @@ class Manager(object):
         # predikat + objekt respektive subjekt + predikat -- det
         # verkar vara de två strukturerna vi behöver för att skapa
         # alla filer vi behöver)
-        
         by_pred_obj = defaultdict(lambda:defaultdict(list))
         by_subj_pred = defaultdict(dict)
 
+        log.info("RDF loaded (%.3f sec)", time()-start)
         for (subj,pred,obj) in g:
             # most of the triples are dct:references, and these
             # are not used for indexpage generation - filter these
@@ -360,8 +360,7 @@ class Manager(object):
                 by_pred_obj[pred][obj].append(subj)
                 by_subj_pred[subj][pred] = obj
 
-        log.info("RDF loaded (%.3f sec)", time()-start)
-
+        log.info("RDF structured (%.3f sec)", time()-start)
         self._build_indexpages(by_pred_obj, by_subj_pred)
 
     def News(self):

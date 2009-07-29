@@ -4,6 +4,7 @@
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+		xmlns:dct="http://purl.org/dc/terms/"
 		xmlns:skos="http://www.w3.org/2008/05/skos#"
 		xmlns:str="http://exslt.org/strings"
 		extension-element-prefixes="str">
@@ -13,6 +14,7 @@
        rinfo-standard URI:s (mapping those abstract uris to concrete
        uris used by lagen.nu -->
   <xsl:template name="link">
+    <xsl:param name="decorate"/>
     <xsl:variable name="uri" select="@href"/>
     <xsl:variable name="localurl">
       <xsl:call-template name="localurl">
@@ -28,17 +30,23 @@
       </xsl:when>
       <xsl:otherwise>
 	<xsl:variable name="rawtitle">
-	  <!-- FIXME: on large documents this increases processing
-	       time exponentially. wonder if there's a faster XSLT way
-	       to get a node with a particular ID? A better way would
-	       be to get the information dynamically through an AJAX
-	       call. As an added bonus, that would work with cross-law
-	       links. But it requires that this information can be
-	       dynamically queried, maybe if we store the actual
-	       content of the texts in Sesame?  -->
-	  <!--<xsl:value-of select="normalize-space(//*[@id=substring-after($uri,'#')])"/>-->
-	  title support currently disabled
+	  <xsl:choose>
+	    <xsl:when test="substring($uri, 0, 25) = 'http://lagen.nu/concept/'"><xsl:value-of select="$terms//skos:Concept[@rdf:about=$uri]/dct:description"/></xsl:when>
+	      <!-- FIXME: on large documents this increases processing
+		   time exponentially. wonder if there's a faster XSLT way
+		   to get a node with a particular ID? A better way would
+		   be to get the information dynamically through an AJAX
+		   call. As an added bonus, that would work with cross-law
+		   links. But it requires that this information can be
+		   dynamically queried, maybe if we store the actual
+		   content of the texts in Sesame?  
+	    <xsl:otherwise>
+	      <xsl:value-of select="normalize-space(//*[@id=substring-after($uri,'#')])"/>
+	    </xsl:otherwise>
+	    -->
+	  </xsl:choose>
 	</xsl:variable>
+
 	<xsl:variable name="tuned-width">
 	  <xsl:call-template name="tune-width">
 	    <xsl:with-param name="txt" select="$rawtitle"/>
@@ -57,7 +65,24 @@
 	  </xsl:choose>
 	</xsl:variable>
 
-	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><!--<xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute>--></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
+	<xsl:if test="$decorate">
+	  <xsl:choose>
+	    <xsl:when test="substring($uri, 0, 25) = 'http://lagen.nu/concept/'">
+	      <xsl:if test="string-length($rawtitle) > 0">
+		<img src="/img/comment.png" alt="Kommentar" title="Det här begreppet finns beskrivet"/>
+	      </xsl:if>
+	    </xsl:when>
+	    <xsl:when test="contains($uri,'/publ/sfs')">
+	      <xsl:if test="$lagkommentar//*[@rdf:about=$uri]">
+		<img src="/img/comment.png" alt="Kommentar" title="Den här lagen är kommenterad"/>
+	      </xsl:if>
+	    </xsl:when>
+	    <xsl:otherwise>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:if>
+
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

@@ -12,10 +12,12 @@ import shutil
 import time
 import logging
 from tempfile import mktemp
+import xml.etree.cElementTree as ET
 
 # 3rd party modules
 from configobj import ConfigObj
 from genshi.template import TemplateLoader
+from mechanize import Browser, LinkNotFoundError
 
 # my libs
 from DispatchMixin import DispatchMixin
@@ -28,6 +30,7 @@ if not os.path.sep in __file__:
 else:
     __scriptdir__ = os.path.dirname(__file__)
 
+MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
 class Manager:
     def __init__(self):
         self.config = ConfigObj(__scriptdir__ + "/conf.ini")
@@ -185,13 +188,41 @@ class Manager:
         # make the front page and other static pages
         log.info("Generating site global static pages")
 
-        # we need to copy the following three file to the base dir,
+        # Step 1: Download Wiki frontpage
+        browser = Browser()
+        browser.set_handle_robots(False) # we can ignore our own robots.txt
+        url = "http://wiki.lagen.nu/index.php/Special:Exportera/Lagen.nu:Huvudsida"
+        browser.open(url)
+        xml = ET.parse(browser.response())
+
+        wikitext = xml.find("//"+MW_NS+"text").text
+
+        # Step 2: Filter out some stuff
+
+        marker = "= Index ="
+        if marker in wikitext:
+            # Step 3: Run the rest through wikiparser
+            from Wiki import WikiParser
+            idx = wikitext.index(marker) + len(marker)
+            wikitext = wikitext[idx+1:]
+            p = WikiParser()
+            incfile = os.path.sep.join([self.baseDir, 'site', 'generated', 'index.inc.xht2'])
+            fp = open(incfile,"w")
+            fp.write(p.parse_wikitext("index",wikitext))
+            fp.close()
+            shutil.copy2(incfile,'static')
+            # Step 4: index.inc.xht2 is then incorporated through an
+            # XInclude in static/index.xht2
+        else:
+            log.warning("Marker %s not found at %s" % (marker,url))
+                       
+        # we need to copy the following four file to the base dir,
         # temporarily, in order to avoid spurious xml:base elements 
         # (http://norman.walsh.name/2005/04/01/xinclude#comment0005)
         includes = [os.path.sep.join([self.baseDir,'site','generated','nyheter','site.xht2']),
                     os.path.sep.join([self.baseDir,'sfs','generated','news','lagar.xht2']),
-                    os.path.sep.join([self.baseDir,'dv','generated','news','allmanna.xht2'])]
-        
+                    os.path.sep.join([self.baseDir,'dv','generated','news','allmanna.xht2']),
+                    os.path.sep.join([self.baseDir,'site','generated','index.inc.xht2'])]
 
         for f in includes:
             if os.path.exists(f):

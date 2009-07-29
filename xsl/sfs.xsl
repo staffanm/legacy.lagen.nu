@@ -155,6 +155,7 @@
       <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
       
       <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
+      <xsl:variable name="inbound" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:references/rdf:Description"/>
       <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
 
       <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy/rdf:Description"/>
@@ -187,6 +188,16 @@
 	  
 	  <xsl:call-template name="rattsfall">
 	    <xsl:with-param name="rattsfall" select="$rattsfall"/>
+	  </xsl:call-template>
+
+
+	</div>
+      </xsl:if>
+      <xsl:if test="$inbound">
+	<div id="inbound-{@id}" class="sidoruta refs">
+	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar {xht2:p/xht2:span[@class='paragrafbeteckning']}"/><b>Lagrumshänvisningar hit</b><br/>
+	  <xsl:call-template name="inbound">
+	    <xsl:with-param name="inbound" select="$inbound"/>
 	  </xsl:call-template>
 	</div>
       </xsl:if>
@@ -230,6 +241,15 @@
 	</xsl:choose>
 	<br/>
       </xsl:for-each>
+  </xsl:template>
+
+  <xsl:template name="inbound">
+    <xsl:param name="inbound"/>
+    <xsl:for-each select="$inbound">
+      <xsl:sort select="@rdf:about"/>
+      <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
+      <a href="{$localurl}"><xsl:value-of select="dct:identifier"/></a><br/>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="xht2:section[@role='main']">

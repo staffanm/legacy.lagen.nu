@@ -385,10 +385,13 @@ def replace_if_different(newfile,oldfile):
     assert os.path.exists(newfile)
     if not os.path.exists(oldfile):
         robustRename(newfile,oldfile)
+        return True
     elif not filecmp.cmp(newfile,oldfile):
         robustRename(newfile,oldfile)
+        return True
     else:
         os.unlink(newfile)
+        return False
 
 def copy_if_different(src,dest):
     if not os.path.exists(dest):

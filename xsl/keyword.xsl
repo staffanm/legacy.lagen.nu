@@ -50,7 +50,8 @@
   </xsl:template>
 
   <xsl:template match="xht2:a|a">
-    <xsl:call-template name="link"/>
+    <xsl:call-template name="link">
+    </xsl:call-template>
   </xsl:template>
 
   <!-- defaultregel: kopierar alla element från xht2 till

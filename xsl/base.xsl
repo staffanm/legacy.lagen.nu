@@ -31,16 +31,18 @@
 	    />
   -->
 
-  <!-- this minimal RDF file is only used to know wheter we have a
-       specific case (and therefore should link it) or not - it's used
-       in uri.xsl -->
+  <!-- these minimal RDF files is only used to know wheter we have a
+       specific case (and therefore should link it) or keyword, so
+       that we can know when to link to it -->
+  
   <xsl:variable name="rattsfall" select="document('../data/dv/parsed/rdf-mini.xml')/rdf:RDF"/>
   <xsl:variable name="terms" select="document('../data/keyword/parsed/rdf-mini.xml')/rdf:RDF"/>
+  <xsl:variable name="lagkommentar" select="document('../data/sfs/parsed/rdf-mini.xml')/rdf:RDF"/>
+
   <xsl:param name="annotationfile"/>
   <xsl:variable name="annotations" select="document($annotationfile)/rdf:RDF"/>
-  <!--<xsl:variable name="annotations">
-    <hello>world</hello>
-  </xsl:variable>
+  <!--<xsl:variable name="annotations"> <hello>world</hello>
+       </xsl:variable>
   -->
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->

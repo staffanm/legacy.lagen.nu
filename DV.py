@@ -150,9 +150,9 @@ class DVDownloader(LegalSource.Downloader):
                 self.download(filename,recurse)
             elif line.startswith('type=file'):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
-                    pass
-                    # localdir = self.download_dir + os.path.sep + dirname
-                    # self.process_zipfile(localdir + os.path.sep + filename)
+                    # pass
+                    localdir = self.download_dir + os.path.sep + dirname
+                    self.process_zipfile(localdir + os.path.sep + filename)
                 else:
                     if dirname:
                         fullname = '%s/%s' % (dirname,filename)
