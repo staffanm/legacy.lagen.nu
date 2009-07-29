@@ -393,8 +393,8 @@ class SFSDownloader(LegalSource.Downloader):
             if os.path.exists(sfst_file):
                 old_checksum = self._checksum(sfst_file)
                 new_checksum = self._checksum(sfst_tempfile)
-                upphavd_genom = self._findUpphavtsGenom("sfst.tmp")
-                uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
+                upphavd_genom = self._findUpphavtsGenom(sfst_tempfile)
+                uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_tempfile)
                 if (old_checksum != new_checksum):
                     old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
                     uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_tempfile)
@@ -423,8 +423,9 @@ class SFSDownloader(LegalSource.Downloader):
             self._archive(sfsr_file, sfsnr, old_uppdaterad_tom)
 
         Util.ensureDir(sfsr_file)
-        self.browser.retrieve(sfsr_url, "sfsr.tmp")
-        Util.replace_if_different("sfsr.tmp",sfsr_file)
+        sfsr_tempfile = mktemp()
+        self.browser.retrieve(sfsr_url, sfsr_tempfile)
+        Util.replace_if_different(sfsr_tempfile,sfsr_file)
 
         if upphavd_genom:
             log.info(u'        %s är upphävd genom %s' % (sfsnr, upphavd_genom))
