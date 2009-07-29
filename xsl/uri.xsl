@@ -15,10 +15,12 @@
        uris used by lagen.nu -->
   <xsl:template name="link">
     <xsl:param name="decorate"/>
+    <xsl:param name="validate" select="true()"/>
     <xsl:variable name="uri" select="@href"/>
     <xsl:variable name="localurl">
       <xsl:call-template name="localurl">
 	<xsl:with-param name="uri" select="$uri"/>
+	<xsl:with-param name="validate" select="$validate"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:choose>
@@ -91,9 +93,15 @@
        URI, either at lagen.nu or somewhere else -->
   <xsl:template name="localurl">
     <xsl:param name="uri"/>
+    <xsl:param name="validate"/>
     <xsl:choose>
       <xsl:when test="substring($uri, 0, 25) = 'http://lagen.nu/concept/'">
-	<xsl:if test="$terms//skos:Concept[@rdf:about=$uri]">/begrepp/<xsl:value-of select="substring-after($uri, '/concept/')"/></xsl:if>
+	<xsl:choose>
+	  <xsl:when test="$validate">
+	    <xsl:if test="$terms//skos:Concept[@rdf:about=$uri]">/begrepp/<xsl:value-of select="substring-after($uri, '/concept/')"/></xsl:if>
+	  </xsl:when>
+	  <xsl:otherwise>/begrepp/<xsl:value-of select="substring-after($uri, '/concept/')"/></xsl:otherwise>
+	</xsl:choose>
       </xsl:when>
       <xsl:when test="substring($uri, 0, 26) != 'http://rinfo.lagrummet.se'">
 	<xsl:value-of select="$uri"/>
@@ -106,7 +114,12 @@
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/rattsfall')">
 	<!-- FIXME: this gets pretty slow when handling 100+ links in a document (DV.py/Indexpages) -->
-	<xsl:if test="$rattsfall//rinfo:Rattsfallsreferat[@rdf:about=$uri]">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:if>
+	<xsl:choose>
+	  <xsl:when test="$validate">
+	    <xsl:if test="$rattsfall//rinfo:Rattsfallsreferat[@rdf:about=$uri]">/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:if>
+	  </xsl:when>
+	  <xsl:otherwise>/dom<xsl:value-of select="substring-after($uri, '/publ/rattsfall')"/></xsl:otherwise>
+	</xsl:choose>
       </xsl:when>
       <xsl:when test="contains($uri,'/publ/prop')">
 	<xsl:variable name="year" select="substring(substring-after($uri, '/publ/prop/'),1,4)"/>

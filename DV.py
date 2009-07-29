@@ -157,9 +157,9 @@ class DVDownloader(LegalSource.Downloader):
                 self.download(filename,recurse)
             elif line.startswith('-'):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
-                    # pass
-                    localdir = self.download_dir + os.path.sep + dirname
-                    self.process_zipfile(localdir + os.path.sep + filename)
+                    pass
+                    # localdir = self.download_dir + os.path.sep + dirname
+                    # self.process_zipfile(localdir + os.path.sep + filename)
                 else:
                     if dirname:
                         fullname = '%s/%s' % (dirname,filename)
@@ -311,6 +311,7 @@ class DVParser(LegalSource.Parser):
                        u'RH': u'http://rinfo.lagrummet.se/ref/rff/rh',
                        u'MÖD': u'http://rinfo.lagrummet.se/ref/rff/mod',
                        u'RÅ': u'http://rinfo.lagrummet.se/ref/rff/ra',
+                       u'RK': u'http://rinfo.lagrummet.se/ref/rff/rk',
                        u'MIG': u'http://rinfo.lagrummet.se/ref/rff/mig',
                        u'AD': u'http://rinfo.lagrummet.se/ref/rff/ad',
                        u'MD': u'http://rinfo.lagrummet.se/ref/rff/md',
@@ -327,7 +328,8 @@ class DVParser(LegalSource.Parser):
                              u'MDO': 'http://lagen.nu/org/2008/marknadsdomstolen',
                              u'MIG': 'http://lagen.nu/org/2008/migrationsoverdomstolen',
                              u'MÖD': 'http://lagen.nu/org/2008/miljooverdomstolen',
-                             u'REG': 'http://lagen.nu/org/2008/regeringsratten'}
+                             u'REG': 'http://lagen.nu/org/2008/regeringsratten',
+                             u'KST': 'http://lagen.nu/org/2008/kammarratten-i-stockholm'}
 
 
     wrapper = textwrap.TextWrapper(break_long_words=False,
@@ -770,6 +772,7 @@ class DVManager(LegalSource.Manager):
 
     publikationer = {u'http://rinfo.lagrummet.se/ref/rff/nja': u'Högsta domstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/rh':  u'Hovrätterna',
+                     u'http://rinfo.lagrummet.se/ref/rff/rk':  u'Kammarrätterna',
                      u'http://rinfo.lagrummet.se/ref/rff/ra':  u'Regeringsrätten',
                      u'http://rinfo.lagrummet.se/ref/rff/ad':  u'Arbetsdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/fod': u'Försäkringsöverdomstolen',
@@ -863,7 +866,8 @@ class DVManager(LegalSource.Manager):
                         if e.text in ('http://rinfo.lagrummet.se/ref/rff/nja',
                                       'http://rinfo.lagrummet.se/ref/rff/rh'):
                             slot = u'de allmänna domstolarna'
-                        elif e.text == 'http://rinfo.lagrummet.se/ref/rff/ra':
+                        elif e.text in ('http://rinfo.lagrummet.se/ref/rff/ra',
+                                        'http://rinfo.lagrummet.se/ref/rff/rk'):
                             slot = u'förvaltningsdomstolarna'
                         else:
                             slot = self.publikationer[e.text]

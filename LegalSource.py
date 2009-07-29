@@ -337,30 +337,61 @@ class Manager(object):
             log.warning("Could not find RDF dump %s" % rdffile)
             return
 
-        g = Graph()
         log.info("Start RDF loading from %s" % rdffile)
-        start = time()
-        g.load(rdffile, format="nt")
-
         # Ladda över alla triples i två stora dicts (nycklade på
         # predikat + objekt respektive subjekt + predikat -- det
         # verkar vara de två strukturerna vi behöver för att skapa
         # alla filer vi behöver)
         by_pred_obj = defaultdict(lambda:defaultdict(list))
         by_subj_pred = defaultdict(dict)
+        start = time()
 
-        log.info("RDF loaded (%.3f sec)", time()-start)
-        for (subj,pred,obj) in g:
-            # most of the triples are dct:references, and these
-            # are not used for indexpage generation - filter these
-            # out to cut down on memory usage
-            subj = unicode(subj)
-            pred = unicode(pred)
-            obj  = unicode(obj)
-            if pred != self.DCT['references']:
-                by_pred_obj[pred][obj].append(subj)
-                by_subj_pred[subj][pred] = obj
+        use_rdflib = False # tar för mycket tid+processor
+        if use_rdflib:
+            g = Graph()
+            g.load(rdffile, format="nt")
 
+
+            log.info("RDF loaded (%.3f sec)", time()-start)
+            for (subj,pred,obj) in g:
+                # most of the triples are dct:references, and these
+                # are not used for indexpage generation - filter these
+                # out to cut down on memory usage
+                subj = unicode(subj)
+                pred = unicode(pred)
+                obj  = unicode(obj)
+                if pred != self.DCT['references']:
+                    by_pred_obj[pred][obj].append(subj)
+                    by_subj_pred[subj][pred] = obj
+        else:
+            fp = codecs.open(rdffile, encoding='unicode_escape', errors='replace')
+            count = 0
+            for line in fp:
+                count += 1
+                if count % 10000 == 0:
+                    sys.stdout.write(".")
+                m = self.re_ntriple.match(line)
+                if m:
+                    subj = m.group(1)
+                    pred = m.group(2)
+                    objUri = m.group(4)
+                    objLiteral = m.group(5)
+                    # most of the triples are dct:references, and these
+                    # are not used for indexpage generation - filter these
+                    # out to cut down on memory usage
+                    if pred != 'http://purl.org/dc/terms/references':
+                        if objLiteral:
+                            by_pred_obj[pred][objLiteral].append(subj)
+                            by_subj_pred[subj][pred] = objLiteral
+                        elif objUri:
+                            by_pred_obj[pred][objUri].append(subj)
+                            by_subj_pred[subj][pred] = objUri
+                        else:
+                            pass
+            else:
+                log.warning("Couldn't parse line %s" % line)
+        sys.stdout.write("\n")
+    
         log.info("RDF structured (%.3f sec)", time()-start)
         self._build_indexpages(by_pred_obj, by_subj_pred)
 

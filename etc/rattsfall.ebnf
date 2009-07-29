@@ -3,7 +3,7 @@
 
 rattsfallref   ::= RattsfallRefID
 RattsfallRefID ::= DomstolRefID, Whitespace, ArRefID, Separator, LopnrRefID
-DomstolRefID   ::= 'NJA'/'RÅ'/'AD'/'RH'/'MÖD'/'MIG'/'MD'
+DomstolRefID   ::= 'NJA'/'RÅ'/'AD'/'RH'/'RK'/'MÖD'/'MIG'/'MD'
 ArRefID        ::= LangtAr
 Separator      ::= (Whitespace, 's'/'ref'/'nr', Period?, Whitespace)/Colon
 LopnrRefID     ::= number
