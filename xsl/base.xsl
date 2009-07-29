@@ -91,6 +91,47 @@
 
       <xsl:attribute name="typeof"><xsl:value-of select="@typeof"/></xsl:attribute>
 
+      
+      <xsl:comment>[if lte IE 6]&gt;
+	  &lt;style type="text/css"&gt;
+	    #ie6msg{border:3px solid #090; margin:8px 0; background:#cfc; color:#000;}
+	    #ie6msg h4{margin:8px; padding:0;}
+	    #ie6msg p{margin:8px; padding:0; font-size: smaller;}
+	    #ie6msg p a.getie7{font-weight:bold; color:#006;}
+	    #ie6msg p a.ie6expl{font-weight:normal; color:#006;}
+	  &lt;/style&gt;
+	  &lt;div id="ie6msg"&gt;
+	    &lt;h4&gt;Du har en gammal version av webbläsaren Internet Explorer.&lt;/h4&gt;
+	    &lt;p&gt;
+	      Det kan hända att sidan på grund av detta ser konstig ut, med överlappande text eller andra problem. 
+              För att få en bättre och säkrare upplevelse på nätet
+	      rekommenderar vi att du &lt;a class="getie7"
+	      href="http://www.microsoft.com/sverige/windows/downloads/ie/getitnow.mspx"&gt;hämtar
+	      en nyare version av Internet
+	      Explorer&lt;/a&gt;. Uppgraderingen är kostnadsfri.  Sitter du
+	      på jobb och inte har kontroll över din dator själv bör
+	      du kontakta din IT-ansvarige.
+	    &lt;/p&gt;
+	    &lt;p&gt;
+	      Vi kan också rekommendera dig att prova någon av följade
+	      alternativa
+	      webbläsare &lt;a href="http://mozilla.com"&gt;Firefox&lt;/a&gt;, 
+              &lt;a href="http://www.google.com/chrome"&gt;Chrome&lt;/a&gt;, 
+	      &lt;a href="http://www.apple.com/safari/download/"&gt;Safari&lt;/a&gt;
+	      eller &lt;a href="http://www.opera.com"&gt;Opera&lt;/a&gt;.
+	    &lt;/p&gt;
+	    &lt;p&gt;
+	      Den här uppmaningen har sitt ursprung i Norge och på en
+	      av deras största sajter, finn.no, kan du läsa om
+	      &lt;a class="ie6expl"
+	      href="http://labs.finn.no/blog/finn-anbefaler-ie6-brukere-a-oppgradere-sin-nettleser"&gt;varför
+              du bör uppgradera&lt;/a&gt;. Du kan även läsa
+	      en &lt;a class="ie6expl" href="http://mindpark.se/2009/02/18/heja-norge/"&gt;bakgrund
+	      till uppmaningen på svenska här&lt;/a&gt;.
+	    &lt;/p&gt;
+	  &lt;/div&gt;
+	  &lt;![endif]</xsl:comment>
+
       <div id="vinjett">
 	<img src="/img/blueprint.jpg" alt=""/>
 	<h1><a href="/">lagen.nu</a></h1>

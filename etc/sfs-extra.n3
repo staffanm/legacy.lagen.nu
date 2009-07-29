@@ -59,7 +59,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1987:11> dct:alternate "ESL" .
 <http://rinfo.lagrummet.se/publ/sfs/1987:230> rdfs:label "äktenskapsbalken"; dct:alternate "ÄktB" .
 <http://rinfo.lagrummet.se/publ/sfs/1987:672> dct:alternate "KL" .
-<http://rinfo.lagrummet.se/publ/sfs/1987:822> dct:alternate "CISC" .
+<http://rinfo.lagrummet.se/publ/sfs/1987:822> dct:alternate "CISG" .
 <http://rinfo.lagrummet.se/publ/sfs/1988:254> rdfs:label "knivlagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1988:870> dct:alternate "LVM" .
 <http://rinfo.lagrummet.se/publ/sfs/1990:324> dct:alternate "TaxL" .

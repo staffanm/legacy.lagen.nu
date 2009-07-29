@@ -2,6 +2,7 @@
 <!--! Genshi template for generating general lists/indexes of available document -->
 <?python
 from operator import itemgetter
+import locale
 ?>
 <html xmlns="http://www.w3.org/2002/06/xhtml2/"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -24,7 +25,7 @@ from operator import itemgetter
 	<h py:content="cat">Kategorirubrik</h>
 	<p>
 	  <!--! can there be cases when we want a non-lexical order sort here? -->
-	<py:for each="pg in sorted(documents[cat].keys())">
+	<py:for each="pg in sorted(documents[cat].keys(),cmp=locale.strcoll)">
 	  <a href="${pg}.html" py:content="pagelabels[pg]">Indexpage label</a>
 	</py:for>
 	</p>

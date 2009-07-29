@@ -22,7 +22,7 @@ are met (all command line programs must be in your PATH):
    * pyRDFa
 
  * xmllint and xsltproc (for XSLT transformations)
- * patch and find (If you're on windows, install cygwin)
+ * patch, find and recode (If you're on windows, install cygwin)
  * apache2 (to view the entire generated site -- if you're on windows
    you must use the cygwin version, since the win32 version has `a bug
    <https://issues.apache.org/bugzilla/show_bug.cgi?id=41441>`_

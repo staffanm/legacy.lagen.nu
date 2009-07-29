@@ -1,0 +1,11 @@
+--- 2009-4.xml	2009-01-18 14:30:44.457000000 +0100
++++ 2009-4-mod.xml	2009-01-18 14:31:52.776000000 +0100
+@@ -10,7 +10,7 @@
+ 
+  <chapter>
+ <title />
+-  <para>Arbetsdomstolen<emphasis role="bold">|</emphasis>Ad 2009 nr 4 |<emphasis role="bold">|</emphasis>
++  <para>Arbetsdomstolen<emphasis role="bold">|</emphasis>AD 2009 nr 4 |<emphasis role="bold">|</emphasis>
+    <informaltable colsep="0" frame="none" rowsep="0">
+ 
+     <tgroup cols="4">

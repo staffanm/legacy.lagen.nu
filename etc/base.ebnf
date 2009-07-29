@@ -65,7 +65,9 @@ digit	     ::= [0-9]
 # * ¡ and ¿ is upside-down exclaimation point and question mark
 # * ¢ is a cent sign
 # * × is multiplication sign
-punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„×-]
+# * ¯ is macron
+# * € is (windows 1252) euro
+punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„×¯€-]
 
 
 # ------------ end of base.ebnf ----------------

@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import unicodedata
+import shutil
 from datetime import date, datetime
 # python 2.5 required
 from collections import defaultdict
@@ -234,7 +235,8 @@ class SFSDownloader(LegalSource.Downloader):
         super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
                                      
     def DownloadAll(self):
-        self._setLastSFSnr()
+        #self._setLastSFSnr()
+        #return
         start = 1600
         end = datetime.today().year
         self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
@@ -266,7 +268,7 @@ class SFSDownloader(LegalSource.Downloader):
             log.info(u'Letar efter senaste SFS-nr i  %s/sfst"' % self.download_dir)
             last_sfsnr = "1600:1"
             for f in Util.listDirs(u"%s/sfst" % self.download_dir, ".html"):
-                if "RFS" in f or "checksum" in f:
+                if "RFS" in f or "checksum" in f or "-" in f:
                     continue
 
                 tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.download_dir)+6:-5].replace("\\", "/")), f)
@@ -281,16 +283,33 @@ class SFSDownloader(LegalSource.Downloader):
             self._setLastSFSnr()
         (year,nr) = [int(x) for x in self.config[__moduledir__]['next_sfsnr'].split(":")]
         done = False
+        real_last_sfs_nr = False
         while not done:
-            log.info(u'Söker efter SFS nr %s:%s' % (year,nr))
+            wanted_sfs_nr = '%s:%s' % (year,nr)
+            log.info(u'Söker efter SFS nr %s' % wanted_sfs_nr)
             base_sfsnr_list = self._checkForSFS(year,nr)
             if base_sfsnr_list:
                 self.download_log.info("%s:%s [%s]" % (year,nr,", ".join(base_sfsnr_list)))
                 for base_sfsnr in base_sfsnr_list: # usually only a 1-elem list
-                    self._downloadSingle(base_sfsnr)
+                    uppdaterad_tom = self._downloadSingle(base_sfsnr)
+                    if base_sfsnr_list[0] == wanted_sfs_nr:
+                        # initial grundförfattning - varken
+                        # "Uppdaterad T.O.M. eller "Upphävd av" ska
+                        # vara satt
+                        pass
+                    elif Util.numcmp(uppdaterad_tom, wanted_sfs_nr) < 0:
+                        log.warning(u"    Texten uppdaterad t.o.m. %s, inte %s" % (uppdaterad_tom, wanted_sfs_nr))
+                        if not real_last_sfs_nr:
+                            real_last_sfs_nr = wanted_sfs_nr
                 nr = nr + 1
             else:
-                if datetime.today().year > year:
+                log.info('tjuvkikar efter SFS nr %s:%s' % (year,nr+1))
+                base_sfsnr_list = self._checkForSFS(year,nr+1)
+                if base_sfsnr_list:
+                    if not real_last_sfs_nr:
+                        real_last_sfs_nr = wanted_sfs_nr
+                    nr = nr + 1 # actual downloading next loop
+                elif datetime.today().year > year:
                     log.info(u'    Är det dags att byta år?')
                     base_sfsnr_list = self._checkForSFS(datetime.today().year, 1)
                     if base_sfsnr_list:
@@ -302,7 +321,10 @@ class SFSDownloader(LegalSource.Downloader):
                 else:
                     log.info(u'    Vi är klara')
                     done = True
-        self._setLastSFSnr("%s:%s" % (year,nr))
+        if real_last_sfs_nr:
+            self._setLastSFSnr(real_last_sfs_nr)
+        else:
+            self._setLastSFSnr("%s:%s" % (year,nr))
                 
     def _checkForSFS(self,year,nr):
         """Givet ett SFS-nummer, returnera en lista med alla
@@ -352,7 +374,8 @@ class SFSDownloader(LegalSource.Downloader):
     def _downloadSingle(self, sfsnr):
         """Laddar ner senaste konsoliderade versionen av
         grundförfattningen med angivet SFS-nr. Om en tidigare version
-        finns på disk, arkiveras den."""
+        finns på disk, arkiveras den. Returnerar det SFS-nummer till
+        vilket författningen uppdaterats."""
         sfsnr = sfsnr.replace("/", ":")
         log.info(u'    Laddar ner %s' % sfsnr)
         # enc_sfsnr = sfsnr.replace(" ", "+")
@@ -361,7 +384,7 @@ class SFSDownloader(LegalSource.Downloader):
         # elif sfsnr == "1942:740": parts = ["1942:740 A", "1942:740 B"]
         else: parts = [sfsnr]
 
-        uppdaterad_tom = old_uppdaterad_tom = None
+        upphavd_genom = uppdaterad_tom = old_uppdaterad_tom = None
         for part in parts:
             sfst_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
             sfst_file = "%s/sfst/%s.html" % (self.download_dir, SFSnrToFilename(part))
@@ -370,6 +393,8 @@ class SFSDownloader(LegalSource.Downloader):
             if os.path.exists(sfst_file):
                 old_checksum = self._checksum(sfst_file)
                 new_checksum = self._checksum(sfst_tempfile)
+                upphavd_genom = self._findUpphavtsGenom("sfst.tmp")
+                uppdaterad_tom = self._findUppdateradTOM(sfsnr, "sfst.tmp")
                 if (old_checksum != new_checksum):
                     old_uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_file)
                     uppdaterad_tom = self._findUppdateradTOM(sfsnr, sfst_tempfile)
@@ -383,20 +408,33 @@ class SFSDownloader(LegalSource.Downloader):
                     # replace the current file, regardless of wheter
                     # we've updated it or not
                     Util.robustRename(sfst_tempfile, sfst_file)
+                elif upphavd_genom:
+                    log.info(u'        %s har upphävts' % (sfsnr))
+                    
                 else:
                     log.debug(u'        %s har inte ändrats (gammal checksum %s)' % (sfsnr,old_checksum))
-                    pass # leave the current file untouched
-                
             else:
                 Util.robustRename(sfst_tempfile, sfst_file)
 
         sfsr_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
         sfsr_file = "%s/sfsr/%s.html" % (self.download_dir, SFSnrToFilename(sfsnr))
-        if uppdaterad_tom != old_uppdaterad_tom:
+        if (old_uppdaterad_tom and
+            old_uppdaterad_tom != uppdaterad_tom):
             self._archive(sfsr_file, sfsnr, old_uppdaterad_tom)
 
         Util.ensureDir(sfsr_file)
-        self.browser.retrieve(sfsr_url, sfsr_file)
+        self.browser.retrieve(sfsr_url, "sfsr.tmp")
+        Util.replace_if_different("sfsr.tmp",sfsr_file)
+
+        if upphavd_genom:
+            log.info(u'        %s är upphävd genom %s' % (sfsnr, upphavd_genom))
+            return upphavd_genom
+        elif uppdaterad_tom:
+            log.info(u'        %s är uppdaterad tom %s' % (sfsnr, uppdaterad_tom))
+            return uppdaterad_tom
+        else:
+            log.info(u'        %s är varken uppdaterad eller upphävd' % (sfsnr))
+            return None
         
             
     def _archive(self, filename, sfsnr, uppdaterad_tom, checksum=None):
@@ -427,6 +465,20 @@ class SFSDownloader(LegalSource.Downloader):
                 return sfsnr
         except IOError:
             return sfsnr # the base SFS nr
+
+
+    def _findUpphavtsGenom(self, filename):
+        reader = TextReader(filename,encoding='iso-8859-1')
+        try:
+            reader.cue("upph&auml;vts genom:<b> SFS")
+            l = reader.readline()
+            m = re.search('(\d+:\s?\d+)',l)
+            if m:
+                return m.group(1)
+            else:
+                return None
+        except IOError:
+            return None
 
     def _checksum(self,filename):
         """MD5-checksumman för den angivna filen"""
@@ -465,6 +517,7 @@ RINFOEX = Namespace(Util.ns['rinfoex'])
 class SFSParser(LegalSource.Parser):
     re_SimpleSfsId     = re.compile(r'(\d{4}:\d+)\s*$')
     re_SearchSfsId     = re.compile(r'\((\d{4}:\d+)\)').search
+    re_ChangeNote      = re.compile(ur'(Lag|Förordning) \(\d{4}:\d+\)\.?$')
     re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
     re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
     re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
@@ -545,17 +598,32 @@ class SFSParser(LegalSource.Parser):
             f = codecs.open(tmpfile, "w",'iso-8859-1')
             f.write(plaintext)
             f.close()
+
             Util.replace_if_different(tmpfile,plaintextfile)
             patchfile = 'patches/sfs/%s.patch' % basefile
+            descfile = 'patches/sfs/%s.desc' % basefile
+            patchdesc = None
             if os.path.exists(patchfile):
+                # Prep the files to have unix lineendings
+                plaintextfile_u = mktemp()
+                shutil.copy2(plaintextfile,plaintextfile_u)
+                patchfile_u = mktemp()
+                shutil.copy2(patchfile,patchfile_u)
+                cmd = 'dos2unix %s' % plaintextfile_u
+                Util.runcmd(cmd)
+                cmd = 'dos2unix %s' % patchfile_u
+                Util.runcmd(cmd)
+                
                 patchedfile = mktemp()
                 # we don't want to sweep the fact that we're patching under the carpet
                 log.warning(u'%s: Applying patch %s' % (basefile, patchfile))
-                cmd = 'patch -s %s %s -o %s' % (plaintextfile, patchfile, patchedfile)
+                cmd = 'patch -s %s %s -o %s' % (plaintextfile_u, patchfile_u, patchedfile)
                 log.debug(u'%s: running %s' % (basefile,cmd))
                 (ret, stdout, stderr) = Util.runcmd(cmd)
                 if ret == 0: # successful patch
                     # patch from cygwin always seem to produce unix lineendings
+                    assert os.path.exists(descfile), "No description of patch %s found" % patchfile
+                    patchdesc = codecs.open(descfile,encoding='utf-8').read().strip()
                     cmd = 'unix2dos %s' % patchedfile
                     log.debug(u'%s: running %s' % (basefile,cmd))
                     (ret, stdout, stderr) = Util.runcmd(cmd)
@@ -565,7 +633,7 @@ class SFSParser(LegalSource.Parser):
                         log.warning(u"%s: Failed lineending conversion: %s" % (basefile,stderr))
                 else:
                     log.warning(u"%s: Could not apply patch %s: %s" % (basefile, patchfile, stdout.strip()))
-            (meta, body) = self._parseSFST(plaintextfile, registry)
+            (meta, body) = self._parseSFST(plaintextfile, registry, patchdesc)
         except IOError:
             log.warning("%s: Fulltext saknas" % self.id)
             # extractSFST misslyckades, då det fanns någon post i
@@ -793,7 +861,10 @@ class SFSParser(LegalSource.Parser):
                                 raise UpphavdForfattning()
                         else:
                             log.warning(u'%s: Obekant nyckel [\'%s\']' % self.id, key)
-                r.append(p)
+                if p:
+                    r.append(p)
+                # else:
+                #     print "discarding empty post"
         return r
 
 
@@ -962,7 +1033,7 @@ class SFSParser(LegalSource.Parser):
         return counters
                 
 
-    def _parseSFST(self, lawtextfile, registry):
+    def _parseSFST(self, lawtextfile, registry, patchdescription=None):
         # self.reader = TextReader(ustring=lawtext,linesep=TextReader.UNIX)
         self.reader = TextReader(lawtextfile, encoding='iso-8859-1', linesep=TextReader.DOS)
         self.reader.autostrip = True
@@ -975,6 +1046,11 @@ class SFSParser(LegalSource.Parser):
         else:
             skipfragments = ['A']
         self._construct_ids(body, u'', u'http://rinfo.lagrummet.se/publ/sfs/%s#' % (FilenameToSFSnr(self.id)), skipfragments)
+
+        if patchdescription:
+            meta[u'Textändring'] = UnicodeSubject(patchdescription,
+                                                  predicate=RINFOEX['patchdescription'])
+        
         return meta,body
 
     def _swedish_ordinal(self,s):
@@ -1419,14 +1495,14 @@ class SFSParser(LegalSource.Parser):
             m = self.re_RevokeDate.search(line)
         if m:
             upphor = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            line = self.re_RevokeDate.sub("", line)
+            line = self.re_RevokeDate.sub(u'', line)
         if match:
             m = self.re_EntryIntoForceDate.match(line)
         else:
             m = self.re_EntryIntoForceDate.search(line)
         if m:
             ikrafttrader = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            line = self.re_EntryIntoForceDate.sub("", line) 
+            line = self.re_EntryIntoForceDate.sub(u'', line) 
         return (line, upphor, ikrafttrader)
 
     
@@ -1475,20 +1551,27 @@ class SFSParser(LegalSource.Parser):
         # 1979:1152: "Avd. 1. Bestämmelser om taxering av fastighet" 
         #  (also in 1979:1193 (revoked))
         #
+        # 1994:1009: "Avdelning I Fartyg"
+        #
         # 1999:1229: "AVD. I INNEHÅLL OCH DEFINITIONER"
         #
         # and also "1 avd." (in 1959:287 (revoked), 1959:420 (revoked)
         #
         #  The below code checks for all these patterns in turn
         # 
-        # The variants "Avdelning 1" and "Avdelning I" have also been found, 
-        # but only in appendixes
+        # The variant "Avdelning 1" has also been found, but only in
+        # appendixes
         p = self.reader.peekline()
         if p.lower().endswith(u"avdelningen") and len(p.split()) == 2:
             ordinal = p.split()[0]
             return unicode(self._swedish_ordinal(ordinal))
         elif p.startswith(u"AVD. "):
             roman = re.split(r'\W',p)[2]
+            if self.re_roman_numeral_matcher(roman):
+                return unicode(self._from_roman(roman))
+        elif p.startswith(u"Avdelning"):
+            roman = re.split(r'\W',p)[1]
+            print "P: %s, roman: %s" % (p,roman)
             if self.re_roman_numeral_matcher(roman):
                 return unicode(self._from_roman(roman))
         elif p[2:6] == "avd.":
@@ -1508,7 +1591,8 @@ class SFSParser(LegalSource.Parser):
         return self.idOfKapitel() != None
 
     def idOfKapitel(self):
-        p = self.reader.peekparagraph()
+        p = self.reader.peekparagraph().replace("\n", " ")
+
         # '1 a kap.' -- almost always a headline, regardless if it
         # streches several lines but there are always special cases
         # (1982:713 1 a kap. 7 §)
@@ -1528,8 +1612,8 @@ class SFSParser(LegalSource.Parser):
                  (m.span()[1] == len(p) or # if the ENTIRE p is eg "6 kap." (like it is in 1962:700)
                   p.endswith(" m.m.") or
                   p.endswith(" m. m.") or
-                  p.endswith("m.fl.") or 
-                  p.endswith("m. fl.") or
+                  p.endswith(" m.fl.") or
+                  p.endswith(" m. fl.") or
                   self.re_ChapterRevoked(p)))): # If the entire chapter's
                                            # been revoked, we still
                                            # want to count it as a
@@ -1548,9 +1632,12 @@ class SFSParser(LegalSource.Parser):
                 return None
             
 
-            # Om det ser ut som en tabell är det nog ingen kapitelrubrik
-            if self.isTabell(p, requireColumns=True):
-                return None 
+            # Om det ser ut som en tabell är det nog ingen
+            # kapitelrubrik -- borttaget, triggade inget
+            # regressionstest och orsakade bug 168
+            
+            #if self.isTabell(p, requireColumns=True):
+            #    return None 
 
             else:
                 return m.group(1)
@@ -1568,7 +1655,7 @@ class SFSParser(LegalSource.Parser):
         self.trace['rubrik'].debug("isRubrik (%s): indirect=%s" % (p[:50], indirect))
 
         # self.trace['rubrik'].debug("isRubrik: p=%s" % p)
-        if len(p) > 110: # it shouldn't be too long
+        if len(p) > 110: # it shouldn't be too long, but some headlines are insanely verbose
             self.trace['rubrik'].debug("isRubrik (%s): too long" % (p[:50]))
             return False
 
@@ -1599,6 +1686,9 @@ class SFSParser(LegalSource.Parser):
             p.endswith("samt") or 
             p.endswith("eller")):
             self.trace['rubrik'].debug("isRubrik (%s): ends with comma/colon etc" % (p[:50]))
+            return False
+
+        if self.re_ChangeNote.search(p): # eg 1994:1512 8 §
             return False
 
         if p.startswith("/") and p.endswith("./"):
@@ -1637,6 +1727,7 @@ class SFSParser(LegalSource.Parser):
     def isParagraf(self, p=None):
         if not p:
             p = self.reader.peekparagraph()
+            self.trace['paragraf'].debug("isParagraf: called w/ '%s' (peek)" % p[:30])
         else:
             self.trace['paragraf'].debug("isParagraf: called w/ '%s'" % p[:30])
 
@@ -1660,7 +1751,7 @@ class SFSParser(LegalSource.Parser):
         # id. Try another way to detect this by looking at the first
         # character in the paragraph - if it's in lower case, it's
         # probably not a paragraph.
-        firstcharidx = (len(paragrafnummer), len(' § '))
+        firstcharidx = (len(paragrafnummer) + len(' § '))
         # print "%r: %s" % (p, firstcharidx)
         if ((len(p) > firstcharidx) and
             (p[len(paragrafnummer) + len(' § ')].islower())):
@@ -1689,6 +1780,7 @@ class SFSParser(LegalSource.Parser):
     # spaltuppdelade
     
     def isTabell(self, p=None, assumeTable = False, requireColumns = False):
+        shortline = 55
         if not p:
             p = self.reader.peekparagraph()
         # Vissa snedformatterade tabeller kan ha en högercell som går
@@ -1722,7 +1814,7 @@ class SFSParser(LegalSource.Parser):
         # Om varje rad
         # 1. Är kort (indikerar en tabellrad med en enda vänstercell)
         if (assumeTable or numlines > 1) and not requireColumns:
-            matches = [l for l in lines if len(l) < 50]
+            matches = [l for l in lines if len(l) < shortline]
             if numlines == 1 and '  ' in lines[0]:
                 self.trace['tabell'].debug(u"isTabell('%s'): Endast en rad, men tydlig kolumnindelning" % (p[:20]))
                 return True
@@ -1790,14 +1882,16 @@ class SFSParser(LegalSource.Parser):
             self.trace['tabell'].debug("isTabell('%s'): %s rader, alla spaltuppdelade" % (p[:20],numlines))
             return True
 
-        # 3. Är kort ELLER har spaltuppdelning 
+        # 3. Är kort ELLER har spaltuppdelning
+        self.trace['tabell'].debug("test 3")
         if (assumeTable or numlines > 1) and not requireColumns:
-            matches = [l for l in lines if '  ' in l or len(l) < 50]
+            self.trace['tabell'].debug("test 3.1")
+            matches = [l for l in lines if '  ' in l or len(l) < shortline]
             if len(matches) == numlines:
                 self.trace['tabell'].debug("isTabell('%s'): %s rader, alla korta eller spaltuppdelade" % (p[:20],numlines))
                 return True
 
-        self.trace['tabell'].debug("isTabell('%s'): %s rader, inga test matchade" % (p[:20],numlines))
+        self.trace['tabell'].debug("isTabell('%s'): %s rader, inga test matchade (aT:%r, rC: %r)" % (p[:20],numlines,assumeTable,requireColumns))
         return False
 
     def makeTabell(self):
@@ -1849,7 +1943,7 @@ class SFSParser(LegalSource.Parser):
         def makeTabellcell(text):
             if len(text) > 1:
                 text = self.re_dehyphenate("", text)
-            return Tabellcell([text.strip()])
+            return Tabellcell([Util.normalizeSpace(text)])
 
         cols = [u'',u'',u'',u'',u'',u'',u'',u''] # Ingen tabell kommer nånsin ha mer än åtta kolumner
         if tabstops:
@@ -1897,9 +1991,9 @@ class SFSParser(LegalSource.Parser):
                 else:
                     if spacecount > 1: # Vi har stött på en ny tabellcell
                                        # - fyll den gamla
-                        # Lägg till ett mellanslag istället för den nyrad
-                        # vi kapat - överflödiga mellanslag trimmas senare
-                        cols[colcount] += u' ' + l[lasttab:charcount-(spacecount+1)]
+                        # Lägg till en nyrad för att ersätta den vi kapat -
+                        # överflödig whitespace trimmas senare
+                        cols[colcount] += u'\n' + l[lasttab:charcount-(spacecount+1)]
                         lasttab = charcount - 1
 
                         # för hantering av tomma vänsterceller
@@ -1920,7 +2014,7 @@ class SFSParser(LegalSource.Parser):
                         tabstops[colcount] = charcount
                         self.trace['tabell'].debug("Tabstops now: %r" % tabstops)
                     spacecount = 0
-            cols[colcount] += u' ' + l[lasttab:charcount]
+            cols[colcount] += u'\n' + l[lasttab:charcount]
             self.trace['tabell'].debug("Tabstops: %r" % tabstops)
             if singlelinemode:
                 self.trace['tabell'].debug(u'makeTabellrad: skapar ny tabellrad')
@@ -2026,10 +2120,10 @@ class SFSParser(LegalSource.Parser):
 
     def isBilaga(self):
         l = self.reader.peekline().strip()
-        return (self.reader.peekline().strip() in (u"Bilaga", u"Bilaga 1", u"Bilaga 2"))
-
-
-        
+        return (self.reader.peekline().strip() in (u"Bilaga", u"Bilaga*", u"Bilaga *",
+                                                   u"Bilaga 1", u"Bilaga 2", u"Bilaga 3",
+                                                   u"Bilaga 4", u"Bilaga 5", u"Bilaga 6"));
+    
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
 
@@ -2453,70 +2547,17 @@ WHERE {
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
         return
 
-#    re_labeled_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|\]]*?)\|(.*?)\]\]')
-#    re_typed_link = re.compile(r'\[\[([^:\]]*?)::([^\|]*?)\]\]')
-#    re_labeled_wiki_link = re.compile(r'\[\[(.*?)\|(.*?)\]\]')
-#    re_wiki_link = re.compile(r'\[\[(.*?)\]\]')
-#    re_external_link = re.compile(r'\[([^ ]*?) (.*?)\]')
-#    re_bold_italic = re.compile(r"'''''(.*?)'''''")
-#    re_bold = re.compile(r"'''(.*?)'''")
-#    re_italic = re.compile(r"''(.*?)''")
-#
-#    def __get_wiki_annotations(self,wikipath,baseuri,parser):
-#        # Hämta kommentarer från wikisidan och gör om dem till RDF/XML
-#        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % wikipath
-#
-#        root_node = PET.Element("rdf:RDF")
-#        for prefix in Util.ns:
-#            # PET._namespace_map[Util.ns[prefix]] = prefix
-#            root_node.set("xmlns:" + prefix, Util.ns[prefix])
-#        root_node.set("xmlns", "http://www.w3.org/1999/xhtml")
-#
-#        tree = ET.parse(urlopen(url))
-#        node = tree.find("//{http://www.mediawiki.org/xml/export-0.3/}text")
-#        if node is None:
-#            raise LegalSource.IdNotFound("No wiki text for %s" % wikipath)
-#        
-#        wikitext = node.text
-#        tr = TextReader(ustring=wikitext,linesep=TextReader.UNIX)
-#        while not tr.eof():
-#            chunk = tr.readchunk("\n==")
-#            pieces = [x.strip() for x in chunk.split("==", 1)]
-#            if len(pieces) == 1:
-#                text = pieces[0]
-#                uri = baseuri
-#            else:
-#                part = pieces[0]
-#                text = pieces[1]
-#                try:
-#                    uri = parser.parse(part,baseuri)[0].uri
-#                except:
-#                    log.warning("Could not find out URI for '%s'" % part)
-#
-#            # Some quick and dirty "parsing" of the wiki text
-#            text = self.re_labeled_typed_link.sub(r'<a class="ltl" href="\2" rel="\1">\3</a>', text)
-#            text = self.re_typed_link.sub(r'<a class="tl" href="\2" rel="\1">\2</a>', text)
-#            text = self.re_labeled_wiki_link.sub(r'<a class="lwl" href="\1">\2</a>', text)
-#            text = self.re_wiki_link.sub(r'<a class="wl" href="\1">\1</a>', text)
-#            text = self.re_external_link.sub(r'<a class="el" href="\1">\2</a>', text)
-#            text = self.re_bold_italic.sub(r'<b><i>\1</i></b>', text)
-#            text = self.re_bold.sub(r'<b>\1</b>', text)
-#            text = self.re_italic.sub(r'<i>\1</i>', text)
-#            text = u'<span xml:lang="sv">%s</span>' % text
-#
-#            lagrum_node = PET.SubElement(root_node,"rdf:Description")
-#            lagrum_node.set("rdf:about",uri)
-#            triple_node = PET.SubElement(lagrum_node, "dct:description")
-#            triple_node.set("rdf:parseType", "Literal")
-#            
-#            triple_node.append(PET.XML(text.encode('utf-8')))
-#        Util.indent_et(root_node)
-#        tree = PET.ElementTree(root_node)
-#        return tree
+    def CleanupAnnulled(self,basefile):
+        infile = self._xmlFileName(basefile)
+        outfile = self._htmlFileName(basefile)
+        if not os.path.exists(infile):
+            Util.robust_remove(outfile)
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
         self._do_for_all(parsed_dir,'xht2',self.Generate)
+        generated_dir = os.path.sep.join([self.baseDir, u'sfs', 'generated'])
+        self._do_for_all(generated_dir,'html',self.CleanupAnnulled)
 
 #    def Convert(self,basefile):
 #        infile = self._xmlFileName(basefile)
@@ -2673,28 +2714,9 @@ WHERE {
         return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
 
     # Aktuell teststatus:
-    # C:\Users\staffan\wds\ferenda.lagen.nu>SFS.py RunTest Parse
-    # ..........F...NN.....N.......N...........NFN..FN....F.......N..NNN.....F..N.....F..N. 66/85
-    # Failed tests:
-    # test/SFS\Parse\definition-numberlist-trailingparagraph.txt
-    # test/SFS\Parse\definition-paranthesis.txt
-    # test/SFS\Parse\definition-plaintext-basic.txt
-    # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
-    # test/SFS\Parse\regression-andrastycke-inte-rubrik.txt
-    # test/SFS\Parse\regression-rubrik-inte-kapitelrubrik.txt
-    # test/SFS\Parse\regression-rubrik-inte-vanstercell.txt
-    # test/SFS\Parse\regression-stycke-inte-rubrik.txt
-    # test/SFS\Parse\regression-tabell-tomrum.txt
-    # test/SFS\Parse\regression-tabell-tva-korta-vansterceller.txt
-    # test/SFS\Parse\regression-upprakning-inte-paragraf.txt           *
-    # test/SFS\Parse\temporal-kapitelrubriker.txt
-    # test/SFS\Parse\temporal-rubriker.txt
-    # test/SFS\Parse\tricky-bilaga-upphorande.txt
-    # test/SFS\Parse\tricky-felformatterad-tabell.txt
-    # test/SFS\Parse\tricky-lopande-rubriknumrering.txt                *
-    # test/SFS\Parse\tricky-okand-aldre-lag.txt
-    # test/SFS\Parse\tricky-paragrafupprakning.txt
-    # test/SFS\Parse\tricky-tabell-sju-kolumner.txt
+    #
+    # ...
+    #
     ####################################################################
     # OVERRIDES OF Manager METHODS
     ####################################################################    
@@ -2767,7 +2789,7 @@ WHERE {
                 pagetitles[letter] = u'Författningar som börjar på "%s"' % letter.upper()
                 pagelabels[letter] = letter.upper()
                 documents[title_lbl][letter].append({'uri':subj,
-                                                     'sortkey':sorttitle,
+                                                     'sortkey':sorttitle.lower(),
                                                      'title':sorttitle,
                                                      'leader':title.replace(sorttitle,'')})
 
@@ -2789,13 +2811,18 @@ WHERE {
     re_message = re.compile(r'(\d+:\d+) \[([^\]]*)\]')
     re_qname = re.compile(r'(\{.*\})(\w+)')
     re_sfsnr = re.compile(r'\s*(\(\d+:\d+\))')
+
     def _build_newspages(self,messages):
+        changes = {}
         all_entries = []
         lag_entries = []
         ovr_entries = []
         for (timestamp,message) in messages:
             m = self.re_message.match(message)
             change = m.group(1)
+            if change in changes:
+                continue
+            changes[change] = True
             bases = m.group(2).split(", ")
             basefile = "%s/%s/parsed/%s.xht2" % (self.baseDir, self.moduleDir, SFSnrToFilename(bases[0]))
             # print "opening %s" % basefile
@@ -2806,6 +2833,10 @@ WHERE {
                 log.warning("File %s not found" % basefile)
                 continue
             tree,ids = ET.XMLID(open(basefile).read())
+
+            if (change != bases[0]) and (not 'L'+change in ids):
+                log.warning("ID %s not found in %s" % ('L'+change,basefile))
+                continue
 
             if change != bases[0]:
                 for e in ids['L'+change].findall(".//{http://www.w3.org/2002/06/xhtml2/}dd"):

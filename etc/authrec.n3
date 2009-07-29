@@ -48,13 +48,13 @@
 <http://lagen.nu/org/2008/hovratten-over-skane-och-blekinge> rdfs:label "Hovrätten över Skåne och Blekinge" .
 <http://lagen.nu/org/2008/svea-hovratt> rdfs:label "Svea hovrätt" .
 <http://lagen.nu/org/2008/hovratten-for-vastra-sverige> rdfs:label "Hovrätten för Västra Sverige" .
-<http://lagen.nu/org/2008/Gota hovratt> rdfs:label "Göta hovrätt" .
-<http://lagen.nu/org/2008/Kammarratten i goteborg> rdfs:label "Kammarrätten i Göteborg" .
-<http://lagen.nu/org/2008/Kammarratten i jonkoping> rdfs:label "Kammarrätten i Jönköping" .
-<http://lagen.nu/org/2008/Kammarratten i stockholm> rdfs:label "Kammarrätten i Stockholm" .
-<http://lagen.nu/org/2008/Kammarratten i sundsvall> rdfs:label "Kammarrätten i Sundsvall" .
+<http://lagen.nu/org/2008/gota-hovratt> rdfs:label "Göta hovrätt" .
+<http://lagen.nu/org/2008/kammarratten-i-goteborg> rdfs:label "Kammarrätten i Göteborg" .
+<http://lagen.nu/org/2008/kammarratten-i-jonkoping> rdfs:label "Kammarrätten i Jönköping" .
+<http://lagen.nu/org/2008/kammarratten-i-stockholm> rdfs:label "Kammarrätten i Stockholm" .
+<http://lagen.nu/org/2008/kammarratten-i-sundsvall> rdfs:label "Kammarrätten i Sundsvall" .
 <http://lagen.nu/org/2008/arbetsdomstolen> rdfs:label "Arbetsdomstolen" .
-<http://lagen.nu/org/2008/Hogsta domstolen> rdfs:label "Högsta domstolen" .
+<http://lagen.nu/org/2008/hogsta-domstolen> rdfs:label "Högsta domstolen" .
 <http://lagen.nu/org/2008/regeringsratten> rdfs:label "Regeringsrätten" .
 <http://lagen.nu/org/2008/patentbesvarsratten> rdfs:label "Patentbesvärsrätten" .
 <http://lagen.nu/org/2008/rattshjalpsnamnden> rdfs:label "Rättshjälpsnämnden" .

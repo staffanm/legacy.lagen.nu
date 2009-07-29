@@ -1,0 +1,18 @@
+--- data/dv/intermediate/docbook/ADO/1996-13_1.xml	2009-02-02 11:23:37.000000000 +0100
++++ data/dv/intermediate/docbook/ADO/1996-13_1-mod.xml	2009-02-02 11:20:54.000000000 +0100
+@@ -208,7 +208,7 @@
+ 
+        <entry>Parter:
+ 
+-Öhrlings Coopers &amp; Lybrand Aktiebolag; Blosfeld, Paul
++Öhrlings Coopers &amp; Lybrand Aktiebolag; P.B.
+ 
+ Nr 13
+ 
+@@ -1353,4 +1353,4 @@
+ 
+  </chapter>
+ 
+-</book>
+\ No newline at end of file
++</book>

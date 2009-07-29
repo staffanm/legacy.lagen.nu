@@ -273,6 +273,7 @@ class Manager(object):
         och laddar in det i systemets triplestore"""
         files = list(Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'))
         rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
+
         context = "<urn:x-local:%s>" % self.moduleDir
 
         if self._outfile_is_newer(files,rdffile):
@@ -639,5 +640,3 @@ class Manager(object):
                 graph.add((o,p,l))
 
 
-
-    

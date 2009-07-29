@@ -264,6 +264,7 @@ class LegalRef:
                 sys.stdout.write(self.prettyprint(part))
             if part.tag in self.roots:
                 self.clear_state()
+                self.verbose = False
                 result.extend(self.formatter_dispatch(part))
             else:
                 assert part.tag == 'plain',"Tag is %s" % part.tag
@@ -272,6 +273,7 @@ class LegalRef:
             # clear state
             if self.currentlaw != None: self.lastlaw = self.currentlaw
             self.currentlaw = None
+
 
         if taglist[-1] != len(fixedindata):
             log.error(u'Problem (%d:%d) with %r / %r' % (taglist[-1]-8,taglist[-1]+8,fixedindata,indata))

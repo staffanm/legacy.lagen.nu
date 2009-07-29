@@ -55,6 +55,7 @@
 
   <xsl:template name="headmetadata"/>
 
+
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'">
@@ -131,7 +132,9 @@
   </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
-    <!-- emit nothing -->
+    <xsl:if test="xht2:dd[@property='rinfoex:patchdescription']">
+      <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="xht2:dd[@property='rinfoex:patchdescription']"/></p>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="xht2:h[@class='kapitelrubrik']">
@@ -253,7 +256,17 @@
   </xsl:template>
 
   <xsl:template match="xht2:section[@role='main']">
-    <div class="konsolideradtext"><xsl:apply-templates/></div>
+    <div class="konsolideradtext">
+      <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']">
+	<div class="warning">
+	  OBS: Författningen har upphävts/ska upphävas <xsl:value-of
+	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:upphavandedatum']"/>
+	  genom SFS <xsl:value-of
+	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']"/>
+	</div>
+      </xsl:if>
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 		
   <xsl:template match="xht2:section[@role='secondary']">
@@ -348,16 +361,39 @@
       <dd rel="dct:creator" resource="{xht2:dd[@rel='dct:creator']/@href}"><xsl:value-of select="xht2:dd[@rel='dct:creator']"/></dd>
       <dt>Utfärdad</dt>
       <dd property="rinfo:utfardandedatum" datatype="xsd:date"><xsl:value-of select="xht2:dd[@property='rinfo:utfardandedatum']"/></dd>
-      <dt>Ändring införd</dt>
-      <dd rel="rinfo:konsolideringsunderlag" href="{xht2:dd[@rel='rinfo:konsolideringsunderlag']/@href}"><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
+      
+      <xsl:if test="xht2:dd[@rel='rinfo:konsolideringsunderlag']">
+	<dt>Ändring införd</dt>
+	<dd rel="rinfo:konsolideringsunderlag" href="{xht2:dd[@rel='rinfo:konsolideringsunderlag']/@href}"><xsl:value-of select="xht2:dd[@rel='rinfo:konsolideringsunderlag']"/></dd>
+      </xsl:if>
+
+      <xsl:if test="xht2:dd[@rel='rinfoex:upphavdAv']">
+	<dt>Författningen har upphävts genom</dt>
+	<dd rel="rinfoex:upphavdAv" href="{xht2:dd[@rel='rinfoex:upphavdAv']/@href}"><xsl:value-of select="xht2:dd[@rel='rinfoex:upphavdAv']"/></dd>
+      </xsl:if>
+
+      <xsl:if test="xht2:dd[@property='rinfoex:upphavandedatum']">
+	<dt>Upphävd</dt>
+	<dd property="rinfoex:omtryck"><xsl:value-of select="xht2:dd[@property='rinfoex:upphavandedatum']"/></dd>
+      </xsl:if>
+
+      <xsl:if test="xht2:dd[@property='rinfoex:omtryck']">
+	<dt>Omtryck</dt>
+	<dd property="rinfoex:omtryck"><xsl:value-of select="xht2:dd[@property='rinfoex:omtryck']"/></dd>
+      </xsl:if>
+      
       <xsl:if test="xht2:dd[@property='rinfoex:tidsbegransad']">
 	<dt>Tidsbegränsad</dt>
 	<dd property="rinfoex:tidsbegransad"><xsl:value-of select="xht2:dd[@property='rinfoex:tidsbegransad']"/></dd>
       </xsl:if>
+      <xsl:if test="xht2:dd[@property='rinfoex:senastHamtad']">
+	<dt>Senast hämtad</dt>
+	<dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+      </xsl:if>
+	
       <dt>Källa</dt>
       <dd rel="dct:publisher" resource="http://lagen.nu/org/2008/regeringskansliet"><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
-      <dt>Senast hämtad</dt>
-      <dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+      
     </dl>
 
     -->

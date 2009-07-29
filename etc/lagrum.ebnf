@@ -57,8 +57,6 @@ SectionItemRefs     ::= SectionRef, Whitespace, ItemRef, WAndOrW, ItemRef
 PieceItemRefs       ::= PieceRef, Whitespace, ItemRefs
 ItemRefs            ::= (ItemRef, Comma, Whitespace)*, ItemRef, WAndOrW, ItemRef
 
-# SectionItemRefs ::= 'blahonga'
-
 IntervalOrSingle     ::= (IntervalSection/SectionSentenceRef/SingleSectionRef) # the SectionSentenceRef does not really belong...
 SingleSectionRefID   ::= SectionRefID
 IntervalSection      ::= SingleSectionRef, Whitespace?,Hyphen, Hyphen?, Whitespace?, SingleSectionRef
@@ -76,8 +74,6 @@ LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordninge
 # dont forget, when adding a new top-level construct, to add it to the
 # 'ref' construct above
 
-
-# ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,'.'
 ChangeRef ::= ('Lag'/'lag'/'Förordning'/'förordning'),Whitespace,SFSNr,('.'/?-(' '/','))
 
 ExternalRef          ::= GenericRef, Whitespace, ExternalLaw

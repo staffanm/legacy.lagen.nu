@@ -125,8 +125,6 @@ class DVDownloader(LegalSource.Downloader):
         self.download(recurse=False)
         
     def download(self,dirname='',recurse=False):
-        # Download using ncftpls/ncftpget, since we can't get python:s
-        # ftplib to play nice w/ domstolsverkets ftp server
         if 'ftp_user' in self.config[__moduledir__]:
             try:
                 self.download_ftp(dirname, recurse, self.config[__moduledir__]['ftp_user'], self.config[__moduledir__]['ftp_pass'])
@@ -135,20 +133,29 @@ class DVDownloader(LegalSource.Downloader):
         else:
             self.download_www(dirname, recurse)
 
-    def download_ftp(self,dirname,recurse,user,password):
-        url = 'ftp://ftp.dom.se/%s' % dirname
-        log.info(u'Listar innehåll i %s' % url)
-        cmd = "ncftpls -m -u %s -p %s %s" % (user, password, url)
-        (ret, stdout, stderr) = Util.runcmd(cmd)
-        if ret != 0:
-            raise Util.ExternalCommandError(stderr)
+    def download_ftp(self,dirname,recurse,user,password,ftp=None):
+        #url = 'ftp://ftp.dom.se/%s' % dirname
+        log.info(u'Listar innehåll i %s' % dirname)
+        lines = []
+        if not ftp:
+            from ftplib import FTP
+            ftp = FTP('ftp.dom.se')
+            ftp.login(user,password)
 
-        for line in stdout.split("\n"):
-            parts = line.split(";")
+        ftp.cwd(dirname)
+        ftp.retrlines('LIST',lines.append)
+        
+        #cmd = "ncftpls -m -u %s -p %s %s" % (user, password, url)
+        #(ret, stdout, stderr) = Util.runcmd(cmd)
+        #if ret != 0:
+        #    raise Util.ExternalCommandError(stderr)
+
+        for line in lines:
+            parts = line.split()
             filename = parts[-1].strip()
-            if line.startswith('type=dir') and recurse:
+            if line.startswith('d') and recurse:
                 self.download(filename,recurse)
-            elif line.startswith('type=file'):
+            elif line.startswith('-'):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
                     # pass
                     localdir = self.download_dir + os.path.sep + dirname
@@ -163,9 +170,11 @@ class DVDownloader(LegalSource.Downloader):
                         localdir = self.download_dir
                         
                     log.info(u'Hämtar %s till %s' % (filename, localdir))
-                    os.system("ncftpget -u %s -p %s ftp.dom.se %s %s" %
-                              (user, password, localdir, fullname))
+                    #os.system("ncftpget -u %s -p %s ftp.dom.se %s %s" %
+                    #          (user, password, localdir, fullname))
+                    ftp.retrbinary('RETR %s' % filename, open(localdir+os.path.sep+filename,'wb').write)
                     self.process_zipfile(localdir + os.path.sep + filename)
+        ftp.cwd('/')
 
     def download_www(self,dirname,recurse):
         url = 'https://lagen.nu/dv/downloaded/%s' % dirname
@@ -193,7 +202,7 @@ class DVDownloader(LegalSource.Downloader):
                     self.process_zipfile(localfile)
 
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
-    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*)_BYTUT_\d+-\d+-\d+_?(\d*)')
+    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*(_\d|)?)_BYTUT_\d+-\d+-\d+_?(\d*)')
     def process_zipfile(self, zipfilename):
         removed = replaced = created = untouched = 0
         zipf = zipfile.ZipFile(zipfilename, "r")
@@ -208,6 +217,7 @@ class DVDownloader(LegalSource.Downloader):
                 m = self.re_malnr.match(uname)
             if m:
                 (court, malnr, referatnr) = (m.group(1), m.group(2), m.group(3))
+                # log.info("court %s, malnr %s, referatnr %s" % (court,malnr, referatnr))
                 if referatnr:
                     outfilename = os.path.sep.join([self.intermediate_dir, court, "%s_%s.doc" % (malnr,referatnr)])
                 else:
@@ -506,6 +516,7 @@ class DVParser(LegalSource.Parser):
             body.append(Stycke([p]))
 
         # Hitta sammansatta metadata i sidfoten
+
         txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findParent('entry').nextSibling.nextSibling)
         sokord = []
         for s in self.re_delimSplit(txt):

@@ -130,7 +130,8 @@
 	</xsl:variable>
 	<xsl:if test="number($year) > 1970">http://www.riksdagen.se/Webbnav/index.aspx?nid=37&amp;dok_id=<xsl:value-of select="$base36year"/>03<xsl:value-of select="$nr"/></xsl:if>
       </xsl:when>
-      <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
+      <!--       <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/> -->
+      <xsl:when test="contains($uri,'/ext/celex')">http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML
       </xsl:when>
       <xsl:when test="contains($uri,'/ext/bet/')">
 	<xsl:variable name="year" select="substring(substring-after($uri, '/ext/bet/'),1,4)"/>

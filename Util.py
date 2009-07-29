@@ -318,6 +318,9 @@ def elementText(element):
              not isinstance(e,BeautifulSoup.Comment))]))
 
 def word_to_html(indoc,outhtml):
+    """Converts a word document to a HTML document by remote
+    controlling Microsoft Word to open and save the doc as HTML (so
+    this function only works on Win32 with Office 2003 installed)"""
     indoc = os.path.join(os.getcwd(),indoc.replace("/",os.path.sep))
     outhtml = os.path.join(os.getcwd(),outhtml.replace("/",os.path.sep))
     display_indoc = indoc[len(os.getcwd()):].replace(os.path.sep,"/")

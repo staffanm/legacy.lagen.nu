@@ -23,7 +23,8 @@
     
   </xsl:template>
   <xsl:template name="headmetadata"/>
-      
+
+  
   <xsl:template match="xht2:h">
     <h2><xsl:value-of select="."/></h2>
   </xsl:template>
@@ -38,6 +39,9 @@
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
     <!-- plocka ut det gottaste från metadatat -->
+    <xsl:if test="xht2:dd[@property='rinfoex:patchdescription']">
+      <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="xht2:dd[@property='rinfoex:patchdescription']"/></p>
+    </xsl:if>
     <h1 property="dct:identifier"><xsl:value-of select="xht2:dd[@property='dct:identifier']"/></h1>
     <p property="dct:description" class="rattsfallsrubrik"><xsl:value-of select="xht2:dd[@property='dct:description']"/></p>
   </xsl:template>

@@ -111,7 +111,13 @@ class Manager:
                             
     def _doAction(self,action,module):
         if module == 'all':
-            modules = self._findModules().keys()
+            modules = []
+            for m in self._findModules().keys():
+                # avoid running non-finished modules by only doing those
+                # that have a config file section
+                if m.lower() in self.config:
+                    modules.append(m)
+
         else:
             modules = (module,)
         for m in modules:

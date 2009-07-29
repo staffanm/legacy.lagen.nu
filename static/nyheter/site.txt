@@ -1,3 +1,53 @@
+2009-06-10 17:37:00 Rättsfallsimporten fungerar igen
+
+<p>Sedan någon gång i april har importen av nya rättsfall från
+domstolsverket slutat fungera. Nu har jag äntligen fått tid att fixa
+till det. Med de nya rättsfallen inlagda finns det nu över 10 000 i
+databasen.</p>
+
+2009-06-09 21:18:00 Sommarjobba med lagen.nu?
+
+<p>lagen.nu drivs ideellt med syftet att göra det möjligt för den
+intresserade allmänheten att ta reda på vad lagen säger. Ett sätt att
+göra det är genom kommenterad lagtext, där själva ursprungstexten
+presenteras sida vid sida med definitioner av juridiska termer,
+hänvisningar till andra relevanta delar av lagstiftningen, och
+översikter av lagstiftningens struktur.</p>
+
+<p>Under sommaren och hösten 2009 kommer jag försöka utveckla en sådan
+lagtextkommentar. Jag kan fixa det tekniska som krävs för en sådan
+tjänst, men för att skriva kommentarerna behöver jag hjälp av dig som
+studerar juridik, är färdig jurist eller bara är riktigt insatt i ett
+visst rättsområde. Den långsiktiga målsättningen är att intresserade
+personer ska bidra med sin tid för att de finner projektet kul och
+målsättningen eftersträvansvärd, men jag tror att man kan kickstarta
+det hela genom avlönat arbete. Jag har därför sökt och fått medel från
+<a
+href="http://www.iis.se/se-ar-mer/internetfonden/">Internetfonden</a>
+för att driva ett pilotprojekt.</p>
+
+<p>För mer information, se <a
+href="http://wiki.lagen.nu/index.php/Huvudsida">projektsidan</a>, och
+skicka <a href="mailto:staffan@tomtebo.org">mig</a> en intresseanmälan
+om det verkar intressant!</p>
+
+2009-02-19 21:02:11 Dags att uppgradera IE6
+
+<p>Jag har fått några felrapporter om att lagen.nu ser konstig ut för
+vissa - det verkar som höger- och vänsterspalterna ibland täcker över
+själva lagtexten. Det har visat sig att felet uppstår för personer som
+har Internet Explorer version 6. Då denna läsare är åtta år gammal och
+har många fel, särskilt vad gäller kompatibilitet med olika
+webbstandards, kommer jag inte försöka fixa dessa
+layoutproblem. Istället vill jag uppmuntra alla som fortfarande
+använder IE6 att <a
+href="http://www.microsoft.com/sverige/windows/downloads/ie/getitnow.mspx">uppgradera</a>
+eller byta webbläsare tilll exempelvis <a
+href="http://mozilla.com">FireFox</a>, <a
+href="http://www.google.com/chrome">Chrome</a>, <a
+href="http://www.apple.com/safari/download/">Safari</a> eller <a
+href="http://www.opera.com">Opera</a>.</p>
+
 2008-09-24 22:15:44 Vill du hjälpa till med lagen.nu?
 
 <p>Nu när den nya versionen är ute är det dags att börja fundera på

@@ -3,6 +3,7 @@
 # for this data.
 datadir = data
 
+
 # The URL for your Sesame server (The below is what you get if you use
 # a default Tomcat/Sesame install)
 triplestore = http://localhost:8080/openrdf-sesame

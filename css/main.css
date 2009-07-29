@@ -93,7 +93,7 @@
     } 
     
     /* olika sätt att formattera dl-listor:
-       side-by-side, bred högerspalt */
+       side-by-side, bred mittspalt */
     .andringar dl, .entry dl {
 	margin-bottom: 18pt;
     }
@@ -124,18 +124,15 @@
         width: inherit;
         font-weight: bold;
     }
-   
-    .sidoruta dt:after { content: ":"; }
-
     .sidoruta dd {
         display: block;
 	float: none;
         width: inherit;
 	margin-left: 22.5pt;
     }
+
     .sidoruta dd:after { clear: left; }
     .paragraf { position: relative; }
-
 
     /* classes for dynamic box layout */
 
@@ -283,6 +280,7 @@
     #vinjett form input {
 	font-weight: bold;
     }
+
     #vinjett #sss {
 	position: absolute;
         top: 3pt;
@@ -334,6 +332,7 @@
 	font-size: 1.5em;
         margin-bottom: 0.5em;
         font-weight: bold;
+        margin-bottom: 0.5em;
     }
     h2 {
 	font-size: 1.2em;
@@ -363,6 +362,7 @@
         font-size: smaller;
         margin:0;
     }
+
     .wikibox {
       padding: 3pt;
       margin-top: 0;
@@ -379,3 +379,16 @@
       background-repeat: no-repeat;
       background-position: 5px 5px;
 }
+    .warning {
+	background: yellow;
+        border: solid thick red;
+	font-weight: bold;
+     }
+     .patchdescription {
+	 background: #f9f6f5;
+         border: solid 1px #6b482c;
+	 padding: 2pt;
+         font-size: smaller;
+	 line-height: 1.1em;
+     }
+

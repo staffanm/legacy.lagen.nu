@@ -15,6 +15,7 @@ import pprint
 import types
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
 import logging
+import datetime
 
 # 3rd party modules
 from genshi.template import TemplateLoader
@@ -71,11 +72,16 @@ class RegPublDownloader(LegalSource.Downloader):
                 log.info(u'No next page link found, this was the last page')
                 done = True
             pagecnt += 1
-        self.config['last_updated'] = datetime.date.today()    
+        self.config['last_update'] = datetime.date.today()    
         self.config.write()
         
     def DownloadNew(self):
-        then = datetime.datetime.strptime(self.config['last_updated'], '%Y-%m-%d')
+        if 'last_update' in self.config:
+            then = datetime.datetime.strptime(self.config['last_update'], '%Y-%m-%d')
+        else:
+            # assume last update was more than a year ago
+            then = datetime.datetime.now() - datetime.timedelta(-367)
+        
         now =  datetime.datetime.now()
         if (now - then).days > 30:
             pass
@@ -230,7 +236,9 @@ class RegPublManager(LegalSource.Manager):
         rd.DownloadAll()
 
     def DownloadNew(self):
-        log.info(u'RegPubl: DownloadNew not implemented') 
+        rd = RegPublDownloader(self.baseDir)
+        rd.DownloadNew()
+
 
     def __listfiles(self,basefile,suffix):
         d = "%s/%s/downloaded/%s" % (self.baseDir,__moduledir__,basefile)
@@ -284,5 +292,5 @@ if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
     RegPublManager.__bases__ += (DispatchMixin,)
-    mgr = RegPublManager("testdata",__moduledir__)
+    mgr = RegPublManager()
     mgr.Dispatch(sys.argv)

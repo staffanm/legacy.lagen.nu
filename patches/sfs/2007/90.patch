@@ -1,0 +1,13 @@
+--- data\sfs\intermediate\2007\90.txt	2009-03-18 00:47:13.275179600 +0100
++++ data\sfs\intermediate\2007\90-mod.txt	2009-03-23 08:09:31.654000000 +0100
+@@ -1737,9 +1737,7 @@
+ anläggning eller liknande, om inte annat anges.
+ Lokaliseringsmärken är följande.
+ 
+-Märke
+-
+-Närmare föreskrifter
++Märke                          Närmare föreskrifter
+ 
+ F1 Orienteringstavla            Märket är en förberedande
+ upplysning om korsning,
