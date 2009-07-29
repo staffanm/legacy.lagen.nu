@@ -113,7 +113,8 @@ class KeywordDownloader(LegalSource.Downloader):
         # 3) Download the Wikipedia dump from
         # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
         # -- term set "wikipedia"
-        #self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+        # FIXME: only download when needed
+        self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
         from gzip import GzipFile
         wikipediaterms = GzipFile(self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
         for utf8_term in wikipediaterms:

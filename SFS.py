@@ -2353,7 +2353,10 @@ WHERE {
 }
 """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
 
+        # FIXME: This query makes tomcat/sesame unbearably slow...
         inboundlinks = self._store_select(sq)
+        # inboundlinks = []
+        
         log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
         stuff[baseuri]['inboundlinks'] = []
         
@@ -2546,6 +2549,8 @@ WHERE {
                        parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
+        #from time import sleep
+        #sleep(1)
         return
 
     def CleanupAnnulled(self,basefile):
