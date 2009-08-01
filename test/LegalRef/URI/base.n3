@@ -1,8 +1,0 @@
-@prefix rinfo: <http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#> .
-[ a rinfo:Rattsfallsreferat ;
-  rinfo:rattsfallspublikation <http://rinfo.lagrummet.se/ref/rff/nja> ;
-  rinfo:artal "2004" ;
-  rinfo:sidnummer "43" ;
-  rinfo:publikationsordinal "2004:10" ]
-
-http://rinfo.lagrummet.se/foo/bar

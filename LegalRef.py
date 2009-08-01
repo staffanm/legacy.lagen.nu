@@ -308,40 +308,6 @@ class LegalRef:
                 normres.append(node)
         return normres
 
-    # Experimental stuff - modelled after URIMinter in
-    # rinfosystem. The idea is to submit a rdf graph centered around a
-    # BNode, and create the canonical URI for that BNode by leveraging
-    # the existing *_format_uri methods, which operates on a much
-    # simpler dictionary.
-    def make_uri(self,node, graph):
-        """Given a node and a RDF graph containing said node, construct a URI for the node"""
-        rinfo = Namespace(Utils.ns['rinfo'])
-        pred_to_attrib = {
-            rinfo['rattsfallspublikation']: 'domstol',
-            rinfo['artal']: 'ar',
-            rinfo['sidnummer']: 'sidnr',
-            rinfo['publikationsordinal']: 'lopnr'
-            }
-        type_to_method = {
-            rinfo['KonsolideradGrundforfattning']:sfs_format_uri,
-            rinfo['VagledandeDomstolsavgorande']:rattsfall_format_uri
-            }
-        attribs = {}
-        # print "node: %s (%s)" % (node, type(node))
-        # We SHOULD be able to just get the type by calling
-        # graph.subjects(node, RDF.type), but that call does not
-        # return any nodes for some reason
-        for (o,p,s) in graph:
-            # print "Node %s %s %s" % (o,p,s)
-            if o == node and p == RDF.type:
-                method = type_to_method[s]
-                # print "setting method to %s" % method
-            else:
-                attribs[pred_to_attrib[p]] = str(s)
-                # print "setting attrib %s to %s" % (pred_to_attrib[p], s)
-        uri = method(attribs)
-        return uri
-
     def find_attributes(self,parts,extra={}):
         """recurses through a parse tree and creates a dictionary of
         attributes"""
@@ -1019,19 +985,6 @@ class TestLegalRef(FilebasedTester):
                                      'testext':'.txt'},
                   }
 
-    def TestURI(self,data):
-        g = Graph()
-        g.parse(StringIO(data),format="n3")
-        #print "Loaded graph, %s tuples" % len(g)
-        # find the bnode that has a RDF.type predicate
-        for (o,p,s) in g:
-            if p == RDF.type:
-                bnode = o
-
-        p = LegalRef(LegalRef.LAGRUM)
-        #print "calling make_uri"
-        res = p.make_uri(bnode,g)
-        return res
         
     def TestParseLagrum(self,data):
         p = LegalRef(LegalRef.LAGRUM)

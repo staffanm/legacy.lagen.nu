@@ -7,7 +7,9 @@ from tempfile import mktemp
 import filecmp
 import BeautifulSoup
 
+# We should reorganize this, maybe in Util.File, Util.String, and so on...
 
+# Util.Namespaces
 # Set up common namespaces and suitable prefixes for them
 ns = {'dc':'http://purl.org/dc/elements/1.1/',
       'dct':'http://purl.org/dc/terms/',
@@ -37,15 +39,18 @@ class ExternalCommandError(Exception):
     def __str__(self):
         return repr(self.value)
 
+# Util.File
 def mkdir(newdir):
     if not os.path.exists(newdir):
         os.makedirs(newdir)
 
+# Util.File
 def ensureDir(filename):
     d = os.path.dirname(filename)
     if d and not os.path.exists(d):
         mkdir(d)
 
+# Util.File
 def robustRename(old,new):
     """Rename old to new no matter what (if the file exists, it's
     removed, if the target dir doesn't exist, it's created)"""
@@ -65,8 +70,8 @@ def robustRename(old,new):
     except IOError:
         # eh, what are you gonna do?
         pass 
-        
-   
+
+# Util.File
 def robust_remove(file):
     if os.path.exists(file):
         #try:
@@ -77,6 +82,7 @@ def robust_remove(file):
         #    time.sleep(1)
         #    os.unlink(file)
 
+# Util.File
 # a python 2.6-ism
 def relpath(path, start=os.curdir):
     """Return a relative version of a path"""
@@ -111,9 +117,11 @@ def relpath(path, start=os.curdir):
     return os.path.sep.join(rel_list)
     
 
+# Util.Sort
 def numcmp(x,y):
     return cmp(split_numalpha(x),split_numalpha(y))
 
+# Util.Sort
 # '10 a §' => [10, ' a §']
 def split_numalpha(s):
     res = []
@@ -129,6 +137,7 @@ def split_numalpha(s):
     res.append(int(seg) if seg.isdigit() else seg)
     return res
 
+# Util.XML
 def indentXmlFile(filename):
     """Neatifies an existing XML file in-place by running xmllint --format"""
     #tmpfile = "tmp.%s.xml" % os.getpid()
@@ -155,7 +164,7 @@ def indentXmlFile(filename):
     # This fails occasionally - why?
     # os.remove(tmpfile)
     
-
+# Util.XML
 def tidyHtmlFile(filename):    
     """Neatifies an existing XHTML file in-place by running tidy"""
     if os.sys.platform == "darwin":
@@ -174,6 +183,7 @@ def tidyHtmlFile(filename):
     # os.system("xmllint --format %s > tmp.xml" % filename)
     robustRename("tmp.xml", filename)
 
+# Util.XML
 def tidy(tagsoup):
     tmpin = mktemp()
     tmpout = mktemp()
@@ -198,7 +208,7 @@ def tidy(tagsoup):
     
     return result
     
-
+# Util.XML
 def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
 
@@ -249,6 +259,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         if (ret != 0):
             raise ValidationError(stderr)
 
+# Util.Sort
 def uniqueList(*lists):
     slots = {}
     for l in lists:
@@ -256,6 +267,7 @@ def uniqueList(*lists):
             slots[i] = 1
     return slots.keys();
 
+# Util.Process
 def runcmd(cmdline):
     # print "runcmd: %r" % cmdline
     if isinstance(cmdline,unicode):
@@ -279,9 +291,11 @@ def runcmd(cmdline):
         stderr = stderr.decode(enc)
     return (p.returncode,stdout,stderr)
 
+# Util.String
 def normalizeSpace(string):
     return u' '.join(string.split())
 
+# Util.File
 def listDirs(d,suffix=None,reverse=False):
     """A generator that works much like os.listdir, only recursively (and only returns files, not directories)"""
     # inspired by http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/161542
@@ -303,12 +317,13 @@ def listDirs(d,suffix=None,reverse=False):
                     #print "yielding %s" % f
                     yield f
 
+# Util.String
 def loadSoup(filename,encoding='iso-8859-1'):
     return BeautifulSoup.BeautifulSoup(
         codecs.open(filename,encoding=encoding,errors='replace').read(),
         convertEntities='html')
 
-
+# Util.String (or XML?)
 def elementText(element):
     """finds the plaintext contained in a BeautifulSoup element"""
     return normalizeSpace(
@@ -317,6 +332,7 @@ def elementText(element):
          if (isinstance(e,unicode) and 
              not isinstance(e,BeautifulSoup.Comment))]))
 
+# Util.String
 def word_to_html(indoc,outhtml):
     """Converts a word document to a HTML document by remote
     controlling Microsoft Word to open and save the doc as HTML (so
@@ -356,6 +372,7 @@ def word_to_html(indoc,outhtml):
         errlog = open(outhtml+".err.log","w")
         errlog.write("%s:\n%s" % (indoc,e))
 
+# Util.String (or XML?)
 def indent_et(elem, level=0):
     i = "\r\n" + level*"  "
     if len(elem):
@@ -371,6 +388,7 @@ def indent_et(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+# Util.String (or XML?)
 def indent_node(elem, level=0):
     i = "\r\n" + level*"  "
     if len(elem):
@@ -384,6 +402,7 @@ def indent_node(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+# Util.File
 def replace_if_different(newfile,oldfile):
     assert os.path.exists(newfile)
     if not os.path.exists(oldfile):
@@ -396,6 +415,7 @@ def replace_if_different(newfile,oldfile):
         os.unlink(newfile)
         return False
 
+# Util.File
 def copy_if_different(src,dest):
     if not os.path.exists(dest):
         ensureDir(dest)
@@ -406,6 +426,7 @@ def copy_if_different(src,dest):
     else:
         pass
 
+# Util.File
 def outfile_is_newer(infiles,outfile):
     """check to see if the outfile is newer than all ingoing files
     (which means there's no need to regenerate outfile)"""
@@ -418,4 +439,3 @@ def outfile_is_newer(infiles,outfile):
             return False
     # print "%s is newer than %r" % (outfile, infiles)
     return True
-

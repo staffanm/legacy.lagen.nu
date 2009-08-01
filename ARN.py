@@ -2,9 +2,9 @@
 # -*- coding: iso-8859-1 -*-
 """Hanterar referat från Allmäna Reklamationsnämnden, www.arn.se.
 
-Modulen hanterar hämtande av referat från ARNs webbplats samt
-omvandlande av dessa till XML.
-
+Modulen hanterar hämtande av referat från ARNs webbplats, omvandlande
+av dessa till XHTML2/RDFa, samt transformering till browserfärdig
+XHTML1.
 """
 import unittest
 import sys

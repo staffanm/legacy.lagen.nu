@@ -127,10 +127,11 @@ class KeywordDownloader(LegalSource.Downloader):
         # 4) Download all pages from Jureka, probably by starting at
         # pageid = 1 and incrementing until done -- term set "jureka"
         #
-        # Possible future term sets: EUROVOC, Rikstermdatabasen (or a
-        # subset thereof), various gov websites... Lawtext also
-        # contains a number of term definitions, maybe marked up as
-        # dct:defines.
+        # Possible future term sets:
+        # * EUROVOC,
+        # * Rikstermdatabasen
+        # * various gov websites
+        #   - SKV: http://www.skatteverket.se/funktioner/ordforklaringar/ordforklaringarac
         #
         # Store all terms under downloaded/[t]/[term] (for wikipedia,
         # store only those terms that occur in any of the other term
@@ -143,12 +144,14 @@ class KeywordDownloader(LegalSource.Downloader):
             outfile = u"%s/%s/%s.txt" % (self.download_dir, firstletter, term)
             if sys.platform != "win32":
                 outfile = outfile.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\x96','--').encode("latin-1")
-            try: 
-                Util.ensureDir(outfile)
-                f = open(outfile,"w")
-                for termset in sorted(terms[term]):
-                    f.write(termset+"\n")
-                f.close()
+            
+            tmpfile = mktemp()
+            f = open(tmpfile,"w")
+            for termset in sorted(terms[term]):
+                f.write(termset+"\n")
+            f.close()
+            try:
+                Util.replace_if_different(tmpfile,outfile)
             except IOError:
                 log.warning("IOError: Could not write term set file for term '%s'" % term)
             except WindowsError:

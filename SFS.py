@@ -932,7 +932,7 @@ class SFSParser(LegalSource.Parser):
                     if isinstance(element, Tabellcell):
                         if elementtext != "Beteckning":
                             term = elementtext
-                            print u'"%s" är nog en definition (1)' % term
+                            log.debug('"%s" är nog en definition (1)' % term)
                     elif isinstance(element, Stycke):
                         # Sometimes, : is not the delimiter between
                         # the term and the definition, but even in
@@ -952,12 +952,12 @@ class SFSParser(LegalSource.Parser):
                                 termdelimiter = " "
                             if termdelimiter in elementtext:
                                 term = elementtext.split(termdelimiter)[0]
-                                print u'"%s" är nog en definition (2)' % term
+                                log.debug('"%s" är nog en definition (2)' % term)
                     elif isinstance(element, Listelement):
                         # remove
                         elementtext = self.re_Bullet.sub('',self.re_DottedNumber.sub('',elementtext))
                         term = elementtext.split(termdelimiter)[0]
-                        print u'"%s" är nog en definition (3)' % term
+                        log.debug('"%s" är nog en definition (3)' % term)
 
                     # Longest legitimate term found "Valutaväxling, betalningsöverföring och annan finansiell verksamhet"
                     if term and len(term) < 68:
