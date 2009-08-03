@@ -141,11 +141,16 @@ class SesameStore():
         req.get_method = lambda : "POST"
         req.add_header('Content-Type',self.contenttype[format]+";charset=UTF-8")
         req.data = data
-        # print data
         try:
             return self.__urlopen(req)
         except HTTPError, e:
-            raise SesameError(e.read())
+            err = e.read()
+            import re
+            m = re.search("line (\d+)", err)
+            lineno = int(m.group(1))
+            line = data.split("\n")[lineno-1]
+            print "Malformed line: %s" % line
+            raise SesameError(err)
     
 if __name__ == "__main__":
     store = SesameStore("http://localhost:8080/openrdf-sesame", "lagen.nu")

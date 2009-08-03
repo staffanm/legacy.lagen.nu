@@ -6,6 +6,8 @@ import os, sys, subprocess, codecs, shutil, locale
 from tempfile import mktemp
 import filecmp
 import BeautifulSoup
+import html5lib
+from html5lib import treebuilders
 
 # We should reorganize this, maybe in Util.File, Util.String, and so on...
 
@@ -319,9 +321,27 @@ def listDirs(d,suffix=None,reverse=False):
 
 # Util.String
 def loadSoup(filename,encoding='iso-8859-1'):
+    # We require BeautifulSoup version < 3.1 (See
+    # http://www.crummy.com/software/BeautifulSoup/3.1-problems.html)
     return BeautifulSoup.BeautifulSoup(
         codecs.open(filename,encoding=encoding,errors='replace').read(),
         convertEntities='html')
+
+    # since 3.1, BeautifulSoup no longer supports broken HTML. In the
+    # future, we should use the html5lib parser instead (which exports
+    # a BeautifulSoup interface). However, html5lib has problems of
+    # it's own right now:
+    # http://www.mail-archive.com/html5lib-discuss@googlegroups.com/msg00346.html
+    #
+    # The old call to BeautifulSoup had a convertEntities parameter
+    # (set to 'html'), html5lib.HTMLParser does not have anything
+    # similar. Hope it does right by default.
+    #
+    # f = codecs.open(filename,encoding=encoding,errors='replace')
+    # parser = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("beautifulsoup"))
+    # return parser.parse(f)
+    
+
 
 # Util.String (or XML?)
 def elementText(element):

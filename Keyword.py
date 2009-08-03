@@ -221,9 +221,9 @@ class KeywordManager(LegalSource.Manager):
         ntfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt'])
         files = list(Util.listDirs(termdir, ".xht2"))
 
-        #if self._outfile_is_newer(files,[minixmlfile,ntfile]):
-        #    log.info(u"Not regenerating RDF/XML files")
-        #    return
+        if self._outfile_is_newer(files,minixmlfile):
+            log.info(u"Not regenerating RDF/XML files")
+            return
 
         log.info("Making a mini graph")
         SKOS = Namespace(Util.ns['skos'])
@@ -240,14 +240,14 @@ class KeywordManager(LegalSource.Manager):
             # Check to see if we have a data/wiki/parsed/[term].xht2 file, and if so, read it's first line
             wikifile = Util.relpath(os.path.sep.join([self.baseDir, 'wiki', u'parsed', basefile + '.xht2']))
             if os.path.exists(wikifile):
-                log.debug("%s exists" % wikifile)
+                # log.debug("%s exists" % wikifile)
                 # use the first <p> of the wiki page as a short description
                 tree = ET.parse(wikifile)
                 firstpara = tree.find("//"+XHT2_NS+"p")
                 if firstpara != None: # redirects and empty pages lack <p> tags alltogether. Which works out just fine
                     xmldesc = ET.tostring(firstpara, encoding='utf-8').decode('utf-8')
                     textdesc = Util.normalizeSpace(self.re_tagstrip.sub('',xmldesc))
-                    log.debug(u"%s has desc %s" % (basefile, textdesc))
+                    # log.debug(u"%s has desc %s" % (basefile, textdesc))
                     mg.add((URIRef(termuri), DCT['description'], Literal(textdesc, lang="sv")))
 
         log.info("Serializing the minimal graph")
@@ -343,7 +343,6 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 SELECT ?desc
 WHERE { ?uri dct:description ?desc . ?uri rdfs:label "%s"@sv }
 """ % esckeyword
-
         wikidesc = self._store_select(sq)
         log.debug(u'%s: Selected %s descriptions (%.3f sec)', basefile, len(wikidesc), time()-start)
 

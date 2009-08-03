@@ -9,8 +9,8 @@ if __name__ == "__main__":
     sys.stdout.write(u"sys.stdout.encoding:        %s\n" % sys.stdout.encoding)
     sys.stdout.write(u"Performing codec/locale magic\n")
     # deep codec/locale magic
-    import locale
-    locale.setlocale(locale.LC_ALL,'')
+    #import locale
+    #locale.setlocale(locale.LC_ALL,'')
     s = u"räksmörgås"
     reload(sys)
 

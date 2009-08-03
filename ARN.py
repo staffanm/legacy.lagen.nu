@@ -94,16 +94,22 @@ class ARNParser(LegalSource.Parser):
         RINFOEX = Namespace(Util.ns['rinfoex'])
         self.id = basefile
         import codecs
+        # log.debug("Loading %s" % files['main'][0])
         soup = Util.loadSoup(files['main'][0])
 
         # FIXME: Create a better URI pattern
         meta = {'xml:base': "http://rinfo.lagrummet.se/publ/arn/%s" % basefile.replace("/","-")}
+
         meta[u'Ärendenummer'] = UnicodeSubject(soup.first('h2').b.i.string.strip(),
                                                predicate=RINFOEX['arendenummer'])
         meta['dct:identifier'] = "ARN %s" % meta[u'Ärendenummer']
-        # maybe this should be a dct:description?
-        meta[u'Rubrik'] = UnicodeSubject(soup.first('h3').string.strip(),
+
+        rubrik = soup.first('h3').string.strip()
+        if not rubrik:
+            rubrik = u"(Rubrik saknas)"
+        meta[u'Rubrik'] = UnicodeSubject(rubrik,
                                          predicate=DCT['description'])
+            
         meta[u'Ärendemening'] = UnicodeSubject(soup.firstText(u"Ärendemening: ").parent.parent.parent.parent.contents[1].string.strip(),
                                                predicate=DCT['subject'])
         meta[u'Avdelning'] = UnicodeSubject(Util.elementText(soup.firstText('Avdelning: ').parent.parent.parent.parent.contents[1]).strip(),
@@ -204,6 +210,7 @@ class ARNManager(LegalSource.Manager):
             year = obj.split("-")[0]
             for subj in by_pred_obj[date_pred][obj]:
                 identifier = by_subj_pred[subj][id_pred]
+
                 desc = by_subj_pred[subj][desc_pred]
                 if len(desc) > 80:
                     desc = desc[:80].rsplit(' ',1)[0]+'...'

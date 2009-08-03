@@ -7,7 +7,6 @@ from time import time
 import datetime
 import codecs
 import difflib
-import locale
 import logging
 import os
 import re
@@ -50,11 +49,12 @@ else:
 
 # Do required codec/locale magic right away, since this is included by
 # all runnable scripts
-locale.setlocale(locale.LC_ALL,'') 
+
 if sys.platform == 'win32':
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding
     else:
+        print "sys.stdout.encoding not set"
         defaultencoding = 'cp850'
 else:
     if sys.stdout.encoding:
@@ -62,11 +62,16 @@ else:
         if defaultencoding == 'ANSI_X3.4-1968': # really?!
             defaultencoding = 'iso-8859-1'
     else:
+        import locale
+        locale.setlocale(locale.LC_ALL,'')
         defaultencoding = locale.getpreferredencoding()
         
-# print "setting sys.stdout to a '%s' writer" % defaultencoding
+print "setting sys.stdout to a '%s' writer" % defaultencoding
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+
+
+
 
 log = logging.getLogger(u'ls')
 
@@ -271,7 +276,11 @@ class Manager(object):
     def RelateAll(self,file=None):
         """Sammanställer all metadata för alla dokument i rättskällan
         och laddar in det i systemets triplestore"""
-        files = list(Util.listDirs(os.path.sep.join([self.baseDir, self.moduleDir, u'parsed']), '.xht2'))
+        xht2_dir = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed'])
+        if not os.path.exists(xht2_dir):
+            log.warning("Dir %s does not exist" % xht2_dir)
+            return
+        files = list(Util.listDirs(xht2_dir, '.xht2'))
         rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
 
         context = "<urn:x-local:%s>" % self.moduleDir
@@ -303,6 +312,8 @@ class Manager(object):
             triples = 0
 
             log.info("Relating %d documents" % len(files))
+            # FIXME: Consider using do_for_all with this to
+            # parallelize things.
             for f in files:
                 c += 1
                 graph = self._extract_rdfa(f)
@@ -388,8 +399,8 @@ class Manager(object):
                             by_subj_pred[subj][pred] = objUri
                         else:
                             pass
-            else:
-                log.warning("Couldn't parse line %s" % line)
+                else:
+                    log.warning("Couldn't parse line %s" % line)
         sys.stdout.write("\n")
     
         log.info("RDF structured (%.3f sec)", time()-start)
@@ -664,10 +675,9 @@ class Manager(object):
         literals in the graph"""
         for tup in graph:
             (o,p,s) = tup
-            if (isinstance(s,Literal) and
-                s.datatype == URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral')):
+            if isinstance(s,Literal):
                 graph.remove(tup)
-                l = Literal(u' '.join(s.split()))
+                l = Literal(u' '.join(s.split()), lang=s.language)
                 graph.add((o,p,l))
 
 

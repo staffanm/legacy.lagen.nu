@@ -12,7 +12,7 @@ import hashlib
 import locale
 import logging
 import urllib
-locale.setlocale(locale.LC_ALL,'') 
+# locale.setlocale(locale.LC_ALL,'') 
 
 # 3rdparty libs
 from simpleparse.parser import Parser

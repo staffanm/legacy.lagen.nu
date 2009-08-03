@@ -213,6 +213,7 @@ class Manager:
             wikitext = wikitext[idx+1:]
             p = WikiParser()
             incfile = os.path.sep.join([self.baseDir, 'site', 'generated', 'index.inc.xht2'])
+            Util.ensureDir(incfile)
             fp = open(incfile,"w")
             fp.write(p.parse_wikitext("index",wikitext))
             fp.close()
@@ -361,8 +362,8 @@ class Manager:
         else:
             log.info("Copying to target server")
             localcmd    = 'tar -c -T %s --mode a+rwx -f - ' % publish
-            transfercmd = 'ssh -C staffan@vps.tomtebo.org'
-            remotecmd   = 'cd /www/staffan/ferenda.lagen.nu && tar xf -'
+            transfercmd = 'ssh -C %s' % self.config['ssh_host']
+            remotecmd   = 'cd %s && tar xf -' % self.config['remote_dir']
             cmd = '%s | %s "%s"' % (localcmd, transfercmd, remotecmd)
             # print "command is '%s'" % cmd
             (ret, stdout, stderr) = Util.runcmd(cmd)

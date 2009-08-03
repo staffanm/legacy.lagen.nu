@@ -1,3 +1,14 @@
+2009-08-03 20:41:13 Betaversion av lagen.nu
+
+<p>Välkommen till betaversionen av lagen.nu. Under sommaren och hösten
+håller vi på att utveckla en ny version av lagen.nu med bättre
+hantering av länkar fram och tillbaka mellan olika dokument, bättre
+hantering av juridiska begrepp, och framförallt med kommentarer till
+de viktigaste lagtexterna! Eftersom detta är en betaversion finns det
+saker här och var som inte riktigt funkar som de ska, men vi jobbar på
+det!</p>
+
+
 2009-06-10 17:37:00 Rättsfallsimporten fungerar igen
 
 <p>Sedan någon gång i april har importen av nya rättsfall från

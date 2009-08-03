@@ -932,7 +932,7 @@ class SFSParser(LegalSource.Parser):
                     if isinstance(element, Tabellcell):
                         if elementtext != "Beteckning":
                             term = elementtext
-                            log.debug('"%s" är nog en definition (1)' % term)
+                            log.debug(u'"%s" är nog en definition (1)' % term)
                     elif isinstance(element, Stycke):
                         # Sometimes, : is not the delimiter between
                         # the term and the definition, but even in
@@ -952,12 +952,12 @@ class SFSParser(LegalSource.Parser):
                                 termdelimiter = " "
                             if termdelimiter in elementtext:
                                 term = elementtext.split(termdelimiter)[0]
-                                log.debug('"%s" är nog en definition (2)' % term)
+                                log.debug(u'"%s" är nog en definition (2)' % term)
                     elif isinstance(element, Listelement):
                         # remove
                         elementtext = self.re_Bullet.sub('',self.re_DottedNumber.sub('',elementtext))
                         term = elementtext.split(termdelimiter)[0]
-                        log.debug('"%s" är nog en definition (3)' % term)
+                        log.debug(u'"%s" är nog en definition (3)' % term)
 
                     # Longest legitimate term found "Valutaväxling, betalningsöverföring och annan finansiell verksamhet"
                     if term and len(term) < 68:
@@ -2561,9 +2561,11 @@ WHERE {
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-        self._do_for_all(parsed_dir,'xht2',self.Generate)
-        generated_dir = os.path.sep.join([self.baseDir, u'sfs', 'generated'])
-        self._do_for_all(generated_dir,'html',self.CleanupAnnulled)
+        #self._do_for_all(parsed_dir,'xht2',self.Generate)
+        self._do_for_all(parsed_dir,'xht2',StaticGenerate)
+
+        # generated_dir = os.path.sep.join([self.baseDir, u'sfs', 'generated'])
+        # self._do_for_all(generated_dir,'html',self.CleanupAnnulled)
 
 #    def Convert(self,basefile):
 #        infile = self._xmlFileName(basefile)
@@ -2930,6 +2932,22 @@ def StaticParse(basefile):
         print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
         # do nothing
         pass
+
+def StaticGenerate(basefile):
+    if multiprocessing:
+        mlog = multiprocessing.get_logger()
+    else:
+        mlog = None
+    try:
+        mgr = SFSManager()
+        return mgr.Generate(basefile)
+    except KeyboardInterrupt:
+        raise
+    except:
+        print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
+        # do nothing
+        pass
+    
 
 if __name__ == "__main__":
     import logging.config

@@ -30,8 +30,8 @@ import re
 import traceback
 import codecs
 from difflib import Differ
-import locale
-locale.setlocale(locale.LC_ALL,'') 
+#import locale
+#locale.setlocale(locale.LC_ALL,'') 
 
 import Util      
 

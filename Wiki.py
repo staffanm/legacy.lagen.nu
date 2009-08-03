@@ -387,6 +387,10 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
+            # FIXME: regardless of this, we should fast-load the store
+            # with the previously-extracted triples, but this is
+            # difficult since we use multiple contexts (also see
+            # below)
             return
 
         for f in files:
@@ -395,7 +399,10 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         # should we serialize everything to a big .nt file like the
         # other LegalSources does? It's a bit more difficult since we
-        # have different contexts
+        # have different contexts. For now, just touch() the file so
+        # that the _otfile_is_newer trick works
+        f = open(rdffile,"w")
+        f.close()
 
     ################################################################
     # IMPLEMENTATION OF FilebasedTester interface
