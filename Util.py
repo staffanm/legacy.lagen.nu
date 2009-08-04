@@ -6,8 +6,8 @@ import os, sys, subprocess, codecs, shutil, locale
 from tempfile import mktemp
 import filecmp
 import BeautifulSoup
-import html5lib
-from html5lib import treebuilders
+#import html5lib
+#from html5lib import treebuilders
 
 # We should reorganize this, maybe in Util.File, Util.String, and so on...
 

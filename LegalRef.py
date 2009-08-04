@@ -971,9 +971,7 @@ class LegalRef:
 from FilebasedTester import FilebasedTester
 class TestLegalRef(FilebasedTester):
 
-    testparams = {'URI': {'dir': u'test/LegalRef/URI',
-                          'testext':'.n3'},
-                  'ParseLagrum': {'dir': u'test/LegalRef/SFS',
+    testparams = {'ParseLagrum': {'dir': u'test/LegalRef/SFS',
                                   'testext':'.txt'},
                   'ParseKortlagrum': {'dir': u'test/LegalRef/Short',
                                       'testext':'.txt'},

@@ -165,6 +165,10 @@ class WikiParser(LegalSource.Parser):
     def Parse(self,basefile,infile,config=None):
         xml = ET.parse(open(infile))
         wikitext = xml.find("//"+MW_NS+"text").text
+        #if wikitext:
+        #    return wikitext.encode('iso-8859-1',"replace")
+        #else:
+        #    return ''
         return self.parse_wikitext(basefile,wikitext)
 
 

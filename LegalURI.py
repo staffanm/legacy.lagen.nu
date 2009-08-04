@@ -21,14 +21,22 @@ from LegalRef import LegalRef
 import Util
 
 RINFO = Namespace(Util.ns['rinfo'])
+RINFOEX = Namespace(Util.ns['rinfoex'])
 
 # Maps keys used by the internal dictionaries that LegalRef
 # constructs, which in turn are modelled after production rule names
 # in the EBNF grammar.
 predicate = {"type": RDF.type,
-             "publikation": RINFO["rattsfallspublikation"],
-             "artal": RINFO["artal"],
-             "sidnummer": RINFO["sidnummer"]}
+             "domstol": RINFO["rattsfallspublikation"],
+             "ar": RINFO["artal"],
+             "lopnr": RINFO["sidnummer"],
+             "law": RINFO["fsNummer"],
+             "chapter": RINFOEX["kapitelnummer"],
+             "section": RINFOEX["paragrafnummer"],
+             "piece": RINFOEX["styckenummer"],
+             "item": RINFOEX["punktnummer"]}
+
+
 
 dictkey = dict([[v,k] for k,v in predicate.items()])
 
@@ -73,6 +81,9 @@ def construct_from_graph(graph):
     # assume every triple in the graph has the same bnode as subject
     bnode = list(graph)[0][0]
     assert(isinstance(bnode,BNode))
+
+    # maybe we should just move the triples into a dict keyed on predicate?
+    
     rdftype = _first_obj(graph,bnode,RDF.type)
     if rdftype == RINFO["Rattsfallsreferat"]:
         publ = _first_obj(graph,bnode,RINFO["rattsfallspublikation"])
@@ -84,7 +95,15 @@ def construct_from_graph(graph):
             raise ValueError("Don't know how to format a %s with rinfo:rattsfallspublikation %s" % (RINFO["Rattsfallsreferat"], publ))
         return "http://rinfo.lagrummet.se/publ/rattsfall/%s" % uripart
     elif rdftype == RINFO["KonsolideradGrundforfattning"]:
-        pass
+        attributeorder = [RINFO["fsNummer"],
+                          RINFOEX["kapitelnummer"],
+                          RINFOEX["paragrafnummer"],
+                          RINFOEX["styckenummer"],
+                          RINFOEX["punktnummer"]]
+
+        for key in attributeorder:
+            if _first_obj(graph,bnode,key):
+                
         
     
 def parse(uri):
