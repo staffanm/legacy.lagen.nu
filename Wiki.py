@@ -119,6 +119,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.doBlockLevels(text, True)
         text = self.unstripNoWiki(text)
         text = self.replaceWikiLinks(text)
+        text = self.replaceImageLinks(text)
         
         text = text.split(u'\n')
         text = u'\n'.join(text)
@@ -130,6 +131,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
         
     re_labeled_wiki_link = re.compile(r'\[\[([^\]]*?)\|(.*?)\]\](\w*)') # is the trailing group really needed?
     re_wiki_link = re.compile(r'\[\[([^\]]*?)\]\](\w*)')
+    re_img_uri = re.compile('(https?://[\S]+\.(png|jpg|gif))')
 
     def capitalizedLink(self,m):
         if m.group(1).startswith('SFS/'):
@@ -143,7 +145,6 @@ class LinkedWikimarkup(wikimarkup.Parser):
         else:
             return '<a class="wl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
         
-    
     def replaceWikiLinks(self,text):
         # print "replacing wiki links: %s" % text[:30]
         # FIXME: Ideally, we should only link those segments that have
@@ -152,6 +153,10 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.re_labeled_wiki_link.sub(self.capitalizedLink, text)
         text = self.re_wiki_link.sub(self.capitalizedLink, text)
         return text
+
+    def replaceImageLinks(self,text):
+        # emulates the parser when using$ wgAllowExternalImages
+        return self.re_img_uri.sub('<img src="\\1"/>',text)
 
 
 class WikiParser(LegalSource.Parser):
