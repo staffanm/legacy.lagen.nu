@@ -374,6 +374,9 @@ class Manager:
                 log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
 
     def WikiUpdate(self, wikipage):
+        # signs of UTF8 mojibake
+        if isinstance(wikipage,unicode) and u'\xc3' in wikipage:
+            wikipage =  wikipage.encode('latin-1').decode('utf-8')
         import Wiki
         wikimgr = Wiki.WikiManager()
         wikimgr.Download(wikipage)
@@ -389,10 +392,14 @@ class Manager:
         elif ":" in wikipage: # not in default namespace, probably
             pass
         else:
-            import Keywords
-            kwmgr = Keywords.KeywordManager()
-            kwmgr.Parse(wikipage) # needed for new terms
-            kwmgr.Generate(wikipage)
+            import Keyword
+            re_firstchar = re.compile(r'(\w)', re.UNICODE).search
+            firstletter = re_firstchar(wikipage).group(0)
+            basefile = u'%s/%s' % (firstletter,wikipage)
+            kwmgr = Keyword.KeywordManager()
+            kwmgr.Parse(basefile,wiki_keyword=True) # needed for new terms
+            # raise ValueError(repr(basefile))
+            kwmgr.Generate(basefile)
 
     def _make_zipfiles(self):
         self._make_zipfile(os.path.sep.join([self.baseDir,u'dv','dv.zip']),

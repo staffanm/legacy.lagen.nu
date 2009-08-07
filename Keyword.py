@@ -288,13 +288,17 @@ class KeywordManager(LegalSource.Manager):
         intermediate_dir = os.path.sep.join([self.baseDir, __moduledir__, u'downloaded'])
         self._do_for_all(intermediate_dir, '.txt',self.Parse)
 
-    def Parse(self,basefile,verbose=False):
+    def Parse(self,basefile,verbose=False, wiki_keyword=False):
         if verbose:
             print "Setting verbosity"
             log.setLevel(logging.DEBUG)
         start = time()
         basefile = basefile.replace(":","/")
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".txt"
+        if (not os.path.exists(infile)) and wiki_keyword:
+            fp = open(infile,"w")
+            fp.write("wiki\n")
+            fp.close()
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):
