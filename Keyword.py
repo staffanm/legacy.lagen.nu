@@ -62,16 +62,16 @@ class KeywordDownloader(LegalSource.Downloader):
         # semantically sensible for a "download" action -- the content
         # isn't really external?) -- term set "subjects" (these come
         # from both court cases and legal definitions in law text)
-
-        # for the dv and arn contexts, maybe we should only use subjects that
-        # appears more than once
         sq = """
         PREFIX dct:<http://purl.org/dc/terms/>
         
-        SELECT DISTINCT ?subject  WHERE { ?uri dct:subject ?subject }
+        SELECT DISTINCT ?subject  WHERE { GRAPH <urn:x-local:sfs> { ?uri dct:subject ?subject } }
         """
         store = SesameStore(self.config['triplestore'], self.config['repository'])
         results = store.select(sq)
+
+        # this is based on LegalSource._store_select -- maybe we
+        # should work that into SesameStore?
         tree = ET.fromstring(results)
         for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
             for element in row: # should be only one
@@ -88,7 +88,41 @@ class KeywordDownloader(LegalSource.Downloader):
 
                 terms[subj][u'subjects'] = True
 
-        log.debug("Retrieved terms from RDF store, got %s terms" % len(terms))
+        log.debug("Retrieved subject terms from RDF graph <urn:x-local:sfs>, got %s terms" % len(terms))
+
+        # for the dv and arn contexts, we should only use subjects
+        # that appears more than once:
+        sq = """
+        PREFIX dct:<http://purl.org/dc/terms/>
+        
+        SELECT ?subject  WHERE { ?uri dct:subject ?subject }
+        """
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        results = store.select(sq)
+        tree = ET.fromstring(results)
+        potential_subj = defaultdict(int)
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            for element in row: # should be only one
+                subj = element[0].text
+                if subj.startswith("http://"):
+                    # we should really select ?uri rdfs:label ?label instead of munging the URI
+                    subj = uri_to_keyword(subj)
+                else:
+                    # legacy triples
+                    subj = subj[0].upper() + subj[1:] # uppercase first letter and leave the rest alone
+
+                # for sanity: set max length of a subject to 100 chars
+                subj = subj[:100] 
+
+                potential_subj[subj] += 1
+
+        
+        for (subj,cnt) in potential_subj.items():
+            if cnt > 1:
+                terms[subj][u'subjects'] = True
+                
+
+        log.debug("Retrieved non-unique subject terms from other RDF graphs, got %s terms" % len(terms))
         # print repr(terms.keys()[:10])
         # 2) Download the wiki.lagen.nu dump from
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
@@ -372,11 +406,16 @@ WHERE {
          ?baseuri dct:title ?label .
          ?uri dct:isPartOf ?x . ?x dct:isPartOf ?y . ?x dct:isPartOf ?z . ?z dct:isPartOf ?baseuri
        }
+       UNION {
+         ?uri dct:subject <%s> .
+         ?baseuri dct:title ?label .
+         ?uri dct:isPartOf ?x . ?x dct:isPartOf ?y . ?x dct:isPartOf ?z . ?z dct:isPartOf ?w . ?w dct:isPartOf ?baseuri
+       }
     }
 }
 
-""" % (escuri,escuri,escuri)
-        
+""" % (escuri,escuri,escuri,escuri)
+        #print sq
         legaldefinitioner = self._store_select(sq)
         log.debug(u'%s: Selected %d legal definitions (%.3f sec)', basefile, len(legaldefinitioner), time()-start)
 
@@ -403,7 +442,7 @@ WHERE {
         }
     } UNION {
         GRAPH <urn:x-local:arn> {
-                ?uri dct:title ?desc .
+                ?uri dct:description ?desc .
                 ?uri rinfoex:arendenummer ?id .
                 ?uri dct:subject "%s"@sv
         }

@@ -161,7 +161,7 @@ class ARNManager(LegalSource.Manager):
         out = file(tmpfile, "w")
         out.write(parsed)
         out.close()
-        Util.indentXmlFile(tmpfile)
+        #Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
         

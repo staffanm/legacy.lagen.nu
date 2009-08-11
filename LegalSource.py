@@ -35,6 +35,8 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 from rdflib import plugin
 from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib.store import Store
+from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
+
 # from rdflib.syntax import NamespaceManager
 import pyRdfa
 
@@ -375,9 +377,10 @@ class Manager(object):
                     by_pred_obj[pred][obj].append(subj)
                     by_subj_pred[subj][pred] = obj
         else:
-            fp = codecs.open(rdffile, encoding='unicode_escape', errors='replace')
+            fp = open(rdffile)
             count = 0
-            for line in fp:
+            for qline in fp:
+                line = ntriple_unquote(qline)
                 count += 1
                 if count % 10000 == 0:
                     sys.stdout.write(".")

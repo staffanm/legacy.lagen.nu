@@ -160,6 +160,7 @@ def indentXmlFile(filename):
     # Also, tidy will hang (due to excessive stderr messages?) for 1992:1226 -- we should
     # try to get runcmd handle this
 
+    # also it seems tidy changes xml:lang to lang -- WHY?!
     (ret,stdout,stderr) = runcmd("tidy -xml -utf8 -i -m -w 0 %s" % (filename))
     if (ret != 0):
         raise TransformError(stderr)

@@ -67,7 +67,7 @@
   </xsl:template>
 
   <!-- refs mode -->
-  <xsl:template match="*|@*" mode="refs">
+  <xsl:template match="xht2:h" mode="refs">
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
 
     <xsl:if test="$rattsfall">
@@ -78,9 +78,9 @@
 	</xsl:call-template>
       </div>
     </xsl:if>
-    
   </xsl:template>
-  
+
+  <xsl:template match="*" mode="refs"/>
   
 
   <xsl:template name="rattsfall">
