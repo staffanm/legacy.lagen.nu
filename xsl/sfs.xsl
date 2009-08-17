@@ -10,6 +10,7 @@
 		exclude-result-prefixes="xht2 rdf">
 
   <xsl:import href="uri.xsl"/>
+  <xsl:import href="accordion.xsl"/>
   <xsl:import href="tune-width.xsl"/>
   <xsl:include href="base.xsl"/>
   
@@ -55,61 +56,78 @@
 
   <xsl:template name="headmetadata"/>
 
+  <xsl:template match="xht2:section[@role='main']">
+    <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/rinfo:isLagrumFor/rdf:Description"/>
+    <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/dct:description/xht2:div/*"/>
+    <div class="konsolideradtext">
+      <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']">
+	<div class="warning">
+	  OBS: Författningen har upphävts/ska upphävas <xsl:value-of
+	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:upphavandedatum']"/>
+	  genom SFS <xsl:value-of
+	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']"/>
+	</div>
+      </xsl:if>
+      <table>
+	<tr>
+	  <td width="50%">
+	    <h1 property="dct:title"><xsl:value-of select="//xht2:h[@property = 'dct:title']"/></h1>
+	    <xsl:copy-of select="$docmetadata"/>
+	  </td>
+	  <td class="aux">
+	    <xsl:if test="$kommentar or $rattsfall">
+	      <div class="ui-accordion">
+		<xsl:if test="$kommentar">
+		  <xsl:call-template name="accordionbox">
+		    <xsl:with-param name="heading">Kommentar</xsl:with-param>
+		    <xsl:with-param name="contents">
+		      <xsl:apply-templates select="$kommentar"/>
+		    </xsl:with-param>
+		    <xsl:with-param name="first" select="true()"/>
+		  </xsl:call-template>
+		</xsl:if>
+		<xsl:if test="$rattsfall">
+		  <xsl:call-template name="accordionbox">
+		    <xsl:with-param name="heading">Rättsfall (<xsl:value-of select="count($rattsfall)"/>)</xsl:with-param>
+		    <xsl:with-param name="contents">
+		      <xsl:call-template name="rattsfall">
+			<xsl:with-param name="rattsfall" select="$rattsfall"/>
+		      </xsl:call-template>
+		    </xsl:with-param>
+		    <xsl:with-param name="first" select="not($kommentar)"/>
+		  </xsl:call-template>
+		</xsl:if>
+	      </div>
+	    </xsl:if>
+	  </td>
+	</tr>
+	<xsl:apply-templates/>
+      </table>
+    </div>
+  </xsl:template>
 
   <xsl:template match="xht2:h">
     <xsl:choose>
-      <xsl:when test="@property = 'dct:title'">
-	<a href="#" onclick="switchBoxlayout('none'); return false;">
-	  <img src="/img/application.png"
-	       class="toolbar-icon" width="16" height="16"
-	       title="Visa inte kommentarer och hänvisningar"/>
-	</a>
-	<a href="#" onclick="switchBoxlayout('horizontal'); return false;">
-	  <img src="/img/application_tile_horizontal.png"
-	       class="toolbar-icon" width="16" height="16"
-	       title="Visa kommentarer och hänvisningar vid sidan om lagtexten"/>
-	</a>
-	<a href="#" onclick="switchBoxlayout('vertical'); return false;">
-	  <img src="/img/application_tile_vertical.png"
-	       class="toolbar-icon" width="16" height="16" 
-	       title="Visa kommentarer och hänvisningar under lagtexten"/>
-	</a>
-	<h1 property="dct:title"><xsl:value-of select="."/></h1>
-	<div class="sidoruta kommentar">
-	  <xsl:call-template name="toc"/>
-	</div>
-
-	<div style="position: relative">
-	  <div class="sidoruta">
-	    
-	    <xsl:copy-of select="$docmetadata"/>
-
-	    <!-- Even though this list only includes cases specific to the law itself, it's still too long. Disabled until we get it usable -->
-	    <!--
-	    <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/rinfo:isLagrumFor/rdf:Description"/>
-	    <xsl:call-template name="rattsfall">
-	      <xsl:with-param name="rattsfall" select="$rattsfall"/>
-	    </xsl:call-template>
-	    -->
-	    <div style="clear: both;"/>
-	  </div>
-	  <div class="sidoruta kommentar">
-	    <h2><img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till författningen"/>Kommentarer</h2>
-	    <p><a class="editlink" href="http://wiki.lagen.nu/index.php?title=SFS/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit">[redigera]</a></p>
-	    <xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/dct:description/xht2:div/*"/>
-	  </div>
-	</div>
-
-      </xsl:when>
+      <xsl:when test="@property = 'dct:title'"/><!-- main title is handled in another template -->
       <xsl:when test="@class = 'underrubrik'">
-	<h3><xsl:for-each select="@*">
-	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
-	  </xsl:for-each><xsl:value-of select="."/></h3>
+	<tr>
+	  <td>
+	    <h3><xsl:for-each select="@*">
+	      <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	    </xsl:for-each><xsl:value-of select="."/></h3>
+	  </td>
+	  <td></td>
+	</tr>
       </xsl:when>
       <xsl:otherwise>
-	<h2><xsl:for-each select="@*">
-	    <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
-	  </xsl:for-each><xsl:value-of select="."/></h2>
+	<tr>
+	  <td>
+	    <h2><xsl:for-each select="@*">
+	      <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	    </xsl:for-each><xsl:value-of select="."/></h2>
+	  </td>
+	  <td></td>
+	</tr>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -119,16 +137,19 @@
   </xsl:template>
 
   <xsl:template match="xht2:section">
-    <div>
-      <xsl:if test="@id">
-	<xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
-	<xsl:attribute name="about"><xsl:value-of select="//xht2:html/@about"/>#<xsl:value-of select="@id"/></xsl:attribute>
-      </xsl:if>
-      <xsl:if test="@class">
-	<xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute>
-      </xsl:if>
-      <xsl:apply-templates/>
-    </div>
+    <tr>
+      <td>
+	<xsl:if test="@id">
+	  <xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
+	  <xsl:attribute name="about"><xsl:value-of select="//xht2:html/@about"/>#<xsl:value-of select="@id"/></xsl:attribute>
+	</xsl:if>
+	<xsl:if test="@class">
+	  <xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute>
+	</xsl:if>
+	<xsl:apply-templates/>
+      </td>
+      <td></td>
+    </tr>
   </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']">
@@ -138,73 +159,106 @@
   </xsl:template>
 
   <xsl:template match="xht2:h[@class='kapitelrubrik']">
-    <h2><xsl:for-each select="@*">
-      <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
-    </xsl:for-each><xsl:value-of select="."/></h2>
-    <xsl:variable name="kapiteluri" select="concat($dokumenturi,'#', ../@id)"/>
-    <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$kapiteluri]/dct:description/xht2:div/*"/>
-    <xsl:if test="$kommentar">
-      <div id="ann-{../@id}" class="sidoruta kommentar">
-	<img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
-	<xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$kapiteluri]/dct:description/xht2:div/*"/>
-      </div>
-    </xsl:if>
+    <tr>
+      <td>
+	<h2><xsl:for-each select="@*">
+	  <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>
+	</xsl:for-each><xsl:value-of select="."/></h2>
+      </td>
+      <td class="aux" id="refs-{../@id}">
+	<xsl:variable name="kapiteluri" select="concat($dokumenturi,'#', ../@id)"/>
+	<xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$kapiteluri]/dct:description/xht2:div/*"/>
+	<xsl:if test="$kommentar">
+	  <div class="ui-accordion">
+	    <xsl:call-template name="accordionbox">
+	      <xsl:with-param name="heading">Kommentar</xsl:with-param>
+	      <xsl:with-param name="contents">
+		<xsl:apply-templates select="$kommentar"/>
+	      </xsl:with-param>
+	      <xsl:with-param name="first" select="true()"/>
+	    </xsl:call-template>
+	  </div>
+	</xsl:if>
+      </td>
+    </tr>
   </xsl:template>
     
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
-    <div class="paragraf" id="{@id}" about="{//xht2:html/@about}#{@id}">
-      <xsl:apply-templates/>
-      <!-- plocka fram referenser kring/till denna paragraf -->
-      <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
-      
-      <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
-      <xsl:variable name="inbound" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:references/rdf:Description"/>
-      <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
-
-      <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy/rdf:Description"/>
-      <xsl:variable name="andrad" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isChangedBy/rdf:Description"/>
-      <xsl:variable name="upphavd" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isRemovedBy/rdf:Description"/>
-
-      <xsl:if test="$kommentar">
-	<div id="ann-{@id}" class="sidoruta kommentar">
-	  <img src="/img/comment.png" class="inline-icon" width="16" height="16" title="Kommentarer till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
-	<xsl:apply-templates select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
-	</div>
-      </xsl:if>
-      <xsl:if test="$rattsfall or $inford or $andrad or $upphavd">
-	<div id="refs-{@id}" class="sidoruta refs">
-	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar till {xht2:p/xht2:span[@class='paragrafbeteckning']}"/>
-	  <xsl:call-template name="andringsnoteringar">
-	    <xsl:with-param name="typ" select="'Införd'"/>
-	    <xsl:with-param name="andringar" select="$inford"/>
-	  </xsl:call-template>
-	  
-	  <xsl:call-template name="andringsnoteringar">
-	    <xsl:with-param name="typ" select="'Ändrad'"/>
-	    <xsl:with-param name="andringar" select="$andrad"/>
-	  </xsl:call-template>
-	  
-	  <xsl:call-template name="andringsnoteringar">
-	    <xsl:with-param name="typ" select="'Upphävd'"/>
-	    <xsl:with-param name="andringar" select="$upphavd"/>
-	  </xsl:call-template>
-	  
-	  <xsl:call-template name="rattsfall">
-	    <xsl:with-param name="rattsfall" select="$rattsfall"/>
-	  </xsl:call-template>
-
-
-	</div>
-      </xsl:if>
-      <xsl:if test="$inbound">
-	<div id="inbound-{@id}" class="sidoruta refs">
-	  <img src="/img/link.png" class="inline-icon" width="16" height="16" title="Hänvisningar {xht2:p/xht2:span[@class='paragrafbeteckning']}"/><b>Lagrumshänvisningar hit</b><br/>
-	  <xsl:call-template name="inbound">
-	    <xsl:with-param name="inbound" select="$inbound"/>
-	  </xsl:call-template>
-	</div>
-      </xsl:if>
-    </div>
+    <!-- plocka fram referenser kring/till denna paragraf -->
+    <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
+    <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
+    <xsl:variable name="inbound" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:references/rdf:Description"/>
+    <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
+    <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy"/>
+    <xsl:variable name="andrad" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isChangedBy"/>
+    <xsl:variable name="upphavd" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isRemovedBy"/>
+    <tr>
+      <td class="paragraf" id="{@id}" about="{//xht2:html/@about}#{@id}">
+	<xsl:apply-templates/>
+      </td>
+      <td id="refs-{@id}" class="aux">
+	<xsl:if test="$kommentar or $rattsfall or $inbound or $inford or $andrad or $upphavd">
+	  <div class="ui-accordion">
+	    <!-- KOMMENTARER -->
+	    <xsl:if test="$kommentar">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Kommentar</xsl:with-param>
+		<xsl:with-param name="contents"><xsl:apply-templates select="$kommentar"/></xsl:with-param>
+		<xsl:with-param name="first" select="true()"/>
+	      </xsl:call-template>
+	    </xsl:if>
+	    
+	    <!-- RÄTTSFALL -->
+	    <xsl:if test="$rattsfall">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Rättsfall (<xsl:value-of select="count($rattsfall)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:call-template name="rattsfall">
+		    <xsl:with-param name="rattsfall" select="$rattsfall"/>
+		  </xsl:call-template>
+		</xsl:with-param>
+		<xsl:with-param name="first" select="not($kommentar)"/>
+	      </xsl:call-template>
+	    </xsl:if>
+	    
+	    <!-- LAGRUMSHÄNVISNINGAR -->
+	    <xsl:if test="$inbound">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Lagrumshänvisningar hit (<xsl:value-of select="count($inbound)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:call-template name="inbound">
+		    <xsl:with-param name="inbound" select="$inbound"/>
+		  </xsl:call-template>
+		</xsl:with-param>
+		<xsl:with-param name="first" select="not($kommentar or $rattsfall)"/>
+	      </xsl:call-template>
+	    </xsl:if>
+	    
+	    <!-- ÄNDRINGAR -->
+	    <xsl:if test="$inford or $andrad or $upphavd">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Ändringar/Förarbeten (<xsl:value-of select="count($inford)+count($andrad)+count($upphavd)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:call-template name="andringsnoteringar">
+		    <xsl:with-param name="typ" select="'Införd'"/>
+		    <xsl:with-param name="andringar" select="$inford"/>
+		  </xsl:call-template>
+		  <xsl:call-template name="andringsnoteringar">
+		    <xsl:with-param name="typ" select="'Ändrad'"/>
+		    <xsl:with-param name="andringar" select="$andrad"/>
+		  </xsl:call-template>
+		  <xsl:call-template name="andringsnoteringar">
+		    <xsl:with-param name="typ" select="'Upphävd'"/>
+		    <xsl:with-param name="andringar" select="$upphavd"/>
+		  </xsl:call-template>
+		</xsl:with-param>
+		<xsl:with-param name="first" select="not($kommentar or $rattsfall or $inbound)"/>
+	      </xsl:call-template>
+	    </xsl:if>
+	  </div>
+	</xsl:if>
+      </td>
+    </tr>
   </xsl:template>
   
   <xsl:template name="andringsnoteringar">
@@ -213,9 +267,7 @@
     <xsl:if test="$andringar">
       <xsl:value-of select="$typ"/>: SFS
       <xsl:for-each select="$andringar">
-	<!--<a href="#{concat(substring-before(../../../@id,':'),'-',substring-after(../../../@id,':'))}"><xsl:value-of select="../..//xht2:dd[@property='rinfo:fsNummer']"/></a><xsl:if test="position()!= last()">, </xsl:if>-->
-	<xsl:value-of select="rinfo:fsNummer"/><xsl:if test="position()!= last()">, </xsl:if>
-	
+	<a href="#L{concat(substring-before(rinfo:fsNummer,':'),'-',substring-after(rinfo:fsNummer,':'))}"><xsl:value-of select="rinfo:fsNummer"/></a><xsl:if test="position()!= last()">, </xsl:if>
       </xsl:for-each>
       <br/>
     </xsl:if>
@@ -255,20 +307,6 @@
     </xsl:for-each>
   </xsl:template>
 
-  <xsl:template match="xht2:section[@role='main']">
-    <div class="konsolideradtext">
-      <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']">
-	<div class="warning">
-	  OBS: Författningen har upphävts/ska upphävas <xsl:value-of
-	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:upphavandedatum']"/>
-	  genom SFS <xsl:value-of
-	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']"/>
-	</div>
-      </xsl:if>
-      <xsl:apply-templates/>
-    </div>
-  </xsl:template>
-		
   <xsl:template match="xht2:section[@role='secondary']">
     <div class="andringar"><xsl:apply-templates/></div>
   </xsl:template>
@@ -457,6 +495,13 @@
   -->
 
   <!-- TABLE OF CONTENTS (TOC) HANDLING -->
+
+  <!-- INNEHÅLL MODE -->
+  <xsl:template match="h[@property = 'dct:title']" mode="toc">
+    <xsl:call-template name="toc"/>
+  </xsl:template>
+
+
   <xsl:template name="toc">
     <ul id="toc">
       <li><h2>Innehållsförteckning</h2>
@@ -530,8 +575,6 @@
   <xsl:template match="xht2:section[@class='upphavd']" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  
-  <!-- KOMMENTARER MODE -->
-  <xsl:template match="*" mode="kommentarer"/>
+
 
 </xsl:stylesheet>

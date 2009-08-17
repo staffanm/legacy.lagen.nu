@@ -118,9 +118,11 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.fixtags(text)
         text = self.doBlockLevels(text, True)
         text = self.unstripNoWiki(text)
+        text = self.replaceCategories(text) 
         text = self.replaceWikiLinks(text)
+        text = self.removeTemplates(text)
         text = self.replaceImageLinks(text)
-        
+
         text = text.split(u'\n')
         text = u'\n'.join(text)
         if taggedNewline and text[-1:] == u'\n':
@@ -132,6 +134,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
     re_labeled_wiki_link = re.compile(r'\[\[([^\]]*?)\|(.*?)\]\](\w*)') # is the trailing group really needed?
     re_wiki_link = re.compile(r'\[\[([^\]]*?)\]\](\w*)')
     re_img_uri = re.compile('(https?://[\S]+\.(png|jpg|gif))')
+    re_template = re.compile(r'{{[^}]*}}')
 
     def capitalizedLink(self,m):
         if m.group(1).startswith('SFS/'):
@@ -157,6 +160,14 @@ class LinkedWikimarkup(wikimarkup.Parser):
     def replaceImageLinks(self,text):
         # emulates the parser when using$ wgAllowExternalImages
         return self.re_img_uri.sub('<img src="\\1"/>',text)
+
+    def removeTemplates(self,text):
+        # emulates the parser when using$ wgAllowExternalImages
+        return self.re_template.sub('',text)
+
+    def replaceCategories(self,text):
+        # replace category links with some RDFa markup
+        return text
 
 
 class WikiParser(LegalSource.Parser):

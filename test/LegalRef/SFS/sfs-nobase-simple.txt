@@ -1,0 +1,19 @@
+NOBASE: Det finns i regeringsformen i och för sig inget skydd mot
+fotografering så som det finns för tagande av fingeravtryck (jfr 2
+kap. 6 §, se dock 2 kap. 1 och 3 §§ som här inte är aktuella).
+
+<list>
+  <unicode>NOBASE: Det finns i </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1974:152">regeringsformen</Link>
+  <unicode> i och för sig inget skydd mot
+fotografering så som det finns för tagande av fingeravtryck (jfr </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1974:152#K2P6">2
+kap. 6 §</Link>
+  <unicode>, se dock </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1974:152#K2">2 kap.</Link>
+  <unicode> </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1974:152#K2P1">1</Link>
+  <unicode> och </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1974:152#K2P3">3 §§</Link>
+  <unicode> som här inte är aktuella).</unicode>
+</list>

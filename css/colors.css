@@ -9,8 +9,16 @@ hue = 21, saturation = 50
 #bba694: midtone (active links)
 */
 /* Typografi, ramar, färger etc */
+
+/*
 a:link    { color: #806855; text-decoration: none; }
 a:visited { color: #6b482c; text-decoration: none; }
 a:hover   { color: #735e4c; text-decoration: underline; }
 a:active  { color: #bba694; text-decoration: underline; }
 
+*/
+
+a:link    { color: #970C42; text-decoration: none; border-bottom: dotted 1px;}
+a:visited { color: #970C42; text-decoration: none; border-bottom: dotted 1px;}
+a:hover   { color: #f00; text-decoration: none; border-bottom: solid 1px;}
+a:active  { color: #f00; text-decoration: none; border-bottom: solid 1px;}

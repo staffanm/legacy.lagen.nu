@@ -152,6 +152,11 @@ class Manager:
         else:
             print "Module %s has no Manager class" % m
 
+    def _doManagerActionFor(self,action,docids):
+        method = getattr(self,action)
+        for docid in docids:
+            if docid:
+                method(docid)
 
     def InitializeDB(self):
         pass
@@ -400,6 +405,10 @@ class Manager:
             kwmgr.Parse(basefile,wiki_keyword=True) # needed for new terms
             # raise ValueError(repr(basefile))
             kwmgr.Generate(basefile)
+
+    def WikiUpdateSome(self,listfile):
+        docids = codecs.open(listfile,encoding='iso-8859-1').read().split("\r\n")
+        self._doManagerActionFor('WikiUpdate',docids)
 
     def _make_zipfiles(self):
         self._make_zipfile(os.path.sep.join([self.baseDir,u'dv','dv.zip']),

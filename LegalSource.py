@@ -24,8 +24,6 @@ except:
     pass
     #print "Multiprocessing module not available, running single instance"
 
-
-
 # 3rd party modules
 import BeautifulSoup
 from configobj import ConfigObj
@@ -51,7 +49,6 @@ else:
 
 # Do required codec/locale magic right away, since this is included by
 # all runnable scripts
-
 if sys.platform == 'win32':
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding
@@ -110,6 +107,7 @@ class Downloader(object):
     def __init__(self,config):
         self.config = config
         self.browser = Browser()
+        self.browser.addheaders = [('User-agent', 'lagen.nu-bot (staffan@lagen.nu)')]
         # FIXME: Set user-agent header somehow. Also, if we could make
         # it support Robot.ThrottlingProcessor it would be cool
 
@@ -682,5 +680,4 @@ class Manager(object):
                 graph.remove(tup)
                 l = Literal(u' '.join(s.split()), lang=s.language)
                 graph.add((o,p,l))
-
 

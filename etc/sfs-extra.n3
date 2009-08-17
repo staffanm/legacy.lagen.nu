@@ -34,7 +34,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1971:69> dct:alternate "SBL" .
 <http://rinfo.lagrummet.se/publ/sfs/1971:796> dct:alternate "LIA" .
 <http://rinfo.lagrummet.se/publ/sfs/1971:948> dct:alternate "VägL" .
-<http://rinfo.lagrummet.se/publ/sfs/1972:207> dct:alternate "SKL" .
+<http://rinfo.lagrummet.se/publ/sfs/1972:207> rdfs:label "skadeståndslagen"; dct:alternate "SkL".
 <http://rinfo.lagrummet.se/publ/sfs/1972:719> dct:alternate "ExprL"; dct:alternate "ExL" .
 <http://rinfo.lagrummet.se/publ/sfs/1973:1149> dct:alternate "AL" .
 <http://rinfo.lagrummet.se/publ/sfs/1973:1150> dct:alternate "SFL" .
@@ -51,7 +51,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1981:981> dct:alternate "UF" .
 <http://rinfo.lagrummet.se/publ/sfs/1982:763> dct:alternate "HSL" .
 <http://rinfo.lagrummet.se/publ/sfs/1982:80> rdfs:label "anställningsskyddslagen"; dct:alternate "LAS" .
-<http://rinfo.lagrummet.se/publ/sfs/1984:387> dct:alternate "PolisL" .
+<http://rinfo.lagrummet.se/publ/sfs/1984:387> dct:alternate "PolisL"; dct:alternate "PL".
 <http://rinfo.lagrummet.se/publ/sfs/1985:206> dct:alternate "VitesL" .
 <http://rinfo.lagrummet.se/publ/sfs/1985:716> dct:alternate "KTjL" .
 <http://rinfo.lagrummet.se/publ/sfs/1986:223> dct:alternate "FL" .
@@ -88,7 +88,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1995:1322> dct:alternate "VerksF" .
 <http://rinfo.lagrummet.se/publ/sfs/1997:192> dct:alternate "LIF" .
 <http://rinfo.lagrummet.se/publ/sfs/1997:857> dct:alternate "EL" .
-<http://rinfo.lagrummet.se/publ/sfs/1998:204> dct:alternate "PUL" .
+<http://rinfo.lagrummet.se/publ/sfs/1998:204> rdfs:label "personuppgiftslagen"; dct:alternate "PUL" .
 <http://rinfo.lagrummet.se/publ/sfs/1998:488> dct:alternate "KörkL" .
 <http://rinfo.lagrummet.se/publ/sfs/1998:674> dct:alternate "LIP" .
 <http://rinfo.lagrummet.se/publ/sfs/1998:808> rdfs:label "miljöbalken"; dct:alternate "MB" .

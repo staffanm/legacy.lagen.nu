@@ -22,6 +22,7 @@ import Util
 
 RINFO = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
+DCT = Namespace(Util.ns['dct'])
 
 # Maps keys used by the internal dictionaries that LegalRef
 # constructs, which in turn are modelled after production rule names
@@ -34,20 +35,24 @@ predicate = {"type": RDF.type,
              "chapter": RINFOEX["kapitelnummer"],
              "section": RINFOEX["paragrafnummer"],
              "piece": RINFOEX["styckenummer"],
-             "item": RINFOEX["punktnummer"]}
-
-
+             "item": RINFOEX["punktnummer"],
+             "myndighet": DCT["creator"],
+             "dnr": RINFO["diarienummer"]}
 
 dictkey = dict([[v,k] for k,v in predicate.items()])
 
 types = {LegalRef.RATTSFALL: RINFO["Rattsfallsreferat"],
-         LegalRef.LAGRUM: RINFO["KonsolideradGrundforfattning"]}
+         LegalRef.LAGRUM: RINFO["KonsolideradGrundforfattning"],
+         LegalRef.MYNDIGHETSBESLUT: RINFO["Myndighetsavgorande"]}
 
 dicttypes = dict([[v,k] for k,v in types.items()])
 
 patterns = {LegalRef.RATTSFALL:
-            re.compile("http://rinfo.lagrummet.se/publ/rattsfall/(?P<publikation>\w+)/(?P<artal>\d+)(?P<_delim>.)(?P<sidnummer>\d+)").match
+            re.compile("http://rinfo.lagrummet.se/publ/rattsfall/(?P<publikation>\w+)/(?P<artal>\d+)(?P<_delim>.)(?P<sidnummer>\d+)").match,
+            LegalRef.MYNDIGHETSBESLUT:
+            re.compile("http://rinfo.lagrummet.se/publ/beslut/(?P<myndighet>\w+)/(?P<dnr>.*)").match
             }
+
 
 # The dictionary should be a number of properties of the document we
 # wish to construct the URI for, e.g:
@@ -56,7 +61,7 @@ patterns = {LegalRef.RATTSFALL:
 #  "artal": "2004"
 #  "sidnr": "43"}
 #
-# The output is a URI like 'http://rinfo.lagrummet.se/publ/rattsfall/nja/2004s43'
+# The output is a URI string like 'http://rinfo.lagrummet.se/publ/rattsfall/nja/2004s43'
 def construct(dictionary):
     # Step 1: massage the data to a rdflib graph
     graph = Graph()
@@ -103,8 +108,14 @@ def construct_from_graph(graph):
 
         for key in attributeorder:
             if _first_obj(graph,bnode,key):
-                
-        
+                return "http://rinfo.lagrummet.se/publ/sfs/not-really-finished-yet"
+    elif rdftype == RINFO["Myndighetsavgorande"]:
+        return "http://rinfo.lagrummet.se/publ/beslut/%s/%s" % \
+               (_first_obj(graph,bnode,DCT["creator"]),
+                _first_obj(graph,bnode,RINFO["diarienummer"]))
+    
+    else:
+        raise ValueError("Don't know how to construct a uri for %s" % rdftype)
     
 def parse(uri):
     graph = parse_to_graph(uri)

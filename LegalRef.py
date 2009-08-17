@@ -223,16 +223,20 @@ class LegalRef:
         # h.update(indata)
         # print "Called with %r (%s) (%s)" % (indata, h.hexdigest(), self.verbose)
         self.predicate = predicate
-        m = self.re_urisegments.match(baseuri)
-        if m:
-            self.baseuri_attributes = {'baseuri':m.group(1),
-                                       'law':m.group(2),
-                                       'chapter':m.group(6),
-                                       'section':m.group(8),
-                                       'piece':m.group(10),
-                                       'item':m.group(12)}
+        self.baseuri = baseuri
+        if baseuri:
+            m = self.re_urisegments.match(baseuri)
+            if m:
+                self.baseuri_attributes = {'baseuri':m.group(1),
+                                           'law':m.group(2),
+                                           'chapter':m.group(6),
+                                           'section':m.group(8),
+                                           'piece':m.group(10),
+                                           'item':m.group(12)}
+            else:
+                self.baseuri_attributes = {'baseuri':baseuri}
         else:
-            self.baseuri_attributes = {'baseuri':baseuri}
+            self.baseuri_attributes = {}
         # Det är svårt att få EBNF-grammatiken att känna igen
         # godtyckliga ord som slutar på ett givet suffix (exv
         # 'bokföringslagen' med suffixet 'lagen'). Därför förbehandlar
@@ -264,7 +268,7 @@ class LegalRef:
                 sys.stdout.write(self.prettyprint(part))
             if part.tag in self.roots:
                 self.clear_state()
-                self.verbose = False
+                # self.verbose = False
                 result.extend(self.formatter_dispatch(part))
             else:
                 assert part.tag == 'plain',"Tag is %s" % part.tag
@@ -377,6 +381,7 @@ class LegalRef:
         return l
 
     def formatter_dispatch(self,part):
+        # print "Verbositiy: %r" % self.verbose
         self.depth += 1
         # Finns det en skräddarsydd formatterare?
         if "format_"+part.tag in dir(self): 
@@ -624,7 +629,10 @@ class LegalRef:
                 res = 'http://rinfo.lagrummet.se/publ/sfs/'
             
         else:
-            res = self.baseuri_attributes['baseuri']
+            if 'baseuri' in self.baseuri_attributes:
+                res = self.baseuri_attributes['baseuri']
+            else:
+                res = ''
         resolvetobase = True
         addfragment = False
         justincase = None
@@ -752,7 +760,7 @@ class LegalRef:
                 samelaw_node = self.find_node(root, 'SameLaw')
                 assert(samelaw_node != None)
                 if self.lastlaw == None:
-                    log.warning(u"(unknown): found reference to \"{samma,nämnda} lag\", but self.lastlaw is not set")
+                    log.warning(u"(unknown): found reference to \"{samma,nämnda} {lag,förordning}\", but self.lastlaw is not set")
 
                 self.currentlaw = self.lastlaw
             else:
@@ -773,7 +781,7 @@ class LegalRef:
 
         #print "DEBUG: middle of format_ExternalRefs; self.currentlaw is %s" % self.currentlaw
         if self.lastlaw is None:
-            # print "DEBUG: format_ExternalRefs: setting self.lastlaw to %s" % self.currentlaw
+            #print "DEBUG: format_ExternalRefs: setting self.lastlaw to %s" % self.currentlaw
             self.lastlaw = self.currentlaw
 
         # if the node tree only contains a single reference, it looks
@@ -822,8 +830,16 @@ class LegalRef:
                                         root.text,
                                         root.tag)]
 
+    def format_SFSNr(self,root):
+        if self.baseuri == None: 
+            sfsid = self.find_node(root,'LawRefID').data
+            self.baseuri_attributes = {'baseuri':'http://rinfo.lagrummet.se/publ/sfs/'+sfsid+'#'}
+        return self.format_tokentree(root)
+
+
     def format_NamedExternalLawRef(self,root):
         resetcurrentlaw = False
+        #print "format_NamedExternalLawRef: self.currentlaw is %r"  % self.currentlaw
         if self.currentlaw == None:
             resetcurrentlaw = True
             lawrefid_node = self.find_node(root,'LawRefID')
@@ -834,11 +850,29 @@ class LegalRef:
                 namedlaw = self.normalize_lawname(self.find_node(root,'NamedLaw').text)
                 # print "remember that %s is %s!" % (namedlaw, self.currentlaw)
                 self.currentlynamedlaws[namedlaw] = self.currentlaw
+            #print "format_NamedExternalLawRef: self.currentlaw is now %r"  % self.currentlaw
 
+        #print "format_NamedExternalLawRef: self.baseuri is %r" % self.baseuri
         if self.currentlaw == None: # if we can't find a ID for this law, better not <link> it
             res = [root.text]
         else:
             res = [self.format_generic_link(root)]
+
+        #print "format_NamedExternalLawRef: self.baseuri is %r" % self.baseuri
+        if self.baseuri == None and self.currentlaw != None:
+            #print "format_NamedExternalLawRef: setting baseuri_attributes"
+            # use this as the new baseuri_attributes
+            m = self.re_urisegments.match(self.currentlaw)
+            if m:
+                self.baseuri_attributes = {'baseuri':m.group(1),
+                                           'law':m.group(2),
+                                           'chapter':m.group(6),
+                                           'section':m.group(8),
+                                           'piece':m.group(10),
+                                           'item':m.group(12)}
+            else:
+                self.baseuri_attributes = {'baseuri':'http://rinfo.lagrummet.se/publ/sfs/'+self.currentlaw+'#'}
+
         if resetcurrentlaw:
             if self.currentlaw != None: self.lastlaw = self.currentlaw
             self.currentlaw = None
@@ -1006,13 +1040,18 @@ class TestLegalRef(FilebasedTester):
 
     def __test_parser(self,data,p):
         p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
+        #p.verbose = True
         p.currentlynamedlaws = {}
         paras = re.split('\r?\n---\r?\n',data)
         resparas = []
         for i in range(len(paras)):
             if paras[i].startswith("RESET:"):
                 p.currentlynamedlaws.clear()
-            nodes = p.parse(paras[i],u'http://rinfo.lagrummet.se/publ/sfs/9999:999')
+            if paras[i].startswith("NOBASE:"):
+                baseuri = None
+            else:
+                baseuri = u'http://rinfo.lagrummet.se/publ/sfs/9999:999'
+            nodes = p.parse(paras[i],baseuri)
             resparas.append(serialize(nodes))
         res = "\n---\n".join(resparas).replace("\r\n","\n").strip()
         return res
@@ -1021,7 +1060,8 @@ class TestLegalRef(FilebasedTester):
         # p = LegalRef(LegalRef.FORARBETEN)
         p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM, LegalRef.FORARBETEN, LegalRef.RATTSFALL)
         p.verbose = verbose
-        print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
+        #print serialize(p.parse(s, u'http://rinfo.lagrummet.se/publ/sfs/9999:999#K9P9S9P9'))
+        print serialize(p.parse(s, None))
 
     # Resultat för testsviterna just nu:
     #

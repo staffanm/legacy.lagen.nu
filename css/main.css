@@ -1,348 +1,158 @@
-    body {
-	margin: 0;
-        padding: 0;
-	font: 13pt/1.3em 'Times New Roman', Times, serif;
- 	/* Avoid using absolute point sizes for fonts in the rest of the file -- use */
-        /* 'smaller', 'larger' or '1.5em' or similar */
-    }
-
-    strong,b {
-	font-weight: bold;
-    }
-
-    em, i {
-	font-style: italic
-    }
-    tt, code, kbd, samp { font-family: monospace }
-
-   ins {
-       background: #efe;
-   }
-
-   del {
-       background: #fee;
-   }
-   
-    #kommentarer  {
-	/*font-size: smaller; */
-    }
-
-    .entry {
-	border: solid 1px #eae3dd;
-        margin-bottom: 12pt;
-    }
-    .sidoruta {
-      /* cursor: move; */
-      padding: 3pt;
-      margin-top: 0;
-      line-height: 1.2em;
-      background: #f9f6f5;
-      border: solid 1px #6b482c;
-      margin-bottom: 5px;
-      font-size: smaller;
-      box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
-      -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
-      -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
-    }
-
-    .mittruta {
-      padding: 3pt;
-      margin-top: 0;
-      line-height: 1.2em;
-      background: #f9f6f5;
-      border: solid 1px #6b482c;
-      margin-bottom: 5px;
-      box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
-      -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
-      -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
-    }
-    .kommentar ul {
-	display: block;
-        margin-left: 20pt;
-	list-style-type: disc;
-        counter-reset: list-item
-    }
-
-    .sidoruta h2 {
-	/*font-size: smaller; */
-        font-weight: bold;
-    }
-    .verticalalign p {
-      text-align: right;
-      padding-bottom: 18px;
-    }
-    
-    .bugreport-link { margin-top: 18pt; font-weight: bold;}
-    .bugreport-form { width: 100% }
-    .bugreport-form textarea { font: 10pt Arial, sans-serif; width: 100% }
-    .bugreport-form input { font: 10pt Arial, sans-serif; width: 100%}
-    
-    td {
-	border: solid 1px #eae3dd;
-        vertical-align: top;
-    }
-
-    img.inline-icon {
-	vertical-align: text-bottom;
-        float: left;
-    } 
-    img.toolbar-icon {
-	float: right;
-        margin: 5px;
- 
-    } 
-    
-    /* olika sätt att formattera dl-listor:
-       side-by-side, bred mittspalt */
-    .andringar dl, .entry dl {
-	margin-bottom: 18pt;
-    }
-    
-    .andringar dt,.entry dt {
-	float: left;
-        clear: left;
-	width: 10em;
-        font-weight: bold;
-    }
-
-    .andringar dt:after, .entry dt:after { content: ":"; }
-
-    .andringar dd, .entry dd {
-	margin: 0 0 0 10.5em;
-        padding: 0;
-	clear: right;
-    }
-    .andringar dd:after, .entry dd:after {
-	clear: left;
-	}
-
-    /* smal högerspalt */
-
-    .sidoruta dt {
-        display: block;
-	float: none;
-        width: inherit;
-        font-weight: bold;
-    }
-    .sidoruta dd {
-        display: block;
-	float: none;
-        width: inherit;
-	margin-left: 22.5pt;
-    }
-
-    .sidoruta dd:after { clear: left; }
-    .paragraf { position: relative; }
-
-    /* classes for dynamic box layout */
-
-    /* default: normal placement, directly under the text */
-    .refs {  }
-    .kommentar { background: #e7dfd8; }
-
-    /* alternate 1: boxes go to the sides */
-    .rightbox {
-  	position: absolute;
-        width: 50%;
-	right: -53%;
-        top: 0;
-	/* to anchor at bottom: "bottom: -1em;" */
-	overflow: auto;
-    }
-
-    .leftbox {
-	position: absolute;
-        width: 50%;
-	left: -54%;
-        top: 0;
-	overflow: auto;
-    }
-
-    /* alternate 2: boxes are hidden */
-    .hiddenbox { display: none; }
-
-
-    .platsmarkor {
-	position: absolute;
-        left: -3em;
-        font-size: 0.6em;
-	color: #999;
-        font-family: Arial;
-    }
-    .editlink { font-size: smaller; }
-    /* side-by-side, statiska sidor */
-    dl.tablestyle {
-    }
-    .tablestyle dt {
-	float: left;
-        clear: left;
-	width: 8.7em;
-        font-weight: bold;
-    }
-   
-    .tablestyle dt:after { content: ":"; }
-
-    .tablestyle dd {
-	margin: 0 0 0 9em;
-        padding: 0;
-	clear: right;
-    }
-    .tablestyle dd:after {
-	clear: left;
-    }
-    
- 
-    /* vanlig layout  */
-   dl.regular { display: block }
-
-   dl.regular dt {
-    display: block;
-    float: none;
-    width: inherit;
-    font-weight: bold;
-   }
-
-   dl.regular dd {
-    display: block;
-    float: none;
-    width: inherit;
-    margin-left: 22.5pt;
-    margin-bottom: 1.0em
-  }
-
-
- 
-    ol {
-    display: block;
-    margin-left: 2em;
-    list-style-type: decimal;
-    counter-reset: list-item
-    }
-
- 
-    #vinjett {
- 	height: 100px;
+      #vinjett {
 	position:relative;
-        font-size: larger;
-	margin-bottom: 10pt;
-        overflow: hidden;
-    }
-    #vinjett img {
-	position: absolute;
-        z-index: -1;
-        top: 0;
-	left: 0;
-    }
-    #vinjett h1 a {
+        background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) repeat-x;
+        border: solid #fff 8pt;
+        padding: 14pt 0 26pt 20pt;
+	height: 38pt;
+        -moz-border-radius-topleft: 20px; -webkit-border-top-left-radius: 20px; -moz-border-radius-topright: 20px; -webkit-border-top-right-radius: 20px;
+      }
+
+      #vinjett h1 {
+        font-size: 24pt;
+	color: #000;
+        font-family: Arial;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+
+      #vinjett h1 a {
 	text-decoration: none;
+        border-bottom: none;
 	color: #fff;
-	font: italic bold 30pt 'Times New Roman', Times, serif;
-	padding: 30pt;
-        text-shadow: #000 5px 5px 5px;
-    }
-    #vinjett h1 a:after { content: "[beta]" }
-	
-    #navigation {
+      }
+      #navigation {
         position: absolute;
-	left:8px;
+  	left:12pt;
         bottom: 0;
-	margin: 0;
-        padding: 9px;
-    }
-    #navigation li {
-	display: inline;
-	margin: 0 3pt; 
-	padding: 8px;
-        background-color: #000;
-	opacity: 0.65;
-        filter: alpha(opacity=65);
-	zoom: 1;
-    }
-    #navigation li a {
-	text-decoration: none;
-	 color: #fff;
-    }
-    #vinjett form {
-        background-color: #000;
-	color: #fff;
-        padding: 8px;
-	opacity: 0.65;
-        filter: alpha(opacity=65);
-        position: absolute;
-	right:6pt;
-        bottom: 0;
-	zoom: 1;
-    }
-    #vinjett form p {
-	margin: 0;
-        padding: 0;
-    }
-    #vinjett form input {
+  	margin: 0;
+        padding: 6pt;
 	font-weight: bold;
-    }
+      }
+      #navigation li {
+  	display: inline;
+  	margin: 0 3pt; 
+  	padding: 6pt 6pt 6pt 6pt;
+  	zoom: 1;
+        border: solid 1pt white;
+	background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) 50% 50% repeat-x;
+      }
+      #navigation li a {
+  	text-decoration: none;
+        border-bottom: none;
+  	color: #fff;
+      }
 
-    #vinjett #sss {
-	position: absolute;
-        top: 3pt;
-	right: 6pt;
-        color: #fff;
-	font: bold 12pt/1.2em serif;
-    }
-    #vinjett #sss li {
-	display: inline;
-        border: solid 1px #fff;
-	margin: 3pt;
-        padding: 0pt 2pt;
-    }
-    #vinjett #sss a {
-	text-decoration: none;
-	color: #fff;
-    }
-    #vinjett #sss a.Times {
-	font-family: 'Times New Roman', Times, serif;
-    }
-    #vinjett #sss a.Verdana {
-	font-family: 'Verdana', sans-serif;
-   }
-    
-    .accelerator {
-	text-decoration: underline;
-    }
+      #navigation li a:hover {
+        border-bottom: solid 1px;
+      }
 
-    #sidfot {
-	border-top: solid thin #6b482c;
-        text-align: center;
-    }
+      #vinjett form {
+        border: solid 1pt white;
+        padding: 6pt;
+        position: absolute;
+  	right:6pt;
+        bottom: -1px;
+  	zoom: 1;
+	background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) 50% 50% repeat-x;
+      }
+      #vinjett form p {
+  	margin: 0;
+        padding: 0;
+      }
+      #vinjett form input {
+  	font-weight: bold;
+        display: inline;
+      }
+  
+      #innehallsforteckning {
+	margin-left: 3pt;
+        width: 112pt;
+        float: left;
+	border-right: dotted 1px grey;
+        overflow: hidden;
+	font-size: 10pt;
+        line-height: 12pt;
+      }
 
-    /* specifik typografi för dokumentkolumnen */
-    #dokument {
-	margin: 0 6pt;
-    }
-    p {
-	padding: 0;
-        margin: 0 0 0.5em 0;
-    }
+      #dokument {
+      margin-left: 132pt;
+      position: relative;
+      margin-right: 4pt;
+      }
+      
+      #sidfot {
+        border-top: dotted black 1px;
+      }
 
-    ul {
-	padding: 0;
-        margin: 0 0 0.5em 0;
-    }
+      .aux {
+	font-size: 10pt;
+	line-height: 12pt;
+      }
+      .aux p {
+	  margin-bottom: 5pt;
+      }
+      .aux ul {
+	list-style-type: disc;
+        margin-left: 15pt;
+      }
+      .aux ol {
+        list-style-type: decimal;
+        margin-left: 20pt;
+      }  
 
-    h1 {
-	font-size: 1.5em;
-        margin-bottom: 0.5em;
-        font-weight: bold;
-        margin-bottom: 0.5em;
-    }
-    h2 {
-	font-size: 1.2em;
-        font-weight: bold;
-    }
-    h3 {
-	/*font-size: medium; */
+      td {
+      padding: 0 4pt 3pt 4pt;
+
+      }
+      /* basic typography */
+      body {
+	font-size: 11pt;
+        line-height: 14pt;
+	font-family: 'Arial', 'Helvetica', sans-serif;
+      }
+      h1 {
+        font-size: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: bold;
+	margin-bottom: 0.5em;
+        line-height: 1.1em;
+      }
+      h2 {
+        font-size: 1.2em;
+	font-weight: bold;
+        line-height: 1.1em;
+      }
+      h3 {
         font-style: italic;
-    }
-    ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
+        line-height: 1.1em;
+      }
+
+      p {
+        padding: 0;
+        margin: 0 0 0.5em 0;
+      }
+      dl { display: block }
+
+      dl dt {
+        display: block;
+        float: none;
+        width: inherit;
+        font-weight: bold;
+       }
+    
+       dl dd {
+        display: block;
+        float: none;
+        width: inherit;
+        margin-left: 22.5pt;
+      }
+
+      ul {
+        padding: 0;
+        margin: 0 0 0.5em 0;
+      }
+      
+      ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
 	list-style-type: none;
         text-indent: -10pt;
         margin-left: 10pt;
@@ -363,22 +173,6 @@
         margin:0;
     }
 
-    .wikibox {
-      padding: 3pt;
-      margin-top: 0;
-      line-height: 1.2em;
-      background: #f9f6f5;
-      border: solid 1px #6b482c;
-      margin-bottom: 5px;
-      padding-left: 25px;
-      font-size: smaller;
-      box-shadow:         2px 2px 9px rgba(0, 0, 0, 0.5);
-      -webkit-box-shadow: 2px 2px 9px rgba(0, 0, 0, 0.5);
-      -moz-box-shadow:    2px 2px 9px rgba(0, 0, 0, 0.5);
-      background-image:url('http://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Wikipedia-logo.png/16px-Wikipedia-logo.png');
-      background-repeat: no-repeat;
-      background-position: 5px 5px;
-}
     .warning {
 	background: yellow;
         border: solid thick red;
@@ -392,3 +186,36 @@
 	 line-height: 1.1em;
      }
 
+    .platsmarkor {
+        position: absolute;
+        left: -2em;
+        font-size: 0.6em;
+        color: #999;
+        font-family: Arial;
+    }
+
+    .andring {
+	margin-bottom: 6pt;
+    }
+    /* styling of jquery UI themed elements */
+    .ui-accordion h3 {
+        font-style: normal;
+	font-size: 10pt !important;
+        padding: 2pt 2pt 2pt 18pt;
+	/* set these just in case javascript isn't activated */
+        background-color: #970C42;
+        /* color: #fff; */
+        cursor: pointer;
+      }
+
+    .ui-accordion .ui-accordion-content {
+	font-size: 10pt !important;
+	line-height: 12pt !important;
+        padding: 1pt 1pt 0 3pt !important;
+    }
+    .ui-widget-content a {
+	color: #970C42 !important;
+	}
+    .ui-widget-content a:hover {
+	color: #f00 !important;
+	}

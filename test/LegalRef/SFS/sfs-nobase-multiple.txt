@@ -1,0 +1,21 @@
+NOBASE: I övrigt finns i lagen (1998:150) om allmän kameraövervakning
+och i lagen (1995:1506) om hemlig övervakning bestämmelser om
+videofilmning i vissa fall. Dessa lagar är emellertid inte tillämpliga
+på kameror som manövreras på platsen (jfr 2 § i den förstnämnda lagen
+respektive 1 § i den sistnämnda).
+
+<list>
+  <unicode>NOBASE: I övrigt finns i lagen (</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1998:150">1998:150</Link>
+  <unicode>) om allmän kameraövervakning
+och i lagen (</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1995:1506">1995:1506</Link>
+  <unicode>) om hemlig övervakning bestämmelser om
+videofilmning i vissa fall. Dessa lagar är emellertid inte tillämpliga
+på kameror som manövreras på platsen (jfr </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1995:1506#P2">2 §</Link>
+  <unicode> i den förstnämnda lagen
+respektive </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1995:1506#P1">1 §</Link>
+  <unicode> i den sistnämnda).</unicode>
+</list>

@@ -1,0 +1,13 @@
+# This is a sample configuration file used with the new
+# DocumentRepository-based architecture. It's not ready for prime time
+# yet.
+
+datadir = mydata
+processes = 1
+log = DEBUG
+
+[example]
+magic = "Blahonga!"
+
+[[special]]
+magic = "Bazinga!"

@@ -1,4 +1,11 @@
 /* @import "debug.css";  */ 
 @import "reset.css";
-@import "perfect-3-column-print.css";
 @import "main.css";
+
+/* Innehållsförteckningen fyller inget syfte på en utskrift (såvida vi inte magiskt fixar dit sidnummer */
+#innehallsforteckning {
+    display:none; 
+}
+#dokument {
+    margin-left: 0;
+}

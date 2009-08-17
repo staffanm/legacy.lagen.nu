@@ -350,7 +350,12 @@ class RDFString(PredicateType,UnicodeStructure):
     # AbstractStructure.__init__ never gets called. I think i must
     # read descrintro again...
     pass
-    
+
+
+class UnicodeSubject(PredicateType,UnicodeStructure): pass
+class Stycke(CompoundStructure): pass
+class Sektion(CompoundStructure): pass
+
 
 if __name__ == '__main__':
 

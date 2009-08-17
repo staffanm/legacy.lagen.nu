@@ -11,6 +11,7 @@
 		exclude-result-prefixes="xht2">
   <xsl:param name="infile">unknown-infile</xsl:param>
   <xsl:param name="outfile">unknown-outfile</xsl:param>
+  <xsl:param name="annotationfile"/>
 
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -34,16 +35,11 @@
   <!-- these minimal RDF files is only used to know wheter we have a
        specific case (and therefore should link it) or keyword, so
        that we can know when to link to it -->
-  
   <xsl:variable name="rattsfall" select="document('../data/dv/parsed/rdf-mini.xml')/rdf:RDF"/>
   <xsl:variable name="terms" select="document('../data/keyword/parsed/rdf-mini.xml')/rdf:RDF"/>
   <xsl:variable name="lagkommentar" select="document('../data/sfs/parsed/rdf-mini.xml')/rdf:RDF"/>
-
-  <xsl:param name="annotationfile"/>
   <xsl:variable name="annotations" select="document($annotationfile)/rdf:RDF"/>
-  <!--<xsl:variable name="annotations"> <hello>world</hello>
-       </xsl:variable>
-  -->
+
   <xsl:template match="/">
     <!--<xsl:message>Root rule</xsl:message>-->
     <xsl:apply-templates/>
@@ -60,23 +56,14 @@
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <title><xsl:call-template name="headtitle"/></title>
       <xsl:call-template name="metarobots"/>
-      <script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script>
-      <script type="text/javascript" src="/js/jquery-ui-personalized-1.6rc2.min.js"></script>
+      <script type="text/javascript" src="/js/jquery-1.3.2.min.js"></script>
+      <script type="text/javascript" src="/js/jquery-ui-1.7.2.custom.min.js"></script>
       <script type="text/javascript" src="/js/jquery.treeview.min.js"></script>
-      <!--
-      <script type="text/javascript" src="/js/jquery.autocomplete.min.js"></script>
-      <script type="text/javascript" src="/js/localdata.js"></script>
-      -->
       <script type="text/javascript" src="/js/base.js"></script>
       <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
-      <link rel="stylesheet" href="/css/screen.css" title="Times" media="screen" type="text/css"/> 
-      <link rel="alternate stylesheet" href="/css/alt-georgia.css" title="Georgia" media="screen" type="text/css"/> 
-      <link rel="alternate stylesheet" href="/css/alt-verdana.css" title="Verdana" media="screen" type="text/css"/> 
-      <link rel="alternate stylesheet" href="/css/alt-calibri.css" title="Calibri" media="" type="text/css"/> 
-      <link rel="alternate stylesheet" href="/css/alt-cambria.css" title="Cambria" media="" type="text/css"/> 
-
       <link rel="stylesheet" href="/css/screen.css" media="screen" type="text/css"/> 
-      <link rel="stylesheet" href="/css/print.css" media="print" type="text/css"/> 
+      <link rel="stylesheet" href="/css/print.css" media="print" type="text/css"/>
+      <link rel="stylesheet" href="/css/jquery-ui-1.7.2.custom.css" type="text/css"/> 
       <xsl:call-template name="linkalternate"/>
       <xsl:call-template name="headmetadata"/>
     </head>
@@ -91,7 +78,6 @@
 
       <xsl:attribute name="typeof"><xsl:value-of select="@typeof"/></xsl:attribute>
 
-      
       <xsl:comment>[if lte IE 6]&gt;
 	  &lt;style type="text/css"&gt;
 	    #ie6msg{border:3px solid #090; margin:8px 0; background:#cfc; color:#000;}
@@ -133,7 +119,7 @@
 	  &lt;![endif]</xsl:comment>
 
       <div id="vinjett">
-	<img src="/img/blueprint.jpg" alt=""/>
+	<!-- <img src="/img/blueprint.jpg" alt=""/> -->
 	<h1><a href="/">lagen.nu</a></h1>
 	<ul id="navigation">
 	  <li><a href="/nyheter/">Nyheter</a></li>
@@ -144,54 +130,25 @@
 	</ul>
 	<form method="get" action="http://www.google.com/custom">
 	  <p>
-	    <span class="accelerator">S</span>ök:<input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
+	    <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
 	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
 	    <input type="hidden" name="domains" value="lagen.nu"/>
 	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
+	    <input type="submit" value="Sök"/>
 	  </p>
-	</form>
-	<ul id="sss">
-	  <li><a href="#" class="Times" title="Använd typsnitt: Times" onclick="switchStylestyle('Times'); return false;">Abc</a></li>
-	  <li><a href="#" class="Verdana" title="Använd typsnitt: Verdana" onclick="switchStylestyle('Verdana'); return false;">Abc</a></li>
-	</ul>
 
+	</form>
       </div>
-      <div id="colmask" class="threecol">
-	<div id="colmid">
-	  <div id="colleft">
-	    <div id="dokument">
-	      <xsl:apply-templates/>
-	    </div>
-	    <div id="kommentarer">
-	      <xsl:apply-templates mode="kommentarer"/>
-	      <!--
-	      <p class="bugreport-link">Ser sidan konstig ut? Hjälp
-	      mig att göra tjänsten bättre genom en felanmälan!</p>
-	      <form class="bugreport-form" action="http://trac.lagen.nu/newticket" method="get">
-		<p>
-		  <input type="hidden" name="summary" value="Felanmälan {$outfile}" />
-		  Din epostadress (inte obligatoriskt, men bra om jag ska
-		  kunna meddela dig att felet åtgärdats):<br/>
-		  
-		  <input type="text" id="author" name="author" value="" /><br/>
-		  Beskrivning av problemet: <br/>
-		  <textarea name="description" rows="8"></textarea><br/>
-		  
-		  Tips för en bra felanmälan: Beskriv <i>var</i> på sidan
-		  problemet är, det <i>förväntade</i> utseendet, och
-		  det <i>faktiska</i> utseendet.<br/>
-		  
-		  <input type="submit" name="submit" value="Felanmäl" />
-		</p>
-	      </form>
-	      -->
-	    </div>
-	    <div id="referenser">
-	      <xsl:apply-templates mode="refs"/>
-	    </div>
-	  </div>
-	</div>
+      <div id="innehallsforteckning">
+	<ul id="toc">
+	  <xsl:apply-templates mode="toc"/>
+	</ul>
       </div>
+
+      <div id="dokument">
+	<xsl:apply-templates/>
+      </div>
+
       <div id="sidfot">
 	<b>Lagen.nu</b> är en privat webbplats. Informationen här är
 	inte officiell och kan vara felaktig | <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning</a> | <a href="/om/kontakt.html">Kontaktinformation</a>

@@ -3,7 +3,24 @@ $(document).ready(function(){
 	persist: "location",
         collapsed: true
 	});
-     $("#accordion").accordion({ header: "h3" });
+
+    /* Use the jQuery UI accordion CSS styles, but not the actual accordion JS code.
+       Based on http://paste.pocoo.org/show/105888/
+
+       This is slow on larger texts. Maybe we should set an
+       onClick-handler in the pregenerated HTML text instead (even
+       though that's not Best Practice<TM>).  */
+
+    $(".ui-accordion")
+	.find("h3")
+		.click(function() {
+			$(this).toggleClass("ui-accordion-header-active").toggleClass("ui-state-active")
+				.toggleClass("ui-state-default").toggleClass("ui-corner-bottom")
+			.find("> .ui-icon").toggleClass("ui-icon-triangle-1-e").toggleClass("ui-icon-triangle-1-s")
+			.end().next().toggleClass("ui-accordion-content-active").toggleClass("ui-helper-hidden");
+			return false;
+		})
+
     /*
     $("#q").autocomplete(docs, {
         matchContains: true,
@@ -15,10 +32,10 @@ $(document).ready(function(){
             location.href = item.l;
     });
     */
-	var c = readCookie('style');
-	if (c) switchStylestyle(c);
-	//$(".sidoruta").draggable({cursor:"move",zIndex:"10"});
- 
+    /*
+    var c = readCookie('style');
+    if (c) switchStylestyle(c);
+    */
 });
 
 jQuery.fn.setHeightLikeParent = function() {

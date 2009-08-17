@@ -141,50 +141,33 @@ def split_numalpha(s):
 
 # Util.XML
 def indentXmlFile(filename):
-    """Neatifies an existing XML file in-place by running xmllint --format"""
-    #tmpfile = "tmp.%s.xml" % os.getpid()
-    #cmdline = "xmllint --format %s > %s" % (filename,tmpfile)
-    #(ret,stdout,stderr) = runcmd(cmdline)
-    #if (not ret):
-    #    robustRename(tmpfile,filename)
-    #else:
-    #    raise ExternalCommandError("'%s' returned %d: %s" % (cmdline, ret, stderr))
-    # The tidy invocation is for wrapping long lines for easier
-    # readability (something that xmllint won't do for us) -- however,
-    # it seems that Tidy, even though -raw is used, mangles tag names
-    # with non-us-ascci characters when the file is utf-8-encoded
-    # ('<Sökord>Lis pendens</Sökord>' comes out as '<Sàkord="">Lis
-    # pendens</Sþ'). This is not a problem when using XHTML2, but it's
-    # still a bug.
-    #
-    # Also, tidy will hang (due to excessive stderr messages?) for 1992:1226 -- we should
-    # try to get runcmd handle this
+    print "WARNING: it's indent_xml_file now"
+    return indent_xml_file(filename)
 
-    # also it seems tidy changes xml:lang to lang -- WHY?!
-    (ret,stdout,stderr) = runcmd("tidy -xml -utf8 -i -m -w 0 %s" % (filename))
+
+def indent_xml_file(infile):
+    """Neatifies an existing XML file in-place"""
+    tmpfile = mktemp()
+    cmd = "tidy -q -xml -asxml -utf8 -w 95 -i %s > %s" % (infile, tmpfile)
+    (ret,stdout,stderr) = runcmd(cmd)
     if (ret != 0):
         raise TransformError(stderr)
-    # This fails occasionally - why?
-    # os.remove(tmpfile)
+    replace_if_different(tmpfile, infile)
     
 # Util.XML
-def tidyHtmlFile(filename):    
-    """Neatifies an existing XHTML file in-place by running tidy"""
-    if os.sys.platform == "darwin":
-        tidycmd = "/usr/local/bin/tidy"
-    else:
-        tidycmd = "tidy"
+def tidyHtmlFile(filename):
+    print "WARNING: it's indent_html_file now"
+    return tidy_html_file(filename)
 
-    cmd = "%s -q -n -i -asxhtml -utf8 -w 120 --doctype strict %s > tmp.xml" % (tidycmd,filename)
+def indent_html_file(infile):
+    """Neatifies an existing XHTML file in-place"""
+    tmpfile = mktemp()
+    cmd = "tidy -q -asxhtml -utf8 -w 95 -i %s > %s" % (infile, tmpfile)
+    print "indent_html_file: Running %s " % cmd
     (ret,stdout,stderr) = runcmd(cmd)
-    # tidy always exists with a non-0 return code if there were any
-    # hrefs with spaces in them, so let's just silently ignore errors
-    # for now
-    #if (ret != 0):
-    #    raise TidyError(stderr)
-    
-    # os.system("xmllint --format %s > tmp.xml" % filename)
-    robustRename("tmp.xml", filename)
+    if (ret != 0):
+        raise TransformError(stderr)
+    replace_if_different(tmpfile, infile)
 
 # Util.XML
 def tidy(tagsoup):
@@ -237,19 +220,15 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     if ' ' in infile:
         infile = '"%s"' % infile
     tmpfile = mktemp()
-    # is this really needed?
-    # stylesheet = os.path.join(os.path.dirname(__file__),stylesheet)
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    #print cmdline
+    print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
     if stderr:
         print "Transformation error: %s" % stderr
 
-    # can't use tidy for HTML fragments -- it creates <head> and <body> sections and other stuff
-    # tidyHtmlFile(tmpfile)
-    # indentXmlFile(outfile)
+    # indent_xml_file(tmpfile)
 
     replace_if_different(tmpfile, outfile)
     if os.path.exists(tmpfile):
@@ -460,3 +439,14 @@ def outfile_is_newer(infiles,outfile):
             return False
     # print "%s is newer than %r" % (outfile, infiles)
     return True
+
+# Util.string
+def ucfirst(string):
+    l = len(string)
+    if l == 0:
+        return string
+    elif l == 1:
+        return string.upper()
+    else:
+        return string[0].upper() + string[1:]
+
