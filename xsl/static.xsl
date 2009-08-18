@@ -94,13 +94,13 @@
   </xsl:template>
 
   <!-- kommentarer mode -->
-  <xsl:template match="xht2:div" mode="kommentarer">
+  <xsl:template match="xht2:div" mode="toc">
     <xsl:if test="@role='navigation'">
       <xsl:apply-templates mode="trans-ns"/>
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="*" mode="kommentarer">
+  <xsl:template match="xht2:*" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
 

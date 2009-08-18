@@ -67,7 +67,7 @@
 	  </xsl:choose>
 	</xsl:variable>
 
-	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
+	<a href="{$localurl}" rel="{@rel}" resource="{$uri}"><xsl:if test="$title"><xsl:attribute name="title"><xsl:value-of select="$title"/></xsl:attribute></xsl:if><xsl:if test="@class"><xsl:attribute name="class"><xsl:value-of select="@class"/></xsl:attribute></xsl:if><xsl:if test="@rel"><xsl:attribute name="rel"><xsl:value-of select="@rel"/></xsl:attribute></xsl:if><xsl:if test="$uri"><xsl:attribute name="resource"><xsl:value-of select="$uri"/></xsl:attribute></xsl:if><xsl:apply-templates/></a>
 	<xsl:if test="$decorate">
 	  <xsl:choose>
 	    <xsl:when test="substring($uri, 0, 25) = 'http://lagen.nu/concept/'">

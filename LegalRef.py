@@ -162,7 +162,11 @@ class LegalRef:
             DCT = Namespace("http://purl.org/dc/terms/")
             d = self.get_relations(DCT['alternate'])
             self.namedlaws.update(d)
-            self.decl += "LawAbbreviation ::= ('%s')\n" % "'/'".join([x.encode(SP_CHARSET) for x in d.keys()])
+            lawlist = [x.encode(SP_CHARSET) for x in d.keys()]
+            # Make sure longer law abbreviations come before shorter
+            # ones (so that we don't mistake "3 § MBL" for "3 § MB"+"L")
+            lawlist.sort(cmp=lambda x,y:len(y)-len(x))
+            self.decl += "LawAbbreviation ::= ('%s')\n" % "'/'".join(lawlist)
             self.roots.insert(0,"kortlagrumref")
 
         if self.EGLAGSTIFTNING in args:
