@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- den här XSL-filen är ganska atypisk - kolla hellre på DV.xsl -->
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -10,6 +11,7 @@
 		exclude-result-prefixes="xht2 dct rdf">
 
   <xsl:import href="uri.xsl"/>
+  <xsl:import href="accordion.xsl"/>
   <xsl:include href="base.xsl"/>
 
   <xsl:variable name="dokumenturi" select="/xht2:html/@xml:base"/>
@@ -22,32 +24,65 @@
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
 
-  <xsl:template match="xht2:h">
-      <xsl:if test="@property = 'dct:title'">
-	<h1><xsl:value-of select="."/></h1>
-	<xsl:variable name="wikidesc" select="$annotations/rdf:Description/dct:description/xht2:div/*"/>
-	<xsl:variable name="legaldefs" select="$annotations/rdf:Description/rinfoex:isDefinedBy/*"/>
-	<xsl:if test="$wikidesc">
-	  <div class="mittruta kommentar">
-	    <img src="/img/comment.png" class="inline-icon" width="16" height="16" alt="" title=""/>
+  <xsl:template match="xht2:h[@property='dct:title']">
+    <xsl:variable name="wikidesc" select="$annotations/rdf:Description/dct:description/xht2:div/*"/>
+    <xsl:variable name="legaldefs" select="$annotations/rdf:Description/rinfoex:isDefinedBy/*"/>
+    <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
+    <xsl:variable name="wikipedia" select="//xht2:p[@class='wikibox']"/>
+
+    <table>
+      <tr>
+	<td width="50%">
+	  <h1 property="dct:title"><xsl:value-of select="."/></h1>
+	  <xsl:if test="$wikidesc">
 	    <xsl:apply-templates select="$wikidesc"/>
+	  </xsl:if>
+	  <xsl:if test="not($wikidesc)">
+	    Det finns ingen beskrivning av "<xsl:value-of
+	    select="."/>" än. Vi jobbar på det! Vill du <a
+	    href="http://wiki.lagen.nu/">hjälpa till?</a>
+	  </xsl:if>
+	</td>
+	<td class="aux">
+	  <div class="ui-accordion">
+	    <xsl:if test="$wikipedia">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Externa länkar</xsl:with-param>
+		<xsl:with-param name="contents" select="$wikipedia"/>
+	      </xsl:call-template>
+	    </xsl:if>
+	    
+	    <xsl:if test="$legaldefs">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Legaldefinitioner (<xsl:value-of select="count($legaldefs)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:for-each select="$legaldefs">
+		    <xsl:sort select="@rdf:about"/>
+		    <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
+		    <a href="{$localurl}"><xsl:value-of select="rdfs:label"/></a><br/>
+		  </xsl:for-each>
+		</xsl:with-param>
+	      </xsl:call-template>
+	    </xsl:if>
+	    
+	    <xsl:if test="$rattsfall">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Rättsfall med detta begrepp (<xsl:value-of select="count($rattsfall)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:call-template name="rattsfall">
+		    <xsl:with-param name="rattsfall" select="$rattsfall"/>
+		  </xsl:call-template>
+		</xsl:with-param>
+	      </xsl:call-template>
+	    </xsl:if>
+
 	  </div>
-	</xsl:if>
-	<xsl:if test="not($wikidesc)">
-	  Det finns ingen beskrivning av "<xsl:value-of select="."/>" än. Du kanske vill <a href="http://wiki.lagen.nu/index.php?title={.}&amp;action=edit">skriva en?</a>
-	</xsl:if>
-	<xsl:if test="$legaldefs">
-	  <div class="mittruta">
-	    <h2>Legaldefinitioner</h2>
-	    <xsl:for-each select="$legaldefs">
-	      <xsl:sort select="@rdf:about"/>
-	      <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
-	      <a href="{$localurl}"><xsl:value-of select="rdfs:label"/></a><br/>
-	    </xsl:for-each>
-	  </div>
-	</xsl:if>
-      </xsl:if>
+	</td>
+      </tr>
+    </table>
   </xsl:template>
+
+  <xsl:template match="xht2:p[@class='wikibox']"/>
 
   <xsl:template match="xht2:a|a">
     <xsl:call-template name="link">
@@ -65,23 +100,6 @@
   <xsl:template match="@*">
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
-
-  <!-- refs mode -->
-  <xsl:template match="xht2:h" mode="refs">
-    <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
-
-    <xsl:if test="$rattsfall">
-      <div class="sidoruta">
-	<h2>Rättsfall</h2>
-	<xsl:call-template name="rattsfall">
-	  <xsl:with-param name="rattsfall" select="$rattsfall"/>
-	</xsl:call-template>
-      </div>
-    </xsl:if>
-  </xsl:template>
-
-  <xsl:template match="*" mode="refs"/>
-  
 
   <xsl:template name="rattsfall">
     <xsl:param name="rattsfall"/>
@@ -108,11 +126,9 @@
       </xsl:for-each>
   </xsl:template>
 
-
-  <!-- kommentar mode -->
-  <xsl:template match="*|@*" mode="kommentarer">
+  <xsl:template match="*|@*" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-  
+
 </xsl:stylesheet>
 

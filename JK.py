@@ -21,8 +21,8 @@ RINFO   = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
 DCT     = Namespace(Util.ns['dct'])
 
-class ExampleRepo(DocumentRepository):
-    module_dir = "example"
+class JK(DocumentRepository):
+    module_dir = "jk"
 
     start_url = "http://www.jk.se/beslut/default.asp"
     document_url = "http://www.jk.se/beslut/XmlToHtml.asp?XML=Files/%s.xml&XSL=../xsl/JK_Beslut.xsl"
@@ -36,7 +36,7 @@ class ExampleRepo(DocumentRepository):
                 self.download_single(m.group(1),cache)
 
     def parse_from_soup(self,soup):
-        # Step 2: Find out basic metadata
+        # Step 1: Find out basic metadata
         rubrik = soup.first("title").string
         beslutsdatum  = soup.first("meta",{'name':'SG_Beslutsdatum'})['content']
         diarienummer  = soup.first("meta",{'name':'SG_Dokumentbet'})['content']
@@ -50,14 +50,15 @@ class ExampleRepo(DocumentRepository):
         nyckelord_val = soup.first("meta",{'name':'Keywords'})['content'].replace("_", " ")
         nyckelord     = [Util.ucfirst(x).strip() for x in nyckelord_val.split("\n")]
 
-        # Step 3: Map the basic metadata to RDF statements
+        # Step 2: Map the basic metadata to RDF statements
         meta = MapStructure()
         meta[u'Rubrik'] = UnicodeSubject(rubrik, predicate=DCT['title'])
         meta[u'Beslutsdatum'] = UnicodeSubject(beslutsdatum, predicate=RINFO['beslutsdatum'])
         meta[u'Diarienummer'] = UnicodeSubject(diarienummer, predicate=RINFO['diarienummer'])
         meta[u'Ärendetyp'] = UnicodeSubject(arendetyp, predicate=RINFOEX['arendetyp'])
         meta[u'Sökord'] = [UnicodeSubject(s, predicate=DCT['subject']) for s in nyckelord]
-        # Step 4: Using the metadata, construct the canonical URI for this document
+
+        # Step 3: Using the metadata, construct the canonical URI for this document
         uri = LegalURI.construct({'type':LegalRef.MYNDIGHETSBESLUT,
                                   'myndighet':'jk',
                                   'dnr':meta[u'Diarienummer']})
@@ -67,7 +68,7 @@ class ExampleRepo(DocumentRepository):
         meta['rdfs:type'] = "rinfoex:Myndighetsbeslut"
         meta['xml:base'] = uri
 
-        # Step 5: Process the actual text of the document
+        # Step 4: Process the actual text of the document
         self.parser = LegalRef(LegalRef.LAGRUM,
                                LegalRef.KORTLAGRUM,
                                LegalRef.RATTSFALL,
@@ -86,12 +87,14 @@ class ExampleRepo(DocumentRepository):
         self.log.debug("Found %d elements" % len(elements))
         from collections import deque
         elements = deque(elements)
-        body = self._make_sektion(elements,u"Referat av beslut")
+        body = self.make_sektion(elements,u"Referat av beslut")
+
+        # Step 5: Combine the metadata and the document, and return it
         doc = {'meta':meta,
                'body':body}
         return doc
 
-    def _make_sektion(self,elements,heading,level=0):
+    def make_sektion(self,elements,heading,level=0):
         sekt = Sektion(**{"rubrik":heading,
                           "niva":level})
         self.log.debug("%sCreated sektion(%d): '%s'" % ("  "*level,level,heading))
@@ -101,9 +104,7 @@ class ExampleRepo(DocumentRepository):
             except IndexError:
                 return sekt
             text = Util.elementText(p)
-
             # self.log.debug("%sp.name: %s, p['class']: %s, 'class' in p.attrs: %s" % ("  "*level,p.name,p['class'], (u'class' in p.attrs[0])))
-
             new_level = None
             if p.name == "h1":
                 new_level = 1
@@ -120,7 +121,7 @@ class ExampleRepo(DocumentRepository):
 
             if new_level:
                 if new_level > level:
-                    sekt.append(self._make_sektion(elements,text,new_level))
+                    sekt.append(self.make_sektion(elements,text,new_level))
                 else:
                     elements.appendleft(p)
                     return sekt
