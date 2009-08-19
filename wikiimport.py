@@ -1,4 +1,9 @@
-import os, sys, mwclient
+import os, sys
+
+try:
+    import mwclient
+except:
+    pass
 import xml.etree.cElementTree as ET
 
 HOST = "wiki.lagen.nu"

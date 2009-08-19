@@ -1,3 +1,15 @@
+2009-08-19 11:21:00 Ny betaversion
+
+<p>En ny betaversion, med en ny grafisk design, är klar för
+testning. Arbetet med lagkommenterandet har gått frammåt med
+stormsteg, och kommentarerna till RB, ÄB, LAS och MBL är i princip
+klara. Tanken med den nya designen är att lagtexten ska kunna
+presenteras sida vid sida med information om samma text - kommentarer,
+rättsfall, hänvisningar från andra lagar m.m. Samtidigt har
+färgschemat och övriga grafiska detaljer fått en översyn. Maila gärna
+dina kommentarer till <a
+href="staffan@tomtebo.org">staffan@tomtebo.org</a></p>
+
 2009-08-03 20:41:13 Betaversion av lagen.nu
 
 <p>Välkommen till betaversionen av lagen.nu. Under sommaren och hösten

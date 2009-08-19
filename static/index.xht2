@@ -8,9 +8,11 @@
     <body>
       <div role="main">
 	<!-- main text is now fetched from wiki.lagen.nu mainpage -->
+	<div id="frontpage">
 	  <xi:include href="index.inc.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(//h:div/*)"/>
+	</div>
       </div>
-      <div role="note">
+      <div role="navigation">
 	<div class="sidoruta">
 	  <h2>
 	    <a href="/nyheter/site.atom"><img src="img/feed.png" title="Atom-flöde för sajtnyheter" alt="Atom-flöde"/></a>

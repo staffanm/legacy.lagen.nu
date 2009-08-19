@@ -46,7 +46,7 @@
 
   <xsl:template match="xht2:a">
     <xsl:call-template name="link">
-      <xsl:with-param name="decorate" select="true()"/>
+      <!-- <xsl:with-param name="decorate" select="true()"/> -->
       <xsl:with-param name="validate" select="false()"/>
     </xsl:call-template>
   </xsl:template>

@@ -1,10 +1,13 @@
       #vinjett {
 	position:relative;
-        background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) repeat-x;
-        border: solid #fff 8pt;
+        border: 1px solid #e0cfc2;
+	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
+        color: #ffffff;
+	outline: none; 
+        margin: 8pt;
         padding: 14pt 0 26pt 20pt;
 	height: 38pt;
-        -moz-border-radius-topleft: 20px; -webkit-border-top-left-radius: 20px; -moz-border-radius-topright: 20px; -webkit-border-top-right-radius: 20px;
+
       }
 
       #vinjett h1 {
@@ -30,11 +33,11 @@
       }
       #navigation li {
   	display: inline;
-  	margin: 0 3pt; 
+  	margin: 0 2pt; 
   	padding: 6pt 6pt 6pt 6pt;
   	zoom: 1;
-        border: solid 1pt white;
-	background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) 50% 50% repeat-x;
+        border: solid 1pt #e0cfc2;
+	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
       }
       #navigation li a {
   	text-decoration: none;
@@ -53,7 +56,7 @@
   	right:6pt;
         bottom: -1px;
   	zoom: 1;
-	background: #970C42 url(images/ui-bg_highlight-soft_50_970c42_1x100.png) 50% 50% repeat-x;
+	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
       }
       #vinjett form p {
   	margin: 0;
@@ -84,6 +87,34 @@
         border-top: dotted black 1px;
       }
 
+      #frontpage {
+	  line-height: 14pt;
+      }
+      #frontpage h2 {
+	  margin-top: 12pt;
+          margin-left: -6pt;
+      }
+      #frontpage h3 {
+	  margin-top: 6pt;
+          
+          margin-bottom: 6pt;
+	  border-bottom: solid #e0cfc2 1px;
+          margin-left: -6pt;
+	  margin-right: 12pt;
+          font-style: normal;
+	  font-weight: bold;
+      }
+
+      #frontpage a {
+	  border-bottom: none;
+	  }
+      .sidoruta {
+	  border: solid #c0cfc2 1px;
+          background-color: #f4f0ec;
+       }
+      .sidoruta h2 {
+	  font-size: 10pt;
+	  }
       .aux {
 	font-size: 10pt;
 	line-height: 12pt;
@@ -151,7 +182,15 @@
         padding: 0;
         margin: 0 0 0.5em 0;
       }
+
+
+a:link    { color: #1e1b1d; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:visited { color: #3f3731; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:hover   { color: #a46313; text-decoration: none; border-bottom: solid 1px;}
+a:active  { color: #a46313; text-decoration: none; border-bottom: solid 1px;}
+
       
+      /* custom typography for certain classes */
       ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
 	list-style-type: none;
         text-indent: -10pt;
@@ -188,7 +227,7 @@
 
     .platsmarkor {
         position: absolute;
-        left: -2em;
+        left: -16pt;
         font-size: 0.6em;
         color: #999;
         font-family: Arial;
@@ -201,21 +240,17 @@
     .ui-accordion h3 {
         font-style: normal;
 	font-size: 10pt !important;
-        padding: 2pt 2pt 2pt 18pt;
-	/* set these just in case javascript isn't activated */
-        background-color: #970C42;
-        /* color: #fff; */
+        padding: 2pt 4pt 2pt 18pt;
         cursor: pointer;
       }
 
     .ui-accordion .ui-accordion-content {
 	font-size: 10pt !important;
 	line-height: 12pt !important;
-        padding: 1pt 1pt 0 3pt !important;
+        padding: 1pt 1pt 2pt 3pt !important;
     }
-    .ui-widget-content a {
-	color: #970C42 !important;
-	}
-    .ui-widget-content a:hover {
-	color: #f00 !important;
-	}
+    .ui-widget-content a:link    { color: #1e1b1d !important; }
+    .ui-widget-content a:visited { color: #3f3731 !important; }
+    .ui-widget-content a:hover   { color: #a46313 !important; }
+    .ui-widget-content a:active  { color: #a46313 !important; }
+
