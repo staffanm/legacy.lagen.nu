@@ -1,11 +1,12 @@
       #vinjett {
 	position:relative;
-        border: 1px solid #e0cfc2;
-	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
+        border: 1px solid #748896;
+	/* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+        background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
         color: #ffffff;
 	outline: none; 
         margin: 8pt;
-        padding: 14pt 0 26pt 20pt;
+        padding: 12pt 0 24pt 20pt;
 	height: 38pt;
 
       }
@@ -26,7 +27,7 @@
       #navigation {
         position: absolute;
   	left:12pt;
-        bottom: 0;
+        bottom: -1px;
   	margin: 0;
         padding: 6pt;
 	font-weight: bold;
@@ -36,8 +37,11 @@
   	margin: 0 2pt; 
   	padding: 6pt 6pt 6pt 6pt;
   	zoom: 1;
-        border: solid 1pt #e0cfc2;
-	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
+        border-left: solid 1pt #fff;
+        border-right: solid 1pt #fff;
+        border-top: solid 1pt #fff;
+	/* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+        background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
       }
       #navigation li a {
   	text-decoration: none;
@@ -50,13 +54,16 @@
       }
 
       #vinjett form {
-        border: solid 1pt white;
+        border-left: solid 1pt #fff;
+        border-right: solid 1pt #fff;
+        border-top: solid 1pt #fff;
         padding: 6pt;
         position: absolute;
   	right:6pt;
         bottom: -1px;
   	zoom: 1;
-	background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x;
+        /* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+	background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
       }
       #vinjett form p {
   	margin: 0;
@@ -69,22 +76,25 @@
   
       #innehallsforteckning {
 	margin-left: 3pt;
-        width: 112pt;
+        width: 150pt;
         float: left;
-	border-right: dotted 1px grey;
+	/*
+	border-right: dotted 1px grey; */
         overflow: hidden;
 	font-size: 10pt;
         line-height: 12pt;
       }
 
       #dokument {
-      margin-left: 132pt;
+      margin-left: 170pt;
       position: relative;
       margin-right: 4pt;
       }
       
       #sidfot {
         border-top: dotted black 1px;
+	padding: 4pt;
+        margin: 4pt;
       }
 
       #frontpage {
@@ -96,9 +106,7 @@
       }
       #frontpage h3 {
 	  margin-top: 6pt;
-          
-          margin-bottom: 6pt;
-	  border-bottom: solid #e0cfc2 1px;
+	  /* border-bottom: solid #748896 1px; */
           margin-left: -6pt;
 	  margin-right: 12pt;
           font-style: normal;
@@ -109,8 +117,15 @@
 	  border-bottom: none;
 	  }
       .sidoruta {
+	  border: solid #939FA8 1px;
+          background-color: #fff;
+	  padding: 3pt;
+          margin-left: 5pt;
+	  margin-bottom: 5pt;
+	  /*
 	  border: solid #c0cfc2 1px;
           background-color: #f4f0ec;
+          */ 
        }
       .sidoruta h2 {
 	  font-size: 10pt;
@@ -184,10 +199,14 @@
       }
 
 
-a:link    { color: #1e1b1d; text-decoration: none; border-bottom: dotted #3f3731 1px;}
-a:visited { color: #3f3731; text-decoration: none; border-bottom: dotted #3f3731 1px;}
-a:hover   { color: #a46313; text-decoration: none; border-bottom: solid 1px;}
-a:active  { color: #a46313; text-decoration: none; border-bottom: solid 1px;}
+a:link    { color: #595D74; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:visited { color: #687385; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:hover   { color: #00f; text-decoration: none; border-bottom: solid 1px;}
+a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
+    .ui-widget-content a:link    { color: inherit !important; }
+    .ui-widget-content a:visited { color: inherit !important; }
+    .ui-widget-content a:hover   { color: inherit !important; }
+    .ui-widget-content a:active  { color: inherit !important; }
 
       
       /* custom typography for certain classes */
@@ -249,8 +268,4 @@ a:active  { color: #a46313; text-decoration: none; border-bottom: solid 1px;}
 	line-height: 12pt !important;
         padding: 1pt 1pt 2pt 3pt !important;
     }
-    .ui-widget-content a:link    { color: #1e1b1d !important; }
-    .ui-widget-content a:visited { color: #3f3731 !important; }
-    .ui-widget-content a:hover   { color: #a46313 !important; }
-    .ui-widget-content a:active  { color: #a46313 !important; }
 

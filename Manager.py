@@ -254,7 +254,7 @@ class Manager:
 
 
         # copy everything in img to basedir site generated img
-        for dirname in ['css','js','img', 'img/treeview']:
+        for dirname in ['css', 'css/images','js','img', 'img/treeview']:
             for f in os.listdir(dirname):
                 src = dirname+os.path.sep+f
                 if os.path.isfile(src):
