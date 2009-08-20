@@ -1,0 +1,21 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>Bestämmelser om betydelsen av följande begrepp finns i nedan angivna paragrafer:</unicode>
+    </Stycke><Stycke id="P1S2">
+      <unicode>aktiebolag i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P4">4 §</LinkSubject>
+    </Stycke><Stycke id="P1S3">
+      <unicode>återföring av avdrag i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P34">34 §</LinkSubject>
+    </Stycke><Stycke id="P1S4">
+      <unicode>ägarlägenhet i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P15">15 §</LinkSubject>
+    </Stycke><Stycke id="P1S5">
+      <unicode>ägarlägenhetsenhet i </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P15">15 §</LinkSubject>
+      <unicode>. </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#L2009:107">Lag (2009:107).</LinkSubject>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

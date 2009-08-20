@@ -219,6 +219,7 @@ from datetime import datetime
       </section>
 
       <section py:def="render_bilaga(bilaga)"
+	       id="${bilaga.id}"
 	       about="#${bilaga.id}"
 	       typeof="rinfo:Bilaga">
 	<h py:content="bilaga.rubrik">Bilagerubrik</h>

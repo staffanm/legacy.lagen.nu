@@ -109,8 +109,14 @@
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'"/><!-- main title is handled in another template -->
+      <xsl:when test="../@typeof = 'rinfo:Bilaga'">
+	<h2>
+	  <xsl:attribute name="id"><xsl:value-of select="../@id" /></xsl:attribute>
+	  <xsl:value-of select="."/>
+	</h2>
+      </xsl:when>
       <xsl:when test="@class = 'underrubrik'">
-	<tr>
+	<tr class="heading-table-row">
 	  <td>
 	    <h3><xsl:for-each select="@*">
 	      <xsl:attribute name="{name()}"><xsl:value-of select="." /></xsl:attribute>

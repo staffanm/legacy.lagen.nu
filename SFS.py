@@ -1015,6 +1015,8 @@ class SFSParser(LegalSource.Parser):
                         term = Util.normalizeSpace(term)
                         termnode = LinkSubject(term, uri=self._term_to_subject(term),predicate="dct:subject")
                         find_definitions_recursive = False
+                    else:
+                        term = None
 
                 for p in element: # normally only one, but can be more
                                   # if the Stycke has a NumreradLista
@@ -1715,6 +1717,10 @@ class SFSParser(LegalSource.Parser):
             indirect = True
 
         self.trace['rubrik'].debug("isRubrik (%s): indirect=%s" % (p[:50], indirect))
+        
+        if len(p) > 0 and p[0].lower() == p[0] and not p.startswith("/Rubriken"):
+           self.trace['rubrik'].debug("isRubrik (%s): starts with lower-case" % (p[:50]))
+           return False
 
         # self.trace['rubrik'].debug("isRubrik: p=%s" % p)
         if len(p) > 110: # it shouldn't be too long, but some headlines are insanely verbose
@@ -2736,12 +2742,13 @@ WHERE {
                              'answerext':'.xht2'},
                   }
 
-    # Status just nu (090820, markerade med * borde kunna fixas)
+    # Status just nu (090820, markerade med * borde kunna fixas någorlunda enkelt)
     #
-    # ..................N........N.............................................N......F..N.........NN.. 90
-    # /97
+    # ..................NF........N.............................................N.......F..N.........NN..
+    # 91/99
     # Failed tests:
     # test/SFS\Parse\definition-paranthesis-multiple.txt *
+    # test/SFS\Parse\definition-paranthesis-twoparas.txt *
     # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
     # test/SFS\Parse\tricky-felformatterad-tabell.txt
     # test/SFS\Parse\tricky-lopande-rubriknumrering.txt *
@@ -2795,10 +2802,6 @@ WHERE {
         p.id = '(test)'
         return unicode(p.generate_xhtml(meta,body,registry,__moduledir__,globals()),'utf-8')
 
-    # Aktuell teststatus:
-    #
-    # ...
-    #
     ####################################################################
     # OVERRIDES OF Manager METHODS
     ####################################################################    
