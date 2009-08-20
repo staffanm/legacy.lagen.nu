@@ -11,8 +11,9 @@
           </Tabellcell>
         </Tabellrad><Tabellrad>
           <Tabellcell>
-            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Biobank" />
-            <unicode>Biobank</unicode>
+            <unicode />
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Biobank">Biobank</LinkSubject>
+            <unicode />
           </Tabellcell><Tabellcell>
             <unicode>Biologiskt material från en eller flera människor som samlas.</unicode>
           </Tabellcell>

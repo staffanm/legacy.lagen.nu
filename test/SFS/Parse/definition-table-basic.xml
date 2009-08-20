@@ -5,15 +5,17 @@
       <Tabell>
         <Tabellrad>
           <Tabellcell>
-            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Detaljhandel" />
-            <unicode>Detaljhandel</unicode>
+            <unicode />
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Detaljhandel">Detaljhandel</LinkSubject>
+            <unicode />
           </Tabellcell><Tabellcell>
             <unicode>Försäljning av läkemedel till konsument, sjukvårdshuvudman, sjukhus eller annan sjukvårdsinrättning eller till den som är behörig att förordna läkemedel.</unicode>
           </Tabellcell>
         </Tabellrad><Tabellrad>
           <Tabellcell>
-            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Dosdispensering" />
-            <unicode>Dosdispensering</unicode>
+            <unicode />
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Dosdispensering">Dosdispensering</LinkSubject>
+            <unicode />
           </Tabellcell><Tabellcell>
             <unicode>Färdigställande av läkemedel för enskilds behov under viss tid genom uttag ur tillverkarens originalförpackning.</unicode>
           </Tabellcell>

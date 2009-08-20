@@ -462,7 +462,7 @@ WHERE {
 
         main_node = PET.SubElement(root_node, "rdf:Description")
         main_node.set("rdf:about", keyword_to_uri(keyword))
-        
+
         for d in wikidesc:
             desc_node = PET.SubElement(main_node, "dct:description")
             xhtmlstr = "<xht2:div xmlns:xht2='%s'>%s</xht2:div>" % (Util.ns['xht2'], d['desc'])

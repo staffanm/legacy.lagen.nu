@@ -1,0 +1,13 @@
+<Forfattning>
+  <Paragraf id="P4" ordinal="4">
+    <Stycke id="P4S1">
+      <unicode>Med </unicode>
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Detaljhandel">detaljhandel</LinkSubject>
+      <unicode> avses i denna lag försäljning av läkemedel till konsument.</unicode>
+    </Stycke><Stycke id="P4S2">
+      <unicode>Med </unicode>
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Nikotinläkemedel">nikotinläkemedel</LinkSubject>
+      <unicode> avses i denna lag receptfria läkemedel som inte har förskrivits och vars enda aktiva substans är nikotin.</unicode>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

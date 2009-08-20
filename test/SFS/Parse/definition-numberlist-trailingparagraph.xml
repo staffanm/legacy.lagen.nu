@@ -4,8 +4,9 @@
       <unicode>I denna förordning avses med:</unicode>
       <NumreradLista>
         <Listelement id="P2S1N1" ordinal="1">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Tekniska_regler" />
-          <unicode>1. tekniska regler:</unicode>
+          <unicode>1. </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Tekniska_regler">tekniska regler</LinkSubject>
+          <unicode>:</unicode>
           <Bokstavslista>
             <Listelement id="P2S1N1Na" ordinal="a">
               <unicode>a) föreskrifter eller andra bestämmelser som utgörs av eller hänvisar till tekniska specifikationer,</unicode>
@@ -15,14 +16,17 @@
           </Bokstavslista>
         </Listelement>
       </NumreradLista>
+    </Stycke><Stycke id="P2S2">
       <unicode>Till tekniska regler som är faktiskt tvingande räknas bl.a. frivilliga överenskommelser,</unicode>
       <NumreradLista>
-        <Listelement id="P2S1N2" ordinal="2">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Tekniska_specifikationer" />
-          <unicode>2. tekniska specifikationer: specifikationer intagna i ett dokument och som fastställer de egenskaper som krävs,</unicode>
-        </Listelement><Listelement id="P2S1N3" ordinal="3">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Andra_krav" />
-          <unicode>3. andra krav: krav som inte är tekniska specifikationer och som ställs på en vara.</unicode>
+        <Listelement id="P2S2N2" ordinal="2">
+          <unicode>2. </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Tekniska_specifikationer">tekniska specifikationer</LinkSubject>
+          <unicode>: specifikationer intagna i ett dokument och som fastställer de egenskaper som krävs,</unicode>
+        </Listelement><Listelement id="P2S2N3" ordinal="3">
+          <unicode>3. </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Andra_krav">andra krav</LinkSubject>
+          <unicode>: krav som inte är tekniska specifikationer och som ställs på en vara.</unicode>
         </Listelement>
       </NumreradLista>
     </Stycke>

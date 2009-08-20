@@ -4,8 +4,9 @@
       <unicode>I denna lag betyder</unicode>
       <NumreradLista>
         <Listelement id="P5S1N1" ordinal="1">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Penningtvätt" />
-          <unicode>1. penningtvätt: sådana åtgärder</unicode>
+          <unicode>1. </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Penningtvätt">penningtvätt</LinkSubject>
+          <unicode>: sådana åtgärder</unicode>
           <Bokstavslista>
             <Listelement id="P5S1N1Na" ordinal="a">
               <unicode>a) med brottsligt förvärvad egendom, som kan medföra att egendomens samband med brott döljs, att den brottslige får möjlighet att undandra sig rättsliga påföljder eller att återskaffandet av egendomen försvåras, samt sådana åtgärder som innefattar förfogande över och förvärv, innehav eller brukande av egendomen,</unicode>
@@ -14,8 +15,9 @@
             </Listelement>
           </Bokstavslista>
         </Listelement><Listelement id="P5S1N8" ordinal="8">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Person_i_politiskt_utsatt_ställning" />
-          <unicode>8. person i politiskt utsatt ställning: personer som har eller tidigare har haft viktiga offentliga funktioner och sådana personers närmaste familjemedlemmar och kända medarbetare,</unicode>
+          <unicode>8. </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Person_i_politiskt_utsatt_ställning">person i politiskt utsatt ställning</LinkSubject>
+          <unicode>: personer som har eller tidigare har haft viktiga offentliga funktioner och sådana personers närmaste familjemedlemmar och kända medarbetare,</unicode>
         </Listelement>
       </NumreradLista>
     </Stycke>

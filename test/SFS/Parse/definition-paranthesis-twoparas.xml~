@@ -1,0 +1,14 @@
+<Forfattning>
+  <Paragraf id="P5" ordinal="5">
+    <Stycke id="P5S1">
+      <unicode>Från fonden skall lämnas ersättning (</unicode>
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Författarpenning">författarpenning</LinkSubject>
+      <unicode>).</unicode>
+    </Stycke><Stycke id="P5S2">
+      <unicode />
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Andra">Andra</LinkSubject>
+      <unicode> stycket skall tillämpas. </unicode>
+      <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#L2003:1116">Förordning (2003:1116).</LinkSubject>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

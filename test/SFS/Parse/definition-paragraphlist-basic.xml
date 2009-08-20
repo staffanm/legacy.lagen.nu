@@ -3,11 +3,13 @@
     <Stycke id="P2S1">
       <unicode>I denna förordning avses med</unicode>
     </Stycke><Stycke id="P2S2">
-      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Alkolås" />
-      <unicode>alkolås: en sådan anordning i ett fordon som hindrar att fordonet startas och körs av förare som har alkohol i utandningsluften,</unicode>
+      <unicode />
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Alkolås">alkolås</LinkSubject>
+      <unicode>: en sådan anordning i ett fordon som hindrar att fordonet startas och körs av förare som har alkohol i utandningsluften,</unicode>
     </Stycke><Stycke id="P2S3">
-      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Antisladdsystem" />
-      <unicode>antisladdsystem: ett tekniskt stödsystem som minskar risken för sladd,</unicode>
+      <unicode />
+      <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Antisladdsystem">antisladdsystem</LinkSubject>
+      <unicode>: ett tekniskt stödsystem som minskar risken för sladd,</unicode>
     </Stycke>
   </Paragraf>
 </Forfattning>

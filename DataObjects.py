@@ -223,9 +223,11 @@ def __serializeNode(node):
                 e.set(key,repr(val))
                 
     if isinstance(node,unicode):
-        e.text = node
+        if node:
+            e.text = node
     elif isinstance(node,str):
-        e.text = node
+        if str:
+            e.text = node
     elif isinstance(node,int):
         e.text = unicode(node)
     elif isinstance(node,list):
@@ -283,7 +285,10 @@ def __deserializeNode(elem,caller_globals):
         c = classobj(int(elem.text),**elem.attrib)
 
     elif isinstance(testclass, unicode):
-        c = classobj(unicode(elem.text),**elem.attrib)
+        if elem.text:
+            c = classobj(unicode(elem.text),**elem.attrib)
+        else:
+            c = classobj(**elem.attrib)
 
     elif isinstance(testclass, datetime.date):
         m = re.match(r'\w+\((\d+), (\d+), (\d+)\)',elem.text)

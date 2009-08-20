@@ -4,13 +4,15 @@
       <unicode>I denna förordning avses med</unicode>
       <Strecksatslista>
         <Listelement id="P5S1N1" ordinal="1">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Funktionshinder" />
-          <unicode>- funktionshinder: fysiska funktionshinder; medicinskt, psykiskt eller neurologiskt betingade funktionsnedsättningar; svåra läs- och skrivsvårigheter (dyslexi) samt utvecklingsstörning och andra funktionshinder som avses i </unicode>
+          <unicode>- </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Funktionshinder">funktionshinder</LinkSubject>
+          <unicode>: fysiska funktionshinder; medicinskt, psykiskt eller neurologiskt betingade funktionsnedsättningar; svåra läs- och skrivsvårigheter (dyslexi) samt utvecklingsstörning och andra funktionshinder som avses i </unicode>
           <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1985:1100#K1P16">1 kap. 16 § skollagen (1985:1100)</LinkSubject>
           <unicode>,</unicode>
         </Listelement><Listelement id="P5S1N2" ordinal="2">
-          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Hemskola" />
-          <unicode>- hemskola: den skola där eleven skulle ha fullgjort sin skolgång om eleven inte hade mottagits för utbildning vid specialskolan,</unicode>
+          <unicode>- </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Hemskola">hemskola</LinkSubject>
+          <unicode>: den skola där eleven skulle ha fullgjort sin skolgång om eleven inte hade mottagits för utbildning vid specialskolan,</unicode>
         </Listelement>
       </Strecksatslista>
     </Stycke>

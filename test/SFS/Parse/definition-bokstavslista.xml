@@ -1,0 +1,14 @@
+<Forfattning>
+  <Paragraf id="P2" ordinal="2">
+    <Stycke id="P2S1">
+      <unicode>I denna förordning avses med</unicode>
+      <Bokstavslista>
+        <Listelement id="P2S1Na" ordinal="a">
+          <unicode>a) </unicode>
+          <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Statligt_reglerad_anställning">statligt reglerad anställning</LinkSubject>
+          <unicode>: sådan statlig eller annan anställning.</unicode>
+        </Listelement>
+      </Bokstavslista>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

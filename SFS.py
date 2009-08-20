@@ -526,15 +526,23 @@ class SFSParser(LegalSource.Parser):
     re_DottedNumber    = re.compile(r'^(\d+ ?\w?)\. ')
     re_Bullet          = re.compile(ur'^(\-\-?|\x96) ')
     re_NumberRightPara = re.compile(r'^(\d+)\) ').match
-    re_Bokstavslista   = re.compile(r'^(\w)\) ').match
+    re_Bokstavslista   = re.compile(r'^(\w)\) ')
     re_ElementId       = re.compile(r'^(\d+) mom\.')        # used for both match+sub
     re_ChapterRevoked  = re.compile(r'^(\d+( \w|)) [Kk]ap. (upphävd|har upphävts) genom (förordning|lag) \([\d\:\. s]+\)\.?$').match
     re_SectionRevoked  = re.compile(r'^(\d+ ?\w?) §[ \.]([Hh]ar upphävts|[Nn]y beteckning (\d+ ?\w?) §) genom ([Ff]örordning|[Ll]ag) \([\d\:\. s]+\)\.$').match
-    re_RevokeDate       = re.compile(r'/Upphör att gälla U:(\d+)-(\d+)-(\d+)/')
-    re_EntryIntoForceDate = re.compile(r'/Träder i kraft I:(\d+)-(\d+)-(\d+)/')
-    re_dehyphenate = re.compile(r'- (?!(och|eller))').sub
+    re_RevokeDate       = re.compile(ur'/(?:Rubriken u|U)pphör att gälla U:(\d+)-(\d+)-(\d+)/')
+    re_RevokeAuthorization = re.compile(ur'/Upphör att gälla U:(den dag regeringen bestämmer)/')
+    re_EntryIntoForceDate = re.compile(ur'/(?:Rubriken t|T)räder i kraft I:(\d+)-(\d+)-(\d+)/')
+    re_EntryIntoForceAuthorization = re.compile(ur'/Träder i kraft I:(den dag regeringen bestämmer)/')
+    re_dehyphenate = re.compile(r'\b- (?!(och|eller))',re.UNICODE).sub
     re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk|denna paragraf|detta kapitel) (avses med|betyder|används följande)').match
-
+    re_brottsdef     = re.compile(ur', (döms|dömes) för ([\w ]{3,50}) till (böter|fängelse)', re.UNICODE).search
+    re_brottsdef_alt = re.compile(ur'[Ff]ör ([\w ]{3,50}) (döms|dömas) till (böter|fängelse)', re.UNICODE).search
+    re_parantesdef   = re.compile(ur'\(([\w ]{3,50})\)\.', re.UNICODE).search
+    re_loptextdef    = re.compile(ur'^Med ([\w ]{3,50}) avses i denna (förordning|lag|balk)', re.UNICODE).search
+    
+                                      
+    
     # use this custom matcher to ensure any strings you intend to convert
     # are legal roman numerals (simpler than having from_roman throwing
     # an exception)
@@ -914,7 +922,12 @@ class SFSParser(LegalSource.Parser):
             if isinstance(element, Paragraf):
                 # kolla om första stycket innehåller en text som
                 # antyder att definitioner följer
-                if self.re_definitions(element[0][0]):
+                # log.debug("Testing %r against some regexes" % element[0][0])
+                if (self.re_definitions(element[0][0]) or
+                    self.re_brottsdef(element[0][0]) or
+                    self.re_brottsdef_alt(element[0][0]) or
+                    self.re_parantesdef(element[0][0]) or
+                    self.re_loptextdef(element[0][0])):
                     find_definitions = True
                     find_definitions_recursive = True
 
@@ -923,9 +936,9 @@ class SFSParser(LegalSource.Parser):
                 or isinstance(element, Listelement)
                 or isinstance(element, Tabellcell)):
                 nodes = []
+                term = None
 
                 if find_definitions:
-                    term = None
                     elementtext = element[0]
                     termdelimiter = ":"
 
@@ -934,6 +947,7 @@ class SFSParser(LegalSource.Parser):
                             term = elementtext
                             log.debug(u'"%s" är nog en definition (1)' % term)
                     elif isinstance(element, Stycke):
+                        # Case 1: "antisladdsystem: ett tekniskt stödsystem"
                         # Sometimes, : is not the delimiter between
                         # the term and the definition, but even in
                         # those cases, : might figure in the
@@ -952,23 +966,55 @@ class SFSParser(LegalSource.Parser):
                                 termdelimiter = " "
                             if termdelimiter in elementtext:
                                 term = elementtext.split(termdelimiter)[0]
-                                log.debug(u'"%s" är nog en definition (2)' % term)
+                                log.debug(u'"%s" är nog en definition (2.1)' % term)
+
+                        # case 2: "Den som berövar annan livet, döms
+                        # för mord till fängelse"
+                        m = self.re_brottsdef(elementtext)
+                        if m:
+                            term = m.group(2)
+                            log.debug(u'"%s" är nog en definition (2.2)' % term)
+
+                        # case 3: "För miljöbrott döms till böter"
+                        m = self.re_brottsdef_alt(elementtext)
+                        if m:
+                            term = m.group(1)
+                            log.debug(u'"%s" är nog en definition (2.3)' % term)
+
+                        # case 4: "Inteckning får på ansökan av
+                        # fastighetsägaren dödas (dödning)."
+                        m = self.re_parantesdef(elementtext)
+                        if m:
+                            term = m.group(1)
+                            log.debug(u'"%s" är nog en definition (2.4)' % term)
+
+                        # case 5: "Med detaljhandel avses i denna lag
+                        # försäljning av läkemedel"
+                        m = self.re_loptextdef(elementtext)
+                        if m:
+                            term = m.group(1)
+                            log.debug(u'"%s" är nog en definition (2.5)' % term)
+
                     elif isinstance(element, Listelement):
                         # remove
-                        elementtext = self.re_Bullet.sub('',self.re_DottedNumber.sub('',elementtext))
+                        for rx in (self.re_Bullet,
+                                   self.re_DottedNumber,
+                                   self.re_Bokstavslista):
+                            elementtext = rx.sub('',elementtext)
                         term = elementtext.split(termdelimiter)[0]
                         log.debug(u'"%s" är nog en definition (3)' % term)
 
-                    # Longest legitimate term found "Valutaväxling, betalningsöverföring och annan finansiell verksamhet"
+                    # Longest legitimate term found "Valutaväxling,
+                    # betalningsöverföring och annan finansiell
+                    # verksamhet"
                     if term and len(term) < 68:
                         # this results in empty/hidden links -- might
                         # be better to hchange sfs.template.xht2 to
                         # change these to <span rel="" href=""/>
                         # instead. Or use another object than LinkSubject.
                         term = Util.normalizeSpace(term)
-                        nodes.append(LinkSubject(u'', uri=self._term_to_subject(term),predicate="dct:subject"))
+                        termnode = LinkSubject(term, uri=self._term_to_subject(term),predicate="dct:subject")
                         find_definitions_recursive = False
-
 
                 for p in element: # normally only one, but can be more
                                   # if the Stycke has a NumreradLista
@@ -979,10 +1025,16 @@ class SFSParser(LegalSource.Parser):
                         # XHTML2 code, but needed to get useful RDF
                         # triples in the RDFa output
                         # print "Parsing %s" % " ".join(p.split())
-                        nodes.extend(self.lagrum_parser.parse(" ".join(p.split()),
-                                                              baseuri+prefix,
-                                                              "dct:references"))
-                        # nodes.extend(self.lagrum_parser.parse(p,baseuri+prefix,DCT["references"]))
+                        parsednodes = self.lagrum_parser.parse(" ".join(p.split()),
+                                                               baseuri+prefix,
+                                                               "dct:references")
+                        for n in parsednodes:
+                            if term and isinstance(n,unicode) and term in n:
+                                    (head,tail) = n.split(term,1)
+                                    nodes.extend((head,termnode,tail))
+                            else:
+                                nodes.append(n)
+                        
                         idx = element.index(p)
                 element[idx:idx+1] = nodes
 
@@ -1147,7 +1199,7 @@ class SFSParser(LegalSource.Parser):
         while self.reader.peekline() == "":
             self.reader.readline()
             
-        # log.debug(u'Första raden \'%s\'' % self.reader.peekline())
+        log.debug(u'Första raden \'%s\'' % self.reader.peekline())
         (line, upphor, ikrafttrader) = self.andringsDatum(self.reader.peekline())
         if ikrafttrader:
             log.debug(u'Författning med ikraftträdandedatum %s' % ikrafttrader)
@@ -1474,7 +1526,12 @@ class SFSParser(LegalSource.Parser):
 
     def makeBilaga(self): # svenska: bilaga
         rubrik = self.reader.readparagraph()
-        b = Bilaga(rubrik=rubrik)
+        (rubrik,upphor,ikrafttrader) = self.andringsDatum(rubrik)
+
+        kwargs = {'rubrik':rubrik}
+        if upphor: kwargs['upphor'] = upphor
+        if ikrafttrader: kwargs['ikrafttrader'] = ikrafttrader
+        b = Bilaga(**kwargs)
         log.debug(u"    Ny bilaga: %s" % rubrik)
         while not self.reader.eof():
             state_handler = self.guess_state()
@@ -1488,23 +1545,27 @@ class SFSParser(LegalSource.Parser):
 
     def andringsDatum(self,line,match=False):
         # Hittar ändringsdatumdirektiv i line. Om match, matcha från strängens början, annars sök i hela strängen.
-        ikrafttrader = None
-        upphor = None
-        if match:
-            m = self.re_RevokeDate.match(line)
-        else:
-            m = self.re_RevokeDate.search(line)
-        if m:
-            upphor = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            line = self.re_RevokeDate.sub(u'', line)
-        if match:
-            m = self.re_EntryIntoForceDate.match(line)
-        else:
-            m = self.re_EntryIntoForceDate.search(line)
-        if m:
-            ikrafttrader = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            line = self.re_EntryIntoForceDate.sub(u'', line) 
-        return (line, upphor, ikrafttrader)
+        dates = {'ikrafttrader': None,
+                 'upphor': None}
+
+        for (regex,key) in {self.re_RevokeDate:'upphor',
+                            self.re_RevokeAuthorization:'upphor',
+                            self.re_EntryIntoForceDate:'ikrafttrader',
+                            self.re_EntryIntoForceAuthorization:'ikrafttrader'}.items():
+            if match:
+                m = regex.match(line)
+            else:
+                m = regex.search(line)
+            if m:
+                if len(m.groups()) == 3:
+                    dates[key] = datetime(int(m.group(1)),
+                                          int(m.group(2)),
+                                          int(m.group(3)))
+                else:
+                    dates[key] = m.group(1)
+                line = regex.sub(u'',line)
+
+        return (line.strip(), dates['upphor'], dates['ikrafttrader'])
 
     
     def guess_state(self):
@@ -2032,7 +2093,7 @@ class SFSParser(LegalSource.Parser):
             emptyok = True
             for c in r:
                 if c or emptyok:
-                    tr.append(makeTabellcell(c))
+                    tr.append(makeTabellcell(c.replace("\n", " ")))
                     if c.strip() != u'':
                         emptyok = False
             res.append(tr)
@@ -2082,7 +2143,7 @@ class SFSParser(LegalSource.Parser):
 
     def idOfBokstavslista(self):
         p = self.reader.peekline()
-        match = self.re_Bokstavslista(p)
+        match = self.re_Bokstavslista.match(p)
 
         if match != None:
             return match.group(1).replace(" ", "")
@@ -2120,8 +2181,8 @@ class SFSParser(LegalSource.Parser):
 
 
     def isBilaga(self):
-        l = self.reader.peekline().strip()
-        return (self.reader.peekline().strip() in (u"Bilaga", u"Bilaga*", u"Bilaga *",
+        (line,upphor,ikrafttrader) = self.andringsDatum(self.reader.peekline())
+        return (line in (u"Bilaga", u"Bilaga*", u"Bilaga *",
                                                    u"Bilaga 1", u"Bilaga 2", u"Bilaga 3",
                                                    u"Bilaga 4", u"Bilaga 5", u"Bilaga 6"));
     
@@ -2674,6 +2735,19 @@ WHERE {
                              'testencoding':'utf-8',
                              'answerext':'.xht2'},
                   }
+
+    # Status just nu (090820, markerade med * borde kunna fixas)
+    #
+    # ..................N........N.............................................N......F..N.........NN.. 90
+    # /97
+    # Failed tests:
+    # test/SFS\Parse\definition-paranthesis-multiple.txt *
+    # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
+    # test/SFS\Parse\tricky-felformatterad-tabell.txt
+    # test/SFS\Parse\tricky-lopande-rubriknumrering.txt *
+    # test/SFS\Parse\tricky-okand-aldre-lag.txt
+    # test/SFS\Parse\tricky-tabell-overgangsbest.txt *
+    # test/SFS\Parse\tricky-tabell-sju-kolumner.txt
     def TestParse(self,data,verbose=None,quiet=None):
         # FIXME: Set this from FilebasedTester
         if verbose == None:

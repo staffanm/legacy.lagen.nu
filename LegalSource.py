@@ -65,7 +65,7 @@ else:
         locale.setlocale(locale.LC_ALL,'')
         defaultencoding = locale.getpreferredencoding()
         
-print "setting sys.stdout to a '%s' writer" % defaultencoding
+# print "setting sys.stdout to a '%s' writer" % defaultencoding
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 

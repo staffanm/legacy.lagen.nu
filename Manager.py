@@ -88,6 +88,7 @@ class Manager:
         if module == 'all':
             modules = self._findModules().keys()
             modules.append('LegalRef')
+            modules.append('LegalURI')
         else:
             modules = (module,)
         for m in modules:

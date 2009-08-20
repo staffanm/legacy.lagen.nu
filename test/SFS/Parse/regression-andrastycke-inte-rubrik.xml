@@ -1,0 +1,21 @@
+<Forfattning>
+  <Paragraf id="P1" ordinal="1">
+    <Stycke id="P1S1">
+      <unicode>I denna lag finns föreskrifter om</unicode>
+      <Strecksatslista>
+        <Listelement id="P1S1N1" ordinal="1">
+          <unicode>- lagens innehåll och tillämpningsområde samt allmänna bestämmelser,</unicode>
+        </Listelement><Listelement id="P1S1N2" ordinal="2">
+          <unicode>- överprövning, skadestånd m.m.</unicode>
+        </Listelement>
+      </Strecksatslista>
+    </Stycke><Stycke id="P1S2">
+      <unicode>Till lagen hör följande bilagor</unicode>
+      <Strecksatslista>
+        <Listelement id="P1S2N1" ordinal="1">
+          <unicode>- Förteckning över byggentreprenadkontrakt (bilaga 1)</unicode>
+        </Listelement>
+      </Strecksatslista>
+    </Stycke>
+  </Paragraf>
+</Forfattning>

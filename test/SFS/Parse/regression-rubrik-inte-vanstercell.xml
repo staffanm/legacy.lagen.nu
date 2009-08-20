@@ -5,7 +5,9 @@
       <Tabell>
         <Tabellrad>
           <Tabellcell>
-            <unicode>Tredje man</unicode>
+            <unicode />
+            <LinkSubject predicate="dct:subject" uri="http://lagen.nu/concept/Tredje_man">Tredje man</LinkSubject>
+            <unicode />
           </Tabellcell><Tabellcell>
             <unicode>Någon annan än den registrerade, den personuppgiftsansvarige, personuppgiftsombudet, personuppgiftsbiträdet och sådana personer som under den personuppgiftsansvariges eller personuppgiftsbiträdets direkta ansvar har befogenhet att behandla personuppgifter.</unicode>
           </Tabellcell>
