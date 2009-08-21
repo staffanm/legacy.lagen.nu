@@ -28,9 +28,10 @@ DCT = Namespace(Util.ns['dct'])
 # constructs, which in turn are modelled after production rule names
 # in the EBNF grammar.
 predicate = {"type": RDF.type,
-             "domstol": RINFO["rattsfallspublikation"],
-             "ar": RINFO["artal"],
-             "lopnr": RINFO["sidnummer"],
+             "publikation": RINFO["rattsfallspublikation"],
+             "artal": RINFO["artal"],
+             "lopnummer": RINFO["publikationsordinal"],
+             "sidnummer": RINFO["sidnummer"],
              "law": RINFO["fsNummer"],
              "chapter": RINFOEX["kapitelnummer"],
              "section": RINFOEX["paragrafnummer"],
@@ -48,9 +49,11 @@ types = {LegalRef.RATTSFALL: RINFO["Rattsfallsreferat"],
 dicttypes = dict([[v,k] for k,v in types.items()])
 
 patterns = {LegalRef.RATTSFALL:
-            re.compile("http://rinfo.lagrummet.se/publ/rattsfall/(?P<publikation>\w+)/(?P<artal>\d+)(?P<_delim>.)(?P<sidnummer>\d+)").match,
+            re.compile("http://rinfo.lagrummet.se/publ/rattsfall/(?P<publikation>\w+)/(?P<artal>\d+)(s(?P<sidnummer>\d+)|((:| nr | ref )(?P<lopnummer>\d+)))").match,
             LegalRef.MYNDIGHETSBESLUT:
-            re.compile("http://rinfo.lagrummet.se/publ/beslut/(?P<myndighet>\w+)/(?P<dnr>.*)").match
+            re.compile("http://rinfo.lagrummet.se/publ/beslut/(?P<myndighet>\w+)/(?P<dnr>.*)").match,
+            LegalRef.LAGRUM:
+            re.compile("http://rinfo.lagrummet.se/publ/sfs/(?P<law>\d{4}:\w+)#?(K(?P<chapter>[0-9a-z]+))?(P(?P<section>[0-9a-z]+))?(S(?P<piece>[0-9a-z]+))?(N(?P<item>[0-9a-z]+))?").match
             }
 
 
@@ -77,7 +80,8 @@ def construct(dictionary):
 def _first_obj(graph,subject,predicate):
     l = list(graph.objects(subject,predicate))
     if not l:
-        raise ValueError("No objects with predicate %s found in the graph" % predicate)
+        #raise ValueError("No objects with predicate %s found in the graph" % predicate)
+        return None
     else:
         return l[0]
                         
@@ -88,7 +92,6 @@ def construct_from_graph(graph):
     assert(isinstance(bnode,BNode))
 
     # maybe we should just move the triples into a dict keyed on predicate?
-    
     rdftype = _first_obj(graph,bnode,RDF.type)
     if rdftype == RINFO["Rattsfallsreferat"]:
         publ = _first_obj(graph,bnode,RINFO["rattsfallspublikation"])
@@ -97,18 +100,28 @@ def construct_from_graph(graph):
                                     _first_obj(graph,bnode,RINFO["artal"]),
                                     _first_obj(graph,bnode,RINFO["sidnummer"]))
         else:
-            raise ValueError("Don't know how to format a %s with rinfo:rattsfallspublikation %s" % (RINFO["Rattsfallsreferat"], publ))
+            uripart = "%s/%s:%s" % (publ,
+                                    _first_obj(graph,bnode,RINFO["artal"]),
+                                    _first_obj(graph,bnode,RINFO["publikationsordinal"]))
+
         return "http://rinfo.lagrummet.se/publ/rattsfall/%s" % uripart
     elif rdftype == RINFO["KonsolideradGrundforfattning"]:
-        attributeorder = [RINFO["fsNummer"],
-                          RINFOEX["kapitelnummer"],
+        # print graph.serialize(format="n3")
+        attributeorder = [RINFOEX["kapitelnummer"],
                           RINFOEX["paragrafnummer"],
                           RINFOEX["styckenummer"],
                           RINFOEX["punktnummer"]]
-
+        signs = {RINFOEX["kapitelnummer"]: 'K',
+                 RINFOEX["paragrafnummer"]: 'P',
+                 RINFOEX["styckenummer"]: 'S',
+                 RINFOEX["punktnummer"]: 'N'}
+        urifragment = _first_obj(graph,bnode,RINFO["fsNummer"])
         for key in attributeorder:
             if _first_obj(graph,bnode,key):
-                return "http://rinfo.lagrummet.se/publ/sfs/not-really-finished-yet"
+                if "#" not in urifragment: urifragment += "#"
+                urifragment += signs[key] + _first_obj(graph,bnode,key)
+        return "http://rinfo.lagrummet.se/publ/sfs/%s" % urifragment
+
     elif rdftype == RINFO["Myndighetsavgorande"]:
         return "http://rinfo.lagrummet.se/publ/beslut/%s/%s" % \
                (_first_obj(graph,bnode,DCT["creator"]),
@@ -145,6 +158,8 @@ def parse_to_graph(uri):
         graph.bind(key,  Namespace(value));
     bnode = BNode()
     for key in dictionary:
+        if dictionary[key] == None:
+            continue
         if key.startswith("_"):
             continue
         if key == "type":
@@ -169,7 +184,8 @@ class Tester(FilebasedTester):
     def TestConstruct(self,data):
         # All test case writers are honorable, noble and thorough
         # persons, but just in case, let's make eval somewhat safer.
-        d = eval(data.strip(),{"__builtins__":None},globals())
+        data = data.strip().replace("\r\n", " ")
+        d = eval(data,{"__builtins__":None},globals())
         uri = construct(d)
         return uri
 

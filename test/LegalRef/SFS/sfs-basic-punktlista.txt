@@ -17,8 +17,8 @@ värde, får de dock bevaras i Statens ljud- och bildarkiv.
 </unicode>
   <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P9S2N2">2</Link>
   <unicode>-</unicode>
-  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P9S2N4">4</Link>
-  <unicode>. Detta gäller dock inte ett sådant verk som avses i </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P9S2N4">4.</Link>
+  <unicode> Detta gäller dock inte ett sådant verk som avses i </unicode>
   <Link uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#P9S3">9 § tredje
 stycket</Link>
   <unicode>. Upphovsmannen har rätt till ersättning</unicode>

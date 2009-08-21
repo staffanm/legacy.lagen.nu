@@ -16,15 +16,18 @@ ArtikelRattsaktRef ::= ArtikelRef, Whitespace, 'i', Whitespace, RattsaktRef
 
 # "rådets direktiv 85/611/EG"
 # "rådets förordning (EEG) nr 2092/91"
-RattsaktRef     ::= Instutition, Whitespace, AkttypRefId, Whitespace,
+# "kommissionens förordning (EG) nr 1488/94"
+RattsaktRef     ::= (Instutition, Whitespace, AkttypRefId, Whitespace,
                     DirektivRef/ForordningRef, (Whitespace,
-                    AvDatum)?
-Instutition     ::= ('rådets'/('Europaparlamentets', Whitespace, 'och',
-                     Whitespace, 'rådets'))
+                    AvDatum)?)/DirektivRefID/ForordningRefID
+Instutition     ::= 'rådets'/('Europaparlamentets', Whitespace, 'och',
+                     Whitespace, 'rådets')/'kommissionens'
 #Instutition    ::= 'rådets'
 AkttypRefId     ::= ('direktiv'/'förordning')
+DirektivRefID   ::= DirektivRef
 DirektivRef     ::= ArRefID, Slash, LopnummerRefID, Slash, SamarbeteRefID
-ForordningRef   ::= LeftParen, SamarbeteRefID, RightParen, ' nr ', LopnummerRefID, Slash, ArRefID
+ForordningRefID ::= ForordningRef
+ForordningRef   ::= LeftParen, SamarbeteRefID, RightParen, Whitespace,'nr', Whitespace, LopnummerRefID, Slash, ArRefID
 ArRefID         ::= Ar
 LopnummerRefID  ::= Lopnummer
 Lopnummer       ::= number

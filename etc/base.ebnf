@@ -29,7 +29,7 @@ PieceOrPieces       ::= "st."/"stycket"/"styckena"/"st "
 SentenceOrSentences ::= "meningen"/"meningarna"
 SectionRefChar      ::= [a-n]
 Element	            ::= 'mom.'
-
+SidnrRefID          ::= number
 
 # GRUNDLÄGGANDE BYGGSTENAR
 plain        ::= (Whitespace/word/number/punctuation)

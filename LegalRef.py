@@ -445,6 +445,10 @@ class LegalRef:
                 uri = uriformatter(self.find_attributes([part]))
             else:
                 uri = self.sfs_format_uri(self.find_attributes([part]))
+        except:
+            # If something else went wrong, just return the plaintext
+            log.warning("(unknown): Unable to format link for text %s (production %s)" % (part.text, part.tag))
+            return part.text
         if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
         if not uri:
             # the formatting function decided not to return a URI for
@@ -621,10 +625,11 @@ class LegalRef:
                       'section' :'P',
                       'piece'   :'S',
                       'item'    :'N',
+                      'itemnumeric':'N',
                       'element' :'O',
                       'sentence':'M', # is this ever used?
                       }
-        attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'sentence']
+        attributeorder = ['law', 'lawref', 'chapter', 'section', 'element', 'piece', 'item', 'itemnumeric','sentence']
 
         if 'law' in attributes:
             if attributes['law'].startswith('http://'):
@@ -804,7 +809,8 @@ class LegalRef:
     def format_SectionItemRefs(self,root):
         assert(root.nodes[0].nodes[0].tag == 'SectionRefID')
         self.currentsection = root.nodes[0].nodes[0].text.strip()
-        res = self.formatter_dispatch(root.nodes[0]) # was formatter_dispatch(self.root)
+        #res = self.formatter_dispatch(root.nodes[0]) # was formatter_dispatch(self.root)
+        res = self.format_tokentree(root)
         self.currentsection = None
         return res
 
@@ -824,6 +830,16 @@ class LegalRef:
         self.currentchapter = root.nodes[0].nodes[0].text.strip()
         return [self.format_generic_link(root)]
 
+    def format_AlternateChapterSectionRefs(self,root):
+        assert(root.nodes[0].nodes[0].tag == 'ChapterRefID')
+        self.currentchapter = root.nodes[0].nodes[0].text.strip()
+        # print "Self.currentchapter is now %s" % self.currentchapter
+        res = self.format_tokentree(root)
+        self.currentchapter = None
+        return res
+
+        
+        
     def format_ExternalLaw(self,root):
         self.currentchapter = None
         return self.formatter_dispatch(root.nodes[0])
@@ -943,6 +959,13 @@ class LegalRef:
     # KOD FÖR EGLAGSTIFTNING
     def eglag_format_uri(self,attributes):
         res = 'http://rinfo.lagrummet.se/ext/celex/'
+        if not 'akttyp' in attributes:
+            if 'forordning' in attributes:
+                attributes['akttyp'] = u'förordning';
+            elif 'direktiv' in attributes:
+                attributes['akttyp'] = u'direktiv';
+
+        assert 'akttyp' in attributes, u"Okand akttyp"
         # Om hur CELEX-nummer konstrueras
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celn.htm
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celf.htm
@@ -953,7 +976,7 @@ class LegalRef:
             sektor = '3'
             rattslig_form = {u'direktiv':'L',
                              u'förordning':'R'}
-                
+
             if len(attributes['ar']) == 2:
                 attributes['ar'] = '19'+attributes['ar']
             res += "%s%s%s%04d" % (sektor,attributes['ar'],
@@ -990,20 +1013,25 @@ class LegalRef:
                        u'FÖD': '/publ/rattsfall/fod/'}
 
         # res = self.baseuri_attributes['baseuri']
+        if 'nja' in attributes:
+            attributes['domstol'] = attributes['nja']
+
         assert 'domstol' in attributes, "No court provided"
         assert attributes['domstol'] in containerid, "%s is an unknown court" % attributes['domstol']
         res = "http://rinfo.lagrummet.se"+containerid[attributes['domstol']]
-        if ":" in attributes['lopnr']:
+
+        if 'lopnr' in attributes and ":" in attributes['lopnr']:
             (attributes['ar'], attributes['lopnr']) = lopnr.split(":", 1)
-            
+
         if attributes['domstol'] == u'NJA':
             # FIXME: URIs should be based on publikationsordinal, not
             # pagenumber (which this in effect is) - but this requires
             # a big lookup table/database/graph with
             # pagenumber-to-ordinal-mappings
-            res += '%ss%s' % (attributes['ar'], attributes['lopnr'])
+            res += '%ss%s' % (attributes['ar'], attributes['sidnr'])
         else:
             res += '%s:%s' % (attributes['ar'], attributes['lopnr'])
+
         return res
 
 from FilebasedTester import FilebasedTester
@@ -1044,7 +1072,7 @@ class TestLegalRef(FilebasedTester):
 
     def __test_parser(self,data,p):
         p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
-        #p.verbose = True
+        # p.verbose = True
         p.currentlynamedlaws = {}
         paras = re.split('\r?\n---\r?\n',data)
         resparas = []
@@ -1069,41 +1097,23 @@ class TestLegalRef(FilebasedTester):
 
     # Resultat för testsviterna just nu:
     #
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseForarbeten
-    # .. 2/2
+    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseRattsfall
+    # ..... 5/5
     # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest URI
-    # E 0/1
-    # Failed tests:
-    # test/LegalRef/URI\base.n3
-    # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseRattsfall
-    # ....N 4/5
-    # Failed tests:
-    # test/LegalRef/DV\dv-tricky-misc.txt
-    # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseEGLagstiftning
+    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseKortlagrum
     # .... 4/4
     # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseKortlagrum
-    # .. 2/2
+    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseEGLagstiftning
+    # ..... 5/5
     # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>python LegalRef.py RunTest ParseLagrum
-    # ......NN..........F.................N..............N.N....N...F 55/63
+    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseForarbeten
+    # ... 3/3
+    # 
+    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseLagrum
+    # ..........................................................N...........F. 70/72
     # Failed tests:
-    # test/LegalRef/SFS\sfs-basic-kungorelse-kapitel-paragrafer.txt
-    # test/LegalRef/SFS\sfs-basic-kungorelse.txt
-    # test/LegalRef/SFS\sfs-basic-punktlista.txt
-    # test/LegalRef/SFS\sfs-regression-obestamd-form.txt
     # test/LegalRef/SFS\sfs-tricky-overgangsbestammelse.txt
-    # test/LegalRef/SFS\sfs-tricky-paragrafer-med-enstaka-paragraftecken.txt
-    # test/LegalRef/SFS\sfs-tricky-sammalag.txt
     # test/LegalRef/SFS\sfs-tricky-vvfs.txt
-    #
-    # (sfs-basic-punktlista gick igenom förut, men slutade funka när
-    # jag rationaliserade bort de flesta format_*-funktionerna). Den
-    # funkar om man pillar på ItemRef-produktionen, men då slutar
-    # sfs-tricky-punkt att funka. Svårt problem.)
 
 if __name__ == "__main__":
     if sys.platform == 'win32':

@@ -8,3 +8,30 @@ MÖD 2003-39
 MÖD 2006 :18
 NJA 2003 s.107 (NJA 2003:16)
 NJA 2003:16
+
+<list>
+  <unicode>Exempel på felformatterade domslutsreferenser in the wild
+000 (NJA 2000:87)
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/ad/2005:115">AD 2005-nr 115</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/ad/2006:73">AD 2006-73</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/md/2007:18">MD 2007-18</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/mod/2000:48">MÖD 2000: 48</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/mod/2003:39">MÖD 2003-39</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/mod/2006:18">MÖD 2006 :18</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/rattsfall/nja/2003s107">NJA 2003 s.107</Link>
+  <unicode> (NJA 2003:16)
+NJA 2003:16</unicode>
+</list>

@@ -7,9 +7,7 @@
           <Tabellrad>
             <Tabellcell>
               <unicode>1. beslut enligt </unicode>
-              <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/9999:999#K10P7S3">10 kap. 7 § tredje stycket</LinkSubject>
-              <unicode> andra meningen </unicode>
-              <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1974:152">regeringsformen</LinkSubject>
+              <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1974:152#K10P7S3M2">10 kap. 7 § tredje stycket andra meningen regeringsformen</LinkSubject>
             </Tabellcell>
           </Tabellrad><Tabellrad>
             <Tabellcell>

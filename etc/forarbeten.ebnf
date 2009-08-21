@@ -33,6 +33,5 @@ CelexRefID     ::= '3', digit, digit, (digit, digit)?, 'L', digit, digit, digit,
 
 # Sidnr-hänvisningar ("prop. 1989/90:89 s. 154")
 SidnrRef       ::= Whitespace, 's.', Period?, Whitespace, SidnrRefID
-SidnrRefID        ::= number
 
 # ------------ end of forarbeten.ebnf ----------------

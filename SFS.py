@@ -2744,13 +2744,14 @@ WHERE {
 
     # Status just nu (090820, markerade med * borde kunna fixas någorlunda enkelt)
     #
-    # ..................NF........N.............................................N.......F..N.........NN..
-    # 91/99
+    # ..................NF........N.............................................N.....N..F..N.........NN..
+    #  91/100
     # Failed tests:
     # test/SFS\Parse\definition-paranthesis-multiple.txt *
     # test/SFS\Parse\definition-paranthesis-twoparas.txt *
     # test/SFS\Parse\extra-overgangsbestammelse-med-rubriker.txt
     # test/SFS\Parse\tricky-felformatterad-tabell.txt
+    # test/SFS\Parse\tricky-lista-not-rubriker-2.txt
     # test/SFS\Parse\tricky-lopande-rubriknumrering.txt *
     # test/SFS\Parse\tricky-okand-aldre-lag.txt
     # test/SFS\Parse\tricky-tabell-overgangsbest.txt *

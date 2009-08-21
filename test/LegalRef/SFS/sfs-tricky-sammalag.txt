@@ -11,3 +11,47 @@ enligt 5 kap. 1 eller 7 § eller 9 kap. 17 § samma lag. Förhandling
 skall alltid hållas inom stängda dörrar, om sekretessen gäller enligt
 9 kap. 3 § andra stycket samma lag och det skulle strida mot avtal som
 avses där att uppgiften röjs vid förhandlingen.
+
+<list>
+  <unicode>Kan det antas att det vid förhandling kommer att förebringas uppgift,
+för vilken hos domstolen gäller sekretess som avses i </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100">sekretesslagen
+(1980:100)</Link>
+  <unicode>, får rätten, om det bedöms vara av synnerlig vikt att
+uppgiften inte röjs, förordna att förhandlingen i vad den angår
+uppgiften skall hållas inom stängda dörrar. Även i annat fall får
+förhandling hållas inom stängda dörrar, om sekretessen gäller enligt </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K7">7
+kap.</Link>
+  <unicode> </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K7P22">22</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K7P23">23 §</Link>
+  <unicode>, </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K8P17">8 kap. 17 §</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K9">9 kap.</Link>
+  <unicode>  </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K9P15">15</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K9P16">16 §</Link>
+  <unicode>
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100">sekretesslagen</Link>
+  <unicode> eller, i vad avser domstolsförhandling under
+förundersökning i brottmål eller därmed likställt mål eller ärende,
+enligt </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K5">5 kap.</Link>
+  <unicode> </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K5P1">1</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K5P7">7 §</Link>
+  <unicode> eller </unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K9P17">9 kap. 17 §</Link>
+  <unicode> samma lag. Förhandling
+skall alltid hållas inom stängda dörrar, om sekretessen gäller enligt
+</unicode>
+  <Link uri="http://rinfo.lagrummet.se/publ/sfs/1980:100#K9P3S2">9 kap. 3 § andra stycket samma lag</Link>
+  <unicode> och det skulle strida mot avtal som
+avses där att uppgiften röjs vid förhandlingen.</unicode>
+</list>
