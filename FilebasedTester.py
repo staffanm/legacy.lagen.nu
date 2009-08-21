@@ -66,9 +66,11 @@ class FilebasedTester:
             (fail, cnt) = self.__run_single_testclass(method, True)
             all_cnt += cnt
             all_fail += fail
-        sys.stdout.write("%s: %s tests of %s passed\n" % (self.__class__.__name__,all_cnt-all_fail, all_cnt))
+
+        msg = ""
         if cnt > 0 and fail == 0:
-            sys.stdout.write("AWESOME!")
+            msg = " AWESOME!"
+        sys.stdout.write("%s: %s tests of %s passed. %s\n" % (self.__class__.__name__,all_cnt-all_fail, all_cnt, msg))
         return (all_fail,all_cnt)
                          
             
