@@ -23,7 +23,9 @@ ExternalChapterSectionRefs ::= MultipleGenericRefs, Whitespace, NamedExternalLaw
 
 GenericRefs          ::= (SectionPieceItemRefs/SectionPieceRefs/SectionItemRefs/IndividualChapterSectionRefs/ChapterSectionPieceRefs/ChapterSectionRefs/AlternateChapterSectionRefs/SectionRefs/PieceItemRefs/GenericRef)
 
-MultipleGenericRefs  ::= (GenericRefs, (CommaSpace/WAndOrW)?)+
+CommaSpaceAndWhitespace ::= Comma, Whitespace, And, Whitespace
+
+MultipleGenericRefs  ::= (GenericRefs, (CommaSpaceAndWhitespace/CommaSpace/WAndOrW)?)+
 
 ChapterSectionRefs    ::= ChapterRef, Whitespace, SectionRefs
 
@@ -75,7 +77,7 @@ LastIntervalOrSingle ::= (SingleSectionRef, Whitespace?, (Hyphen,Hyphen?)/AndOr,
 LastSectionRefID     ::= SectionRefID
 
 TheLaw		     ::= 'lagen'
-LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordningens'/'lagen'/'balken'/'förordningen'/'formen'/'ordningen'/'kungörelsen'/'lag'/'förordning')
+LawSynonyms          ::= ('lagens'/'balkens'/'förordningens'/'formens'/'ordningens'/'lagen'/'balken'/'förordningen'/'formen'/'ordningen'/'kungörelsen'/'lag'/'förordning'/'stadgan')
 
 # SINGLE REFERENCES
 # dont forget, when adding a new top-level construct, to add it to the
@@ -128,10 +130,10 @@ SectionElementRef ::= SectionRef, Whitespace, ElementRef
 SectionItemRef    ::= SectionRef, Whitespace, ItemRef
 ElementRef	  ::= ElementRefID, Whitespace, Element
 ElementRefID	  ::= number
-ItemRef           ::= 'anvisningarna punkt '?, ItemRefID, Period?, RightParen?
+ItemRef           ::= ('anvisningarna punkt '?, ItemRefID, Period?, RightParen?)/(ItemNumericRefID, Whitespace, 'punkten')
 ItemNumericRef    ::= 'anvisningarna punkt '?, ItemNumericRefID, Period?, RightParen?
 ItemRefID         ::= number/(ItemRefChar, ?-char), (Whitespace,ItemRefChar,?-char)?
-ItemNumericRefID  ::= number, (Whitespace,ItemRefChar,?-char)?
+ItemNumericRefID  ::= number/ordinal, (Whitespace,ItemRefChar,?-char)?
 ItemRefChar       ::= [a-h]/[j-z]
 
 # ------------ end of base.ebnf ----------------

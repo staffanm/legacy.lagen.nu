@@ -115,8 +115,8 @@ class LegalRef:
 
     
     re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
-    re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?)\b', re.LOCALE)
-    re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?)')
+    re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)\b', re.UNICODE)
+    re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)')
 
     def __init__(self,*args):
         if not os.path.sep in __file__:
@@ -658,7 +658,7 @@ class LegalRef:
                 if addfragment:
                     res += '#'
                     addfragment = False
-                if (key in ['piece', 'sentence'] and not val.isdigit()):
+                if (key in ['piece', 'itemnumeric', 'sentence'] and val in piecemappings):
                     res += '%s%s' % (keymapping[key],piecemappings[val.lower()])
                 else:
                     if key == 'law':
@@ -1109,8 +1109,8 @@ class TestLegalRef(FilebasedTester):
     # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseForarbeten
     # ... 3/3
     # 
-    # C:\Users\staffan\wds\ferenda.lagen.nu>LegalRef.py RunTest ParseLagrum
-    # ..........................................................N...........F. 70/72
+    # C:\Users\staffan\wds\lagen.nu-trunk>LegalRef.py RunTest ParseLagrum
+    # ...............................................................N............F. 76/78
     # Failed tests:
     # test/LegalRef/SFS\sfs-tricky-overgangsbestammelse.txt
     # test/LegalRef/SFS\sfs-tricky-vvfs.txt

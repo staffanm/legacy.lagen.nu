@@ -13,9 +13,9 @@
             <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1956:618">1956:618</LinkSubject>
             <unicode>) om allmänna sammankomster,</unicode>
           </Listelement><Listelement id="L1993:1617S1Nb" ordinal="b">
-            <unicode>b) allmänna ordningsstadgan (</unicode>
-            <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1956:617">1956:617</LinkSubject>
-            <unicode>),</unicode>
+            <unicode>b) allmänna </unicode>
+            <LinkSubject predicate="dct:references" uri="http://rinfo.lagrummet.se/publ/sfs/1956:617">ordningsstadgan (1956:617)</LinkSubject>
+            <unicode>,</unicode>
           </Listelement>
         </Bokstavslista>
       </Stycke>
