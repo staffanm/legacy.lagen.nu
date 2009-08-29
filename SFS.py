@@ -536,7 +536,7 @@ class SFSParser(LegalSource.Parser):
     re_EntryIntoForceAuthorization = re.compile(ur'/Träder i kraft I:(den dag regeringen bestämmer)/')
     re_dehyphenate = re.compile(r'\b- (?!(och|eller))',re.UNICODE).sub
     re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk|denna paragraf|detta kapitel) (avses med|betyder|används följande)').match
-    re_brottsdef     = re.compile(ur', (döms|dömes) för ([\w ]{3,50}) till (böter|fängelse)', re.UNICODE).search
+    re_brottsdef     = re.compile(ur'\b(döms|dömes)(?: han)?(?:,[\w§ ]+,)? för ([\w ]{3,50}) till (böter|fängelse)', re.UNICODE).search
     re_brottsdef_alt = re.compile(ur'[Ff]ör ([\w ]{3,50}) (döms|dömas) till (böter|fängelse)', re.UNICODE).search
     re_parantesdef   = re.compile(ur'\(([\w ]{3,50})\)\.', re.UNICODE).search
     re_loptextdef    = re.compile(ur'^Med ([\w ]{3,50}) avses i denna (förordning|lag|balk)', re.UNICODE).search
@@ -963,8 +963,15 @@ class SFSParser(LegalSource.Parser):
                                     termdelimiter = " - "
                             m = self.re_SearchSfsId(elementtext)
                             if m and m.start() < elementtext.index(":"):
-                                termdelimiter = " "
-                            if termdelimiter in elementtext:
+                                # Enabeling this heuristic fails
+                                # definition-parenthesis-multiple.txt,
+                                # disabling it fails
+                                # definition-paragraphlist-spacedelimiter.txt. The
+                                # latter is not that important.
+                                #
+                                # termdelimiter = " "
+                                pass
+                            elif termdelimiter in elementtext:
                                 term = elementtext.split(termdelimiter)[0]
                                 log.debug(u'"%s" är nog en definition (2.1)' % term)
 
@@ -1230,7 +1237,9 @@ class SFSParser(LegalSource.Parser):
         p = Avdelning(rubrik = self.reader.readline(),
                       ordinal = avdelningsnummer,
                       underrubrik = None)
-        if self.reader.peekline(1) == "" and self.reader.peekline(3) == "":
+        if (self.reader.peekline(1) == "" and
+            self.reader.peekline(3) == "" and
+            not self.isKapitel(self.reader.peekline(2))):
             self.reader.readline()
             p.underrubrik = self.reader.readline()
 
@@ -1619,6 +1628,8 @@ class SFSParser(LegalSource.Parser):
         #
         # 1999:1229: "AVD. I INNEHÅLL OCH DEFINITIONER"
         #
+        # 2009:400: "AVDELNING I. INLEDANDE BESTÄMMELSER"
+        #
         # and also "1 avd." (in 1959:287 (revoked), 1959:420 (revoked)
         #
         #  The below code checks for all these patterns in turn
@@ -1629,7 +1640,7 @@ class SFSParser(LegalSource.Parser):
         if p.lower().endswith(u"avdelningen") and len(p.split()) == 2:
             ordinal = p.split()[0]
             return unicode(self._swedish_ordinal(ordinal))
-        elif p.startswith(u"AVD. "):
+        elif p.startswith(u"AVD. ") or p.startswith(u"AVDELNING "):
             roman = re.split(r'\W',p)[2]
             if self.re_roman_numeral_matcher(roman):
                 return unicode(self._from_roman(roman))
@@ -1651,11 +1662,12 @@ class SFSParser(LegalSource.Parser):
         match = self.re_ChapterRevoked(self.reader.peekline())
         return match != None
 
-    def isKapitel(self):
-        return self.idOfKapitel() != None
+    def isKapitel(self, p=None):
+        return self.idOfKapitel(p) != None
 
-    def idOfKapitel(self):
-        p = self.reader.peekparagraph().replace("\n", " ")
+    def idOfKapitel(self, p=None):
+        if not p:
+            p = self.reader.peekparagraph().replace("\n", " ")
 
         # '1 a kap.' -- almost always a headline, regardless if it
         # streches several lines but there are always special cases

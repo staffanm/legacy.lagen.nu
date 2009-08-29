@@ -191,10 +191,14 @@
         width: inherit;
         margin-left: 22.5pt;
       }
-
+      ol {
+	  list-style-type: decimal;
+          margin: 0 0 0 1em;
+      }
       ul {
-        padding: 0;
-        margin: 0 0 0.5em 0;
+	  list-style-type: disc
+          padding: 0;
+          margin: 0 0 0.5em 0;
       }
 
 

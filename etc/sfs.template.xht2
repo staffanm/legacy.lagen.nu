@@ -114,8 +114,8 @@ from datetime import datetime
 	       property="rinfoex:paragrafnummer"
 	       content="${paragraf.ordinal}">
 	<span rel="dct:isPartOf" href="${isPartOf}"/>
-	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${datetime.strftime(paragraf.ikrafttrader,'%Y-%m-%d')})</span>
-	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${datetime.strftime(paragraf.upphor,'%Y-%m-%d')})</span>
+	<span class="ikrafttradande" py:if="paragraf.ikrafttrader">(Träder i kraft ${paragraf.ikrafttrader})</span>
+	<span class="upphor"         py:if="paragraf.upphor">(Upphör att gälla ${paragraf.upphor})</span>
 	<!--! första stycket måste rendreras tillsammans med
 	     paragrafbeteckningen (inuti samma p-element) -->
         ${render_stycke(paragraf[0], '#'+paragraf.id, paragraf.ordinal)}
