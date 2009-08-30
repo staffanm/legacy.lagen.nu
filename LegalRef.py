@@ -115,8 +115,11 @@ class LegalRef:
 
     
     re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
-    re_escape = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)\b', re.UNICODE)
-    re_descape = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)')
+    re_escape_compound = re.compile(r'\b(\w+-) (och) (\w+-?)(lagen|förordningen)\b', re.UNICODE)
+    re_escape_named = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)\b', re.UNICODE)
+
+    re_descape_compound = re.compile(r'\b(\w+-)_(och)_(\w+-?)(lagen|förordningen)\b', re.UNICODE)
+    re_descape_named = re.compile(r'\|(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)')
 
     def __init__(self,*args):
         if not os.path.sep in __file__:
@@ -245,8 +248,11 @@ class LegalRef:
         # godtyckliga ord som slutar på ett givet suffix (exv
         # 'bokföringslagen' med suffixet 'lagen'). Därför förbehandlar
         # vi indatasträngen och stoppar in ett '|'-tecken innan vissa
-        # suffix
-        fixedindata = self.re_escape.sub(r'|\1', indata)
+        # suffix. Vi transformerar även 'Radio- och TV-lagen' till
+        # 'Radio-_och_TV-lagen'
+        fixedindata = self.re_escape_compound.sub(r'\1_\2_\3\4', indata)
+        fixedindata = self.re_escape_named.sub(r'|\1', fixedindata)
+
         
         # SimpleParse har inget stöd för unicodesträngar, så vi
         # konverterar intdatat till en bytesträng. Tyvärr kan vi
@@ -261,7 +267,7 @@ class LegalRef:
         # att göra det, men om man gör enligt
         # Simpleparse-dokumentationen byggs taggertabellen om för
         # varje anrop till parse()
-        # print "calling tag with %s (%s)" % (fixedindata, self.verbose)
+        if self.verbose: print u"calling tag with '%s'" % (fixedindata.decode(SP_CHARSET), self.verbose)
         # print "tagger length: %d" % len(repr(self.tagger))
         taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
         
@@ -294,10 +300,11 @@ class LegalRef:
         # tidigare.
         normres = []
         for i in range(len(result)):
-            if not self.re_descape.search(result[i]):
+            if not self.re_descape_named.search(result[i]):
                 node = result[i]
             else:
-                text = self.re_descape.sub(r'\1',result[i])
+                text = self.re_descape_named.sub(r'\1',result[i])
+                text = self.re_descape_compound.sub(r'\1 \2 \3\4', text)
                 if isinstance(result[i], Link):
                     # Eftersom Link-objekt är immutable måste vi skapa
                     # ett nytt och kopiera dess attribut
@@ -1073,7 +1080,7 @@ class TestLegalRef(FilebasedTester):
 
     def __test_parser(self,data,p):
         p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
-        # p.verbose = True
+        #p.verbose = True
         p.currentlynamedlaws = {}
         paras = re.split('\r?\n---\r?\n',data)
         resparas = []

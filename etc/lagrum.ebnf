@@ -90,7 +90,7 @@ ExternalRef          ::= GenericRef, Whitespace, ExternalLaw
 ExternalLaw          ::= (AnonymousExternalLaw/NamedExternalLawRef/SameLaw)
 AnonymousExternalLaw ::= (In, Whitespace)?, LawSynonyms, Whitespace, SFSNr
 NamedExternalLawRef     ::= NamedLaw, (Whitespace, SFSNr)?
-NamedLaw		::= word, Pipe, LawSynonyms
+NamedLaw		::= (char/'-'/'_')+, Pipe, LawSynonyms
 SameLaw			::= 'samma lag'/'nämnda lag'/'samma förordning'/'nämnda förordning'
 
 GenericRef            ::= (ChapterSectionPieceItemRef/ChapterSectionPieceSentenceRef/ChapterSectionPieceRef/ChapterSectionItemRef/ChapterSectionSentenceRef/ChapterSectionRef/SectionPieceItemRef/SectionPieceSentenceRef/SectionElementRef/SectionPieceRef/SectionSentenceRef/SectionItemRef/SectionRef/ChapterRef)
