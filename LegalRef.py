@@ -267,7 +267,7 @@ class LegalRef:
         # att göra det, men om man gör enligt
         # Simpleparse-dokumentationen byggs taggertabellen om för
         # varje anrop till parse()
-        if self.verbose: print u"calling tag with '%s'" % (fixedindata.decode(SP_CHARSET), self.verbose)
+        if self.verbose: print u"calling tag with '%s'" % (fixedindata.decode(SP_CHARSET))
         # print "tagger length: %d" % len(repr(self.tagger))
         taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
         
@@ -502,7 +502,7 @@ class LegalRef:
         return sfsid
         
     def normalize_lawname(self,lawname):
-        lawname=lawname.replace('|','').lower()
+        lawname=lawname.replace('|','').replace('_',' ').lower()
         if lawname.endswith('s'):
             lawname = lawname[:-1]
         return lawname
@@ -615,6 +615,7 @@ class LegalRef:
             return self.namedlaws[text]
         else:
             if self.verbose:
+                # print "(unknown): I don't know the ID of named law [%s]" % text
                 log.warning("(unknown): I don't know the ID of named law [%s]" % text)
             return None
 
@@ -1080,7 +1081,7 @@ class TestLegalRef(FilebasedTester):
 
     def __test_parser(self,data,p):
         p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
-        #p.verbose = True
+        # p.verbose = True
         p.currentlynamedlaws = {}
         paras = re.split('\r?\n---\r?\n',data)
         resparas = []

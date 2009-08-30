@@ -227,6 +227,6 @@
 <http://rinfo.lagrummet.se/publ/sfs/2008:579> rdfs:label "konkurrenslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/2009:287> rdfs:label "studiestödsdatalagen" .
 <http://rinfo.lagrummet.se/publ/sfs/2009:367> rdfs:label "apoteksdatalagen" .
-<http://rinfo.lagrummet.se/publ/sfs/2009:400> dct:alternate "OSL" .
+<http://rinfo.lagrummet.se/publ/sfs/2009:400> rdfs:label "offentlighets- och sekretesslagen" ; dct:alternate "OSL" .
 <http://rinfo.lagrummet.se/publ/sfs/2009:600> rdfs:label "språklagen" .
 <http://rinfo.lagrummet.se/publ/sfs/2009:865> rdfs:label "kommissionslagen" .
