@@ -76,7 +76,7 @@
       <tr>
 	<td width="66%">
 	  <xsl:if test="//xht2:dd[@property='rinfoex:patchdescription']">
-	    <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="xht2:dd[@property='rinfoex:patchdescription']"/></p>
+	    <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="//xht2:dd[@property='rinfoex:patchdescription']"/></p>
 	  </xsl:if>
 	  <h1 property="dct:identifier"><xsl:value-of select="//xht2:dd[@property='dct:identifier']"/></h1>
 	  <p property="dct:description" class="rattsfallsrubrik"><xsl:value-of select="//xht2:dd[@property='dct:description']"/></p>
