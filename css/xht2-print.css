@@ -67,7 +67,7 @@
 
 /* Grundläggande typografi och utrymme */
 body {
-    font: 10pt/1.4 Times;
+    font: 10pt/1.2 Times;
     text-align: justify;
     hyphens: auto;
     prince-hyphenate-patterns: "sv.hyp"; 

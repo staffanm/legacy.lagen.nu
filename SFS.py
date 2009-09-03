@@ -535,11 +535,11 @@ class SFSParser(LegalSource.Parser):
     re_EntryIntoForceDate = re.compile(ur'/(?:Rubriken t|T)räder i kraft I:(\d+)-(\d+)-(\d+)/')
     re_EntryIntoForceAuthorization = re.compile(ur'/Träder i kraft I:(den dag regeringen bestämmer)/')
     re_dehyphenate = re.compile(r'\b- (?!(och|eller))',re.UNICODE).sub
-    re_definitions = re.compile(r'^I (förordningen|balken|denna lag|denna förordning|denna balk|denna paragraf|detta kapitel) (avses med|betyder|används följande)').match
+    re_definitions = re.compile(r'^I (lagen|förordningen|balken|denna lag|denna förordning|denna balk|denna paragraf|detta kapitel) (avses med|betyder|används följande)').match
     re_brottsdef     = re.compile(ur'\b(döms|dömes)(?: han)?(?:,[\w§ ]+,)? för ([\w ]{3,50}) till (böter|fängelse)', re.UNICODE).search
     re_brottsdef_alt = re.compile(ur'[Ff]ör ([\w ]{3,50}) (döms|dömas) till (böter|fängelse)', re.UNICODE).search
     re_parantesdef   = re.compile(ur'\(([\w ]{3,50})\)\.', re.UNICODE).search
-    re_loptextdef    = re.compile(ur'^Med ([\w ]{3,50}) avses i denna (förordning|lag|balk)', re.UNICODE).search
+    re_loptextdef    = re.compile(ur'^Med ([\w ]{3,50}) (?:avses|förstås) i denna (förordning|lag|balk)', re.UNICODE).search
     
                                       
     
@@ -923,13 +923,17 @@ class SFSParser(LegalSource.Parser):
                 # kolla om första stycket innehåller en text som
                 # antyder att definitioner följer
                 # log.debug("Testing %r against some regexes" % element[0][0])
-                if (self.re_definitions(element[0][0]) or
-                    self.re_brottsdef(element[0][0]) or
-                    self.re_brottsdef_alt(element[0][0]) or
-                    self.re_parantesdef(element[0][0]) or
-                    self.re_loptextdef(element[0][0])):
-                    find_definitions = True
-                    find_definitions_recursive = True
+                if self.re_definitions(element[0][0]):
+                    find_definitions = "normal"
+                if (self.re_brottsdef(element[0][0]) or
+                    self.re_brottsdef_alt(element[0][0])):
+                    find_definitions = "brottsrubricering"
+                if self.re_parantesdef(element[0][0]):
+                    find_definitions = "parantes"
+                if self.re_loptextdef(element[0][0]):
+                    find_definitions = "loptext"
+
+                find_definitions_recursive = find_definitions
 
             # Hitta lagrumshänvisningar + definitioner
             if (isinstance(element, Stycke)
@@ -938,6 +942,7 @@ class SFSParser(LegalSource.Parser):
                 nodes = []
                 term = None
 
+                # log.debug("handling text %s, find_definitions %s" % (element[0],find_definitions))
                 if find_definitions:
                     elementtext = element[0]
                     termdelimiter = ":"
@@ -954,26 +959,30 @@ class SFSParser(LegalSource.Parser):
                         # definition itself, usually as part of the
                         # SFS number. Do some hairy heuristics to find
                         # out what delimiter to use
-                        if not self.re_definitions(elementtext):
-                            if " - " in elementtext:
-                                if (":" in elementtext and
-                                    (elementtext.index(":") < elementtext.index(" - "))):
-                                    termdelimiter = ":"
-                                else:
-                                    termdelimiter = " - "
-                            m = self.re_SearchSfsId(elementtext)
-                            if m and m.start() < elementtext.index(":"):
-                                # Enabeling this heuristic fails
-                                # definition-parenthesis-multiple.txt,
-                                # disabling it fails
-                                # definition-paragraphlist-spacedelimiter.txt. The
-                                # latter is not that important.
-                                #
-                                # termdelimiter = " "
-                                pass
-                            elif termdelimiter in elementtext:
-                                term = elementtext.split(termdelimiter)[0]
-                                log.debug(u'"%s" är nog en definition (2.1)' % term)
+                        
+                        if find_definitions == "normal":
+                            if not self.re_definitions(elementtext):
+                                if " - " in elementtext:
+                                    if (":" in elementtext and
+                                        (elementtext.index(":") < elementtext.index(" - "))):
+                                        termdelimiter = ":"
+                                    else:
+                                        termdelimiter = " - "
+                                m = self.re_SearchSfsId(elementtext)
+
+                                if termdelimiter == ":" and m and m.start() < elementtext.index(":"):
+                                    # Enabeling this heuristic fails
+                                    # definition-paranthesis-twoparas.txt,
+                                    # disabling it fails
+                                    # definition-paragraphlist-spacedelimiter.txt. The
+                                    # latter is not that important.
+                                    #
+                                    # log.debug("Setting termdelimiter to space")
+                                    termdelimiter = " "
+
+                                if termdelimiter in elementtext:
+                                    term = elementtext.split(termdelimiter)[0]
+                                    log.debug(u'"%s" är nog en definition (2.1)' % term)
 
                         # case 2: "Den som berövar annan livet, döms
                         # för mord till fängelse"

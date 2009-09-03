@@ -75,7 +75,8 @@ if __name__ == "__main__":
         # (is useful for debugging though)
         cmd = "xmllint --xinclude --format tmp.xht2 > out.xht2" 
         os.system(cmd)
-        cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\print-2col.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
+        #cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\print-2col.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
+        cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\xht2-print.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
         print cmd
         os.system(cmd)
     
