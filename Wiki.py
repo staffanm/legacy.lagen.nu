@@ -203,7 +203,7 @@ class WikiParser(LegalSource.Parser):
         except SyntaxError:
             log.warn("%s: wikiparser did not return well-formed markup (working around)" % basefile)
             tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','')
-            xhtml = ET.fromstring(tidied.encode('utf-8')).find("body")
+            xhtml = ET.fromstring(tidied.encode('utf-8')).find("body/div")
 
         # p = LegalRef(LegalRef.LAGRUM)
         Util.indent_et(xhtml)
