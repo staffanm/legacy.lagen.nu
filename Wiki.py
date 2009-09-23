@@ -147,12 +147,19 @@ class LinkedWikimarkup(wikimarkup.Parser):
             return '<a class="lwl" href="%s">%s%s</a>' % (uri, m.group(2), m.group(3))
         else:
             return '<a class="wl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
+
+    def categoryLink(self,m):
+        uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+        
+        if len(m.groups()) == 3:
+            # lcwl = "Labeled Category WikiLink"
+            return '<a class="lcwl" href="%s">%s%s</a>' % (uri, m.group(2), m.group(3))
+        else:
+            return '<a class="cwl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
+        
         
     def replaceWikiLinks(self,text):
         # print "replacing wiki links: %s" % text[:30]
-        # FIXME: Ideally, we should only link those segments that have
-        # defined corresponding pages. Or maybe that could be done in
-        # the XSLT transform?
         text = self.re_labeled_wiki_link.sub(self.capitalizedLink, text)
         text = self.re_wiki_link.sub(self.capitalizedLink, text)
         return text
@@ -167,6 +174,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
 
     def replaceCategories(self,text):
         # replace category links with some RDFa markup
+        # return self.re_category_wiki_link.sub('',text)
         return text
 
 
@@ -202,7 +210,9 @@ class WikiParser(LegalSource.Parser):
             xhtml = ET.fromstring(html.encode('utf-8'))
         except SyntaxError:
             log.warn("%s: wikiparser did not return well-formed markup (working around)" % basefile)
-            tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','')
+            print u"Invalid markup:\n%s" % html
+            tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','').replace('&nbsp;','&#160;')
+            print "Valid markup:\n%s" % tidied
             xhtml = ET.fromstring(tidied.encode('utf-8')).find("body/div")
 
         # p = LegalRef(LegalRef.LAGRUM)
@@ -365,7 +375,14 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         out.close()
         # Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
-        log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        (chars,words) = self.wc(parsed)
+        log.info(u'%s: OK (%.3f sec, %d words, %d chars)', basefile,time()-start, words, chars)
+
+    re_tags = re.compile(r'<.*?>')
+    def wc(self,txt):
+        txt = self.re_tags.sub('',txt)
+        return (len(txt), len (txt.split()))
+        
 
     def Generate(self,basefile):
         # No pages to generate for this src (pages for

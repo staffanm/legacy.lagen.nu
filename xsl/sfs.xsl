@@ -56,23 +56,37 @@
 
   <xsl:template name="headmetadata"/>
 
+  <xsl:template match="xht2:dl[@role='contentinfo']"/>
+  
   <xsl:template match="xht2:section[@role='main']">
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/rinfo:isLagrumFor/rdf:Description"/>
     <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$dokumenturi]/dct:description/xht2:div/*"/>
     <div class="konsolideradtext">
-      <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']">
-	<div class="warning">
-	  OBS: Författningen har upphävts/ska upphävas <xsl:value-of
-	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:upphavandedatum']"/>
-	  genom SFS <xsl:value-of
-	  select="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']"/>
-	</div>
-      </xsl:if>
       <table>
 	<tr>
 	  <td width="50%">
 	    <h1 property="dct:title"><xsl:value-of select="//xht2:h[@property = 'dct:title']"/></h1>
 	    <xsl:copy-of select="$docmetadata"/>
+	    
+	    <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']">
+	      <div class="ui-state-error">
+		<span class="ui-icon ui-icon-alert" style="float: left;margin-right:.3em;"/>
+		OBS: Författningen har upphävts/ska upphävas <xsl:value-of
+		select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:upphavandedatum']"/>
+		genom SFS <xsl:value-of
+		select="../xht2:dl[@role='contentinfo']/xht2:dd[@rel='rinfoex:upphavdAv']"/>
+	      </div>
+	    </xsl:if>
+
+	    <xsl:if test="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:patchdescription']">
+	      <div class="ui-state-highlight">
+		<span class="ui-icon ui-icon-info" style="float: left;margin-right:.3em;"/>
+		Texten har ändrats jämfört med ursprungsmaterialet:
+		<xsl:value-of
+		    select="../xht2:dl[@role='contentinfo']/xht2:dd[@property='rinfoex:patchdescription']"/>
+	      </div>
+	    </xsl:if>
+	    
 	  </td>
 	  <td class="aux">
 	    <xsl:if test="$kommentar or $rattsfall">
@@ -81,6 +95,11 @@
 		  <xsl:call-template name="accordionbox">
 		    <xsl:with-param name="heading">Kommentar</xsl:with-param>
 		    <xsl:with-param name="contents">
+		      <p class="ui-state-highlight">
+			<span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span> 
+			<a href="/om/ansvarsfriskrivning.html">Läs detta</a> om kommentarerna på lagen.nu
+			
+		      </p>
 		      <xsl:apply-templates select="$kommentar"/>
 		    </xsl:with-param>
 		    <xsl:with-param name="first" select="true()"/>
@@ -156,12 +175,6 @@
       </td>
       <td></td>
     </tr>
-  </xsl:template>
-
-  <xsl:template match="xht2:dl[@role='contentinfo']">
-    <xsl:if test="xht2:dd[@property='rinfoex:patchdescription']">
-      <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="xht2:dd[@property='rinfoex:patchdescription']"/></p>
-    </xsl:if>
   </xsl:template>
 
   <xsl:template match="xht2:h[@class='kapitelrubrik']">

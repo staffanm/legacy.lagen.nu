@@ -971,13 +971,6 @@ class SFSParser(LegalSource.Parser):
                                 m = self.re_SearchSfsId(elementtext)
 
                                 if termdelimiter == ":" and m and m.start() < elementtext.index(":"):
-                                    # Enabeling this heuristic fails
-                                    # definition-paranthesis-twoparas.txt,
-                                    # disabling it fails
-                                    # definition-paragraphlist-spacedelimiter.txt. The
-                                    # latter is not that important.
-                                    #
-                                    # log.debug("Setting termdelimiter to space")
                                     termdelimiter = " "
 
                                 if termdelimiter in elementtext:
