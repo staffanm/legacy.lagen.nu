@@ -54,14 +54,20 @@ class WikiDownloader(LegalSource.Downloader):
         for ns_el in xml.findall("//"+MW_NS+"namespace"):
             wikinamespaces.append(ns_el.text)
 
-        
+        # Get list of currently downloaded pages - if any of those
+        # does not appear in the XML dump, remove them afterwards
+        downloaded_files = list(Util.listDirs(Util.relpath(unicode(self.download_dir)),".xml"))
+
         for page_el in xml.findall(MW_NS+"page"):
             title = page_el.find(MW_NS+"title").text
             if title == "Huvudsida":
                 continue
             if ":" in title and title.split(":")[0] in wikinamespaces:
-                continue # only process pages in the main namespace
+                (namespace, localtitle) = title.split(":",1)
+                if namespace != "Kategori":
+                    continue # only process pages in the main + Kategori namespace
             outfile = "%s/%s.xml" % (self.download_dir, title.replace(":","/"))
+            outfile = Util.relpath(outfile)
 
             tmpfile = mktemp()
             f = open(tmpfile,"w")
@@ -69,6 +75,19 @@ class WikiDownloader(LegalSource.Downloader):
             f.close()
             if Util.replace_if_different(tmpfile,outfile):
                 log.debug("Dumping %s" % outfile)
+            #else:
+            #    log.debug("Not replacing %s" % outfile)
+            try:
+                del downloaded_files[downloaded_files.index(outfile)]
+            except ValueError:
+                # Will happen for new files
+                pass
+
+        for f in downloaded_files:
+            log.debug("Removing %s" % f)
+            Util.robust_remove(f)
+        
+
             
                 
     def DownloadNew(self):
@@ -135,6 +154,8 @@ class LinkedWikimarkup(wikimarkup.Parser):
     re_wiki_link = re.compile(r'\[\[([^\]]*?)\]\](\w*)')
     re_img_uri = re.compile('(https?://[\S]+\.(png|jpg|gif))')
     re_template = re.compile(r'{{[^}]*}}')
+    re_category_wiki_link = re.compile(r'\[\[Kategori:([^\]]*?)\]\]')
+    re_inline_category_wiki_link = re.compile(r'\[\[:Kategori:([^\]]*?)\|(.*?)\]\]')
 
     def capitalizedLink(self,m):
         if m.group(1).startswith('SFS/'):
@@ -151,12 +172,16 @@ class LinkedWikimarkup(wikimarkup.Parser):
     def categoryLink(self,m):
         uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
         
-        if len(m.groups()) == 3:
+        if len(m.groups()) == 2:
             # lcwl = "Labeled Category WikiLink"
-            return '<a class="lcwl" href="%s">%s%s</a>' % (uri, m.group(2), m.group(3))
+            return '<a class="lcwl" href="%s">%s</a>' % (uri, m.group(2))
         else:
-            return '<a class="cwl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
+            # cwl = "Category wikilink"
+            return '<a class="cwl" href="%s">%s</a>' % (uri, m.group(1))
         
+    def hiddenLink(self,m):
+        uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+        return '<a class="hcwl" rel="dct:subject" href="%s"/>' % uri
         
     def replaceWikiLinks(self,text):
         # print "replacing wiki links: %s" % text[:30]
@@ -169,12 +194,14 @@ class LinkedWikimarkup(wikimarkup.Parser):
         return self.re_img_uri.sub('<img src="\\1"/>',text)
 
     def removeTemplates(self,text):
-        # emulates the parser when using$ wgAllowExternalImages
+        # removes all usage of templates ("{{DISPLAYTITLE:Avtalslagen}}" etc)
         return self.re_template.sub('',text)
 
     def replaceCategories(self,text):
-        # replace category links with some RDFa markup
-        # return self.re_category_wiki_link.sub('',text)
+        # inline links ("Inom [[:Kategori:Allmän avtalsrätt|Allmän avtalsrätt]] studerar man...")
+        text = self.re_inline_category_wiki_link.sub(self.categoryLink,text)
+        # Normal category links - replace these with hidden RDFa typed links
+        text = self.re_category_wiki_link.sub(self.hiddenLink,text)
         return text
 
 
@@ -210,9 +237,9 @@ class WikiParser(LegalSource.Parser):
             xhtml = ET.fromstring(html.encode('utf-8'))
         except SyntaxError:
             log.warn("%s: wikiparser did not return well-formed markup (working around)" % basefile)
-            print u"Invalid markup:\n%s" % html
+            # print u"Invalid markup:\n%s" % html
             tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','').replace('&nbsp;','&#160;')
-            print "Valid markup:\n%s" % tidied
+            # print "Valid markup:\n%s" % tidied
             xhtml = ET.fromstring(tidied.encode('utf-8')).find("body/div")
 
         # p = LegalRef(LegalRef.LAGRUM)
@@ -357,9 +384,21 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             print "Setting verbosity"
             log.setLevel(logging.DEBUG)
         start = time()
-        basefile = basefile.replace(":","/")
+
+        basefile = basefile.replace(":","/").replace("\\","/")
+        
+        categoryfile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', 'Kategori', basefile]) + ".xml"
+        if os.path.exists(categoryfile):
+            log.debug(u"%s: Skippad", basefile)
+            return
+            
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".xml"
+
+        if "Kategori/" in basefile:
+            basefile = basefile.replace("Kategori/","")
+ 
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
+        
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):
             log.debug(u"%s: Överhoppad", basefile)
@@ -394,6 +433,8 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     
     def Relate(self, basefile):
         basefile = basefile.replace(":","/")
+        if basefile.startswith("Kategori/"):
+            basefile = basefile.replace("Kategori/","")
 
         # each wiki page gets a unique context - this is so that we
         # can easily delete its statements once we re-parse and

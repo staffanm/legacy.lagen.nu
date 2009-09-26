@@ -211,7 +211,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
     if xinclude:
         tmpfile = mktemp()
         cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
-        #print cmdline
+        # print cmdline
         (ret,stdout,stderr) = runcmd(cmdline)
         #if (ret != 0):
         #    raise TransformError(stderr)
@@ -406,12 +406,15 @@ def indent_node(elem, level=0):
 def replace_if_different(newfile,oldfile):
     assert os.path.exists(newfile)
     if not os.path.exists(oldfile):
+        #print "old file %s didn't exist" % oldfile
         robustRename(newfile,oldfile)
         return True
     elif not filecmp.cmp(newfile,oldfile):
+        #print "old file %s different from new file %s" % (oldfile,newfile)
         robustRename(newfile,oldfile)
         return True
     else:
+        #print "old file %s identical to new file %s" % (oldfile,newfile)
         os.unlink(newfile)
         return False
 

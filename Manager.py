@@ -196,10 +196,7 @@ class Manager:
         if module in ('all','site'):
             self._static_newspages()
 
-    def _static_indexpages(self):
-        # make the front page and other static pages
-        log.info("Generating site global static pages")
-
+    def _prep_frontpage(self):
         # Step 1: Download Wiki frontpage
         browser = Browser()
         browser.set_handle_robots(False) # we can ignore our own robots.txt
@@ -228,6 +225,12 @@ class Manager:
             # XInclude in static/index.xht2
         else:
             log.warning("Marker %s not found at %s" % (marker,url))
+
+    def _static_indexpages(self):
+        # make the front page and other static pages
+        log.info("Generating site global static pages")
+
+        self._prep_frontpage()
                        
         # we need to copy the following four file to the base dir,
         # temporarily, in order to avoid spurious xml:base elements 
@@ -380,13 +383,16 @@ class Manager:
                 log.info("Copying (tar over ssh) failed with error code %s (%s)" % (ret, stderr))
 
     def WikiUpdate(self, wikipage):
+        import Keyword
+        re_firstchar = re.compile(r'(\w)', re.UNICODE).search
+
         # signs of UTF8 mojibake
         if isinstance(wikipage,unicode) and u'\xc3' in wikipage:
             wikipage =  wikipage.encode('latin-1').decode('utf-8')
         import Wiki
         wikimgr = Wiki.WikiManager()
         wikimgr.Download(wikipage)
-        wikimgr.Parse(wikipage)
+        wikimgr.Parse(wikipage) 
         wikimgr.Relate(wikipage)
         if wikipage.startswith("SFS/"):
             import SFS
@@ -396,10 +402,20 @@ class Manager:
         elif wikipage.startswith("Dom/"):
             pass
         elif ":" in wikipage: # not in default namespace, probably
-            pass
+            (namespace,localpage) = wikipage.split(":")
+            if namespace == "Kategori":
+                firstletter = re_firstchar(localpage).group(0)
+                basefile = u'%s/%s' % (firstletter,localpage)
+                kwmgr = Keyword.KeywordManager()
+                kwmgr.Parse(basefile,wiki_keyword=True) # needed for new terms
+                kwmgr.Generate(basefile)
+            elif namespace == "Lagen.nu" and localpage == "Huvudsida":
+                self._prep_frontpage()
+                infile = Util.relpath(os.path.sep.join(['static','index.xht2']))
+                outfile = Util.relpath(os.path.sep.join([self.baseDir,'site','generated','index.html']))
+                print "in %s, out %s" % (infile,outfile)
+                Util.transform("xsl/static.xsl", infile, outfile, validate=False, xinclude=True)
         else:
-            import Keyword
-            re_firstchar = re.compile(r'(\w)', re.UNICODE).search
             firstletter = re_firstchar(wikipage).group(0)
             basefile = u'%s/%s' % (firstletter,wikipage)
             kwmgr = Keyword.KeywordManager()
