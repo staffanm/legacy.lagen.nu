@@ -1863,6 +1863,7 @@ class SFSParser(LegalSource.Parser):
     
     def isTabell(self, p=None, assumeTable = False, requireColumns = False):
         shortline = 55
+        shorterline = 52
         if not p:
             p = self.reader.peekparagraph()
         # Vissa snedformatterade tabeller kan ha en högercell som går
@@ -1969,7 +1970,7 @@ class SFSParser(LegalSource.Parser):
         self.trace['tabell'].debug("test 3")
         if (assumeTable or numlines > 1) and not requireColumns:
             self.trace['tabell'].debug("test 3.1")
-            matches = [l for l in lines if '  ' in l or len(l) < shortline]
+            matches = [l for l in lines if '  ' in l or len(l) < shorterline]
             if len(matches) == numlines:
                 self.trace['tabell'].debug("isTabell('%s'): %s rader, alla korta eller spaltuppdelade" % (p[:20],numlines))
                 return True
