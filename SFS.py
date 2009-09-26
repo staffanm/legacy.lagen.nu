@@ -2582,11 +2582,14 @@ WHERE {
                     desc_node.text = r['desc']
             if 'inboundlinks' in stuff[l]:
                 for r in stuff[l]['inboundlinks']:
+                    if not "#" in r['uri']:
+                        continue
                     islagrumfor_node = PET.SubElement(lagrum_node, "dct:references")
                     inbound_node = PET.SubElement(islagrumfor_node, "rdf:Description")
                     inbound_node.set("rdf:about",r['uri'])
                     id_node = PET.SubElement(inbound_node, "dct:identifier")
                     # FIXME: Beautify this
+                    # print "Creating display text for %s" % r['uri']
                     (law, part) = r['uri'].split("#")
                     law = law.replace("http://rinfo.lagrummet.se/publ/sfs/", "SFS ")
                     id_node.text = "%s, %s" % (law, part)
