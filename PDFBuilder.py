@@ -44,16 +44,15 @@ def parseSimpleList(s):
             res.append({'sfsnr':sfsnr,'rubrik':rubrik})
     return {u'main':res}
 
-if __name__ == "__main__":
-    import logging.config
-    logging.config.fileConfig('etc/log.conf')
-    m = SFSManager()
-    # for l in parseList(open(sys.argv[1]).read()):
-    # res = parseAccessExport(open(sys.argv[1]).read().decode('iso-8859-1'))
+def download_config(configpage):
+    import Wiki
+    wd = Wiki.WikiDownloader()
+    wd._downloadSingle(configpage)
+
+def old_main():
     res = parseSimpleList(open(sys.argv[1]).read().decode('iso-8859-1'))
     for area in sorted(res.keys()):
         for f in res[area]:
-            #m.Parse(f['sfsnr'].replace(':','/'))
             pass
         areastruct = {area:res[area]}
         loader = TemplateLoader(['.'])
@@ -62,24 +61,19 @@ if __name__ == "__main__":
         out = open("tmp.xht2", "w")
         out.write(stream.render())
         out.close()
-
-        # infile = "testdata/sfs/parsed/%s.xht2" % basefile # SFSManager should be able to tell me this
-        # outfile = "testdata/sfs/pdf/%s.pdf" % basefile
-        # mkdirp(os.path.dirname(outfile))
-        # cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\print.css %s -o %s' % (infile, outfile)
-        # sys.stdout.write("Generating: %s\n" % cmd)
-        # os.system(cmd)
-
-
         # note that prince.exe has internal xinclude support, so this step isn't really needed
         # (is useful for debugging though)
         cmd = "xmllint --xinclude --format tmp.xht2 > out.xht2" 
         os.system(cmd)
-        #cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\print-2col.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
         cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\xht2-print.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
         print cmd
         os.system(cmd)
     
+
+if __name__ == "__main__":
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
+
 
     
 

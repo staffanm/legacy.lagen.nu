@@ -93,7 +93,7 @@
 	      <div class="ui-accordion">
 		<xsl:if test="$kommentar">
 		  <xsl:call-template name="accordionbox">
-		    <xsl:with-param name="heading">Kommentar</xsl:with-param>
+		    <xsl:with-param name="heading">XKommentar</xsl:with-param>
 		    <xsl:with-param name="contents">
 		      <p class="ui-state-highlight">
 			<span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span> 
@@ -190,7 +190,7 @@
 	<xsl:if test="$kommentar">
 	  <div class="ui-accordion">
 	    <xsl:call-template name="accordionbox">
-	      <xsl:with-param name="heading">Kommentar</xsl:with-param>
+	      <xsl:with-param name="heading">YKommentar <span class="ui-icon ui-icon-info" style="float: right; margin-right: .3em;"></span></xsl:with-param>
 	      <xsl:with-param name="contents">
 		<xsl:apply-templates select="$kommentar"/>
 	      </xsl:with-param>
@@ -221,7 +221,7 @@
 	    <!-- KOMMENTARER -->
 	    <xsl:if test="$kommentar">
 	      <xsl:call-template name="accordionbox">
-		<xsl:with-param name="heading">Kommentar</xsl:with-param>
+		<xsl:with-param name="heading">Kommentar<a href="/om/ansvarsfriskrivning.html"><span class="ui-icon ui-icon-info" style="right: 0.5em; left: auto;"></span></a></xsl:with-param>
 		<xsl:with-param name="contents"><xsl:apply-templates select="$kommentar"/></xsl:with-param>
 		<xsl:with-param name="first" select="true()"/>
 	      </xsl:call-template>
