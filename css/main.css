@@ -192,13 +192,13 @@
         margin-left: 22.5pt;
       }
       ol {
-	  list-style-type: decimal;
-          margin: 0 0 0 1em;
+	  list-style-type: decimal !important;
+          margin: 0 0 0 1.5em;
       }
       ul {
-	  list-style-type: disc
+	  list-style-type: disc !important;
           padding: 0;
-          margin: 0 0 0.5em 0;
+          margin: 0 0 0.5em 1.5em;
       }
 
 
@@ -214,7 +214,7 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
       
       /* custom typography for certain classes */
       ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
-	list-style-type: none;
+	list-style-type: none !important;
         text-indent: -10pt;
         margin-left: 10pt;
 	margin-top: 0;
