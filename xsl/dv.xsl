@@ -52,7 +52,7 @@
       </xsl:if>
       
       <dt>Källa</dt>
-      <dd property="dct:publisher" resource="http://lagen.nu/org/2008/domstolsverket"><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
+      <dd rel="dct:publisher" resource="http://lagen.nu/org/2008/domstolsverket" content="Domstolsverket"><a href="http://www.rattsinfosok.dom.se/lagrummet/index.jsp">Domstolsverket</a></dd>
     </dl>
   </xsl:variable>
 
