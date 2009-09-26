@@ -57,7 +57,7 @@ class TextReader:
                 chunk = self.f.read(1024*1024)
                 # FIXME: check to see if this speeds things up
                 # s = struct.pack("%dB" % (len(a),), *a)
-                self.data = "".join(chunks)
+            self.data = "".join(chunks)
             self.f.close()
         else:
             assert(isinstance(ustring,unicode))

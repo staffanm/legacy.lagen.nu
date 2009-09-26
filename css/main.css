@@ -84,7 +84,10 @@
 	font-size: 10pt;
         line-height: 12pt;
       }
-
+      #innehallsforteckning ul {
+	  list-style-type: none !important;
+      }
+      
       #dokument {
       margin-left: 170pt;
       position: relative;

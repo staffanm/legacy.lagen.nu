@@ -605,7 +605,7 @@ class SFSParser(LegalSource.Parser):
             Util.ensureDir(plaintextfile)
             tmpfile = mktemp()
             f = codecs.open(tmpfile, "w",'iso-8859-1')
-            f.write(plaintext)
+            f.write(plaintext+"\n")
             f.close()
 
             Util.replace_if_different(tmpfile,plaintextfile)
@@ -1895,6 +1895,7 @@ class SFSParser(LegalSource.Parser):
         # Heuristiken för att gissa om detta stycke är en tabellrad:
         # Om varje rad
         # 1. Är kort (indikerar en tabellrad med en enda vänstercell)
+        self.trace['tabell'].debug("assumeTable: %s numlines: %s requireColumns: %s " % (assumeTable,numlines,requireColumns))
         if (assumeTable or numlines > 1) and not requireColumns:
             matches = [l for l in lines if len(l) < shortline]
             if numlines == 1 and '  ' in lines[0]:
@@ -1960,7 +1961,7 @@ class SFSParser(LegalSource.Parser):
                 
         # 2. Har mer än ett mellanslag i följd på varje rad (spaltuppdelning)
         matches = [l for l in lines if '  ' in l]
-        if len(matches) == numlines:
+        if numlines > 1 and len(matches) == numlines:
             self.trace['tabell'].debug("isTabell('%s'): %s rader, alla spaltuppdelade" % (p[:20],numlines))
             return True
 
@@ -1972,6 +1973,11 @@ class SFSParser(LegalSource.Parser):
             if len(matches) == numlines:
                 self.trace['tabell'].debug("isTabell('%s'): %s rader, alla korta eller spaltuppdelade" % (p[:20],numlines))
                 return True
+
+        # 3. Är enrading med TYDLIG tabelluppdelning
+        if numlines == 1 and '   ' in l:
+            self.trace['tabell'].debug("isTabell('%s'): %s rader, alla spaltuppdelade" % (p[:20],numlines))
+            return True
 
         self.trace['tabell'].debug("isTabell('%s'): %s rader, inga test matchade (aT:%r, rC: %r)" % (p[:20],numlines,assumeTable,requireColumns))
         return False
