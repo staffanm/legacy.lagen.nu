@@ -32,6 +32,10 @@
       <dd rel="dct:publisher" resource="http://lagen.nu/org/2008/regeringskansliet"><a href="http://62.95.69.15/cgi-bin/thw?%24%7BHTML%7D=sfst_lst&amp;%24%7BOOHTML%7D=sfst_dok&amp;%24%7BSNHTML%7D=sfst_err&amp;%24%7BBASE%7D=SFST&amp;%24%7BTRIPSHOW%7D=format%3DTHW&amp;BET={//xht2:dd[@property='rinfo:fsNummer']}">Regeringskansliets rättsdatabaser</a></dd>
       <dt>Senast hämtad</dt>
       <dd property="rinfoex:senastHamtad" datatype="xsd:date"><xsl:value-of select="//xht2:meta[@property='rinfoex:senastHamtad']/@content"/></dd>
+      <xsl:if test="//xht2:dd[@property='rdfs:comment']">
+	<dt>Övrigt</dt>
+	<dd property="rdfs:comment"><xsl:value-of select="//xht2:dd[@property='rdfs:comment']"/></dd>
+      </xsl:if>
     </dl>
   </xsl:variable>
   
