@@ -34,10 +34,11 @@ if __name__ == "__main__":
     elif "/dv/intermediate/docbook/" in file_to_patch:
         source = "dv"
         basefile = file_to_patch.split("/dv/intermediate/docbook/")[1]
-        import DV.py
+        import DV
         p = DV.DVParser()
-        sourcefile = file_to_patch.repace("/docbook/", "/word/").replace(".xml", ".doc"),
-        print "source %s, basefile %s, sourcefile %s" % (source,basefile,sourcefile)
+        sourcefile = file_to_patch.replace("/docbook/", "/word/").replace(".xml", ".doc")
+        print "source %r, basefile %r, sourcefile %r" % (source,basefile,sourcefile)
+        os.remove(file_to_patch)
         p.word_to_docbook(sourcefile, file_to_patch)
         
     # calculate place in patch tree
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     
     # run diff on the original and the modified file, placing the patch right in the patch tree
     cmd = "diff -u %s %s > %s" % (file_to_patch, tmpfile, patchfile)
-    print "Running %s" % cmd
+    print "Running %r" % cmd
     os.system(cmd)
 
     if os.stat(patchfile).st_size == 0:
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     else:
         if sys.platform == "win32":
             os.system("unix2dos %s" % patchfile)
-        print "Created patch file %s" % patchfile
+        print "Created patch file %r" % patchfile
         print "Please give a description of the patch"
         patchdesc = sys.stdin.readline()
         fp = open(patchfile.replace(".patch",".desc"),"w")
