@@ -1,5 +1,5 @@
---- data/sfs/intermediate/2007/90.txt	2009-09-27 17:38:31.936000000 +0200
-+++ c:\users\staffan\appdata\local\temp\tmpkfsri5	2009-09-27 17:38:18.083599900 +0200
+--- data/sfs/intermediate/2007/90.txt	2009-09-27 17:47:25.052000000 +0200
++++ c:\users\staffan\appdata\local\temp\tmpi1slv4	2009-09-27 17:47:16.021799900 +0200
 @@ -40,22 +40,22 @@
  (1998:490), lagen (2001:559) om vägtrafikdefinitioner och
  förordningen (2001:651) om vägtrafikdefinitioner.
@@ -50,7 +50,7 @@
  
  I.      lokaliseringsmärken för turistiskt intressanta mål,
 -och
-+        och
++         och
  
  J.      upplysningsmärken.
  
@@ -445,7 +445,18 @@
  Förordning (2008:45).
  
  Symboler
-@@ -2246,8 +2244,8 @@
+@@ -2226,9 +2224,7 @@
+ tilläggstavlor för att ange ett visst fordonsslag, en viss
+ trafikantgrupp eller viss verksamhet.
+ 
+-Symbol
+-
+-Betydelse
++Symbol                          Betydelse
+ 
+ S1 Tung lastbil
+ 
+@@ -2246,8 +2242,8 @@
  klass II
  
  S7 Motorcykel                   Symbolen anger tvåhjulig
@@ -456,7 +467,7 @@
  
  S8 Cykel och moped klass II
  
-@@ -2258,14 +2256,14 @@
+@@ -2258,14 +2254,14 @@
  S11 Rörelsehindrade
  
  S12 Färja                       Symbolen anger ett färjeläge
@@ -477,7 +488,7 @@
  
  Tilläggstavlor
  
-@@ -2283,211 +2281,210 @@
+@@ -2283,211 +2279,210 @@
  Tavla                           Närmare föreskrifter
  
  T1 Vägsträckas längd            Tavlan anger början och slutet
@@ -843,7 +854,7 @@
  Förordning (2007:448).
  
  3 kap. Trafiksignaler
-@@ -2553,38 +2550,38 @@
+@@ -2553,38 +2548,38 @@
  Signalbild                      Närmare föreskrifter
  
  Röd                             Stopp. Fordon får inte passera
@@ -904,7 +915,7 @@
  
  7 § En gångsignal har två ljusöppningar: en för rött ljus som
  visar bilden av en stående person och en för grönt ljus som
-@@ -2600,30 +2597,29 @@
+@@ -2600,30 +2595,29 @@
  Röd
  Akustisk signal med
  långsam pulsfrekvens            Förbjudet att beträda en
@@ -949,7 +960,7 @@
  
  Kollektivtrafiksignaler
  
-@@ -2651,28 +2647,28 @@
+@@ -2651,28 +2645,28 @@
  Signalbild                      Närmare föreskrifter
  
  S                               Stopp. Fordon och spårvagn får
@@ -992,7 +1003,7 @@
  
  Körfältssignaler
  
-@@ -2688,18 +2684,18 @@
+@@ -2688,18 +2682,18 @@
  Signalbild                      Närmare föreskrifter
  
  Rött kryss                      Körfältet och i förekommande
@@ -1018,7 +1029,7 @@
  Förordning (2007:448).
  
  Signaler vid korsning med järnväg eller spårväg
-@@ -2724,12 +2720,12 @@
+@@ -2724,12 +2718,12 @@
  Signalbild                      Närmare föreskrifter
  
  Rött blinkande ljus             Stopp. Trafikanter får inte
@@ -1035,7 +1046,7 @@
  
  Signaler vid rörlig bro, utryckningsstation, flygfält, tunnel
  eller liknande
-@@ -2748,8 +2744,8 @@
+@@ -2748,8 +2742,8 @@
  Signalbild                      Närmare föreskrifter
  
  Rött blinkande ljus             Stopp. Trafikanter får inte
@@ -1046,7 +1057,7 @@
  
  Signaler för påkallande av särskild försiktighet
  
-@@ -2759,30 +2755,30 @@
+@@ -2759,30 +2753,30 @@
  Signalbild                      Närmare föreskrifter
  
  Rött fast ljus                  Signalen anger att en väg är
@@ -1096,7 +1107,7 @@
  
  4 kap. Vägmarkeringar
  
-@@ -2817,79 +2813,79 @@
+@@ -2817,79 +2811,79 @@
  
  M1 Mittlinje eller
  körfältslinje                   Mittlinje anger gränsen mellan
@@ -1232,7 +1243,7 @@
  
  5 § Heldragna linjer används i stället för motsvarande brutna
  linjer när det av trafiksäkerhetsskäl inte är tillåtet att
-@@ -2905,29 +2901,29 @@
+@@ -2905,29 +2899,29 @@
  Markering                       Närmare föreskrifter
  
  M8 Heldragen linje              Heldragen linje anger att
@@ -1283,7 +1294,7 @@
  
  7 § Heldragna och brutna linjer i kombination anger i stället
  för enbart mittlinje eller körfältslinje gränsen mellan
-@@ -2938,34 +2934,33 @@
+@@ -2938,34 +2932,33 @@
  M10 Mittlinje eller
  körfältslinje och
  heldragen linje                 Markeringen används där det
@@ -1340,7 +1351,7 @@
  Förordning (2007:448).
  
  Tvärgående markeringar
-@@ -2975,23 +2970,23 @@
+@@ -2975,23 +2968,23 @@
  Markering                       Närmare föreskrifter
  
  M13 Stopplinje                  Markeringen anger var ett
@@ -1373,7 +1384,7 @@
  
  Övriga markeringar
  
-@@ -3002,125 +2997,125 @@
+@@ -3002,125 +2995,125 @@
  M18 Förberedande upplysning
  om väjningsplikt eller
  stopplikt                       Markeringen anger att
@@ -1574,7 +1585,7 @@
  Förordning (2007:448).
  
  5 kap. Andra anordningar för anvisningar för trafiken och
-@@ -3133,84 +3128,84 @@
+@@ -3133,84 +3126,84 @@
  Anordning                       Närmare föreskrifter
  
  X1 Markeringspil                Anordningen anger att
@@ -1715,7 +1726,7 @@
  
  Tecken av vakt
  
-@@ -3219,22 +3214,22 @@
+@@ -3219,22 +3212,22 @@
  Tecken                          Innebörd
  
  X10 Stopp                       Tecknet anger stopp för den
@@ -1748,7 +1759,7 @@
  
  6 kap. Säkerhetsanordningar i korsningar med järnväg eller
  spårväg
-@@ -3271,104 +3266,104 @@
+@@ -3271,104 +3264,104 @@
  Tecken                          Närmare föreskrifter
  
  P1 Stopp                        Tecknet anger stopp för den
@@ -1926,7 +1937,7 @@
  
  8 kap. Bemyndiganden, kostnader m.m.
  
-@@ -3523,4 +3518,4 @@
+@@ -3523,4 +3516,4 @@
  tidigare än utgången av år 2020, och
  
  c) meddela ytterligare övergångsbestämmelser.
