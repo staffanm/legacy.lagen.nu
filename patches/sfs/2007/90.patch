@@ -1,5 +1,59 @@
---- data/sfs/intermediate/2007/90.txt	2009-09-27 17:30:40.178000000 +0200
-+++ c:\users\staffan\appdata\local\temp\tmpjaz0hc	2009-09-27 17:30:16.029800000 +0200
+--- data/sfs/intermediate/2007/90.txt	2009-09-27 17:38:31.936000000 +0200
++++ c:\users\staffan\appdata\local\temp\tmpkfsri5	2009-09-27 17:38:18.083599900 +0200
+@@ -40,22 +40,22 @@
+ (1998:490), lagen (2001:559) om vägtrafikdefinitioner och
+ förordningen (2001:651) om vägtrafikdefinitioner.
+ 
+-Beteckning      Betydelse
++Beteckning       Betydelse
+ 
+-Symbol          Bild som används i stället för en text.
++Symbol           Bild som används i stället för en text.
+ 
+-Vägmärkesbild   Den information som lämnas på ett vägmärke
+-                genom text och symboler. I vägmärkesbilden
+-                ingår bårder och motsvarande.
+-
+-Vägvisningsplan 1. En förteckning över geografiska mål som
+-                skall anges med lokaliseringsmärken för
+-                vägvisning längs de allmänna vägarna.
+-
+-                2. En förteckning över mål av turistiskt
+-                intresse som får anges med lokaliseringsmärken
+-                för vägvisning eller med lokaliseringsmärken
+-                för turistiskt intressanta mål.
++Vägmärkesbild    Den information som lämnas på ett vägmärke
++                 genom text och symboler. I vägmärkesbilden
++                 ingår bårder och motsvarande.
++
++Vägvisningsplan  1. En förteckning över geografiska mål som
++                 skall anges med lokaliseringsmärken för
++                 vägvisning längs de allmänna vägarna.
++ 
++                 2. En förteckning över mål av turistiskt
++                 intresse som får anges med lokaliseringsmärken
++                 för vägvisning eller med lokaliseringsmärken
++                 för turistiskt intressanta mål.
+ 
+ 3 § Vägmärken och andra anordningar skall tillsammans med väg-
+ och gatuutformningen och dess anpassning till väg- och gaturum
+@@ -317,13 +317,13 @@
+ F.      lokaliseringsmärken för vägvisning,
+ 
+ G.      lokaliseringsmärken för upplysning om allmänna
+-inrättningar m.m.,
++        inrättningar m.m.,
+ 
+ H.      lokaliseringsmärken för upplysning om
+-serviceanläggningar m.m.,
++        serviceanläggningar m.m.,
+ 
+ I.      lokaliseringsmärken för turistiskt intressanta mål,
+-och
++        och
+ 
+ J.      upplysningsmärken.
+ 
 @@ -1113,93 +1113,93 @@
  Märke                           Närmare föreskrifter
  
@@ -1872,3 +1926,9 @@
  
  8 kap. Bemyndiganden, kostnader m.m.
  
+@@ -3523,4 +3518,4 @@
+ tidigare än utgången av år 2020, och
+ 
+ c) meddela ytterligare övergångsbestämmelser.
+-Förordning (2008:1180).
++Förordning (2008:1180).
