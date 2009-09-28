@@ -101,7 +101,7 @@
 		    <xsl:with-param name="contents">
 		      <p class="ui-state-highlight">
 			<span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span> 
-			<a href="/om/ansvarsfriskrivning.html">Läs detta</a> om kommentarerna på lagen.nu
+			Var kommer dessa kommentarer ifrån? <a href="/om/ansvarsfriskrivning.html">Läs mer...</a>
 			
 		      </p>
 		      <xsl:apply-templates select="$kommentar"/>
@@ -194,7 +194,7 @@
 	<xsl:if test="$kommentar">
 	  <div class="ui-accordion">
 	    <xsl:call-template name="accordionbox">
-	      <xsl:with-param name="heading">Kommentar <span class="ui-icon ui-icon-info" style="float: right; margin-right: .3em;"></span></xsl:with-param>
+	      <xsl:with-param name="heading">Kommentar<a style="display:inline" href="/om/ansvarsfriskrivning.html"><span class="ui-icon ui-icon-info" style="right: 0.5em; left: auto;"></span></a></xsl:with-param>
 	      <xsl:with-param name="contents">
 		<xsl:apply-templates select="$kommentar"/>
 	      </xsl:with-param>
