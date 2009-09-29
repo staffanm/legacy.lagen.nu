@@ -491,7 +491,7 @@ WHERE {
         tree.write(tmpfile, encoding="utf-8")
 
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
-        print "Saving annotation file %s "% annotations
+        log.debug("Saving annotation file %s "% annotations)
 
         Util.replace_if_different(tmpfile,annotations)
 

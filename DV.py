@@ -5,6 +5,7 @@ hämtas från DV:s (ickepublika) FTP-server, eller från lagen.nu."""
 
 # system libraries
 import sys, os, re
+import shutil
 import pprint
 import types
 import codecs
@@ -12,6 +13,7 @@ from time import time, mktime
 from tempfile import mktemp
 from datetime import datetime
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
+import xml.etree.ElementTree as PET
 import logging
 import zipfile
 import traceback
@@ -722,6 +724,7 @@ class DVManager(LegalSource.Manager):
         head = codecs.open(infile,encoding='utf-8').read(1024)
         m = self.re_xmlbase(head)
         if m:
+            uri = "http://rinfo.lagrummet.se/publ/rattsfall/%s" % m.group(1)
             mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map'])
             Util.ensureDir(mapfile)
             f = codecs.open(mapfile,'a',encoding='iso-8859-1')
@@ -729,16 +732,64 @@ class DVManager(LegalSource.Manager):
         else:
             log.warning("could not find xml:base in %s" % infile)
 
+        sq = """
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+
+SELECT ?uri ?id ?desc
+WHERE {
+      ?uri dct:description ?desc .
+      ?uri dct:identifier ?id .
+      ?uri rinfo:rattsfallshanvisning <%s>
+}
+""" % uri
+
+        rattsfall = self._store_select(sq)
+
+        root_node = PET.Element("rdf:RDF")
+        for prefix in Util.ns:
+            PET._namespace_map[Util.ns[prefix]] = prefix
+            root_node.set("xmlns:" + prefix, Util.ns[prefix])
+
+        main_node = PET.SubElement(root_node, "rdf:Description")
+        main_node.set("rdf:about", uri)
+
+        for r in rattsfall:
+            subject_node = PET.SubElement(main_node, "dct:subject")
+            rattsfall_node = PET.SubElement(subject_node, "rdf:Description")
+            rattsfall_node.set("rdf:about",r['uri'])
+            id_node = PET.SubElement(rattsfall_node, "dct:identifier")
+            id_node.text = r['id']
+            desc_node = PET.SubElement(rattsfall_node, "dct:description")
+            desc_node.text = r['desc']
+
+        Util.indent_et(root_node)
+        tree = PET.ElementTree(root_node)
+        tmpfile = mktemp()
+        tree.write(tmpfile, encoding="utf-8")
+
+        annotations = "%s/%s/intermediate/annotations/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
+
+        Util.replace_if_different(tmpfile,annotations)
+
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-        if not force and self._outfile_is_newer([infile], outfile):
+        if not force and self._outfile_is_newer([infile,annotations], outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
+
         Util.mkdir(os.path.dirname(outfile))
         log.info(u'Transformerar %s > %s' % (infile,outfile))
+        # xsltproc silently fails to open files through the document()
+        # functions if the filename has non-ascii
+        # characters. Therefore, we copy the annnotation file to a
+        # separate temp copy first.
+        tmpfile = mktemp()
+        shutil.copy2(annotations,tmpfile)
+        params = {'annotationfile':tmpfile.replace("\\","/")}
         Util.transform("xsl/dv.xsl",
                        infile,
                        outfile,
-                       {},
+                       parameters = params,
                        validate=False)
         
 

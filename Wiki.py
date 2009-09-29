@@ -238,6 +238,11 @@ class WikiParser(LegalSource.Parser):
         except SyntaxError:
             log.warn("%s: wikiparser did not return well-formed markup (working around)" % basefile)
             # print u"Invalid markup:\n%s" % html
+            tmpfilename = mktemp()
+            fp = open(tmpfilename,"w")
+            fp.write(html.encode('utf-8'))
+            fp.close()
+            log.debug("Saved invalid HTML as %s" % tmpfilename)
             tidied = Util.tidy(html.encode('utf-8')).replace(' xmlns="http://www.w3.org/1999/xhtml"','').replace('&nbsp;','&#160;')
             # print "Valid markup:\n%s" % tidied
             xhtml = ET.fromstring(tidied.encode('utf-8')).find("body/div")
@@ -255,6 +260,7 @@ class WikiParser(LegalSource.Parser):
         else:
             # concept == "begrepp"
             uri = "http://lagen.nu/concept/" + basefile.replace(" ","_")
+            print "Creating URI: %s" % uri
             rdftype = "skos:Concept"
 
         log.debug("    URI: %s" % uri)

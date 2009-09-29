@@ -72,6 +72,7 @@
 
   <xsl:template match="xht2:section[@role='main']">
     <!-- select $kommentarer and $inbound -->
+    <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
     <table>
       <tr>
 	<td width="66%">
@@ -88,11 +89,17 @@
 	      <xsl:with-param name="heading">Metadata</xsl:with-param>
 	      <xsl:with-param name="contents"><xsl:copy-of select="$docmetadata"/></xsl:with-param>
 	    </xsl:call-template>
-
-	    <xsl:call-template name="accordionbox">
-	      <xsl:with-param name="heading">Rättsfallshänvisningar hit</xsl:with-param>
-	      <xsl:with-param name="contents">...kommer snart</xsl:with-param>
-	    </xsl:call-template>
+	    
+	    <xsl:if test="$rattsfall">
+	      <xsl:call-template name="accordionbox">
+		<xsl:with-param name="heading">Rättsfall som hänvisar till detta (<xsl:value-of select="count($rattsfall)"/>)</xsl:with-param>
+		<xsl:with-param name="contents">
+		  <xsl:call-template name="rattsfall">
+		    <xsl:with-param name="rattsfall" select="$rattsfall"/>
+		  </xsl:call-template>
+		</xsl:with-param>
+	      </xsl:call-template>
+	    </xsl:if>
 	  </div>
 	</td>
       </tr>
@@ -124,7 +131,35 @@
     <xsl:copy><xsl:apply-templates/></xsl:copy>
   </xsl:template>
 
+  <!-- copy of a similar template in keyword.xsl and sfs.xsl - maybe abstract this? -->
+  <xsl:template name="rattsfall">
+    <xsl:param name="rattsfall"/>
+      <xsl:for-each select="$rattsfall">
+	<xsl:sort select="@rdf:about"/>
+	<xsl:variable name="tuned-width">
+	  <xsl:call-template name="tune-width">
+	    <xsl:with-param name="txt" select="dct:description"/>
+	    <xsl:with-param name="width" select="200"/>
+	    <xsl:with-param name="def" select="200"/>
+	  </xsl:call-template>
+	</xsl:variable>
+	<xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
+	<a href="{$localurl}"><b><xsl:value-of select="dct:identifier"/></b></a>:
+	<xsl:choose>
+	  <xsl:when test="string-length(dct:description) > 200">
+	    <xsl:value-of select="normalize-space(substring(dct:description, 1, $tuned-width - 1))" />...
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="dct:description"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+	<br/>
+      </xsl:for-each>
+  </xsl:template>
+
+
   <xsl:template match="xht2:section[@role='main']" mode="toc">
+    <!--
     <h2>Innehållsförteckning</h2>
     <ul id="toc">
 	<li>Om vi kan hitta</li>
@@ -137,6 +172,7 @@
 	<li>Rent tekniskt ganska knepigt, men...</li>
 	</li>
       </ul>
+      -->
   </xsl:template>
 
   <xsl:template match="*" mode="toc"/>
