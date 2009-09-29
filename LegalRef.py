@@ -261,7 +261,16 @@ class LegalRef:
         # (emdash). Ibland får vi dessa i windows-1252-kodning (\x96)
         if isinstance(fixedindata,unicode):
             # print repr(fixedindata)
-            fixedindata = fixedindata.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\u2019',"'").replace(u'\x96','--').encode(SP_CHARSET)
+
+            # fixedindata = fixedindata.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\u2019',"'").replace(u'\x96','--').encode(SP_CHARSET)
+            fixedindata = fixedindata.replace(u'\u2013','--')
+            fixedindata = fixedindata.replace(u'\u2014','---')
+            fixedindata = fixedindata.replace(u'\u2022',u'·')
+            fixedindata = fixedindata.replace(u'\u201d', '"')
+            fixedindata = fixedindata.replace(u'\u2026', '...')
+            fixedindata = fixedindata.replace(u'\x96','--')
+            fixedindata = fixedindata.encode(SP_CHARSET)
+            
 
         # Parsea texten med TextTools.tag - inte det enklaste sättet
         # att göra det, men om man gör enligt
