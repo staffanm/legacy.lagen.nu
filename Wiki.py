@@ -135,6 +135,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.formatHeadings(text, True)
         text = self.unstrip(text)
         text = self.fixtags(text)
+        text = self.replaceRedirect(text)
         text = self.doBlockLevels(text, True)
         text = self.unstripNoWiki(text)
         text = self.replaceCategories(text) 
@@ -204,6 +205,9 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.re_category_wiki_link.sub(self.hiddenLink,text)
         return text
 
+    re_redirect = re.compile("^#REDIRECT ")
+    def replaceRedirect(self, text):
+        return self.re_redirect.sub("Se ", text)
 
 class WikiParser(LegalSource.Parser):
     re_anchors = re.compile('(<a.*?</a>)',re.DOTALL)
