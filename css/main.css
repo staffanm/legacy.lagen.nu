@@ -89,7 +89,7 @@
       }
       
       #dokument {
-      margin-left: 170pt;
+      margin-left: 174pt;
       position: relative;
       margin-right: 4pt;
       }
@@ -118,6 +118,9 @@
 
       #frontpage a {
 	  border-bottom: none;
+	  }
+      #frontpage ul {
+	  list-style-type: none !important;
 	  }
       .sidoruta {
 	  border: solid #939FA8 1px;
@@ -226,6 +229,9 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
     }
     .paragrafbeteckning, .rattsfallsrubrik {
 	font-weight: bold;
+        text-decoration: none;
+	border-bottom: none !important;
+	color: #000;
     }
     .andringsnot, .upphavd {
 	font-style: italic;
@@ -252,7 +258,7 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
 
     .platsmarkor {
         position: absolute;
-        left: -16pt;
+        left: -36px;
         font-size: 0.6em;
         color: #999;
         font-family: Arial;

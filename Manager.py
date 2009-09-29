@@ -226,9 +226,24 @@ class Manager:
         else:
             log.warning("Marker %s not found at %s" % (marker,url))
 
+    def _make_images(self):
+        for i in range(1,100):
+            self.make_image("K%d"%i,"%d kap."%i)
+        for i in range(1,100):
+            self.make_image("S%d"%i,"%d st."%i)
+
+    def make_image(self,basename,label):
+        filename = "img/%s.png" % basename
+        if not os.path.exists(filename):
+            log.info("Creating img %s with label %s" % (basename,label))
+            cmd = 'convert -background transparent -fill Grey -font Arial -pointsize 10 -size 36x14 -gravity East label:"%s" %s' % (label,filename)
+            os.system(cmd)
+        
     def _static_indexpages(self):
         # make the front page and other static pages
         log.info("Generating site global static pages")
+
+        self._make_images()
 
         self._prep_frontpage()
                        

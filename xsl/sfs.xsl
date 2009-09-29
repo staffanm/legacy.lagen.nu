@@ -356,23 +356,26 @@
   </xsl:template>
 
   <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
+    <xsl:variable name="marker">
+      <xsl:choose>
+	<xsl:when test="substring-after(@id,'S') = '1'"><xsl:if test="substring-after(@id,'K')">K<xsl:value-of select="substring-before(substring-after(@id,'K'),'P')"/></xsl:if></xsl:when>
+	<xsl:otherwise>S<xsl:value-of select="substring-after(@id,'S')"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <p id="{@id}" about="{//xht2:html/@about}#{@id}">
-      <span class="platsmarkor">
-	<!-- FIXME: do these as img instead to fix alignment + cut'n'paste issues -->
-	<xsl:choose>
-	  <xsl:when test="substring-after(@id,'S') = '1'">
-	    <xsl:if test="substring-after(@id,'K')">
-	      <xsl:value-of select="substring-before(substring-after(@id,'K'),'P')"/> kap.
-	    </xsl:if>
-	  </xsl:when>
-	  <xsl:otherwise>
-	    <xsl:value-of select="substring-after(@id,'S')"/> st.
-	  </xsl:otherwise>
-	</xsl:choose></span>
+      <xsl:if test="$marker != ''">
+	<a href="#{@id}" title="Permalänk till detta stycke"><img class="platsmarkor" src="img/{$marker}.png"/></a>
+      </xsl:if>
+      <xsl:if test="xht2:span[@class='paragrafbeteckning']">
+	<a href="#{@id}" class="paragrafbeteckning" title="Permalänk till detta stycke"><xsl:copy-of select="xht2:span[@class='paragrafbeteckning']"/></a>
+      </xsl:if>
       <xsl:apply-templates/>
     </p>
   </xsl:template>
 
+  <!-- emit nothing - this is already handled above -->
+  <xsl:template match="xht2:span[@class='paragrafbeteckning']"/>
+  
   <!-- FIXME: in order to be valid xhtml1, we must remove unordered
        lists from within paragraphs, and place them after the
        paragraph. This turns out to be tricky in XSLT, the following
