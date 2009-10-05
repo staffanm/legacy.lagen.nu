@@ -114,7 +114,8 @@ class LegalRef:
     INTLRATTSFALL = 10     # Europadomstolen
 
     
-    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
+    # re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
+    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K([a-z0-9]+)|)(P([a-z0-9]+)|)(S(\d+)|)(N(\d+)|)')
     re_escape_compound = re.compile(r'\b(\w+-) (och) (\w+-?)(lagen|förordningen)\b', re.UNICODE)
     re_escape_named = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)\b', re.UNICODE)
 

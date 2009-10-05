@@ -210,7 +210,7 @@
     <!-- plocka fram referenser kring/till denna paragraf -->
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isLagrumFor/rdf:Description"/>
-    <xsl:variable name="inbound" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:references/rdf:Description"/>
+    <xsl:variable name="inbound" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:references"/>
     <xsl:variable name="kommentar" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/dct:description/xht2:div/*"/>
     <xsl:variable name="inford" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isEnactedBy"/>
     <xsl:variable name="andrad" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isChangedBy"/>
@@ -247,7 +247,7 @@
 	    <!-- LAGRUMSHÄNVISNINGAR -->
 	    <xsl:if test="$inbound">
 	      <xsl:call-template name="accordionbox">
-		<xsl:with-param name="heading">Lagrumshänvisningar hit (<xsl:value-of select="count($inbound)"/>)</xsl:with-param>
+		<xsl:with-param name="heading">Lagrumshänvisningar hit (<xsl:value-of select="count($inbound/rdf:Description)"/>)</xsl:with-param>
 		<xsl:with-param name="contents">
 		  <xsl:call-template name="inbound">
 		    <xsl:with-param name="inbound" select="$inbound"/>
@@ -323,11 +323,18 @@
 
   <xsl:template name="inbound">
     <xsl:param name="inbound"/>
-    <xsl:for-each select="$inbound">
-      <xsl:sort select="@rdf:about"/>
-      <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
-      <a href="{$localurl}"><xsl:value-of select="dct:identifier"/></a><br/>
-    </xsl:for-each>
+    <ul class="lagrumslista">
+      <xsl:for-each select="$inbound">
+	<li>
+	  <xsl:for-each select="rdf:Description">
+	    <xsl:if test="./dct:identifier != ''">
+	      <xsl:variable name="localurl"><xsl:call-template name="localurl"><xsl:with-param name="uri" select="@rdf:about"/></xsl:call-template></xsl:variable>
+	      <a href="{$localurl}"><xsl:value-of select="dct:identifier"/></a><xsl:if test="position()!=last()">, </xsl:if>
+	    </xsl:if>
+	  </xsl:for-each>
+	</li>
+      </xsl:for-each>
+    </ul>
   </xsl:template>
 
   <xsl:template match="xht2:section[@role='secondary']">

@@ -227,6 +227,10 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
 	padding-left: 1em;
 	padding-bottom: 0.5em;
     }
+    ul.lagrumslista {
+	list-style-type: none !important;
+        margin-left: 0;
+    }
     .paragrafbeteckning, .rattsfallsrubrik {
 	font-weight: bold;
         text-decoration: none;

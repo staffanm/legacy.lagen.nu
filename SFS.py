@@ -39,6 +39,7 @@ from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 # my own libraries
 import LegalSource
 from LegalRef import LegalRef, ParseError, Link, LinkSubject
+import LegalURI
 import Util
 from DispatchMixin import DispatchMixin
 from TextReader import TextReader
@@ -1036,8 +1037,9 @@ class SFSParser(LegalSource.Parser):
                         # XHTML2 code, but needed to get useful RDF
                         # triples in the RDFa output
                         # print "Parsing %s" % " ".join(p.split())
+                        # print "Calling parse w %s" % baseuri+"#"+prefix
                         parsednodes = self.lagrum_parser.parse(" ".join(p.split()),
-                                                               baseuri+prefix,
+                                                               baseuri+"#"+prefix,
                                                                "dct:references")
                         for n in parsednodes:
                             if term and isinstance(n,unicode) and term in n:
@@ -2215,6 +2217,7 @@ class SFSParser(LegalSource.Parser):
     
 class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     __parserClass = SFSParser
+    _document_name_cache = {}
 
     ####################################################################
     # IMPLEMENTATION OF Manager INTERFACE
@@ -2439,6 +2442,7 @@ WHERE {
            ?d dct:isPartOf ?e .
            ?e dct:isPartOf <%s> }
 }
+ORDER BY ?uri ?lagrum
 """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
 
         # FIXME: This query makes tomcat/sesame unbearably slow...
@@ -2447,7 +2451,10 @@ WHERE {
         
         log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
         stuff[baseuri]['inboundlinks'] = []
-        
+
+        # mapping <http://rinfo.lagrummet.se/publ/sfs/1999:175> =>
+        # "Rättsinformationsförordning (1999:175)"
+        doctitles = {} 
         specifics = {}
         for row in inboundlinks:
             if 'lagrum' not in row:
@@ -2479,6 +2486,7 @@ WHERE {
                 filtered.append(r)
         stuff[baseuri]['inboundlinks'] = filtered
 
+        # pprint (stuff)
         # 3. all wikientries that dct:description this
     
         sq = """
@@ -2537,6 +2545,7 @@ WHERE {
                 stuff[lagrum]['changes'] = []
             stuff[lagrum]['changes'].append({'uri':row['change'],
                                           'id':row['id']})
+
         # then, construct a single de-normalized rdf/xml dump, sorted
         # by root/chapter/section/paragraph URI:s. We do this using
         # raw XML, not RDFlib, to avoid normalizing the graph -- we
@@ -2588,19 +2597,49 @@ WHERE {
                     desc_node = PET.SubElement(rattsfall_node, "dct:description")
                     desc_node.text = r['desc']
             if 'inboundlinks' in stuff[l]:
-                for r in stuff[l]['inboundlinks']:
-                    if not "#" in r['uri']:
-                        continue
-                    islagrumfor_node = PET.SubElement(lagrum_node, "dct:references")
-                    inbound_node = PET.SubElement(islagrumfor_node, "rdf:Description")
-                    inbound_node.set("rdf:about",r['uri'])
+                inbound = stuff[l]['inboundlinks']
+                inboundlen = len(inbound)
+                prev_uri = None
+                for i in range(inboundlen):
+                    if "#" in inbound[i]['uri']:
+                        (uri,fragment) = inbound[i]['uri'].split("#")
+                    else:
+                        (uri,fragment) = (inbound[i]['uri'], None)
+                        
+                    # 1) if the baseuri differs from the previous one,
+                    # create a new dct:references node
+                    if uri != prev_uri:
+                        references_node = PET.Element("dct:references")
+                        # 1.1) if the baseuri is the same as the uri
+                        # for the law we're generating, place it first
+                        if uri == baseuri:
+                            # If the uri is the same as baseuri (the law
+                            # we're generating), place it first.
+                            lagrum_node.insert(0,references_node)
+                        else:
+                            lagrum_node.append(references_node)
+                    # Find out the next uri safely
+                    if (i+1 < inboundlen):
+                        next_uri = inbound[i+1]['uri'].split("#")[0]
+                    else:
+                        next_uri = None
+                        
+                    # If uri is the same as the next one OR uri is the
+                    # same as baseuri, use relative form for creating
+                    # dct:identifer
+                    # print "uri: %s, next_uri: %s, baseuri: %s" % (uri[35:],next_uri[35:],baseuri[35:])
+                    if (uri == next_uri) or (uri == baseuri):
+                        form = "relative"
+                    else:
+                        form = "absolute"
+
+                    inbound_node = PET.SubElement(references_node, "rdf:Description")
+                    inbound_node.set("rdf:about",inbound[i]['uri'])
                     id_node = PET.SubElement(inbound_node, "dct:identifier")
-                    # FIXME: Beautify this
-                    # print "Creating display text for %s" % r['uri']
-                    (law, part) = r['uri'].split("#")
-                    law = law.replace("http://rinfo.lagrummet.se/publ/sfs/", "SFS ")
-                    id_node.text = "%s, %s" % (law, part)
-                    # print "Set id_node for %s to %s" % (l,id_node.text)
+                    id_node.text = self.display_title(inbound[i]['uri'],form)
+
+                    prev_uri = uri
+
             if 'changes' in stuff[l]:
                 for r in stuff[l]['changes']:
                     ischanged_node = PET.SubElement(lagrum_node, "rinfo:isChangedBy")
@@ -2644,6 +2683,39 @@ WHERE {
         #sleep(1)
         return
 
+    def display_title(self,uri,form="absolute"):
+        parts = LegalURI.parse(uri)
+        res = ""
+        for (field,label) in (('chapter',u'kap.'),
+                              ('section',u'§'),
+                              ('piece',  u'st'),
+                              ('item',   u'p')):
+            if field in parts and not (field == 'piece' and
+                                       parts[field] == u'1' and
+                                       'item' not in parts):
+                res += "%s %s " % (parts[field], label)
+
+        if form == "absolute":
+            if parts['law'] not in self._document_name_cache:
+                baseuri = LegalURI.construct({'type':LegalRef.LAGRUM,
+                                              'law':parts['law']})
+                sq = """PREFIX dct:<http://purl.org/dc/terms/>
+                        SELECT ?title WHERE {<%s> dct:title ?title }""" % baseuri
+                changes = self._store_select(sq)
+                if changes:
+                    self._document_name_cache[parts['law']] = changes[0]['title']
+                else:
+                    self._document_name_cache[parts['law']] = "SFS %s" % parts['law']
+                    #print "Cache miss for %s (%s)" % (parts['law'],
+                    #                              self._document_name_cache[parts['law']])
+
+            res += self._document_name_cache[parts['law']]
+            return res
+        elif form == "relative":
+            return res.strip()
+        else:
+            raise ValueError('unknown form %s' % form)
+
     def CleanupAnnulled(self,basefile):
         infile = self._xmlFileName(basefile)
         outfile = self._htmlFileName(basefile)
@@ -2657,39 +2729,6 @@ WHERE {
 
         # generated_dir = os.path.sep.join([self.baseDir, u'sfs', 'generated'])
         # self._do_for_all(generated_dir,'html',self.CleanupAnnulled)
-
-#    def Convert(self,basefile):
-#        infile = self._xmlFileName(basefile)
-#        outfile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir, self.moduleDir,basefile)
-#        start = time()
-#        Util.transform("xsl/xhtml2to1.xsl",
-#                       infile,
-#                       outfile,
-#                       validate=False)
-#        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-#        
-#    def ConvertAll(self):
-#        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-#        self._do_for_all(parsed_dir,'xht2',self.Convert)
-#        
-#    def Intertwine(self, basefile):
-#        infile = u'%s/%s/xhtml1-base/%s.html' % (self.baseDir,
-#                                                 self.moduleDir,
-#                                                 basefile)
-#        outfile = u'%s/%s/xhtml1-combined/%s.html' % (self.baseDir,
-#                                                      self.moduleDir,
-#                                                      basefile)
-#        start = time()
-#        Util.transform("xsl/intertwine.xsl",
-#                       infile,
-#                       outfile,
-#                       validate=False)
-#        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-#
-#    def IntertwineAll(self):
-#        parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-#        self._do_for_all(parsed_dir,'xht2',self.Intertwine)
-        
 
     def ParseGen(self,basefile):
         self.Parse(basefile)
@@ -2721,11 +2760,6 @@ WHERE {
         minixmlfile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf-mini.xml'])
         files = list(Util.listDirs(termdir, ".xht2"))
         parser = LegalRef(LegalRef.LAGRUM)
-
-
-        #if self._outfile_is_newer(files,[minixmlfile,ntfile]):
-        #    log.info(u"Not regenerating RDF/XML files")
-        #    return
 
         log.info("Making a mini graph")
         RINFO = Namespace(Util.ns['skos'])
