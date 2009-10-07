@@ -138,10 +138,11 @@ class LinkedWikimarkup(wikimarkup.Parser):
         text = self.replaceRedirect(text)
         text = self.doBlockLevels(text, True)
         text = self.unstripNoWiki(text)
+        text = self.replaceImageLinks(text)
         text = self.replaceCategories(text) 
+        text = self.replaceAuthorLinks(text) 
         text = self.replaceWikiLinks(text)
         text = self.removeTemplates(text)
-        text = self.replaceImageLinks(text)
 
         text = text.split(u'\n')
         text = u'\n'.join(text)
@@ -157,12 +158,14 @@ class LinkedWikimarkup(wikimarkup.Parser):
     re_template = re.compile(r'{{[^}]*}}')
     re_category_wiki_link = re.compile(r'\[\[Kategori:([^\]]*?)\]\]')
     re_inline_category_wiki_link = re.compile(r'\[\[:Kategori:([^\]]*?)\|(.*?)\]\]')
+    re_image_wiki_link = re.compile(r'\[\[Fil:([^\]]*?)\s*\]\]')
+    re_author_wiki_link = re.compile(ur'\[\[(Användare:[^\]]+?)\|(.*?)\]\]') 
 
     def capitalizedLink(self,m):
         if m.group(1).startswith('SFS/'):
             uri = 'http://rinfo.lagrummet.se/publ/%s' % m.group(1).lower()
         else:
-            uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+            uri = 'http://lagen.nu/concept/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
         
         if len(m.groups()) == 3:
             # lwl = "Labeled WikiLink"
@@ -171,7 +174,7 @@ class LinkedWikimarkup(wikimarkup.Parser):
             return '<a class="wl" href="%s">%s%s</a>' % (uri, m.group(1), m.group(2))
 
     def categoryLink(self,m):
-        uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+        uri = 'http://lagen.nu/concept/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
         
         if len(m.groups()) == 2:
             # lcwl = "Labeled Category WikiLink"
@@ -179,11 +182,19 @@ class LinkedWikimarkup(wikimarkup.Parser):
         else:
             # cwl = "Category wikilink"
             return '<a class="cwl" href="%s">%s</a>' % (uri, m.group(1))
-        
+
     def hiddenLink(self,m):
-        uri = 'http://lagen.nu/concept/%s' % m.group(1).capitalize().replace(' ','_')
+        uri = 'http://lagen.nu/concept/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
         return '<a class="hcwl" rel="dct:subject" href="%s"/>' % uri
-        
+
+    def imageLink(self,m):
+        uri = 'http://wiki.lagen.nu/images/%s' % m.group(1).strip()
+        return '<img class="iwl" src="%s" />' % uri
+
+    def authorLink(self,m):
+        uri = u'http://wiki.lagen.nu/index.php/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
+        return '<a class="awl" href="%s">%s</a>' % (uri,m.group(2))
+
     def replaceWikiLinks(self,text):
         # print "replacing wiki links: %s" % text[:30]
         text = self.re_labeled_wiki_link.sub(self.capitalizedLink, text)
@@ -192,7 +203,14 @@ class LinkedWikimarkup(wikimarkup.Parser):
 
     def replaceImageLinks(self,text):
         # emulates the parser when using$ wgAllowExternalImages
-        return self.re_img_uri.sub('<img src="\\1"/>',text)
+        text = self.re_img_uri.sub('<img src="\\1"/>',text)
+        # handle links like [[Fil:SOU_2003_99_s117.png]]
+        text = self.re_image_wiki_link.sub(self.imageLink, text)
+        return text
+
+    def replaceAuthorLinks(self,text):
+        # links to author descriptions should point directly to the wiki
+        return self.re_author_wiki_link.sub(self.authorLink, text)
 
     def removeTemplates(self,text):
         # removes all usage of templates ("{{DISPLAYTITLE:Avtalslagen}}" etc)
