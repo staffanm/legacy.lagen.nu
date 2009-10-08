@@ -2395,10 +2395,18 @@ WHERE {
                 stuff[lagrum] = {}
             if not 'rattsfall' in stuff[lagrum]:
                 stuff[lagrum]['rattsfall'] = []
-            #print "adding %s under %s" % (row['id'],lagrum)
-            stuff[lagrum]['rattsfall'].append({'id':row['id'],
-                                               'desc':row['desc'],
-                                               'uri':row['uri']})
+
+            record = {'id':row['id'],
+                      'desc':row['desc'],
+                      'uri':row['uri']}
+
+            # if one case references two or more paragraphs in a
+            # particular section (ie "6 kap 1 § 1 st. och 6 kap 1 § 2
+            # st.") we will get duplicates that we can't (easily)
+            # filter out in the SPARQL query. Filter them out here
+            # instead.
+            if not record in stuff[lagrum]['rattsfall']:
+                stuff[lagrum]['rattsfall'].append(record)
 
         # remove cases that refer to the law itself and a specific
         # paragraph (ie only keep cases that only refer to the law
