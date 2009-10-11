@@ -894,7 +894,6 @@ WHERE {
         for base in basefile.keys():
             entries[base] = []
         for (timestamp,message) in messages:
-
             f = message.replace('\\','/').replace('intermediate/word','parsed').replace('.doc','.xht2')
             if not os.path.exists(f):
                 # kan hända om parsandet gick snett

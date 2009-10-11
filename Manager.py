@@ -220,6 +220,7 @@ class Manager:
             fp = open(incfile,"w")
             fp.write(p.parse_wikitext("index",wikitext))
             fp.close()
+            print "Copying %s to 'static'" % incfile
             shutil.copy2(incfile,'static')
             # Step 4: index.inc.xht2 is then incorporated through an
             # XInclude in static/index.xht2
