@@ -1,7 +1,30 @@
+2009-10-11 16:31:00 Välkommen till nya versionen!
+
+<p>Efter en sommar och höst full av skrivande och utveckling är vi
+stolta att få presentera nästa version av lagen.nu. Vi har skrivit
+lagkommentarer till femton av de mest använda lagtextena, där vi
+förklarar hur texten ska tolkas och ger exempel på hur lagen kan
+tillämpas. Vi har även förklarat över 500 juridiska begrepp.</p>
+
+<p>Lagkommentarerna och begreppsförklaringarna har skrivits av jurister
+och juriststudenter. Om du är duktig på ett visst rättsområde kan du
+hjälpa oss att förbättra tjänsten genom att skriva en kommentar till
+någon av de lagar vi inte hunnit med än. Kolla på <a
+href="http://wiki.lagen.nu/index.php/Lagen.nu:Deltagarportalen">Deltagarportalen</a>
+för information om hur du går tillväga.</p>
+
+<p>Utöver kommentarerna har tjänsten förbättrats med ett nytt
+gränssnitt och många nya funktioner. Se mer under <a
+href="http://ferenda.lagen.nu/om/nytt.html">Vad är nytt?</a>.</p>
+
+<p>Arbetet med lagkommentarerna har möjliggjorts genom ekonomiskt stöd
+från <a
+href="http://www.iis.se/se-ar-mer/internetfonden/">Internetfonden</a>.</p>
+
 2009-08-19 11:21:00 Ny betaversion
 
 <p>En ny betaversion, med en ny grafisk design, är klar för
-testning. Arbetet med lagkommenterandet har gått frammåt med
+testning. Arbetet med lagkommenterandet har gått framåt med
 stormsteg, och kommentarerna till RB, ÄB, LAS och MBL är i princip
 klara. Tanken med den nya designen är att lagtexten ska kunna
 presenteras sida vid sida med information om samma text - kommentarer,
@@ -19,7 +42,6 @@ hantering av juridiska begrepp, och framförallt med kommentarer till
 de viktigaste lagtexterna! Eftersom detta är en betaversion finns det
 saker här och var som inte riktigt funkar som de ska, men vi jobbar på
 det!</p>
-
 
 2009-06-10 17:37:00 Rättsfallsimporten fungerar igen
 

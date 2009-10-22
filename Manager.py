@@ -34,7 +34,7 @@ MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
 class Manager:
     def __init__(self):
         self.config = ConfigObj(__scriptdir__ + "/conf.ini")
-        self.baseDir = self.config['datadir']
+        self.baseDir = __scriptdir__+os.path.sep+self.config['datadir']
     
     def _pairListToDict(self,pairlist):
         """maybe this could be done w/ list comprehensions (can they
@@ -220,8 +220,9 @@ class Manager:
             fp = open(incfile,"w")
             fp.write(p.parse_wikitext("index",wikitext))
             fp.close()
-            print "Copying %s to 'static'" % incfile
-            shutil.copy2(incfile,'static')
+            destfile = __scriptdir__ + "/static/index.inc.xht2"
+            Util.robust_remove(destfile)
+            shutil.copy2(incfile,destfile)
             # Step 4: index.inc.xht2 is then incorporated through an
             # XInclude in static/index.xht2
         else:
@@ -265,7 +266,7 @@ class Manager:
             outfile = os.path.sep.join([self.baseDir, 'site', 'generated', basefile.replace(".xht2",".html")])
             log.info("Generating %s" % outfile)
             Util.ensureDir(outfile)
-            Util.transform("xsl/static.xsl", f, outfile,validate=False,xinclude=True)
+            Util.transform(__scriptdir__+"/xsl/static.xsl", f, outfile,validate=False,xinclude=True)
 
         for f in includes:
             Util.robust_remove(os.path.sep.join([self.baseDir,'static',os.path.split(f)[1]]))
@@ -276,7 +277,7 @@ class Manager:
         # copy everything in img to basedir site generated img
         for dirname in ['css', 'css/images','js','img', 'img/treeview']:
             for f in os.listdir(dirname):
-                src = dirname+os.path.sep+f
+                src = __scriptdir__+dirname+os.path.sep+f
                 if os.path.isfile(src):
                     dest = os.path.sep.join([self.baseDir, 'site', 'generated', dirname, f])
                     Util.copy_if_different(src,dest)
@@ -427,10 +428,10 @@ class Manager:
                 kwmgr.Generate(basefile)
             elif namespace == "Lagen.nu" and localpage == "Huvudsida":
                 self._prep_frontpage()
-                infile = Util.relpath(os.path.sep.join(['static','index.xht2']))
+                infile = Util.relpath(os.path.sep.join([__scriptdir__,'static','index.xht2']))
                 outfile = Util.relpath(os.path.sep.join([self.baseDir,'site','generated','index.html']))
                 print "in %s, out %s" % (infile,outfile)
-                Util.transform("xsl/static.xsl", infile, outfile, validate=False, xinclude=True)
+                Util.transform(__scriptdir__+"/xsl/static.xsl", infile, outfile, validate=False, xinclude=True)
         else:
             firstletter = re_firstchar(wikipage).group(0)
             basefile = u'%s/%s' % (firstletter,wikipage)

@@ -190,6 +190,8 @@
 <http://rinfo.lagrummet.se/publ/sfs/1999:1229> rdfs:label "inkomstskattelagen" ; dct:alternate "IL" .
 <http://rinfo.lagrummet.se/publ/sfs/1999:1395> rdfs:label "studiestödslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1999:355> rdfs:label "kasinolagen" .
+<http://rinfo.lagrummet.se/publ/sfs/1999:381> rdfs:label "sevesolagen" .
+<http://rinfo.lagrummet.se/publ/sfs/1999:382> rdfs:label "sevesoförordningen" .
 <http://rinfo.lagrummet.se/publ/sfs/1999:657> rdfs:label "epizootilagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1999:658> rdfs:label "zoonoslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1999:799> rdfs:label "socialförsäkringslagen" .
