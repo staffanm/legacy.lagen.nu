@@ -282,7 +282,6 @@ class WikiParser(LegalSource.Parser):
         else:
             # concept == "begrepp"
             uri = "http://lagen.nu/concept/" + basefile.replace(" ","_")
-            print "Creating URI: %s" % uri
             rdftype = "skos:Concept"
 
         log.debug("    URI: %s" % uri)
