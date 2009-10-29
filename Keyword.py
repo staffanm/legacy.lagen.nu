@@ -491,12 +491,13 @@ WHERE {
         tree.write(tmpfile, encoding="utf-8")
 
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
+        terms = "%s/%s/parsed/rdf-mini.xml" % (self.baseDir, self.moduleDir)
         log.debug("Saving annotation file %s "% annotations)
 
         Util.replace_if_different(tmpfile,annotations)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-        if not force and self._outfile_is_newer([infile,annotations],outfile):
+        if not force and self._outfile_is_newer([infile,annotations,terms],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
 
