@@ -1,0 +1,19 @@
+<Forfattning>
+  <Stycke id="S1">
+    <unicode>DE HÖGA FÖRDRAGSSLUTANDE PARTERNA i Fördraget om upprättandet av Europeiska ekonomiska gemenskapen,</unicode>
+  </Stycke>
+  <Stycke id="S2">
+    <unicode>HAR KOMMIT ÖVERENS OM FÖLJANDE.</unicode>
+  </Stycke>
+  <Avdelning id="A1" ordinal="1" rubrik="AVDELNING I" underrubrik="KONVENTIONENS TILLÄMPNINGSOMRÅDE">
+    <Rubrik id="R1">Artikel 1</Rubrik>
+    <Stycke id="S1">
+      <unicode>Konventionens tillämpningsområde</unicode>
+      <NumreradLista>
+        <Listelement id="S1N1" ordinal="1">
+          <unicode>1. Bestämmelserna i denna konvention skall tillämpas på avtalsförpliktelser i de fall då ett val skall göras mellan lagarna i olika länder.</unicode>
+        </Listelement>
+      </NumreradLista>
+    </Stycke>
+  </Avdelning>
+</Forfattning>
