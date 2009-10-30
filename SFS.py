@@ -23,12 +23,6 @@ from collections import defaultdict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
-# python 2.6 required
-try:
-    import multiprocessing
-except:
-    multiprocessing = None
-    mlog = None
     
 # 3rdparty libs
 from configobj import ConfigObj
@@ -2224,13 +2218,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     ####################################################################    
 
     def Parse(self, basefile, verbose=False):
-        if multiprocessing:
-            mlog = multiprocessing.get_logger()
-        else:
-            mlog = None
         try:
-            if mlog:
-                mlog.info(u'%s: Starting' % basefile)
             if verbose:
                 print "Setting verbosity"
                 log.setLevel(logging.DEBUG)
@@ -2260,9 +2248,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             filelist = []
             [filelist.extend(files[x]) for x in files.keys()]
             if not force and self._outfile_is_newer(filelist,filename):
-                if mlog:
-                    mlog.info(u'%s: Skipping' % basefile)
-                log.debug(u"%s: Överhoppad", basefile)
+                log.debug(u'%s: Skipping' % basefile)
                 return
 
             # 3: check to see if the Författning has been revoked using
@@ -2273,8 +2259,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
                 datestr = t.readto(u'</i></b>')
                 if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
-                    if mlog:
-                        mlog.info(u'%s: Expired' % basefile)
+                    log.debug(u'%s: Expired' % basefile)
                     raise UpphavdForfattning()
             except IOError:
                 pass
@@ -2297,8 +2282,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             else:
                 Util.robustRename(tmpfile,filename)
             # Util.indentXmlFile(filename)
-            if mlog:
-                mlog.info(u'%s: OK (%.3f sec)', basefile,time()-start)
             log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
             return '(%.3f sec)' % (time()-start)
         except UpphavdForfattning:
@@ -2310,7 +2293,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                      
     def ParseAll(self):
         downloaded_dir = os.path.sep.join([self.baseDir, u'sfs', 'downloaded', 'sfst'])
-        self._do_for_all(downloaded_dir,'html',StaticParse)
+        #self._do_for_all(downloaded_dir,'html',StaticParse)
+        self._do_for_all(downloaded_dir,'html',self.Parse)
 
     def Generate(self,basefile):
         start = time()
@@ -3062,36 +3046,6 @@ WHERE {
         templ = "%s/sfs/downloaded/%s/%s%%s.html" % (self.baseDir,source,basename)
         return [templ%f for f in ('','_A','_B') if os.path.exists(templ%f)]
 
-def StaticParse(basefile):
-    if multiprocessing:
-        mlog = multiprocessing.get_logger()
-    else:
-        mlog = None
-    try:
-        mgr = SFSManager()
-        return mgr.Parse(basefile)
-    except KeyboardInterrupt:
-        raise
-    except:
-        print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
-        # do nothing
-        pass
-
-def StaticGenerate(basefile):
-    if multiprocessing:
-        mlog = multiprocessing.get_logger()
-    else:
-        mlog = None
-    try:
-        mgr = SFSManager()
-        return mgr.Generate(basefile)
-    except KeyboardInterrupt:
-        raise
-    except:
-        print "%s: Ledsen error: %s" % (basefile,sys.exc_info()[0])
-        # do nothing
-        pass
-    
 
 if __name__ == "__main__":
     import logging.config
