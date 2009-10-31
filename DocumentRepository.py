@@ -41,27 +41,28 @@ from DataObjects import UnicodeStructure, CompoundStructure, \
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 
-# Do required codec/locale magic right away, since this is included by
-# all runnable scripts
-if sys.platform == 'win32':
-    if sys.stdout.encoding:
-        defaultencoding = sys.stdout.encoding
-    else:
-        print "sys.stdout.encoding not set"
-        defaultencoding = 'cp850'
-else:
-    if sys.stdout.encoding:
-        defaultencoding = sys.stdout.encoding
-        if defaultencoding == 'ANSI_X3.4-1968': # really?!
-            defaultencoding = 'iso-8859-1'
-    else:
-        import locale
-        locale.setlocale(locale.LC_ALL,'')
-        defaultencoding = locale.getpreferredencoding()
-        
+# Magicality to make sure printing of unicode objects work no matter
+# what platform we're running on
+# 
+# if sys.platform == 'win32':
+#     if sys.stdout.encoding:
+#         defaultencoding = sys.stdout.encoding
+#     else:
+#         print "sys.stdout.encoding not set"
+#         defaultencoding = 'cp850'
+# else:
+#     if sys.stdout.encoding:
+#         defaultencoding = sys.stdout.encoding
+#         if defaultencoding == 'ANSI_X3.4-1968': # really?!
+#             defaultencoding = 'iso-8859-1'
+#     else:
+#         import locale
+#         locale.setlocale(locale.LC_ALL,'')
+#         defaultencoding = locale.getpreferredencoding()
+#         
 # print "setting sys.stdout to a '%s' writer" % defaultencoding
-sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
-sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+# sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+# sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
 # Global/static functions - global_init and global_run are used when
 # running actions in parallel using multiprocessing.Pool. The argument
@@ -76,6 +77,7 @@ __execute_class = None
 __execute_args = None
 
 def global_init(modulename,classname,args):
+    """This is a helper function to make L{multiprocessing} work nice under Windows"""
     global __execute_module, __execute_class, __execute_args
     __execute_module = modulename
     __execute_class = classname
@@ -91,6 +93,7 @@ def global_init(modulename,classname,args):
 
 
 def global_run(argument):
+    """This is a helper function to make L{multiprocessing} work nice under Windows"""
     global __execute_module, __execute_class, __execute_args
     #log = multiprocessing.get_logger()
     #log.info("running %s %r %s" % (__execute_class, __execute_args, argument))
@@ -101,14 +104,51 @@ def global_run(argument):
 
 
 class DocumentRepository(object):
+    """Base class for downloadning, parsing and generating HTML
+    versions of a repository of documents.
+
+    If you want to do stuff with a set of documents (particularly
+    documents that can be fetched over the web), like downloading
+    them, parsing the data into some structured format, and
+    (re-)generating HTML versions of them, this class contains lots of
+    stuff to help you.
+
+    You use it by creating a new class that inherits from this class,
+    and overriding methods in that class. To get a very simple example
+    going, you don't need to override anything other than the
+    L{download_everything} function.
+
+    To get more control over parsing and HTML generation, you override
+    additional methods.
+    """
+    
+    
     module_dir = "base"
+    """The directory where this module will store downloaded, parsed
+    and generated files. You need to override thi.s"""
+
     genshi_tempate = "etc/generic.template.xht2"
+    """The U{Genshi<http://genshi.edgewall.org/>} template used to
+    transform the parsed object structure into a standard XML file. If
+    your data is complex, you might want to override this (and write
+    your own Genshi template). If you prefer other ways of
+    transforming your data into a serialized XML file, you might want
+    to override L{parse] altogether."""
+    
     xslt_template = "xsl/generic.xsl"
+    """A template used to transform the XML file into browser-ready
+    HTML. If your document type is complex, you might want to override
+    this (and write your own XSLT transform). You should include
+    base.xslt in that template, though."""
+    
     # this is a replacement for DispatchMixin.dispatch with built-in
     # support for running the *_all methods (parse_all and
     # generate_all) in parallell using multiprocessing
     @classmethod
     def run(cls,argv=sys.argv[1:],*extra):
+        """Method for running individual methods in a consistent and
+        multiprocessing-friendly manner. You don't need to override or
+        call this."""
         # OptionParser seems to require that we define each and every
         # possible option beforehand. Since each module may have it's
         # own settings, this is not really possible
@@ -256,13 +296,13 @@ class DocumentRepository(object):
         Util.replace_if_different(tmpfile,filename)
 
     def downloaded_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'downloaded', '%s.html' % basefile))        
+        return os.path.sep.join((self.base_dir, self.module_dir, u'downloaded', '%s.html' % basefile))
 
     def parsed_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'parsed', '%s.xht2' % basefile))        
+        return os.path.sep.join((self.base_dir, self.module_dir, u'parsed', '%s.xht2' % basefile))
 
     def generated_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))        
+        return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
 
  
     def getlogger(self,name):
@@ -328,7 +368,7 @@ class DocumentRepository(object):
     # The boilerplate code for handling exceptions and logging time
     # duration might be extracted to decorator functions (generate
     # uses the same boilerplate code, as might other functions). Maybe
-    # even the parce_force hnadling?
+    # even the parce_force handling?
     def parse(self,basefile):
         try:
             start = time()
@@ -357,7 +397,6 @@ class DocumentRepository(object):
     def prep_annotation_file(self, basefile):
         return None
         
-    
     def generate(self,basefile):
         try:
             start = time()
@@ -413,6 +452,36 @@ class DocumentRepository(object):
         return g
 
 
+    def toc(self):
+        # Generalized algorithm for creating TOC pages
+        #
+        # Step 1: find out what criteria(s) we should create pages from, ex:
+        #  - By Title (dct:title, rdfs:label or a similar pred)
+        #  - By Year (dct:published or some other date pred)
+        #  - By Court (rinfo:rattsfallspublikation)
+        #  - By Area (rinfoex:rattsomrade) - might be around 40 areas
+        #
+        # return a list of tuples (displaytitle, predicate, selector_function)
+        # example ("Efter titel", dct:title, first_letter)
+        #  
+        # Step 2: For each criteria:
+        #  - find out pages we should create, eg ("a","b","c",...), (2009,2008,2007,...)
+        #  - by doing some sort of SPARQL query
+        #  - return a list of tuples (pagename, pagetitle) example:
+        #      (("a", "Lagar som börjar på 'A'"))
+        #
+        # Step 3: From the data collected in step 1 and 2, create a
+        # data struct that can generate the TOC page index to the left
+        # (together with toc.template.xht2)
+        #
+        # Step 4: For each page (returned in step 2):
+        #  - create the page
+        
+        # final: Create a index.html (or copy some existing page to it
+    
+        
+
+    # this is crap old code. we want to replace it with crap shiny new code!
     def index(self):
         rdffile = Util.relpath("%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir))
         if not os.path.exists(rdffile):
@@ -435,7 +504,7 @@ class DocumentRepository(object):
             log.info("RDF loaded (%.3f sec)", time()-start)
             for (subj,pred,obj) in g:
                 # most of the triples are dct:references, and these
-                # are not used for indexpage generation - filter these
+                # are not used for tocpage generation - filter these
                 # out to cut down on memory usage
                 subj = unicode(subj)
                 pred = unicode(pred)
@@ -458,7 +527,7 @@ class DocumentRepository(object):
                     objUri = m.group(4)
                     objLiteral = m.group(5)
                     # most of the triples are dct:references, and these
-                    # are not used for indexpage generation - filter these
+                    # are not used for tocpage generation - filter these
                     # out to cut down on memory usage
                     if pred != 'http://purl.org/dc/terms/references':
                         if objLiteral:
@@ -474,9 +543,9 @@ class DocumentRepository(object):
         sys.stdout.write("\n")
     
         log.info("RDF structured (%.3f sec)", time()-start)
-        self.build_indexpages(by_pred_obj, by_subj_pred)
+        self.build_tocpages(by_pred_obj, by_subj_pred)
 
-    def build_indexpages(self,by_pred_obj, by_subj_pred):
+    def build_tocpages(self,by_pred_obj, by_subj_pred):
         displaypredicates = {'http://purl.org/dc/terms/title':
                              u'titel',
                              'http://purl.org/dc/terms/identifier':
@@ -497,7 +566,7 @@ class DocumentRepository(object):
                     pred_id = pred_id.replace(v,k+"-")
                 pred_label = "Ordnade efter %s" % displaypredicates[predicate]
 
-                log.info("creating index pages ordered by %s" % pred_id)
+                log.info("creating toc pages ordered by %s" % pred_id)
                 # generate a list of all lowercase letters using the unicode db
                 letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
                 for letter in letters:
@@ -520,19 +589,19 @@ class DocumentRepository(object):
 
         for category in documents.keys():
             for pageid in documents[category].keys():
-                outfile = Util.relpath("%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid))
+                outfile = Util.relpath("%s/%s/generated/toc/%s.html" % (self.baseDir, self.moduleDir, pageid))
                 title = pagetitles[pageid]
-                self.render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                self.render_tocpage(outfile,title,documents,pagelabels,category,pageid)
                 if pageid.endswith("-a"):
-                    outfile = Util.relpath("%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir))
-                    self.render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+                    outfile = Util.relpath("%s/%s/generated/toc/index.html" % (self.baseDir, self.moduleDir))
+                    self.render_tocpage(outfile,title,documents,pagelabels,category,pageid)
                     
 
-    def render_indexpage(self,outfile,title,documents,pagelabels,category,page,keyword=None,compactlisting=False, docsorter=cmp):
+    def render_tocpage(self,outfile,title,documents,pagelabels,category,page,keyword=None,compactlisting=False, docsorter=cmp):
         # only look in cwd and this file's directory
         loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
                                 variable_lookup='lenient') 
-        tmpl = loader.load("etc/indexpage.template.xht2")
+        tmpl = loader.load("etc/tocpage.template.xht2")
 
         stream = tmpl.generate(title=title,
                                documents=documents,

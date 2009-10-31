@@ -132,12 +132,14 @@
   <xsl:template match="xht2:h">
     <xsl:choose>
       <xsl:when test="@property = 'dct:title'"/><!-- main title is handled in another template -->
+      <!--
       <xsl:when test="../@typeof = 'rinfo:Bilaga'">
 	<h2>
 	  <xsl:attribute name="id"><xsl:value-of select="../@id" /></xsl:attribute>
 	  <xsl:value-of select="."/>
 	</h2>
       </xsl:when>
+      -->
       <xsl:when test="@class = 'underrubrik'">
 	<tr class="heading-table-row">
 	  <td>
@@ -205,7 +207,8 @@
       </td>
     </tr>
   </xsl:template>
-    
+
+  
   <xsl:template match="xht2:section[@typeof='rinfo:Paragraf']">
     <!-- plocka fram referenser kring/till denna paragraf -->
     <xsl:variable name="paragrafuri" select="concat($dokumenturi,'#', @id)"/>
@@ -217,7 +220,7 @@
     <xsl:variable name="upphavd" select="$annotations/rdf:Description[@rdf:about=$paragrafuri]/rinfo:isRemovedBy"/>
     <tr>
       <td class="paragraf" id="{@id}" about="{//xht2:html/@about}#{@id}">
-	<xsl:apply-templates/>
+	<xsl:apply-templates mode="in-paragraf"/>
       </td>
       <td id="refs-{@id}" class="aux">
 	<xsl:if test="$kommentar or $rattsfall or $inbound or $inford or $andrad or $upphavd">
@@ -282,6 +285,34 @@
 	</xsl:if>
       </td>
     </tr>
+  </xsl:template>
+
+  <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
+    <tr>
+      <td><xsl:apply-templates mode="in-paragraf"/></td>
+      <td><!-- here goes the boxes for commentary etc, but that's not supported for standalone Stycke nodes yet --></td>
+    </tr>
+  </xsl:template>
+
+
+  <xsl:template match="xht2:p[@typeof='rinfo:Stycke']" mode="in-paragraf">
+    <xsl:variable name="marker">
+      <xsl:choose>
+	<xsl:when test="substring-after(@id,'S') = '1'"><xsl:if
+	test="substring-after(@id,'K')">K<xsl:value-of
+	select="substring-before(substring-after(@id,'K'),'P')"/></xsl:if></xsl:when>
+	<xsl:otherwise>S<xsl:value-of select="substring-after(@id,'S')"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <p id="{@id}" about="{//xht2:html/@about}#{@id}">
+      <xsl:if test="$marker != ''">
+	<a href="#{@id}" title="Permalänk till detta stycke"><img class="platsmarkor" src="img/{$marker}.png"/></a>
+      </xsl:if>
+      <xsl:if test="xht2:span[@class='paragrafbeteckning']">
+	<a href="#{@id}" class="paragrafbeteckning" title="Permalänk till detta stycke"><xsl:copy-of select="xht2:span[@class='paragrafbeteckning']"/></a>
+      </xsl:if>
+      <xsl:apply-templates/>
+    </p>
   </xsl:template>
   
   <xsl:template name="andringsnoteringar">
@@ -358,27 +389,10 @@
 
 	<p><a href="http://62.95.69.3/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Officiell version (PDF)</a></p>
       </xsl:if>
-      <xsl:apply-templates/>
+      <xsl:apply-templates mode="in-paragraf"/>
     </div>
   </xsl:template>
 
-  <xsl:template match="xht2:p[@typeof='rinfo:Stycke']">
-    <xsl:variable name="marker">
-      <xsl:choose>
-	<xsl:when test="substring-after(@id,'S') = '1'"><xsl:if test="substring-after(@id,'K')">K<xsl:value-of select="substring-before(substring-after(@id,'K'),'P')"/></xsl:if></xsl:when>
-	<xsl:otherwise>S<xsl:value-of select="substring-after(@id,'S')"/></xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <p id="{@id}" about="{//xht2:html/@about}#{@id}">
-      <xsl:if test="$marker != ''">
-	<a href="#{@id}" title="Permalänk till detta stycke"><img class="platsmarkor" src="img/{$marker}.png"/></a>
-      </xsl:if>
-      <xsl:if test="xht2:span[@class='paragrafbeteckning']">
-	<a href="#{@id}" class="paragrafbeteckning" title="Permalänk till detta stycke"><xsl:copy-of select="xht2:span[@class='paragrafbeteckning']"/></a>
-      </xsl:if>
-      <xsl:apply-templates/>
-    </p>
-  </xsl:template>
 
   <!-- emit nothing - this is already handled above -->
   <xsl:template match="xht2:span[@class='paragrafbeteckning']"/>
@@ -422,6 +436,16 @@
   </xsl:template>
 
 
+  <xsl:template match="*" mode="in-paragraf">
+    <xsl:element name="{name()}">
+      <xsl:apply-templates select="@*|node()" mode="in-paragraf"/>
+    </xsl:element>
+  </xsl:template>
+  <xsl:template match="@*" mode="in-paragraf">
+    <xsl:copy><xsl:apply-templates/></xsl:copy>
+  </xsl:template>
+
+  
   <!-- TABLE OF CONTENTS (TOC) HANDLING -->
   <xsl:template match="h[@property = 'dct:title']" mode="toc">
     <xsl:call-template name="toc"/>

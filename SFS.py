@@ -1643,7 +1643,7 @@ class SFSParser(LegalSource.Parser):
             roman = re.split(r'\s+',p)[1]
             if self.re_roman_numeral_matcher(roman):
                 return unicode(self._from_roman(roman))
-        elif p.startswith(u"Avdelning"):
+        elif p.startswith(u"Avdelning "):
             roman = re.split(r'\s+',p)[1]
             print "P: %s, roman: %s" % (p,roman)
             if self.re_roman_numeral_matcher(roman):

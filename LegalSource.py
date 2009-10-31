@@ -199,6 +199,9 @@ class Manager(object):
         self.config = ConfigObj(os.path.dirname(__file__)+"/conf.ini")
         self.baseDir = os.path.dirname(__file__)+os.path.sep+self.config['datadir']
 
+    # FIXME: This does not handle escaped double quotes (\")
+    # correctly. That *should* be possible to express in a regex,
+    # right?
     re_ntriple = re.compile(r'<([^>]+)> <([^>]+)> (<([^>]+)>|"([^"]*)")(@\d{2}|).')
     XHT2NS = '{http://www.w3.org/2002/06/xhtml2/}' 
     DCT = Namespace("http://purl.org/dc/terms/")

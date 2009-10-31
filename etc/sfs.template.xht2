@@ -277,7 +277,7 @@ from datetime import datetime
       <!--! main body -->
       <h property="dct:title" py:content="meta[u'Rubrik']">Författningsrubrik</h>
       ${render_metadata(meta)}
-      <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${datetime.strftime(body.ikrafttrader,'%Y-%m-%d')})</p>
+      <p class="ikrafttradande" py:if="body.ikrafttrader">(Träder i kraft ${body.ikrafttrader})</p>
       <section role="main">
       <py:for each="part in body" py:choose="">
 	<div py:when="isinstance(part, Avdelning)"       py:strip="">${render_avdelning(part)}</div>
