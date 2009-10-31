@@ -54,7 +54,7 @@
     <!-- emit nothing -->
   </xsl:template>
 
-  <xsl:template match="xht2:dl[@role='contentinfo']" mode="refs">
+  <xsl:template match="xht2:dl[@role='contentinfo']">
     <div class="sidoruta">
       <dl>
 	<dt>Beslutsdatum</dt>
@@ -74,15 +74,9 @@
     </div>
   </xsl:template>
 
-  <xsl:template match="*|@*" mode="refs">
+  <xsl:template match="*|@*" mode="toc">
     <!-- emit nothing -->
   </xsl:template>
-
-  <!-- kommentar mode -->
-  <xsl:template match="*|@*" mode="kommentarer">
-    <!-- emit nothing -->
-  </xsl:template>
-
   
 </xsl:stylesheet>
 

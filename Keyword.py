@@ -240,7 +240,9 @@ class KeywordManager(LegalSource.Manager):
     
     def __init__(self):
         super(KeywordManager,self).__init__()
-        # self.moduleDir = "dv" # to fake Indexpages to load dv/parsed/rdf.nt -- will do for now
+        # we use the display_title function
+        import SFS
+        self.sfsmgr = SFS.SFSManager()
         
     def _get_module_dir(self):
         return __moduledir__
@@ -483,7 +485,8 @@ WHERE {
             rattsfall_node = PET.SubElement(subject_node, "rdf:Description")
             rattsfall_node.set("rdf:about",l['uri'])
             id_node = PET.SubElement(rattsfall_node, "rdfs:label")
-            id_node.text = "%s %s" % (l['uri'].split("#")[1], l['label'])
+            #id_node.text = "%s %s" % (l['uri'].split("#")[1], l['label'])
+            id_node.text = self.sfsmgr.display_title(l['uri'])
 
         Util.indent_et(root_node)
         tree = PET.ElementTree(root_node)
@@ -532,6 +535,37 @@ WHERE {
         # This LegalSource have no triples of it's own
         # super(KeywordManager,self).RelateAll()
         self._build_mini_rdf()
+
+
+#    not yet ready for prime time
+#
+#    def _build_indexpages(self, by_pred_obj, by_subj_pred):
+#        documents = defaultdict(lambda:defaultdict(list))
+#        pagetitles = {}
+#        pagelabels = {}
+#        type_pred  = Util.ns['rdf']+'type'
+#        type_obj   = Util.ns['skos']+'Concept'
+#        title_pred = Util.ns['dct']+'title'
+#        for subj in by_pred_obj[type_pred][type_obj]:
+#            title = by_subj_pred[subj][title_pred]
+#            letter = title[0].lower()
+#
+#            pagetitles[letter] = u'Begrepp som börjar på "%s"' % letter.upper()
+#            pagelabels[letter] = letter.upper()
+#            documents[u'Inledningsbokstav'][letter].append({'uri':subj,
+#                                                            'sortkey':title.lower(),
+#                                                            'title':title})
+#
+#        for category in documents.keys():
+#            for pageid in documents[category].keys():
+#                outfile = "%s/%s/generated/index/%s.html" % (self.baseDir, self.moduleDir, pageid)
+#                title = pagetitles[pageid]
+#                self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+#                if pageid == 'a': # make index.html
+#                    outfile = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
+#                    self._render_indexpage(outfile,title,documents,pagelabels,category,pageid)
+#                        
+                                                 
 
         
 if __name__ == "__main__":

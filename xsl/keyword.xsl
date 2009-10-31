@@ -8,6 +8,7 @@
 		xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"
 		xmlns:rinfoex="http://lagen.nu/terms#"
 		xmlns:dct="http://purl.org/dc/terms/"
+		xmlns:str="http://exslt.org/strings"
 		exclude-result-prefixes="xht2 dct rdf">
 
   <xsl:import href="uri.xsl"/>
@@ -30,6 +31,16 @@
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
     <xsl:variable name="wikipedia" select="//xht2:p[@class='wikibox']"/>
 
+    <xsl:comment>
+      <xsl:variable name="ws" select="'&#x20;&#xD;&#xA;&#x9;'"/>
+      Score: <xsl:value-of select="count(str:tokenize(string($annotations/rdf:Description/dct:description/xht2:div), $ws)) + count($rattsfall) + 5*count($legaldefs)+5*count($wikipedia)"/>
+      Word Count: <xsl:value-of select="count(str:tokenize(string($annotations/rdf:Description/dct:description/xht2:div), $ws))"/>
+      Rattsfall: <xsl:value-of select="count($rattsfall)"/>
+      Legaldefs: <xsl:value-of select="count($legaldefs)"/>
+      Wikipedia: <xsl:value-of select="count($wikipedia)"/>
+      
+    </xsl:comment>
+    
     <table>
       <tr>
 	<td width="50%">
