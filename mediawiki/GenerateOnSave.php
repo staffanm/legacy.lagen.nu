@@ -1,6 +1,6 @@
 <?php
-define("FERENDA_DIR",'/www/staffan/ferenda.lagen.nu');
-define("PYTHON", "/www/staffan/ferenda.lagen.nu/bin/python");
+define("FERENDA_DIR",'/www/staffan/lagen.nu');
+define("PYTHON", "/www/staffan/lagen.nu/bin/python");
 
 $wgHooks['ArticleSaveComplete'][] = 'fnGenerateOnSave';
 function fnGenerateOnSave(&$article, &$user, &$text, &$summary, &$minoredit, 
