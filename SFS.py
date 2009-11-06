@@ -1639,8 +1639,9 @@ class SFSParser(LegalSource.Parser):
             ordinal = p.split()[0]
             return unicode(self._swedish_ordinal(ordinal))
         elif p.startswith(u"AVD. ") or p.startswith(u"AVDELNING "):
-
             roman = re.split(r'\s+',p)[1]
+            if roman.endswith("."):
+                roman = roman[:-1]
             if self.re_roman_numeral_matcher(roman):
                 return unicode(self._from_roman(roman))
         elif p.startswith(u"Avdelning "):
