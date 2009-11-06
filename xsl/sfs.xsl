@@ -105,6 +105,10 @@
 			
 		      </p>
 		      <xsl:apply-templates select="$kommentar"/>
+		      <p class="ui-state-highlight" style="padding:2pt; margin:0">
+			Hittar du något fel i lagkommentaren? Du får gärna <a href="/w/index.php?title=Diskussion:SFS/{//xht2:dd[@property='rinfo:fsNummer']}&amp;action=edit&amp;section=new&amp;preloadtitle=Felrapport&amp;editintro=Lagen.nu:Editintro/Felrapport">skriva en felrapport</a>.
+		      </p>
+		      
 		    </xsl:with-param>
 		    <xsl:with-param name="first" select="true()"/>
 		  </xsl:call-template>

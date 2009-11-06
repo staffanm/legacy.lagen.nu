@@ -46,12 +46,21 @@
 	<td width="50%">
 	  <h1 property="dct:title"><xsl:value-of select="."/></h1>
 	  <xsl:if test="$wikidesc">
+	    <p class="ui-state-highlight">
+	      <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span> 
+	      Var kommer den här beskrivningen från? <a href="/om/ansvarsfriskrivning.html">Läs mer...</a>.
+	    </p>
+
 	    <xsl:apply-templates select="$wikidesc"/>
+
+	    <p class="ui-state-highlight" style="padding:2pt;">
+	      Hittar du något fel i ovanstående? Du får gärna <a href="/w/index.php?title=Diskussion:{.}&amp;action=edit&amp;section=new&amp;preloadtitle=Felrapport&amp;editintro=Lagen.nu:Editintro/Felrapport">skriva en felrapport</a>.
+	    </p>
 	  </xsl:if>
 	  <xsl:if test="not($wikidesc)">
-	    Det finns ingen beskrivning av "<xsl:value-of
-	    select="."/>" än. Vi jobbar på det! Vill du <a
-	    href="http://wiki.lagen.nu/">hjälpa till?</a>
+	    <p class="ui-state-highlight" style="padding:2pt;">
+	      Ingen har skrivit en beskrivning av "<xsl:value-of select="."/>" än. Vill du göra det? <a href="/w/index.php?title=Diskussion:{.}&amp;action=edit&amp;section=new&amp;preloadtitle=Förslag&amp;editintro=Lagen.nu:Editintro/Förslag">Skriv gärna ett förslag!</a>
+	    </p>
 	  </xsl:if>
 	</td>
 	<td class="aux">

@@ -252,9 +252,7 @@ class WikiParser(LegalSource.Parser):
         # the output from wikimarkup is less than ideal...
         html = html.replace("&", "&amp;");
         html = '<div>'+html+'</div>';
-        # FIXME: we should also
-        #
-        # 4) Separate the trailing [[Kategori:Blahonga]] links
+
         try: 
             xhtml = ET.fromstring(html.encode('utf-8'))
         except SyntaxError:
