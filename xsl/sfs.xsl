@@ -440,6 +440,9 @@
   </xsl:template>
 
 
+  <xsl:template match="xht2:a|a" mode="in-paragraf">
+    <xsl:call-template name="link"/>
+  </xsl:template>
   <xsl:template match="*" mode="in-paragraf">
     <xsl:element name="{name()}">
       <xsl:apply-templates select="@*|node()" mode="in-paragraf"/>
