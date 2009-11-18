@@ -1,15 +1,6 @@
---- testdata\sfs\intermediate\1998\204.txt	2008-02-23 18:04:43.182800000 +0100
-+++ testdata\sfs\intermediate\1998\204-mod.txt	2008-02-23 18:04:49.017200000 +0100
-@@ -34,7 +34,7 @@
- 
- Beteckning                   Betydelse
- 
--Behandling (av person)          Varje åtgärd eller serie av
-+Behandling (av person-          Varje åtgärd eller serie av
- uppgifter)                      åtgärder som vidtas i fråga om
-                                 personuppgifter, vare sig det
-                                 sker på automatisk väg eller inte,
-@@ -323,7 +323,6 @@
+--- data/sfs/intermediate/1998/204.txt	2009-11-11 17:02:55.750000000 +0100
++++ c:\users\staffan\appdata\local\temp\tmpqbrv6-	2009-11-11 17:01:50.024799900 +0100
+@@ -322,7 +322,6 @@
  betecknas i denna lag som känsliga personuppgifter.
  
  Undantag från förbudet mot behandling av känsliga
@@ -17,7 +8,7 @@
  personuppgifter
  
  14 § Det är trots förbudet i 13 § tillåtet att behandla
-@@ -506,7 +505,7 @@
+@@ -509,7 +508,7 @@
  c) ändamålen med behandlingen, och
  
  d) till vilka mottagare eller kategorier av mottagare som

@@ -1,12 +1,11 @@
---- 1996-13_1.xml	2009-02-02 11:18:45.000000000 +0100
-+++ 1996-13_1-mod.xml	2009-02-02 11:20:54.000000000 +0100
-@@ -208,7 +208,7 @@
+--- data/dv/intermediate/docbook/ADO/1998-134_1.xml	2009-11-11 17:30:25.799000000 +0100
++++ c:\users\staffan\appdata\local\temp\tmp8rkoy-	2009-11-11 17:30:00.090799900 +0100
+@@ -754,7 +754,7 @@
  
-        <entry>Parter:
- 
--Öhrlings Coopers &amp; Lybrand Aktiebolag; Blosfeld, Paul
-+Öhrlings Coopers &amp; Lybrand Aktiebolag; P.B.
- 
- Nr 13
- 
-@@ -1353,0 +1353,0 @@
+ Vad först angår C.K:s sysselsättning hos Bil och Riktning är det
+ tjänstgöringsintyg som han fogade till sin ansökan otydligt. Där anges i
+-ett första stycke: "C.K., 730919-1018, har under tiden 970113-970630
++ett första stycke: "C.K., 730000-0000, har under tiden 970113-970630
+ varit anställd enligt anställningsformen API vid Bil &amp; Riktning i Öjaby
+ AB". I nästa stycke anges: "Anställningstiden har varit fastställd
+ enligt visstidsanställning". Det har genom vittnesförhöret med H.B.

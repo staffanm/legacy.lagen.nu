@@ -58,8 +58,8 @@ if __name__ == "__main__":
             os.system("unix2dos %s" % patchfile)
         print "Created patch file %r" % patchfile
         print "Please give a description of the patch"
-        patchdesc = sys.stdin.readline()
-        fp = open(patchfile.replace(".patch",".desc"),"w")
+        patchdesc = sys.stdin.readline().decode('cp850')
+        fp = codecs.open(patchfile.replace(".patch",".desc"),"w",'utf-8')
         fp.write(patchdesc)
         fp.close()
 

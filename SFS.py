@@ -600,7 +600,7 @@ class SFSParser(LegalSource.Parser):
             Util.ensureDir(plaintextfile)
             tmpfile = mktemp()
             f = codecs.open(tmpfile, "w",'iso-8859-1')
-            f.write(plaintext+"\n")
+            f.write(plaintext+"\r\n")
             f.close()
 
             Util.replace_if_different(tmpfile,plaintextfile)

@@ -478,7 +478,7 @@ class DocumentRepository(object):
         #  - create the page
         
         # final: Create a index.html (or copy some existing page to it
-    
+        pass
         
 
     # this is crap old code. we want to replace it with crap shiny new code!

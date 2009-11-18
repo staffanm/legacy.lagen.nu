@@ -1,16 +1,5 @@
 --- 230.txt	2008-09-04 00:15:30.000000000 +0200
 +++ 230-mod.txt	2009-01-19 01:44:27.219362800 +0100
-@@ -103,8 +103,8 @@
- var för sig på fråga av vigselförrättaren ge till känna att de samtycker
- till äktenskapet. Vigselförrättaren skall därefter förklara att de är makar.
- 
--Har det inte gått till så som anges i första stycket eller var vigselför-
--rättaren inte behörig att förrätta vigsel, är förrättningen ogiltig som
-+Har det inte gått till så som anges i första stycket eller var vigselförrättaren
-+inte behörig att förrätta vigsel, är förrättningen ogiltig som
- vigsel.
- 
- En förrättning som enligt andra stycket är ogiltig som vigsel får godkännas
 @@ -256,8 +256,8 @@
  maken.
  
