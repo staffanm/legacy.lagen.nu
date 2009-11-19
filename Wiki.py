@@ -47,7 +47,7 @@ class WikiDownloader(LegalSource.Downloader):
     def DownloadAll(self):
         wikinamespaces = []
         # this file is regenerated hourly
-        url = "http://wiki.lagen.nu/pages-articles.xml"
+        url = "https://lagen.nu/wiki-pages-articles.xml"
         self.browser.open(url)
         xml = ET.parse(self.browser.response())
 

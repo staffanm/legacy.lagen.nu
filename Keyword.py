@@ -128,7 +128,7 @@ class KeywordDownloader(LegalSource.Downloader):
         # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
 
         self.browser.set_handle_robots(False) # we can ignore our own robots.txt
-        self.browser.open("http://wiki.lagen.nu/pages-articles.xml")
+        self.browser.open("https://lagen.nu/wiki-pages-articles.xml")
         xml = ET.parse(self.browser.response())
         wikinamespaces = []
         for ns_el in xml.findall("//"+MW_NS+"namespace"):

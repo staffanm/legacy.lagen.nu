@@ -419,7 +419,7 @@ class Manager:
         elif wikipage.startswith("Dom/"):
             pass
         elif ":" in wikipage: # not in default namespace, probably
-            (namespace,localpage) = wikipage.split(":")
+            (namespace,localpage) = wikipage.split(":",1)
             if namespace == "Kategori":
                 firstletter = re_firstchar(localpage).group(0)
                 basefile = u'%s/%s' % (firstletter,localpage)
