@@ -19,6 +19,7 @@ from time import time
 import functools
 import xml.etree.cElementTree as ET
 import xml.dom.minidom
+from datetime import datetime
 
 # 3rd party
 import BeautifulSoup
@@ -28,6 +29,7 @@ from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
+from rdflib.syntax import NamespaceManager
 import pyRdfa
 
 # mine
@@ -37,6 +39,7 @@ from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, IntStructure, DateStructure, PredicateType, \
      UnicodeSubject, Stycke, Sektion, \
      serialize
+from SesameStore import SesameStore
 
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -44,25 +47,25 @@ __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 # Magicality to make sure printing of unicode objects work no matter
 # what platform we're running on
 # 
-# if sys.platform == 'win32':
-#     if sys.stdout.encoding:
-#         defaultencoding = sys.stdout.encoding
-#     else:
-#         print "sys.stdout.encoding not set"
-#         defaultencoding = 'cp850'
-# else:
-#     if sys.stdout.encoding:
-#         defaultencoding = sys.stdout.encoding
-#         if defaultencoding == 'ANSI_X3.4-1968': # really?!
-#             defaultencoding = 'iso-8859-1'
-#     else:
-#         import locale
-#         locale.setlocale(locale.LC_ALL,'')
-#         defaultencoding = locale.getpreferredencoding()
-#         
-# print "setting sys.stdout to a '%s' writer" % defaultencoding
-# sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
-# sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+if sys.platform == 'win32':
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+    else:
+        print "sys.stdout.encoding not set"
+        defaultencoding = 'cp850'
+else:
+    if sys.stdout.encoding:
+        defaultencoding = sys.stdout.encoding
+        if defaultencoding == 'ANSI_X3.4-1968': # really?!
+            defaultencoding = 'iso-8859-1'
+    else:
+        import locale
+        locale.setlocale(locale.LC_ALL,'')
+        defaultencoding = locale.getpreferredencoding()
+        
+print "setting sys.stdout to a '%s' writer" % defaultencoding
+sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
 # Global/static functions - global_init and global_run are used when
 # running actions in parallel using multiprocessing.Pool. The argument
@@ -102,6 +105,16 @@ def global_run(argument):
     cls = getattr(mod, __execute_class)
     return cls.run(__execute_args, argument)
 
+#class SaneNamespaceManager(NamespaceManager):
+#   def compute_qname(self, uri):
+#        if not uri in self.__cache:
+#            namespace, name = split_uri(uri)
+#            namespace = URIRef(namespace)
+#            prefix = self.store.prefix(namespace)
+#            if prefix is None:
+#                raise Exception("Prefix for %s not bound" % namespace)
+#            self.__cache[uri] = (prefix, namespace, name)
+#        return self.__cache[uri]
 
 class DocumentRepository(object):
     """Base class for downloadning, parsing and generating HTML
@@ -119,28 +132,65 @@ class DocumentRepository(object):
     L{download_everything} function.
 
     To get more control over parsing and HTML generation, you override
-    additional methods.
+    additional methods. There are eight main entry points into the
+    module, with the following principal call chains:
+
+    download_new
+        download_everything
+            download_single
+                downloaded_path
+                download_if_needed
+    parse
+        parsed_path
+        soup_from_basefile
+        parse_from_soup
+        render_xhtml
+            extract_rdfa -> .rdf
+        
+    relate
+
+    generate
+        generated_file
+        prep_annotation_file
+
+    toc
+        toc_navigation
+        toc_title
+        toc_style
+            toc_style_list | toc_style_table | toc_style_multicol
+        toc_page
+
+    news
+        news_selections
+        news_selection
+
+    frontpage_content
+
+    tabs
     """
     
     
     module_dir = "base"
     """The directory where this module will store downloaded, parsed
-    and generated files. You need to override thi.s"""
+    and generated files. You need to override this."""
 
-    genshi_tempate = "etc/generic.template.xht2"
+    genshi_tempate = "genshi/generic.xhtml"
     """The U{Genshi<http://genshi.edgewall.org/>} template used to
     transform the parsed object structure into a standard XML file. If
     your data is complex, you might want to override this (and write
     your own Genshi template). If you prefer other ways of
     transforming your data into a serialized XML file, you might want
-    to override L{parse] altogether."""
+    to override L{render_xhtml} altogether."""
     
     xslt_template = "xsl/generic.xsl"
     """A template used to transform the XML file into browser-ready
     HTML. If your document type is complex, you might want to override
     this (and write your own XSLT transform). You should include
     base.xslt in that template, though."""
-    
+
+    rdf_type = Namespace(Util.ns['rinfo'])['Rattsinformationsdokument']
+    """The RDF type of the documents you are handling (expressed as a RDFLib URIRef)."""
+
     # this is a replacement for DispatchMixin.dispatch with built-in
     # support for running the *_all methods (parse_all and
     # generate_all) in parallell using multiprocessing
@@ -157,7 +207,10 @@ class DocumentRepository(object):
         args = []
         for arg in argv:
             if arg.startswith("--"):
-                (key,value) = arg.split("=",1)
+                if "=" in arg:
+                    (key,value) = arg.split("=",1)
+                else:
+                    (key,value) = (arg, 'True')
                 parts = key[2:].split("-")
                 if len(parts) == 1:
                     options[parts[0]] = value
@@ -172,13 +225,27 @@ class DocumentRepository(object):
             args.append(arg)
             
         (configfile,config,moduleconfig) = cls.initialize_config(options)
-
-        if args[0].endswith("_all"):
+        #from pprint import pprint
+        #pprint(config)
+        #pprint(moduleconfig)
+        
+        if len(args) == 0:
+            cls.print_valid_commands()
+        elif args[0].endswith("_all"):
             cls.run_all(args[0],argv,config)
         else:
             c = cls(options)
             func = getattr(c,args[0])
             return func(*args[1:])
+
+    @classmethod
+    def print_valid_commands(cls):
+        internal_commands = ("run", "print_valid_commands")
+        print "Valid commands are:", ", ".join(
+            [str(m) for m in dir(cls) if (m not in internal_commands and
+                                           not m.startswith("_") and
+                                           callable(getattr(cls, m)))]
+            )
 
     # how should download_all and relate_all be parallelizable (if at
     # all?) For relate_all in particular we need to collect the
@@ -192,7 +259,8 @@ class DocumentRepository(object):
         argv[argv.index(func_name_all)] = func_name
         argv.append("--logfile=%s" % mktemp())
         # FIXME: find out which module this class belongs to
-        global_init_args = ("ExampleRepo",cls.__name__, argv)
+        global_init_args = (cls.__module__,cls.__name__, argv)
+        cls.setup(func_name_all, config)
         iterable = cls.get_iterable_for(func_name_all,config['datadir'])
         if 'processes' in config and int(config['processes']) > 1:
             print "Running multiprocessing"
@@ -204,11 +272,10 @@ class DocumentRepository(object):
             results = []
             for basefile in iterable:
                 results.append(global_run(basefile))
-
+        cls.teardown(func_name_all, config)
         # FIXME: This should use the logging infrastructure, but
         # _setup_logger is a instancemethod
-        ret = cls.collect_results_for(func_name_all, results)
-        print results
+        # ret = cls.collect_results_for(func_name_all, results)
         print u'%s: OK (%.3f sec)' % (func_name_all,time()-start)
         
     @classmethod
@@ -218,21 +285,37 @@ class DocumentRepository(object):
             suffix = ".html"
         elif funcname in ("generate_all", "relate_all"):
             directory = os.path.sep.join((base_dir, cls.module_dir, u"parsed"))
-            suffix = ".xht2"
+            suffix = ".xhtml"
 
         return [cls.basefile_from_path(x) for x in Util.listDirs(directory,suffix)]
 
     @classmethod
-    def collect_results_for(cls,funcname,results):
+    def setup(cls,funcname,config):
+        """Runs before any of the *_all methods starts executing"""
         if funcname == "relate_all":
-            # results will be an array of NT files. Combine them into
-            # one big NT file, submit it to sesame, and store it as a
-            # NT file. Things to find out: the sesame server location
-            # the context URI the name of the NT file
-            for f in results:
-                pass
+            store = SesameStore(config['triplestore'],config['repository'],cls.context())
+            print "Clearing context %s at repository %s" % (cls.context(), config['repository'])
+            store.clear()
         else:
-            pass # nothin' to do
+            pass
+
+    @classmethod
+    def teardown(cls,funcname,base_dir):
+        """Runs after any of the *_all methods has finished executing"""
+        # right now, nothing to do
+        pass
+
+#    @classmethod
+#    def collect_results_for(cls,funcname,results):
+#        if funcname == "relate_all":
+#            # results will be an array of NT files. Combine them into
+#            # one big NT file, submit it to sesame, and store it as a
+#            # NT file. Things to find out: the sesame server location
+#            # the context URI the name of the NT file
+#            for f in results:
+#                pass
+#        else:
+#            pass # nothin' to do
 
     @classmethod
     def initialize_config(cls,options):
@@ -243,6 +326,9 @@ class DocumentRepository(object):
         # exception is if you wish to save some sort of state
         # (eg. "last-processed-id-number") in the config file.
         config = DocumentRepository.merge_dict_recursive(dict(configfile), options)
+        if cls.module_dir not in config:
+            config[cls.module_dir] = {}
+
         moduleconfig = config[cls.module_dir]
         return (configfile,config,moduleconfig)
     
@@ -250,6 +336,11 @@ class DocumentRepository(object):
     def basefile_from_path(cls,path):
         seg = os.path.splitext(path)[0].split(os.sep)
         return "/".join(seg[seg.index(cls.module_dir)+2:])
+
+    @classmethod
+    def context(cls):
+        """Return the context URI under which RDF statements should be stored."""
+        return "http://example.org/ctx/%s" % (cls.module_dir)
 
     @staticmethod
     def merge_dict_recursive(base,other):
@@ -262,8 +353,12 @@ class DocumentRepository(object):
                 base[key] = value
         return base
 
+
     def __init__(self,options):
         (self.configfile,self.config,self.moduleconfig) = self.initialize_config(options)
+        # If we have a particular log level for this method, use that,
+        # otherwise use the global log level. If that isn't defined
+        # either, use the INFO loglevel.
         if 'log' in self.moduleconfig:
             loglevel = self.moduleconfig['log']
         else:
@@ -275,37 +370,21 @@ class DocumentRepository(object):
         self.browser = Browser()
         self.browser.addheaders = [('User-agent', 'lagen.nu-bot (staffan@lagen.nu)')]
 
-    def download_everything(self,cache=False):
-        log.error("You need to implement download_everything in your subclass")
+        self.ns = {'rinfo':  Namespace(Util.ns['rinfo']),
+                   'rinfoex':Namespace(Util.ns['rinfoex']),
+                   'dct':    Namespace(Util.ns['dct'])}
 
-    def download_new(self):
-        self.download_everything(cache=True)
+    def canonical_uri(self,basefile):
+        """return the canonical URI for this particular document/resource."""
+        # Note that there might not be a 1:1 mappning between
+        # documents and URIs -- don't know what we should do in those
+        # cases.
+        #
+        # It might also be impossible to provide the canonical_uri
+        # without actually parse()ing the document
+        return "http://example.org/res/%s/%s" % (self.module_dir, basefile)
 
-    def download_single(self,basefile,cache=False):
-        url = self.document_url % basefile
-        filename = self.downloaded_path(basefile)
-        if not cache or not os.path.exists(filename):
-            self.download_if_needed(url,filename)
-
-    def download_if_needed(self,url,filename):
-        # FIXME: Check the timestamp of filename (if it exists), and
-        # do a if-modified-since request.
-        tmpfile = mktemp()
-        self.log.info("Retrieving %s to %s" % (url,filename))
-        self.browser.retrieve(url,tmpfile)
-        Util.replace_if_different(tmpfile,filename)
-
-    def downloaded_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'downloaded', '%s.html' % basefile))
-
-    def parsed_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'parsed', '%s.xht2' % basefile))
-
-    def generated_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
-
- 
-    def getlogger(self,name):
+    def get_logger(self,name):
         """Create an additional logger (which can be turned on or off
         in the config file) for debug messages in particular areas of
         the code"""
@@ -329,18 +408,133 @@ class DocumentRepository(object):
         if l.handlers == []:
             h = logging.StreamHandler()
             h.setLevel(loglevel)
-            h.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+            h.setFormatter(logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s",
+                                             datefmt="%Y-%m-%d %H:%M:%S"))
             l.addHandler(h)
         l.setLevel(loglevel)
         return l
 
+    def store_triple(self,subj,pred,obj):
+        # store this changelog under a different context than the
+        # actual content, since that gets blown away by relate_all
+        store = SesameStore(self.config['triplestore'],self.config['repository'],self.context()+"/modified")
+        store.add_triple((subj,pred,obj))
+        store.commit()
+        
+    
+    ################################################################
+    #
+    # STEP 1: Download documents from the web
+    #
+    ################################################################
+    def download_everything(self,cache=False):
+        log.error("You need to implement download_everything in your subclass")
+
+
+    def download_new(self):
+        self.download_everything(cache=True)
+
+
+    def download_single(self,basefile,cache=False):
+        url = self.document_url % basefile
+        filename = self.downloaded_path(basefile)
+        if not cache or not os.path.exists(filename):
+            if self.download_if_needed(url,filename):
+                # the downloaded file was updated (or created) --
+                # let's make a note of this in the RDF graph!
+                uri = self.canonical_uri(basefile)
+                self.store_triple(URIRef(uri), self.ns['dct']['modified'], Literal(datetime.now()))
+            else:
+                self.log.info("Don't need to store info about %s" % basefile)
+
+
+    def download_if_needed(self,url,filename):
+        # FIXME: Check the timestamp of filename (if it exists), and
+        # do a if-modified-since request.
+        tmpfile = mktemp()
+        self.log.info("Retrieving %s to %s" % (url,filename))
+        self.browser.retrieve(url,tmpfile)
+        return Util.replace_if_different(tmpfile,filename)
+
+
+    def downloaded_path(self,basefile):
+        return os.path.sep.join((self.base_dir, self.module_dir, u'downloaded', '%s.html' % basefile))
+
+
+    ################################################################
+    #
+    # STEP 2: Parse the downloaded data into a structured XML document
+    # with RDFa metadata.
+    #
+    ################################################################
+    
+    # The boilerplate code for handling exceptions and logging time
+    # duration might be extracted to decorator functions (generate
+    # uses the same boilerplate code, as might other functions). Maybe
+    # even the parce_force handling?
+    def parse(self,basefile):
+        """Takes the raw data downloaded by the download functions and
+        parses it into a structured XML document with RDFa sprinkled
+        throughout. It will also save the same RDF statements in a
+        separate RDF/XML file.
+
+        You will need to provide your own parsing logic, but often
+        it's easier to just override parse_from_soup (assuming your
+        indata is in a HTML format parseable by BeautifulSoup)."""
+        try:
+            start = time()
+            infile = self.downloaded_path(basefile)
+            outfile = self.parsed_path(basefile)
+            force = ('parse_force' in self.moduleconfig and
+                     self.moduleconfig['parse_force'] == 'True')
+            if not force and Util.outfile_is_newer([infile],outfile):
+                self.log.debug(u"%s: Överhoppad", basefile)
+                return
+            self.log.debug(u"%s: Starting", basefile)
+
+            # the actual function code
+            soup = self.soup_from_basefile(basefile)
+            doc = self.parse_from_soup(soup)
+            self.render_xhtml(self.genshi_tempate, doc,
+                              self.parsed_path(basefile), globals())
+
+            # Check to see that all metadata contained in doc.meta is present in the serialized file
+            distilled_graph = self.extract_rdfa(outfile)
+            distilled_file = self.distilled_path(basefile)
+            Util.ensureDir(distilled_file)
+            distilled_graph.serialize(distilled_file,format="rdf/xml", encoding="utf-8")
+            for triple in distilled_graph:
+                doc['meta'].remove(triple)
+
+            if doc['meta']:
+                self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file (possibly due to incorrect language tags or typed literals)" % len(doc['meta']))
+                # print unicode(doc['meta'].serialize(format="nt", encoding="utf-8"), "utf-8")
+
+            self.log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+
+        except KeyboardInterrupt:
+            raise
+        except:
+            self.log.exception("parse of %s failed" % basefile)
+            if 'fatalexceptions' in self.config:
+                raise
+
     def soup_from_basefile(self,basefile,encoding='iso-8859-1'):
+        """Helper function."""
         filename = self.downloaded_path(basefile)
         return BeautifulSoup.BeautifulSoup(
             codecs.open(filename,encoding=encoding,errors='replace').read(),
             convertEntities='html')
 
+    def parse_from_soup(self,soup):
+        """Returns a dict with the keys meta, body, uri and lang"""
+        return {'doc':{},
+                'meta':{},
+                'uri':self.canonical_uri()}
+    
     def render_xhtml(self,template,doc,outfile,globals):
+        """Serializes the parsed object structure into a XML file with
+        RDFa attributes, by using Genshi with a suitable template."""
         # only look in cwd and this file's directory
         loader = TemplateLoader(['.' , os.path.dirname(__file__)],
                                 variable_lookup='lenient') 
@@ -365,45 +559,67 @@ class DocumentRepository(object):
             self.log.error(u'templatefel \'%s\'' % (msg[:80]))
         return res
 
-    # The boilerplate code for handling exceptions and logging time
-    # duration might be extracted to decorator functions (generate
-    # uses the same boilerplate code, as might other functions). Maybe
-    # even the parce_force handling?
-    def parse(self,basefile):
-        try:
-            start = time()
-            infile = self.downloaded_path(basefile)
-            outfile = self.parsed_path(basefile)
-            force = ('parse_force' in self.moduleconfig and
-                     self.moduleconfig['parse_force'] == 'True')
-            if not force and Util.outfile_is_newer([infile],outfile):
-                self.log.debug(u"%s: Överhoppad", basefile)
-                return
-            self.log.debug(u"%s: Starting", basefile)
 
-            # the actual function code
-            soup = self.soup_from_basefile(basefile)
-            doc = self.parse_from_soup(soup)
-            self.render_xhtml(self.genshi_tempate, doc,
-                              self.parsed_path(basefile), globals())
+    def parsed_path(self,basefile):
+        return os.path.sep.join((self.base_dir, self.module_dir, u'parsed', '%s.xhtml' % basefile))
 
-            self.log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
-        except KeyboardInterrupt:
-            raise
-        except:
-            self.log.exception("parse of %s failed" % basefile)
+    def distilled_path(self,basefile):
+        return os.path.sep.join((self.base_dir, self.module_dir, u'distilled', '%s.rdf' % basefile))
 
-    
-    def prep_annotation_file(self, basefile):
-        return None
+    ################################################################
+    #
+    # STEP 3: Extract and store the RDF data
+    #
+    ################################################################
+
+    def relate(self,basefile):
+        """Insert the (previously distilled) RDF statements into the triple store"""
+        self.log.debug("About to add %s to triple store" % self.distilled_path(basefile))
+        data = open(self.distilled_path(basefile)).read()
+        store = SesameStore(self.config['triplestore'],self.config['repository'],self.context())
+        store.add_serialized(data,format="xml")
         
+
+
+    def extract_rdfa(self,filename):
+        """Helper function to extract RDF data from any XML document
+        containing RDFa attributes. Returns a RDFlib graph of the
+        triples found."""
+        dom  = xml.dom.minidom.parse(filename)
+        o = pyRdfa.Options(space_preserve=False)
+        o.warning_graph = None
+        g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
+        # clean up whitespace for Literals
+        #for tup in g:
+        #    (o,p,s) = tup
+        #    if isinstance(s,Literal):
+        #        g.remove(tup)
+        #        l = Literal(u' '.join(s.split()), lang=s.language, datatype=s.datatype)
+        #        g.add((o,p,l))
+        return g
+        
+
+    ################################################################
+    #
+    # STEP 4: Generate browser-ready HTML with navigation panels,
+    # information about related documents and so on.
+    #
+    ################################################################
+
     def generate(self,basefile):
+        """Generate a browser-ready HTML file from the structured XML
+        file constructed by parse. The generation is done by XSLT, and
+        normally you won't need to override this, but you might want
+        to provide your own xslt file and set self.xslt_template to
+        the name of that file. If you want to generate your
+        browser-ready HTML by any other means than XSLT, you should
+        override this method."""
         try:
             start = time()
             infile = self.parsed_path(basefile)
             outfile = self.generated_path(basefile)
             force = ('generate_force' in self.moduleconfig and
-                     self.moduleconfig['generate_force'] == 'True')
+                    self.moduleconfig['generate_force'] == 'True')
             if not force and Util.outfile_is_newer([infile],outfile):
                 self.log.debug(u"%s: Överhoppad", basefile)
                 return
@@ -427,257 +643,188 @@ class DocumentRepository(object):
         except:
             self.log.exception("parse of %s failed" % basefile)
             
-    def relate(self,basefile):
-        infile = self.parsed_path(basefile)
-        graph = self.extract_rdfa(infile)
-        outfile = mktemp()
-        fp = open(outfile,"w")
-        fp.write(graph.serialize(format="nt"))
-        fp.close()
-        print "returning %s for %s" % (outfile,basefile)
-        return outfile
 
-    def extract_rdfa(self,filename):
-        dom  = xml.dom.minidom.parse(filename)
-        o = pyRdfa.Options()
-        o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
-        # clean up whitespace for Literals
-        for tup in g:
-            (o,p,s) = tup
-            if isinstance(s,Literal):
-                g.remove(tup)
-                l = Literal(u' '.join(s.split()), lang=s.language)
-                g.add((o,p,l))
-        return g
+    def prep_annotation_file(self, basefile):
+        """Helper function used by generate -- prepares a RDF/XML file
+        containing statements that in some way annotates the
+        information found in the document that generate handles, like
+        URI/title of other documents that refers to this one."""
+        return None
 
+
+    def generated_path(self,basefile):
+        return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
+
+    ################################################################
+    #
+    # STEP 5: Generate HTML pages for a TOC of a all documents, news
+    # pages of new/updated documents, and other odds'n ends.
+    #
+    ################################################################
 
     def toc(self):
-        # Generalized algorithm for creating TOC pages
-        #
-        # Step 1: find out what criteria(s) we should create pages from, ex:
-        #  - By Title (dct:title, rdfs:label or a similar pred)
-        #  - By Year (dct:published or some other date pred)
-        #  - By Court (rinfo:rattsfallspublikation)
-        #  - By Area (rinfoex:rattsomrade) - might be around 40 areas
-        #
-        # return a list of tuples (displaytitle, predicate, selector_function)
-        # example ("Efter titel", dct:title, first_letter)
-        #  
-        # Step 2: For each criteria:
-        #  - find out pages we should create, eg ("a","b","c",...), (2009,2008,2007,...)
-        #  - by doing some sort of SPARQL query
-        #  - return a list of tuples (pagename, pagetitle) example:
-        #      (("a", "Lagar som börjar på 'A'"))
-        #
-        # Step 3: From the data collected in step 1 and 2, create a
-        # data struct that can generate the TOC page index to the left
-        # (together with toc.template.xht2)
-        #
-        # Step 4: For each page (returned in step 2):
-        #  - create the page
-        
-        # final: Create a index.html (or copy some existing page to it
+        """Creates a set of pages that together acts as a table of
+        contents for all documents in the repository. For smaller
+        repositories a single page might be enough, but for
+        repositoriees with a few hundred documents or more, there will
+        usually be one page for all documents starting with A,
+        starting with B, and so on. There might be different ways of
+        browseing/drilling down, i.e. both by title, publication year,
+        keyword and so on.
+
+        Normally you don't have to overide toc to get better control
+        over TOC page generation -- override toc_navigation and
+        toc_page instead."""
+        nav = self.toc_navigation()
+        used_nav = []
+        for section in nav:
+            used_criteria = []
+            criteria_type = section[0]
+            criteria = section[1:]
+            for criterium in criteria:
+                lines = self.toc_style(criteria_type, criterium)
+                title = self.toc_title(criteria_type,criterium)
+                if lines != False:
+                    used_critera.append([criteria,lines,title])
+            if used_criteria:
+                used_nav.append(used_criteria)
+
+
+        # OK, used_nav now contains good stuff. Now to instansiate it!
+        for section in used_criteria:
+            for criterium in section:
+                # Step 1 is to serialize our stuff into the simplest
+                # XHTML that could possibly work (one section that
+                # contains the entire 2-level navigation structure, one
+                # that contains all documents for a particular
+                # type and criteria
+                tmpfile = mktemp()
+                page = toc_page(section, criterium)
+                self.render_xhtml('genshi/toc.xhtml',None,tmpfile,{nav:used_nav,
+                                                                   page:page})
+
+                # Step 2 is to create a browser-ready HTML file from
+                # that XHTML.
+                outfile = "%s/generated/index/%s.html" % self.module_dir, criterium
+                Util.transform('xsl/toc.xsl',tmpfile, outfile)
+
+        return "AWESOME!"
+
+
+    # The default implementation will find the title of each resource
+    # that has the relevant rdf:type (self.rdf_type)
+    #
+    # You might want to do a SPARQL query to find out possible values
+    # for criteria, but it's probably easier if you enumerate all of
+    # them, and let toc_page return False when there are no hits.
+    def toc_navigation(self):
+        """Returns a list of lists, where the first element in each list is
+        the name or description of a certain selection criterium, and the
+        remaining elements are instances of that criterium, e.g.
+        (('By title', 'A','B','C'...)"""
+        return (('Efter titel','A','B','C','D','E','F','G','H','I'),
+                ('Efter år',2009,2008,2007,2006))
+
+
+    # this might be called as .tocpage('Efter titel', 'A'), or
+    # .tocpage('Högsta domstolen', '2009')
+    #
+    # You probably want to do a SPARQL query, then filter/massage the
+    # results somewhat as you create your list of dicts.
+    def toc_page(self, criterium_type, criterium):
+        """Returns a list of dict, where each dict represents one
+        document. The two required fields are 'uri', which is the
+        (relative) uri of the document, and 'title' is the display
+        title of the document (the text of which will be linked). You
+        can also provide the optional 'leader' and 'trailer' fields,
+        which contains text that will be presented before and after
+        the linked title, respectively.
+
+        If you return a empty list, the criterium appears in the
+        navigation list. If you return False, it's removed. That way,
+        you can easily make your tocnavigation return every possible
+        value (e.g. all years from 2009 to 1600), and still have a
+        compact navigation list as unused criteria gets removed."""
+
+        return ({'uri':'/publ/sfs/1995:1331',
+                 'title':'Oskäliga avtalsvillkor',
+                 'leader':'Lag (1995:1331) om '})
+
+
+    # is called just like tocpage, but only returns a string
+    def toc_title(self, section, idx):
+        return "Dokument som börjar på %s" % idx
+
+    # called with the lines from tocpage to provide a HTML blob. Is
+    # that really a good idea?
+    def toc_style(self,lines):
+        """A formatting function for displaying the list of documents
+        on an individual page. The default implementation styles them
+        as a simple unordered list (toc_style_list), but you can
+        choose from other formatters (toc_style_table,
+        toc_style_multicol) or implement your own."""
+        return self.tocstyle_list(lines)
+
+
+    def toc_style_list(self,lines):
+        """Styles the list of documents as a simple unordered HTML list."""
         pass
-        
 
-    # this is crap old code. we want to replace it with crap shiny new code!
-    def index(self):
-        rdffile = Util.relpath("%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir))
-        if not os.path.exists(rdffile):
-            log.warning("Could not find RDF dump %s" % rdffile)
-            return
-        log.info("Start RDF loading from %s" % rdffile)
-        # Ladda över alla triples i två stora dicts (nycklade på
-        # predikat + objekt respektive subjekt + predikat -- det
-        # verkar vara de två strukturerna vi behöver för att skapa
-        # alla filer vi behöver)
-        by_pred_obj = defaultdict(lambda:defaultdict(list))
-        by_subj_pred = defaultdict(dict)
-        start = time()
 
-        use_rdflib = False # tar för mycket tid+processor
-        if use_rdflib:
-            g = Graph()
-            g.load(rdffile, format="nt")
+    def toc_style_table(self,lines):
+        """Styles the list of documents as a table, one row per
+        element, and a column for eacch field."""
+        pass
 
-            log.info("RDF loaded (%.3f sec)", time()-start)
-            for (subj,pred,obj) in g:
-                # most of the triples are dct:references, and these
-                # are not used for tocpage generation - filter these
-                # out to cut down on memory usage
-                subj = unicode(subj)
-                pred = unicode(pred)
-                obj  = unicode(obj)
-                if pred != self.DCT['references']:
-                    by_pred_obj[pred][obj].append(subj)
-                    by_subj_pred[subj][pred] = obj
-        else:
-            fp = open(rdffile)
-            count = 0
-            for qline in fp:
-                line = ntriple_unquote(qline)
-                count += 1
-                if count % 10000 == 0:
-                    sys.stdout.write(".")
-                m = self.re_ntriple.match(line)
-                if m:
-                    subj = m.group(1)
-                    pred = m.group(2)
-                    objUri = m.group(4)
-                    objLiteral = m.group(5)
-                    # most of the triples are dct:references, and these
-                    # are not used for tocpage generation - filter these
-                    # out to cut down on memory usage
-                    if pred != 'http://purl.org/dc/terms/references':
-                        if objLiteral:
-                            by_pred_obj[pred][objLiteral].append(subj)
-                            by_subj_pred[subj][pred] = objLiteral
-                        elif objUri:
-                            by_pred_obj[pred][objUri].append(subj)
-                            by_subj_pred[subj][pred] = objUri
-                        else:
-                            pass
-                else:
-                    log.warning("Couldn't parse line %s" % line)
-        sys.stdout.write("\n")
-    
-        log.info("RDF structured (%.3f sec)", time()-start)
-        self.build_tocpages(by_pred_obj, by_subj_pred)
 
-    def build_tocpages(self,by_pred_obj, by_subj_pred):
-        displaypredicates = {'http://purl.org/dc/terms/title':
-                             u'titel',
-                             'http://purl.org/dc/terms/identifier':
-                             u'identifierare',
-                             'http://www.w3.org/2000/01/rdf-schema#label':
-                             u'beteckning'}
-        
-        documents = defaultdict(lambda:defaultdict(list))
-        pagetitles = {} # used for title on a specific page
-        pagelabels = {} # used for link label in the navigation 
-        for predicate in by_pred_obj.keys():
-            if predicate in displaypredicates.keys():
-                # shorten
-                # 'http://purl.org/dc/terms/title' to
-                # 'dct-title' etc for usage in filenames
-                pred_id = predicate
-                for (k,v) in Util.ns.items():
-                    pred_id = pred_id.replace(v,k+"-")
-                pred_label = "Ordnade efter %s" % displaypredicates[predicate]
+    def toc_style_multicol(self,lines,columns):
+        """Styles the list of documents as a series of columns
+        (implemented as a HTML table)."""
+        pass
 
-                log.info("creating toc pages ordered by %s" % pred_id)
-                # generate a list of all lowercase letters using the unicode db
-                letters = [unichr(i) for i in range(255) if unicodedata.category(unichr(i)) == 'Ll']
-                for letter in letters:
-                    pageid = "%s-%s" % (pred_id, letter)
 
-                    pagetitles[pageid] = u"Dokument vars %s börjar på '%s'" % (displaypredicates[predicate], letter)
-                    pagelabels[pageid] = letter.upper()
-                    for obj in by_pred_obj[predicate]:
-                        if obj.lower().startswith(letter):
-                            for subject in by_pred_obj[predicate][obj]:
-                                # normally, the title of a document is
-                                # unique and thus there will only be a
-                                # single subject with this particular
-                                # object, but in some special cases
-                                # different documents can have the
-                                # same title
-                                documents[pred_label][pageid].append({'uri':subject,
-                                                                      'sortkey':obj,
-                                                                      'title':obj})
-
-        for category in documents.keys():
-            for pageid in documents[category].keys():
-                outfile = Util.relpath("%s/%s/generated/toc/%s.html" % (self.baseDir, self.moduleDir, pageid))
-                title = pagetitles[pageid]
-                self.render_tocpage(outfile,title,documents,pagelabels,category,pageid)
-                if pageid.endswith("-a"):
-                    outfile = Util.relpath("%s/%s/generated/toc/index.html" % (self.baseDir, self.moduleDir))
-                    self.render_tocpage(outfile,title,documents,pagelabels,category,pageid)
-                    
-
-    def render_tocpage(self,outfile,title,documents,pagelabels,category,page,keyword=None,compactlisting=False, docsorter=cmp):
-        # only look in cwd and this file's directory
-        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
-                                variable_lookup='lenient') 
-        tmpl = loader.load("etc/tocpage.template.xht2")
-
-        stream = tmpl.generate(title=title,
-                               documents=documents,
-                               pagelabels=pagelabels,
-                               currentcategory=category,
-                               currentpage=page,
-                               currentkeyword=keyword,
-                               compactlisting=compactlisting,
-                               docsorter=docsorter)
-
-        tmpfilename = outfile.replace(".html",".xht2")
-        Util.ensureDir(tmpfilename)
-        fp = open(tmpfilename,"w")
-        fp.write(stream.render())
-        fp.close()
-        Util.ensureDir(outfile)
-        Util.transform("xsl/static.xsl", tmpfilename, outfile, validate=False)
-        log.info("rendered %s" % outfile)
-        
     def news(self):
-        """Creates one or more pages containing updated and new documents for the datasource"""
-        startdate = datetime.datetime.now() - datetime.timedelta(30)
-        logfilename = "%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir)
-        if not os.path.exists(logfilename):
-            log.warning("Could not find download log %s" % logfilename)
-            return 
-        logfp = codecs.open(logfilename, encoding = "utf-8")
-        entries = []
-        for line in logfp:
-            (timestr, message) = line.strip().split(": ", 1)
-            timestamp = datetime.datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S")
-            if timestamp > startdate:
-                entries.append([timestamp,message])
-        entries.reverse()
-        self.build_newspages(entries)
+        """Creates a set of pages where each page contains a list of
+        new/updated documents. Each page gets created in HTML and Atom
+        formats. To control the set of pages, see news_selections."""
+        for selection in self.news_selections():
+            result = self.news_selection(selection,some_cutoff_date)
+            tmpfile = mktemp()
+            self.render_xhtml('genshi/news.xhtml',None,tmpfile,{title:selection,
+                                                                entries:result})
+            Util.transform('xsl/news.xsl',tmpfile,outfile)
+            self.render_atom('genshi/news.atom')
 
-    def build_newspages(self,messages):
-        entries = []
-        for (timestamp,message) in messages:
-            entry = {'title':message,
-                     'timestamp':timestamp}
-            entries.append(entry)
-        htmlfile = "%s/%s/generated/news/index.html" % (self.baseDir, self.moduleDir)
-        atomfile = "%s/%s/generated/news/index.atom" % (self.baseDir, self.moduleDir)
-        self.render_newspage(htmlfile, atomfile, u'Nyheter', 'Nyheter de senaste 30 dagarna', entries)
 
-    def render_newspage(self,htmlfile,atomfile,title,subtitle,entries):
-        # only look in cwd and this file's directory
-        loader = TemplateLoader(['.' , os.path.dirname(__file__)], 
-                                variable_lookup='lenient') 
-        tmpl = loader.load("etc/newspage.template.xht2")
-        stream = tmpl.generate(title=title,
-                               entries=entries)
-        # tmpfilename = mktemp()
-        tmpfilename = htmlfile.replace(".html",".xht2")
-        assert(tmpfilename != htmlfile)
-        Util.ensureDir(tmpfilename)
-        fp = open(tmpfilename,"w")
-        fp.write(stream.render())
-        fp.close()
-        Util.ensureDir(htmlfile)
-        Util.transform("xsl/static.xsl", tmpfilename, htmlfile, validate=False)
-        
-        tmpl = loader.load("etc/newspage.template.atom")
-        stream = tmpl.generate(title=title,
-                               subtitle=subtitle,
-                               entries=entries,
-                               feeduri=u'https://lagen.nu/%s' % atomfile,
-                               pageuri=u'https://lagen.nu/%s' % htmlfile)
-                               
-        tmpfilename = mktemp()
-        fp = open(tmpfilename,"w")
-        fp.write(stream.render())
-        fp.close()
-        Util.ensureDir(atomfile)
-        Util.replace_if_different(tmpfilename, atomfile)
+    def news_selections(self):
+        """Returns a list of news page titles. Each one will be used
+        as an argument to news_selection."""
+        return ("Nya och ändrade dokument")
 
-        log.info("rendered %s (%s)" % (htmlfile, atomfile))
 
+    def news_selection(self, selection_name, cutoff_date):
+        """Returns a list of news entries for a particular news page."""
+        if selection_name == "Nya och ändrade dokument":
+            return ({'title': 'Lag (2009:123) om blahonga',
+                     'date': '2009-11-27',
+                     'uri':'urn:lex:sv:sfs:2009:123',
+                     'body':'<p>A typical text with some <b>HTML</b> and <a href="urn:lex:sfs:2009:123">canonical linkz</a></p>',
+                     'readmore':'Författningstext'})
+    
+
+    def frontpage_content(self, primary=False):
+        """If the module wants to provide any particular content on
+        the frontpage, it can do so by returning a XHTML fragment (in
+        text form) here. If primary is true, the caller wants the
+        module to take primary responsibility for the frontpage
+        content. If primary is false, the caller only expects a
+        smaller amount of content (like a smaller presentation of the
+        repository and the document it contains)."""
+        return "<div><h2>Module %s</h2><p>Handles %s documents</p></div>" % (module_dir, rdf_type)
+
+
+    def tabs(self,primary=False):
+        """returns a list of tuples, where each tuple will be rendered
+        as a tab in the main UI. Normally, a module will only return a
+        single tab."""
+        return ([rdf_type,module_dir])
