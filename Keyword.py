@@ -350,6 +350,7 @@ class KeywordManager(LegalSource.Manager):
         out.write(parsed)
         out.close()
         Util.replace_if_different(tmpfile,outfile)
+        os.utime(outfile,None)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
 
