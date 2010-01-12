@@ -115,7 +115,7 @@ class LegalRef:
 
     
     # re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K(\d+)|)(P(\d+)|)(S(\d+)|)(N(\d+)|)')
-    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\. |N|)?\d+( s\.\d+|))#?(K([a-z0-9]+)|)(P([a-z0-9]+)|)(S(\d+)|)(N(\d+)|)')
+    re_urisegments = re.compile(r'([\w]+://[^/]+/[^\d]*)(\d+:(bih\.[_ ]|N|)?\d+([_ ]s\.\d+|))#?(K([a-z0-9]+)|)(P([a-z0-9]+)|)(S(\d+)|)(N(\d+)|)')
     re_escape_compound = re.compile(r'\b(\w+-) (och) (\w+-?)(lagen|förordningen)\b', re.UNICODE)
     re_escape_named = re.compile(r'\B(lagens?|balkens?|förordningens?|formens?|ordningens?|kungörelsens?|stadgans?)\b', re.UNICODE)
 
@@ -188,6 +188,11 @@ class LegalRef:
             for p in productions:
                 self.uriformatter[p] = self.rattsfall_format_uri
             self.roots.append("rattsfallref")
+        if self.EGRATTSFALL in args:
+            productions = self.load_ebnf(scriptdir+"/etc/egratt.ebnf")
+            for p in productions:
+                self.uriformatter[p] = self.egrattsfall_format_uri
+            self.roots.append("ecjcaseref")
 
         self.decl += "root ::= (%s/plain)+\n" % "/".join(self.roots)
         # pprint(productions)
@@ -264,14 +269,18 @@ class LegalRef:
             # print repr(fixedindata)
 
             # fixedindata = fixedindata.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\u2019',"'").replace(u'\x96','--').encode(SP_CHARSET)
+            fixedindata = fixedindata.replace(u'\u2011','-') 
             fixedindata = fixedindata.replace(u'\u2013','--')
             fixedindata = fixedindata.replace(u'\u2014','---')
+            fixedindata = fixedindata.replace(u'\u2018','\'')
+            fixedindata = fixedindata.replace(u'\u2019','\'')
             fixedindata = fixedindata.replace(u'\u2022',u'·')
             fixedindata = fixedindata.replace(u'\u201d', '"')
             fixedindata = fixedindata.replace(u'\u2026', '...')
+            fixedindata = fixedindata.replace(u'\u2500','--')
             fixedindata = fixedindata.replace(u'\x96','--')
+            fixedindata = fixedindata.replace(u'\u0160',' ')
             fixedindata = fixedindata.encode(SP_CHARSET)
-            
 
         # Parsea texten med TextTools.tag - inte det enklaste sättet
         # att göra det, men om man gör enligt
@@ -467,6 +476,7 @@ class LegalRef:
             # If something else went wrong, just return the plaintext
             log.warning("(unknown): Unable to format link for text %s (production %s)" % (part.text, part.tag))
             return part.text
+        
         if self.verbose: print (". "*self.depth)+ "format_generic_link: uri is %s" % uri
         if not uri:
             # the formatting function decided not to return a URI for
@@ -1053,6 +1063,28 @@ class LegalRef:
 
         return res
 
+    ################################################################
+    # KOD FÖR EGRÄTTSFALL
+    def egrattsfall_format_uri(self,attributes):
+        descriptormap = {'C':'J', # Court of justice Judgement
+                         'T':'A', # Court of first instance Judgement
+                         'F':'K', # Order of the Civil Service Tribunal (First Chamber) 
+                         }
+        # FIXME: Change this before the year 2054 (as ECJ will
+        # hopefully have fixed their case numbering by then)
+        if len(attributes['year']) == 2:
+            if int(attributes['year']) < 54:
+                year = "20"+attributes['year']
+            else:
+                year = "19"+attributes['year']
+        else:
+            year = attributes['year']
+
+        serial = '%04d' % int(attributes['serial'])
+        descriptor = descriptormap[attributes['decision']]
+        uri = "http://lagen.nu/ext/celex/6%s%s%s" % (year, descriptor, serial)
+        return uri
+        
 from FilebasedTester import FilebasedTester
 class TestLegalRef(FilebasedTester):
 
@@ -1066,6 +1098,9 @@ class TestLegalRef(FilebasedTester):
                                           'testext':'.txt'},
                   'ParseRattsfall': {'dir': u'test/LegalRef/DV',
                                      'testext':'.txt'},
+                  'ParseECJ': {'dir': u'test/LegalRef/ECJ',
+                               'testext':'.txt',
+                               'testencoding':'utf-8'},
                   }
 
         
@@ -1089,6 +1124,10 @@ class TestLegalRef(FilebasedTester):
         p = LegalRef(LegalRef.RATTSFALL)
         return self.__test_parser(data,p)
 
+    def TestParseECJ(self,data):
+        p = LegalRef(LegalRef.EGRATTSFALL)
+        return self.__test_parser(data,p)
+    
     def __test_parser(self,data,p):
         p.verbose = False # FIXME: How to set this from FilebasedTester if wanted?
         # p.verbose = True
@@ -1135,6 +1174,9 @@ class TestLegalRef(FilebasedTester):
     # test/LegalRef/SFS\sfs-tricky-vvfs.txt
 
 if __name__ == "__main__":
+    import logging.config
+    logging.config.fileConfig('etc/log.conf')
+
     if sys.platform == 'win32':
         if sys.stdout.encoding:
             defaultencoding = sys.stdout.encoding
