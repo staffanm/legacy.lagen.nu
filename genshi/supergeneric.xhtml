@@ -28,7 +28,7 @@
 	--></py:for>
     </p>
 
-    <div py:def="render_compound(c,depth=0)">
+    <div py:def="render_compound(c,depth=0)" py:attrs="c.attrs">
       <!-- ${part.__class__.__name__ } -->
       <!--! if c.ordinal is defined, do something with that -->
       <!--! if c.id is defined, set either @id or @about (or both?) -->

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- note: this is a XHTML1 template -->
 <xsl:stylesheet version="1.0"
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -7,7 +8,6 @@
 		xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
 		xmlns:rinfoex="http://lagen.nu/terms#"
 		>
-
   <xsl:import href="uri.xsl"/>
   <xsl:include href="base1.xsl"/>
 
@@ -16,8 +16,6 @@
       <xsl:apply-templates/>
     </not_really_html>
   </xsl:template>
-  
-
   
   <!-- Implementationer av templates som anropas från base.xsl -->
   <xsl:template name="headtitle">

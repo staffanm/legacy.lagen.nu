@@ -374,9 +374,9 @@ class Manager:
             findcmd = 'find'
         
         if os.path.exists(lastpublish):
-            cmd = '%s %s -type f -cnewer %s > %s' % (findcmd, self.baseDir, lastpublish, publish)
+            cmd = '%s %s -type f -cnewer %s > %s' % (findcmd, Util.relpath(self.baseDir), lastpublish, publish)
         else:
-            cmd = '%s %s > %s' % (findcmd, self.baseDir, publish)
+            cmd = '%s %s > %s' % (findcmd, Util.relpath(self.baseDir), publish)
         # print "command is '%s'" % cmd
         (ret, stdout, stderr) = Util.runcmd(cmd)
         numlines=0

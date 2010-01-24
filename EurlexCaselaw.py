@@ -143,19 +143,28 @@ class EurlexCaselaw(DocumentRepository):
         # :casereporter - the last p, contains an <em> tag
         title_paras = soup.find("h2").findNextSiblings("p")
         for para in title_paras:
+            # self.log.debug(u"Handling para %s" % para)
             if not 'courtdecision' in meta: # optional: do sanitychecks to see if this really is a :courtdecision
                 meta['courtdecision'] = para.string.strip()
+            # self.log.debug("  Filed as courtdecision")
             elif not 'party' in meta:
                 meta['party'] = para.string # split up if needed (if the string " v " occurs)
+                # self.log.debug("  Filed as party")
             elif (not 'referingcourt' in meta and para.string and
                   para.string.startswith("Reference for a preliminary ruling")):
                 meta['referingcourt'] = para.string
-            elif not 'legalissue' in meta:
-                meta['legalissue'] = para.string # split this up
-            elif not 'casenum' in meta:
+                # self.log.debug("  Filed as referingcourt")
+            elif (not 'casenum' in meta and para.string and
+                  (para.string.strip().lower().startswith("case ") or
+                   para.string.strip().lower().startswith("joined cases "))):
                 meta['casenum'] = para.string.strip() # optionally trim trailing characters?
+                # self.log.debug("  Filed as casenum")
             elif para.em:
                 meta['casereporter'] = ''.join(para.findAll(text=True)).strip()
+                # self.log.debug("  Filed as casereporter")
+            elif not 'legalissue' in meta:
+                meta['legalissue'] = para.string # split this up
+                # self.log.debug("  Filed as legalissue")
             pass
         
         # 2 Create canonical URI for our document (deliverable A) The

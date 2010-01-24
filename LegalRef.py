@@ -266,20 +266,30 @@ class LegalRef:
         # representeras i latin-1, exv u+2013 (endash) och u+2014
         # (emdash). Ibland får vi dessa i windows-1252-kodning (\x96)
         if isinstance(fixedindata,unicode):
-            # print repr(fixedindata)
-
-            # fixedindata = fixedindata.replace(u'\u2013','--').replace(u'\u2014','---').replace(u'\u2022',u'·').replace(u'\u201d', '"').replace(u'\u2019',"'").replace(u'\x96','--').encode(SP_CHARSET)
+            fixedindata = fixedindata.replace(u'\x96','--')
+            fixedindata = fixedindata.replace(u'\u0160',' ')
+            
             fixedindata = fixedindata.replace(u'\u2011','-') 
             fixedindata = fixedindata.replace(u'\u2013','--')
             fixedindata = fixedindata.replace(u'\u2014','---')
             fixedindata = fixedindata.replace(u'\u2018','\'')
             fixedindata = fixedindata.replace(u'\u2019','\'')
-            fixedindata = fixedindata.replace(u'\u2022',u'·')
+            fixedindata = fixedindata.replace(u'\u201c', '"')
             fixedindata = fixedindata.replace(u'\u201d', '"')
+            fixedindata = fixedindata.replace(u'\u2022',u'·')
             fixedindata = fixedindata.replace(u'\u2026', '...')
+            fixedindata = fixedindata.replace(u'\u2212', '-')
             fixedindata = fixedindata.replace(u'\u2500','--')
-            fixedindata = fixedindata.replace(u'\x96','--')
-            fixedindata = fixedindata.replace(u'\u0160',' ')
+            fixedindata = fixedindata.replace(u'\u03a6','[PHI]') # OK this is ridiculous
+            fixedindata = fixedindata.replace(u'\u0101','a')  
+            fixedindata = fixedindata.replace(u'\u0107','c')  
+            fixedindata = fixedindata.replace(u'\u010d','c')  
+            fixedindata = fixedindata.replace(u'\u0142','l')  
+            fixedindata = fixedindata.replace(u'\u0151','o')  
+            fixedindata = fixedindata.replace(u'\u0153','oe')  
+            fixedindata = fixedindata.replace(u'\u0161','s')  
+            fixedindata = fixedindata.replace(u'\u016b','u')  
+            fixedindata = fixedindata.replace(u'\u2193','v')  
             fixedindata = fixedindata.encode(SP_CHARSET)
 
         # Parsea texten med TextTools.tag - inte det enklaste sättet

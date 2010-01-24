@@ -38,6 +38,7 @@ __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 
 class IDStructure(object):
     id = None
+    attrs = None
 
 class Body(CompoundStructure, IDStructure): pass 
 class Paragraph(CompoundStructure, IDStructure): pass
@@ -48,12 +49,16 @@ class Chapter(CompoundStructure, IDStructure, OrdinalStructure): pass
 class Section(CompoundStructure, IDStructure, OrdinalStructure): pass
 class Article(CompoundStructure, IDStructure, OrdinalStructure):
     fragment_label = "A"
+    rdftype = "eurlex:Article"
 class Subarticle(CompoundStructure, IDStructure, OrdinalStructure):
     fragment_label = "P"
+    rdftype = "eurlex:Subarticle"
 class UnorderedList(CompoundStructure, IDStructure): pass
-class ListItem(CompoundStructure, IDStructure): pass
-class OrderedList(CompoundStructure, IDStructure, OrdinalStructure):
+class OrderedList(CompoundStructure, IDStructure, OrdinalStructure): pass
+class ListItem(CompoundStructure, IDStructure): 
     fragment_label = "L"
+    rdftype = "eurlex:ListItem"
+
 
 DCT = Namespace(Util.ns['dct'])
 XSD = Namespace(Util.ns['xsd'])
@@ -68,7 +73,7 @@ class EurlexTreaties(DocumentRepository):
     genshi_tempate = "genshi/supergeneric.xhtml"
 
     # own class variables
-    vocab_url = "http://lagen.nu/eurlex#"
+    vocab_url = Util.ns['eurlex']
 
     def download_everything(self,cache=False):
         self.log.info("Hello")
@@ -115,12 +120,14 @@ class EurlexTreaties(DocumentRepository):
 
     def parse_from_soup(self,soup,basefile):
         g = Graph()
-        uri = 'http://example.org/'
         self.log.info("%s: Parsing" % basefile)
         if basefile == "teu":
+            # FIXME: Use a better base URI?
+            uri = 'http://rinfo.lagrummet.se/extern/celex/12008M'
             startnode = soup.findAll(text="-"*50)[1].parent
             g.add((URIRef(uri),DCT['title'],Literal("Treaty on European Union")))
         elif basefile == "tfeu":
+            uri = 'http://rinfo.lagrummet.se/extern/celex/12008E'
             startnode = soup.findAll(text="-"*50)[2].parent
             g.add((URIRef(uri),DCT['title'],Literal("Treaty on the Functioning of the European Union")))
 
@@ -364,26 +371,78 @@ class EurlexTreaties(DocumentRepository):
     # Post-process the document tree in a recursive fashion in order to:
     #
     # Find addressable units (resources that should have unique URI:s,
-    # e.g. articles and subarticles) and construct IDs for them, like "A7", "A25(b)(ii)" (or A25S1P2N2 or...?)
+    # e.g. articles and subarticles) and construct IDs for them, like
+    # "A7", "A25(b)(ii)" (or A25S1P2N2 or...?)
+    #
+    # How should we handle Articles themselves -- they have individual
+    # CELEX numbers and therefore URIs (but subarticles don't)?
+    
 
     def process_body(self, element, prefix, baseuri):
         if type(element) == unicode:
             return
-        counters = defaultdict(int)
         # print "Starting with "  + str(type(element))
+        counters = defaultdict(int)
         for p in element:
-            # print "handling " + str(type(p))
             counters[type(p)] += 1
-            if hasattr(p, 'fragment_label'):
+            # print "handling " + str(type(p))
+            if hasattr(p, 'fragment_label'): # this is an addressable resource
                 elementtype = p.fragment_label
-                elementordinal = counters[type(p)]
+                if hasattr(p,'ordinal'):
+                    elementordinal = p.ordinal
+                else:
+                    elementordinal = counters[type(p)]
+
                 fragment = "%s%s%s" % (prefix, elementtype, elementordinal)
+                if elementtype == "A":
+                    uri = "%s%03d" % (baseuri, elementordinal)
+                else:
+                    uri = "%s%s%s" % (baseuri, elementtype, elementordinal)
+
                 p.id = fragment
+                p.attrs = {'id':p.id,
+                           'about':uri,
+                           'typeof':p.rdftype}
+                if elementtype == "A":
+                    uri += "#"
             else:
                 fragment = prefix
+                uri = baseuri
+                
+            self.process_body(p,fragment,uri)
 
-            self.process_body(p,fragment,baseuri)
+    def prep_annotation_file(self,basefile):
+        # step 1: Find out all eurlex:Articles that are part of the
+        # current treaty (could be done through a simple regex match,
+        # if we don't want to mess with dct:isPartOf
 
+        # Step 2: Load all EurlexCaselaw documents into Whoosh (or
+        # maybe rather initiate a Whoosh database that was
+        # prepopulated by EurlexCaselaw.relate)
 
+        # Step 3: For each article URI, find out the text of it (probably
+        # by loading it into ElementTree and finding the node with the
+        # right @about attribute)
+
+        # Step 4: Perform a query with the article text against the
+        # Whoosh DB (with appropriate stemming and whatnot). Put the
+        # top 15 results as being in a ir:BM25NaiveResult with this
+        # article as object. This is our baseline.
+
+        # Step 5: Perform a query with the article text against the
+        # Whoosh DB, but filter cases so that only cases that
+        # explicitly refer to the article in question (or any of it's
+        # earlier incarnations) are selected. Put the top 15 results
+        # as being ir:BM25FilteredResult
+
+        # Step 6: Do whatever magic citation network analysis needed
+        # to get a relevance score based on internal citation
+        # patterns. Put the top 15 results as being
+        # ir:CitationInternalResult
+
+        # Step 7: Do a similar analysis, but use other citation
+        # datasets as well, appropriately weighed. Put the top 15
+        # results as being ir:CitationWeighedResult
+        
 if __name__ == "__main__":
     EurlexTreaties.run()
