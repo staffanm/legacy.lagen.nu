@@ -97,6 +97,7 @@ class FilebasedTester:
             encoding=self.testparams[method]['testencoding']
         else:
             encoding = 'iso-8859-1'
+
         if 'answerext' in self.testparams[method]:
             answerfile = testfile.replace(self.testparams[method]['testext'],
                                           self.testparams[method]['answerext'])

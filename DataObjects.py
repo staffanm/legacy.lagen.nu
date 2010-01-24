@@ -2,8 +2,9 @@
 # -*- coding: iso-8859-1 -*-
 """Several base datatypes that inherit from native types
 (unicode,list,dict, etc) or python defined types (datetime), but adds
-support for general properties. Once a class has been instansiated,
-you cannot add any more properties."""
+support for general properties. The properties are set when
+instansiated (in the constructor call, as named arguments). Once an
+object has been instansiated, you cannot add any more properties."""
 
 import datetime, re
 import xml.etree.cElementTree as ET
@@ -96,9 +97,6 @@ class CompoundStructure(AbstractStructure,list):
         object.__setattr__(obj,'__initialized',False)
         return obj
 
-#    def __init__(self, *args, **kwargs):
-#        super(CompoundStructure,self).__init__(*args, **kwargs)
-
 class MapStructure(AbstractStructure,dict):
     """En MapStructure är en anpassad map/dictionary"""
     def __new__(cls,arg={}, *args, **kwargs):
@@ -108,9 +106,6 @@ class MapStructure(AbstractStructure,dict):
         obj.update(arg)
         object.__setattr__(obj,'__initialized',False)
         return obj
-
-#    def __init__(self, *args, **kwargs):
-#        super(MapStructure,self).__init__(*args, **kwargs)
 
 # Abstrakta klasser avsedda att användas vid multipelt arv, som
 # lägger till vanliga egenskaper

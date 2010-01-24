@@ -10,8 +10,10 @@ import logging
 from time import time
 from tempfile import mktemp
 from urllib import quote
+from urllib2 import HTTPError
 import random
 from pprint import pprint
+import traceback
 # 3rdparty
 from configobj import ConfigObj
 from rdflib import Namespace
@@ -477,7 +479,7 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             store.bind(key, Namespace(value));
         store.add_graph(graph)
         store.commit()
-        log.info("Related %s: %d triples" % (basefile, triples))
+        log.debug("Related %s: %d triples" % (basefile, triples))
 
     def RelateAll(self,file=None):
         # we override LegalSource.RelateAll since we want a different
@@ -496,9 +498,39 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # below)
             return
 
+        c = 0
         for f in files:
             basefile = self._file_to_basefile(f)
-            self.Relate(basefile)
+            try: 
+                self.Relate(basefile)
+                c += 1
+                if c % 100 == 0:
+                    log.info("Related %d wiki entries" % c)
+            except KeyboardInterrupt:
+                raise
+            except:
+                # Handle traceback-loggning ourselves since the
+                # logging module can't handle source code containing
+                # swedish characters (iso-8859-1 encoded).
+                formatted_tb = [x.decode('iso-8859-1') for x in traceback.format_tb(sys.exc_info()[2])]
+                exception = sys.exc_info()[1]
+                msg = exception
+                if isinstance(exception, HTTPError):
+                    msg = repr(exception) + ": " + exception.read()
+                if not msg:
+                    if isinstance(exception,OSError):
+                        msg = "[Errno %s] %s: %s" % (exception.errno, exception.strerror, exception.filename)
+                    else:
+                        msg = "(Message got lost)"
+
+                log.error(u'%r: %s:\nMyTraceback (most recent call last):\n%s%s [%s]' %
+                          (basefile,
+                           sys.exc_info()[0].__name__, 
+                           u''.join(formatted_tb),
+                           sys.exc_info()[0].__name__,
+                           msg))
+
+
 
         # should we serialize everything to a big .nt file like the
         # other LegalSources does? It's a bit more difficult since we

@@ -476,7 +476,6 @@ class Manager(object):
                                u''.join(formatted_tb),
                                sys.exc_info()[0].__name__,
                                msg))
-                
 
     def _file_to_basefile(self,f):
         """Given a full physical filename, transform it into the
@@ -491,11 +490,11 @@ class Manager(object):
         if not os.path.exists(outfile): return False
         outfile_mtime = os.stat(outfile).st_mtime
         for f in infiles:
-            #print "Testing whether %s is newer than %s" % (f, outfile)
+            # print "Testing whether %s is newer than %s" % (f, outfile)
             if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
-                #print "%s was newer than %s" % (f, outfile)
+                # print "%s was newer than %s" % (f, outfile)
                 return False
-        #print "%s is newer than %r" % (outfile, infiles)
+        # print "%s is newer than %r" % (outfile, infiles)
         return True
 
     def _htmlFileName(self,basefile):

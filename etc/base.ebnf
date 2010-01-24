@@ -40,8 +40,8 @@ WhitespaceOrPunctuation ::= (Whitespace/punctuation)+
 # * œ and Œ are windows-1252-only oe-ligatures (upper- and lowercase)
 # * Š (S-with-caron) occurs in 1994:1720 (where they probably mean 'é') 
 # * ş occurs in 1982:790 (where they probably mean space)
-word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠşõÆÿğ]+
-char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîãçñÑßÇçŠşõÆÿğ]
+word         ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîïãçñÑßÇçŠşõÆÿğÃ¯]+
+char	     ::= [a-zA-ZåäöÅÄÖéèêëÉÈËüûùúÙÜÛıæáàâÀÂØøÒÓÔôóòŒœíîïãçñÑßÇçŠşõÆÿğÃ¯]
 number       ::= [0-9]+
 digit	     ::= [0-9]
 

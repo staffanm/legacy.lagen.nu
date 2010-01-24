@@ -852,6 +852,7 @@ class SFSParser(LegalSource.Parser):
                                 else:
                                     log.warning(u"%s: Okänd omfattningstyp  ['%s']" % (self.id, changecat))
                                     pred = None
+                                # print self.lagrum_parser.parse(changecat,docuri,pred)
                                 p[key].extend(self.lagrum_parser.parse(changecat,docuri,pred))
                                 p[key].append(u';')
                             p[key] = p[key][:-1] # chop of trailing ';'
@@ -2718,8 +2719,8 @@ WHERE {
 
     def GenerateAll(self):
         parsed_dir = os.path.sep.join([self.baseDir, u'sfs', 'parsed'])
-        #self._do_for_all(parsed_dir,'xht2',self.Generate)
-        self._do_for_all(parsed_dir,'xht2',StaticGenerate)
+        self._do_for_all(parsed_dir,'xht2',self.Generate)
+        #self._do_for_all(parsed_dir,'xht2',StaticGenerate)
 
         # generated_dir = os.path.sep.join([self.baseDir, u'sfs', 'generated'])
         # self._do_for_all(generated_dir,'html',self.CleanupAnnulled)

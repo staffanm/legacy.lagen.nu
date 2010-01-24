@@ -45,7 +45,7 @@ AlternateChapterSectionRefs  ::= ChapterRef, (IntervalOrSingle,CommaSpace)*, Whi
 SectionPieceRefs      ::= SectionRef, Whitespace, ((PieceItemRef/PieceRef/PieceRefID), Comma, Whitespace)*, (PieceItemRef/PieceRef/PieceRefID), WAndOrW, (PieceItemRef/PieceRef)
 
 # this matches things on the form "3 § andra stycket 2-4"
-SectionPieceItemRefs  ::= SectionRef, Whitespace, PieceRef, Whitespace, ItemRef, Hyphen, ItemRef
+SectionPieceItemRefs  ::= SectionRef, Whitespace, PieceRef, Whitespace, ItemRef, Whitespace?, Hyphen, Whitespace?, ItemRef
 
 # Things like '2, 4-6 och 8 §§' 
 SectionRefs           ::= (IntervalOrSingle,CommaSpace/WAndOrW)*, LastIntervalOrSingle

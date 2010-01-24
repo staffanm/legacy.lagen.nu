@@ -30,6 +30,8 @@ class SesameStore():
         self.pending_graph = Graph()
         self.namespaces = {}
         if self.context:
+            if not (self.context.startswith("<") and self.context.endswith(">")):
+                self.context = "<"+self.context+">"
             self.statements_url = ("%s/repositories/%s/statements?context=%s" %
                                    (self.url, self.repository, self.context))
             self.endpoint_url =  ("%s/repositories/%s?context=%s&" %
@@ -98,7 +100,7 @@ class SesameStore():
             raise SparqlError(e.read())
 
     def clear(self):
-        #print "Deleting all triples from %s" % self.statements_url
+        # print "Deleting all triples from %s" % self.statements_url
         req = Request(self.statements_url)
         req.get_method = lambda : "DELETE"
         return self.__urlopen(req)
@@ -147,9 +149,10 @@ class SesameStore():
             err = e.read()
             import re
             m = re.search("line (\d+)", err)
-            lineno = int(m.group(1))
-            line = data.split("\n")[lineno-1]
-            print "Malformed line: %s" % line
+            if m:
+                lineno = int(m.group(1))
+                line = data.split("\n")[lineno-1]
+                print "Malformed line: %s" % line
             raise SesameError(err)
     
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      py:strip="">
+    <!--! Library of common Genshi template definitions -->
+    
+    <a py:def="render_link(link)" rel="${link.predicate}" href="${link.uri}">${link}</a>
+
+    <div py:def="render_metadata_graph(graph)" py:strip="">
+      <py:for each="(subj,pred,obj) in graph" py:choose="">
+	<div py:when="graph.qname(pred) == 'dct:title'" py:strip="">
+	  <title property="dct:title" py:content="obj"></title>
+	</div>
+	<div py:when="isinstance(obj,URIRef)" py:strip="">
+	  <link rel="${graph.qname(pred)}" href="${obj}"/>
+	</div>
+	<div py:when="obj.datatype" py:strip="">
+	  <meta property="${graph.qname(pred)}" datatype="${graph.qname(obj.datatype)}" content="${obj}"/>
+	</div>
+	<div py:otherwise="" py:strip="">
+	  <meta property="${graph.qname(pred)}" content="${obj}"/>
+	</div>
+      </py:for>
+    </div>
+
+</html>
+

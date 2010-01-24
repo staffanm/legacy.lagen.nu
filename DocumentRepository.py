@@ -51,7 +51,7 @@ if sys.platform == 'win32':
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding
     else:
-        print "sys.stdout.encoding not set"
+        # print "sys.stdout.encoding not set"
         defaultencoding = 'cp850'
 else:
     if sys.stdout.encoding:
@@ -63,7 +63,7 @@ else:
         locale.setlocale(locale.LC_ALL,'')
         defaultencoding = locale.getpreferredencoding()
         
-print "setting sys.stdout to a '%s' writer" % defaultencoding
+# print "setting sys.stdout to a '%s' writer" % defaultencoding
 sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
 sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
@@ -191,6 +191,9 @@ class DocumentRepository(object):
     rdf_type = Namespace(Util.ns['rinfo'])['Rattsinformationsdokument']
     """The RDF type of the documents you are handling (expressed as a RDFLib URIRef)."""
 
+    source_encoding = "iso-8859-1"
+    """The character set that the source HTML documents use (if applicable)"""
+    
     # this is a replacement for DispatchMixin.dispatch with built-in
     # support for running the *_all methods (parse_all and
     # generate_all) in parallell using multiprocessing
@@ -374,6 +377,13 @@ class DocumentRepository(object):
                    'rinfoex':Namespace(Util.ns['rinfoex']),
                    'dct':    Namespace(Util.ns['dct'])}
 
+    def get_globals(self):
+        """If your submodule defines classes or functions which your
+        genshi template expects to find, you need to implement this
+        (with a single "return globals()" statement. This is in order to
+        feed your modules global bindings to Genshi"""
+        return globals()
+        
     def canonical_uri(self,basefile):
         """return the canonical URI for this particular document/resource."""
         # Note that there might not be a 1:1 mappning between
@@ -452,7 +462,7 @@ class DocumentRepository(object):
         # FIXME: Check the timestamp of filename (if it exists), and
         # do a if-modified-since request.
         tmpfile = mktemp()
-        self.log.info("Retrieving %s to %s" % (url,filename))
+        #self.log.debug("Retrieving %s to %s" % (url,filename))
         self.browser.retrieve(url,tmpfile)
         return Util.replace_if_different(tmpfile,filename)
 
@@ -493,22 +503,23 @@ class DocumentRepository(object):
             self.log.debug(u"%s: Starting", basefile)
 
             # the actual function code
-            soup = self.soup_from_basefile(basefile)
-            doc = self.parse_from_soup(soup)
+            soup = self.soup_from_basefile(basefile,self.source_encoding)
+            doc = self.parse_from_soup(soup,basefile)
             self.render_xhtml(self.genshi_tempate, doc,
-                              self.parsed_path(basefile), globals())
+                              self.parsed_path(basefile), self.get_globals())
 
             # Check to see that all metadata contained in doc.meta is present in the serialized file
             distilled_graph = self.extract_rdfa(outfile)
             distilled_file = self.distilled_path(basefile)
             Util.ensureDir(distilled_file)
             distilled_graph.serialize(distilled_file,format="rdf/xml", encoding="utf-8")
+            self.log.debug(u'%s: %s triples extracted', basefile, len(distilled_graph))
             for triple in distilled_graph:
                 doc['meta'].remove(triple)
 
             if doc['meta']:
                 self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file (possibly due to incorrect language tags or typed literals)" % len(doc['meta']))
-                # print unicode(doc['meta'].serialize(format="nt", encoding="utf-8"), "utf-8")
+                print unicode(doc['meta'].serialize(format="nt", encoding="utf-8"), "utf-8")
 
             self.log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
@@ -526,7 +537,7 @@ class DocumentRepository(object):
             codecs.open(filename,encoding=encoding,errors='replace').read(),
             convertEntities='html')
 
-    def parse_from_soup(self,soup):
+    def parse_from_soup(self,soup,basefile):
         """Returns a dict with the keys meta, body, uri and lang"""
         return {'doc':{},
                 'meta':{},
