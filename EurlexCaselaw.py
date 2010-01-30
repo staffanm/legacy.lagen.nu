@@ -13,6 +13,8 @@ import LegalURI
 from LegalRef import LegalRef, Link
 from DataObjects import UnicodeStructure, CompoundStructure, Stycke
 
+from whoosh.index import create_in, open_dir
+from whoosh.fields import Schema, TEXT, ID
 
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -207,7 +209,50 @@ class EurlexCaselaw(DocumentRepository):
                 'body':body,
                 'lang':'en',
                 'uri':uri}
-                        
+
+    @classmethod
+    def relate_all_setup(cls, config):
+        # before extracting all RDFa, create a Whoosh index
+        print "Doing subclass-specific setup (that can be done w/o an instance)"
+
+        indexdir = os.path.sep.join([config['datadir'],cls.module_dir,'index'])
+        if not os.path.exists(indexdir):
+            os.mkdir(indexdir)
+
+        print "Creating a new index"
+        schema = Schema(title=TEXT(stored=True),
+                        basefile=ID(stored=True, unique=True),
+                        content=TEXT)
+        whoosh_ix = create_in(indexdir, schema)
+        writer = whoosh_ix.writer()
+
+        base_dir = config['datadir']
+        
+        from time import time
+        
+        for basefile in cls.get_iterable_for("relate_all",base_dir):
+            readstart = time()
+            # just save the text from the document, strip out the tags
+            from BeautifulSoup import BeautifulSoup
+            m = cls.re_celexno.match(basefile)
+            year = m.group(2)
+            parsed_file = os.path.sep.join([base_dir, cls.module_dir, u'parsed', year, basefile+'.xhtml'])
+            
+            soup = BeautifulSoup(open(parsed_file).read())
+            text = ''.join(soup.findAll(text=True))
+            # Skip the first 150 chars (XML junk) and normalize space
+            text = ' '.join(text[150:].split())
+            indexstart = time()
+            writer.update_document(title="Case "+ basefile,basefile=basefile,content=text)
+            writer.commit()
+            print "Added %s '%s...' %.1f kb in %.3f + %.3f s" % (basefile, text[:39], len(text)/1024, indexstart-readstart, time()-indexstart) 
+            
+        searcher = whoosh_ix.searcher()
+        results = searcher.find("content", "citizen move reside", limit=10)
+        for i in range(len(results)):
+            print "%s: %s" % (results[i]['title'], results.score(i))
+
+        # then call the super method to clear the RDF DB
+            
 if __name__ == "__main__":
     EurlexCaselaw.run()
-

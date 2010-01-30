@@ -195,7 +195,7 @@ class DocumentRepository(object):
     """The character set that the source HTML documents use (if applicable)"""
     
     # this is a replacement for DispatchMixin.dispatch with built-in
-    # support for running the *_all methods (parse_all and
+    # support for running the *_all methods (parse_all, relate_all and
     # generate_all) in parallell using multiprocessing
     @classmethod
     def run(cls,argv=sys.argv[1:],*extra):
@@ -295,18 +295,14 @@ class DocumentRepository(object):
     @classmethod
     def setup(cls,funcname,config):
         """Runs before any of the *_all methods starts executing"""
-        if funcname == "relate_all":
-            store = SesameStore(config['triplestore'],config['repository'],cls.context())
-            print "Clearing context %s at repository %s" % (cls.context(), config['repository'])
-            store.clear()
-        else:
-            pass
+        cbl = getattr(cls, funcname + "_setup")
+        cbl(config)
 
     @classmethod
     def teardown(cls,funcname,base_dir):
         """Runs after any of the *_all methods has finished executing"""
-        # right now, nothing to do
-        pass
+        cbl = getattr(cls, funcname + "_teardown")
+        cbl(config)
 
 #    @classmethod
 #    def collect_results_for(cls,funcname,results):
@@ -477,6 +473,14 @@ class DocumentRepository(object):
     # with RDFa metadata.
     #
     ################################################################
+
+    @classmethod
+    def parse_all_setup(cls, config):
+        pass
+
+    @classmethod
+    def parse_all_teardown(cls, config):
+        pass
     
     # The boilerplate code for handling exceptions and logging time
     # duration might be extracted to decorator functions (generate
@@ -582,6 +586,15 @@ class DocumentRepository(object):
     # STEP 3: Extract and store the RDF data
     #
     ################################################################
+    @classmethod
+    def relate_all_setup(cls, config):
+        store = SesameStore(config['triplestore'],config['repository'],cls.context())
+        print "Clearing context %s at repository %s" % (cls.context(), config['repository'])
+        store.clear()
+
+    @classmethod
+    def relate_all_teardown(cls, config):
+        pass
 
     def relate(self,basefile):
         """Insert the (previously distilled) RDF statements into the triple store"""
@@ -589,8 +602,6 @@ class DocumentRepository(object):
         data = open(self.distilled_path(basefile)).read()
         store = SesameStore(self.config['triplestore'],self.config['repository'],self.context())
         store.add_serialized(data,format="xml")
-        
-
 
     def extract_rdfa(self,filename):
         """Helper function to extract RDF data from any XML document
@@ -616,6 +627,13 @@ class DocumentRepository(object):
     # information about related documents and so on.
     #
     ################################################################
+    @classmethod
+    def generate_all_setup(cls, config):
+        pass
+    
+    @classmethod
+    def generate_all_teardown(cls, config):
+        pass
 
     def generate(self,basefile):
         """Generate a browser-ready HTML file from the structured XML
