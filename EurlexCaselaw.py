@@ -223,6 +223,8 @@ class EurlexCaselaw(DocumentRepository):
         schema = Schema(title=TEXT(stored=True),
                         basefile=ID(stored=True, unique=True),
                         content=TEXT)
+        # FIXME: Get a keyword list, correct title, and list of treaty
+        # references (celex nums as keywords or uris or...)
         whoosh_ix = create_in(indexdir, schema)
         writer = whoosh_ix.writer()
 
@@ -231,6 +233,8 @@ class EurlexCaselaw(DocumentRepository):
         from time import time
         
         for basefile in cls.get_iterable_for("relate_all",base_dir):
+            if not ("J" in basefile or "A" in basefile or "K" in basefile):
+                continue
             readstart = time()
             # just save the text from the document, strip out the tags
             from BeautifulSoup import BeautifulSoup
@@ -247,12 +251,18 @@ class EurlexCaselaw(DocumentRepository):
             writer.commit()
             print "Added %s '%s...' %.1f kb in %.3f + %.3f s" % (basefile, text[:39], len(text)/1024, indexstart-readstart, time()-indexstart) 
             
+        writer.commit()
         searcher = whoosh_ix.searcher()
         results = searcher.find("content", "citizen move reside", limit=10)
         for i in range(len(results)):
             print "%s: %s" % (results[i]['title'], results.score(i))
 
         # then call the super method to clear the RDF DB
+
+    # skip the actual relation 
+    def relate(self,basefile):
+        pass
+
             
 if __name__ == "__main__":
     EurlexCaselaw.run()

@@ -299,7 +299,7 @@ class DocumentRepository(object):
         cbl(config)
 
     @classmethod
-    def teardown(cls,funcname,base_dir):
+    def teardown(cls,funcname,config):
         """Runs after any of the *_all methods has finished executing"""
         cbl = getattr(cls, funcname + "_teardown")
         cbl(config)
