@@ -433,6 +433,7 @@ class DocumentRepository(object):
     # STEP 1: Download documents from the web
     #
     ################################################################
+
     def download_everything(self,cache=False):
         log.error("You need to implement download_everything in your subclass")
 

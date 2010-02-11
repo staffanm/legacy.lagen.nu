@@ -1076,9 +1076,9 @@ class LegalRef:
     ################################################################
     # KOD FÖR EGRÄTTSFALL
     def egrattsfall_format_uri(self,attributes):
-        descriptormap = {'C':'J', # Court of justice Judgement
-                         'T':'A', # Court of first instance Judgement
-                         'F':'K', # Order of the Civil Service Tribunal (First Chamber) 
+        descriptormap = {'C':'J', # Judgment of the Court
+                         'T':'A', # Judgment of the Court of First Instance
+                         'F':'W', # Judgement of the Civil Service Tribunal
                          }
         # FIXME: Change this before the year 2054 (as ECJ will
         # hopefully have fixed their case numbering by then)

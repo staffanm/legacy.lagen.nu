@@ -6,6 +6,7 @@ import datetime
 
 from rdflib import Namespace, URIRef, Literal, RDF
 from rdflib.Graph import Graph
+from mechanize import LinkNotFoundError
 
 from DocumentRepository import DocumentRepository
 import Util
@@ -30,7 +31,7 @@ class EurlexCaselaw(DocumentRepository):
     source_encoding = "utf-8"
 
     re_celexno = re.compile('(6)(\d{4})(\w)(\d{4})(\(\d{2}\)|)')
-    def download_everything(self,cache=False):
+    def download_everything_old(self,cache=False):
         # Request every month from now back to circa 1990 (the DB
         # *should* contain earlier cases, but it doesn't - an
         # alternative way might be to just guess CELEX numbers by
@@ -46,9 +47,60 @@ class EurlexCaselaw(DocumentRepository):
                     m = self.re_celexno.search(link.url)
                     if m:
                         celexno = m.group(0)
+                        # only download actual judgements
+                        # J: Judgment of the Court
+                        # A: Judgment of the Court of First Instance
+                        # W: Judgement of the Civil Service Tribunal
+                        # T: (old) Judgement of the Court
+                        if ('J' in m or 'A' in m or 'W' in m):
+                            self.log.debug("Downloading case %s" % celexno)
+                            self.download_single(celexno,cache=True)
+
+
+    def download_everything(self,cache=False):
+        startyear = 2009 # eg 1954
+        for year in range(startyear,datetime.date.today().year+1):
+            list_url = "http://eur-lex.europa.eu/Result.do?T1=V6&T2=%d&T3=&RechType=RECH_naturel" % year
+            self.log.debug("Searching for %d"% year)
+            self.browser.open(list_url)
+            pagecnt = 0
+            done = False
+            while not done:
+                pagecnt += 1
+                self.log.debug("Result page #%s" % pagecnt)
+                # For some reason, Mechanize can't find the link to
+                # the HTML version of the case text. So we just get
+                # the whole page as a string and find unique CELEX ids
+                # in the tagsoup.
+                pagetext = self.browser.response().read()
+                celexnos = self.re_celexno.findall(pagetext)
+                for celexno in Util.uniqueList(celexnos):
+                    # the number will be split up in components - concatenate
+                    celexno = "".join(celexno)
+                    # only download actual judgements
+                    # J: Judgment of the Court
+                    # A: Judgment of the Court of First Instance
+                    # W: Judgement of the Civil Service Tribunal
+                    # T: (old) Judgement of the Court
+                    if ('J' in celexno or 'A' in celexno
+                        or 'W' in celexno or 'T' in celexno):
                         self.log.debug("Downloading case %s" % celexno)
                         self.download_single(celexno,cache=True)
+                    else:
+                        pass
+                        #self.log.debug("Not downloading doc %s" % celexno)
+                            
+                # see if there are any "next" pages
+                try:
+                    self.browser.follow_link(text='>')
+                except LinkNotFoundError:
+                    self.log.info(u'No next page link found, we must be done')
+                    done = True
+                
+                        
 
+            
+                            
     @classmethod
     def basefile_from_path(cls,path):
         seg = os.path.splitext(path)[0].split(os.sep)
