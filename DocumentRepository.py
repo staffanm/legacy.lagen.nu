@@ -290,7 +290,8 @@ class DocumentRepository(object):
             directory = os.path.sep.join((base_dir, cls.module_dir, u"parsed"))
             suffix = ".xhtml"
 
-        return [cls.basefile_from_path(x) for x in Util.listDirs(directory,suffix)]
+        for x in Util.listDirs(directory,suffix,reverse=True):
+            yield cls.basefile_from_path(x)
 
     @classmethod
     def setup(cls,funcname,config):

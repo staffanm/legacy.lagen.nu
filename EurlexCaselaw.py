@@ -185,57 +185,150 @@ class EurlexCaselaw(DocumentRepository):
         #     - "62007K0023"
         #     - "62008A0012"
 
-        # 1 Find basic metadata
-        meta = {}
-        # :celex - first <h1>
-        meta['celexnum'] = soup.first("h1").string.strip()
-        
-        # :courtdecision, :party (one or two items), :referingcourt
-        # (optional), :legalissue (list of strings), :casenum -
-        # <strong>/<p> following <h2>Title and reference</h2>
+        # convenience nested functions
+        def add_literal(predicate,literal):
+            g.add((URIRef(uri), voc[predicate], Literal(literal, lang=lang)))
 
-        # :casereporter - the last p, contains an <em> tag
-        title_paras = soup.find("h2").findNextSiblings("p")
-        for para in title_paras:
-            # self.log.debug(u"Handling para %s" % para)
-            if not 'courtdecision' in meta: # optional: do sanitychecks to see if this really is a :courtdecision
-                meta['courtdecision'] = para.string.strip()
-            # self.log.debug("  Filed as courtdecision")
-            elif not 'party' in meta:
-                meta['party'] = para.string # split up if needed (if the string " v " occurs)
-                # self.log.debug("  Filed as party")
-            elif (not 'referingcourt' in meta and para.string and
-                  para.string.startswith("Reference for a preliminary ruling")):
-                meta['referingcourt'] = para.string
-                # self.log.debug("  Filed as referingcourt")
-            elif (not 'casenum' in meta and para.string and
-                  (para.string.strip().lower().startswith("case ") or
-                   para.string.strip().lower().startswith("joined cases "))):
-                meta['casenum'] = para.string.strip() # optionally trim trailing characters?
-                # self.log.debug("  Filed as casenum")
-            elif para.em:
-                meta['casereporter'] = ''.join(para.findAll(text=True)).strip()
-                # self.log.debug("  Filed as casereporter")
-            elif not 'legalissue' in meta:
-                meta['legalissue'] = para.string # split this up
-                # self.log.debug("  Filed as legalissue")
-            pass
-        
-        # 2 Create canonical URI for our document (deliverable A) The
+        def add_celex_object(predicate,celexno):
+            g.add((URIRef(uri), voc[predicate], URIRef("http://lagen.nu/ext/celex/%s" % celexno)))
+
+        def get_predicate(predicate):
+            predicates = list(g.objects(URIRef(uri),voc[predicate]))
+            return predicates != []
+            
+                                # These are a series of refinments for
+                                # the "Affecting"
+                                # relationship. "Cites" doesn't have
+                                # these (or similar)
+        affects_predicates = {"Interprets": "interprets",
+                              "Interprets the judgment": "interpretsJudgment",
+                              "Declares void": "declaresVoid",
+                              "Confirms": "confirms",
+                              "Declares valid (incidentally)": "declaresValidIncidentally",
+                              "Declares valid (by a preliminary ruling)": "declaresValidByPreliminaryRuling",
+                              "Incidentally declares invalid": "declaresInvalidIncidentally",
+                              "Declares invalid (by a preliminary ruling)":"declaresInvalidByPreliminaryRuling",
+                              "Amends": "amends",
+                              "Failure concerning":"failureConcerning"}
+
+        isaffected_predicates = {"Interpreted by": "interpretedBy",
+                                 "Confirmed by": "confirmedBy",
+                                 "Declared void by": "declaredVoidBy",
+                                 "Annulment requested by": "annulmentRequestedBy"}
+
+
+        # 1. Express metadata about our document as a RDF graph
+        g = Graph()
+        voc = Namespace(self.vocab_url)
+        g.bind('dct',self.ns['dct'])
+        g.bind('eurlex',voc)
+
+        # :celex - first <h1>
+        celexnum = soup.h1.string.strip()
+        if celexnum == "No documents matching criteria.":
+            self.log.warning("%s: No document found!" % basefile)
+            raise Exception("No document found!")
+
+        assert celexnum == basefile, "Celex number in file (%s) differ from filename (%s)" % (celexnum,basefile)
+        lang = soup.html['lang']
+        # 1.1 Create canonical URI for our document (deliverable A) The
         # URI could either be based upon case number or celex
         # number. These can be transformed into one another (eg
         # C-357/09 -> 62009J0357). To keep things simple, let's use
         # the celex number as the basis (in the future, we should
         # extend LegalURI to do it)
-        uri = "http://lagen.nu/ext/celex/%s" % meta['celexnum']
+        uri = "http://lagen.nu/ext/celex/%s" % celexnum
+        add_literal('celexnum', celexnum)
+        
+        # The first section, following <h2>Title and reference</h2>
+        # contains :courtdecision, :party (one or two items),
+        # :referingcourt (optional), :legalissue (list of strings),
+        # :casenum, :casereporter. Since some are optional, we do a
+        # little heuristics to find out what we're looking at at any
+        # given moment.
+        for section in soup.findAll(["h1","h2"]):
+            if section.name == "h1" and section.a and section.a.string == "Text": 
+                break 
+            if section.string == u"Title and reference":
+                for para in section.findNextSiblings("p"):
+                    if not para.string: continue
+                    string = para.string.strip()
+
+                    if not get_predicate('courtdecision'): # optional: do sanitychecks to see if this really is a :courtdecision
+                        add_literal('courtdecision',string)
+                    elif not get_predicate('party'):
+                        # this will be one or two items. Are they position dependent?
+                        for party in string.split(" v "):
+                            add_literal('party', party)
+                    elif (not get_predicate('referingcourt') and
+                          (string.startswith("Reference for a preliminary ruling") or
+                           string.startswith("Preliminary ruling requested"))):
+                        add_literal('referingcourt', string)
+                    elif (not get_predicate('casenum') and
+                          (string.lower().startswith("case ") or
+                           string.lower().startswith("joined cases "))):
+                        add_literal('casenum',string)
+                    elif para.em: # :casereporter is enclosed in an em
+                        for row in para.findAll(text=True):
+                            add_literal('casereporter',row.strip())
+                    elif get_predicate('legalissue'):
+                        # fixme: Split this up somehow
+                        add_literal('legalissue', string)
+                    pass
+            elif section.string == "Relationship between documents":
+                for item in section.findNextSibling("ul").findAll("li"):
+                    predicate = None
+                    subpredicate = None
+                    for node in item.childGenerator():
+                        if not hasattr(node,"name"):
+                            nodetext = node.strip()
+                            if re.match("([ABCDEFGIJKLNPRST]+\d*)+$",nodetext): continue 
+                            if re.match("\d[\d\-]*[ABC]?$",nodetext): continue 
+                            if predicate == "affects" and nodetext:
+                                if nodetext in affects_predicates:
+                                    subpredicate = affects_predicates[nodetext]
+                                else:
+                                    self.log.warning("Can't express '%s' as a affects predicate" % nodetext)
+                            elif predicate == "isaffected" and nodetext:
+                                if nodetext in isaffected_predicates:
+                                    subpredicate = isaffected_predicates[nodetext]
+                                else:
+                                    self.log.warning("Can't express '%s' as a isaffected predicate" % nodetext)
+                                
+                        elif node.name == "strong":
+                            subpredicate = None
+                            if node.string == "Treaty:":
+                                predicate = "treaty"
+                            elif node.string == "Affected by case:":
+                                predicate = "isaffected"
+                            elif node.string == "Case affecting:":
+                                predicate = "affects"
+                            elif node.string == "Instruments cited in case law:":
+                                predicate = "cites"
+                            else:
+                                self.log.warning("Don't know how to handle key '%s'" % node.string)
+                        elif node.name == "a" and predicate:
+                            p = predicate
+                            if subpredicate:
+                                p = subpredicate
+                            # self.log.debug("adding %s as %s" % (node.string.strip(),p))
+
+                            # FIXME: If the
+                            # predicate is "cites", the celex number
+                            # may have extra crap
+                            # (eg. "31968R0259(01)-N2A1L6") indicating
+                            # pinpoint location. Transform these to a
+                            # fragment identifier.
+                            add_celex_object(p,node.string.strip())
+                        #else:
+                        #    self.log.warning("HALP: " + repr(node))
+                            
+                        
+
+                                
+                            
+
         # 3 Create RDF graph from basic metadata (deliverable B)
-        g = Graph()
-        voc = Namespace(self.vocab_url)
-        g.bind('dct',self.ns['dct'])
-        g.bind('eurlex',voc)
-        g.add((URIRef(uri),voc['celexnum'],Literal(meta['celexnum'],lang="en")))
-        g.add((URIRef(uri),voc['courtdecision'],Literal(meta['courtdecision'], lang="en")))
-        g.add((URIRef(uri),voc['casenum'],Literal(meta['casenum'], lang="en")))
         # add more later...
 
         # 4 Process text and create DOM (deliverable C)
@@ -255,15 +348,17 @@ class EurlexCaselaw(DocumentRepository):
                                                  predicate="dct:references")
                     body.append(Paragraph(subnodes))
         else:
-            self.log.warning("%s: No fulltext available!" % meta['celexnum'])
+            self.log.warning("%s: No fulltext available!" % celexnum)
 
         return {'meta':g,
                 'body':body,
                 'lang':'en',
                 'uri':uri}
 
+
+
     @classmethod
-    def relate_all_setup(cls, config):
+    def relate_all_setup_inactive(cls, config):
         # before extracting all RDFa, create a Whoosh index
         print "Doing subclass-specific setup (that can be done w/o an instance)"
 
@@ -312,8 +407,8 @@ class EurlexCaselaw(DocumentRepository):
         # then call the super method to clear the RDF DB
 
     # skip the actual relation 
-    def relate(self,basefile):
-        pass
+    # def relate(self,basefile):
+        # pass
 
             
 if __name__ == "__main__":
