@@ -600,7 +600,7 @@ class DocumentRepository(object):
 
     def relate(self,basefile):
         """Insert the (previously distilled) RDF statements into the triple store"""
-        self.log.debug("About to add %s to triple store" % self.distilled_path(basefile))
+        self.log.debug("Adding %s to triple store" % self.distilled_path(basefile))
         data = open(self.distilled_path(basefile)).read()
         store = SesameStore(self.config['triplestore'],self.config['repository'],self.context())
         store.add_serialized(data,format="xml")

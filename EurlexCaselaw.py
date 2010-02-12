@@ -196,10 +196,9 @@ class EurlexCaselaw(DocumentRepository):
             predicates = list(g.objects(URIRef(uri),voc[predicate]))
             return predicates != []
             
-                                # These are a series of refinments for
-                                # the "Affecting"
-                                # relationship. "Cites" doesn't have
-                                # these (or similar)
+        # These are a series of refinments for the "Affecting"
+        # relationship. "Cites" doesn't have these (or similar), but
+        # "is affected by" has (the inverse properties)
         affects_predicates = {"Interprets": "interprets",
                               "Interprets the judgment": "interpretsJudgment",
                               "Declares void": "declaresVoid",
@@ -222,7 +221,6 @@ class EurlexCaselaw(DocumentRepository):
         voc = Namespace(self.vocab_url)
         g.bind('dct',self.ns['dct'])
         g.bind('eurlex',voc)
-
         # :celex - first <h1>
         celexnum = soup.h1.string.strip()
         if celexnum == "No documents matching criteria.":
@@ -231,13 +229,18 @@ class EurlexCaselaw(DocumentRepository):
 
         assert celexnum == basefile, "Celex number in file (%s) differ from filename (%s)" % (celexnum,basefile)
         lang = soup.html['lang']
-        # 1.1 Create canonical URI for our document (deliverable A) The
-        # URI could either be based upon case number or celex
-        # number. These can be transformed into one another (eg
-        # C-357/09 -> 62009J0357). To keep things simple, let's use
-        # the celex number as the basis (in the future, we should
-        # extend LegalURI to do it)
+        # 1.1 Create canonical URI for our document. To keep things
+        # simple, let's use the celex number as the basis (in the
+        # future, we should extend LegalURI to do it)
         uri = "http://lagen.nu/ext/celex/%s" % celexnum
+
+        m = self.re_celexno.match(celexnum)
+        rdftype = {'J': voc['Judgment'],
+                   'A': voc['JudgmentFirstInstance'],
+                   'W': voc['JudgmentCivilService']}[m.group(3)]
+                   
+        g.add((URIRef(uri), RDF.type, rdftype))
+
         add_literal('celexnum', celexnum)
         
         # The first section, following <h2>Title and reference</h2>
