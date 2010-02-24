@@ -4,9 +4,12 @@ import sys,os
 import re
 import datetime
 from collections import deque, defaultdict
+import xml.etree.cElementTree as ET
 
 from rdflib import Namespace, URIRef, Literal, RDF
 from rdflib.Graph import Graph
+from whoosh import analysis, fields, formats, query, qparser, scoring
+from whoosh.filedb.filestore import RamStorage, FileStorage
 
 from DocumentRepository import DocumentRepository
 import Util
@@ -143,7 +146,7 @@ class EurlexTreaties(DocumentRepository):
         self.log.info("%s: Found %d lines" % (basefile,len(lines)))
         body = self.make_body(lines)
         self.process_body(body, '', uri)
-        print serialize(body)
+        # print serialize(body)
         return {'meta':g,
                 'body':body,
                 'lang':'en',
@@ -167,7 +170,7 @@ class EurlexTreaties(DocumentRepository):
                 b.append(self.make_part(lines))
             else:
                 b.append(Paragraph([line]))
-            print type(b[-1])
+            # print type(b[-1])
         return b
 
     def make_preamble(self,lines):
@@ -197,6 +200,7 @@ class EurlexTreaties(DocumentRepository):
                 lines.appendleft(line)
                 p.append(self.make_title(lines))
             elif (self.re_article(line)):
+                # print "make_part: %s matches article" % line
                 lines.appendleft(line)
                 p.append(self.make_article(lines))
             else:
@@ -218,6 +222,7 @@ class EurlexTreaties(DocumentRepository):
                 lines.appendleft(line)
                 t.append(self.make_chapter(lines))
             elif (self.re_article(line)):
+                # print "make_title: %s matches article" % line
                 lines.appendleft(line)
                 t.append(self.make_article(lines))
             else:
@@ -241,6 +246,7 @@ class EurlexTreaties(DocumentRepository):
                 lines.appendleft(line)
                 c.append(self.make_section(lines))
             elif (self.re_article(line)):
+                # print "make_chapter: %s matches article" % line
                 lines.appendleft(line)
                 c.append(self.make_article(lines))
             else:
@@ -262,6 +268,7 @@ class EurlexTreaties(DocumentRepository):
                 lines.appendleft(line)
                 return s
             elif (self.re_article(line)):
+                # print "make_section: %s matches article" % line
                 lines.appendleft(line)
                 s.append(self.make_article(lines))
             else:
@@ -299,7 +306,7 @@ class EurlexTreaties(DocumentRepository):
                 lines.appendleft(line)
                 a.append(self.make_ordered_list(lines,"lower-alpha"))
             else:
-                # this is OK
+                # print "Appending %s" % line[:40]
                 a.append(Paragraph([line]))
 
         return a
@@ -352,18 +359,22 @@ class EurlexTreaties(DocumentRepository):
             # try romanliststart before orderedliststart -- (i) matches
             # both, but is likely the former
             if self.re_romanliststart(line):
+                # print "make_ordered_list: re_romanliststart: %s" % line[:40]
                 if style=="lower-roman":
                     ol.append(ListItem([line]))
                 else:
                     lines.appendleft(line)
                     ol.append(self.make_ordered_list(lines,"lower-roman"))
             elif self.re_orderedliststart(line):
+                # print "make_ordered_list: re_orderedliststart: %s" % line[:40]
                 if style=="lower-alpha":
                     ol.append(ListItem([line]))
                 else: # we were in a roman-style sublist, so we should pop up
                     lines.appendleft(line)
                     return ol
             else:
+                # print "make_ordered_list: done: %s" % line[:40]
+                lines.appendleft(line)
                 return ol
         return ol
 
@@ -412,13 +423,80 @@ class EurlexTreaties(DocumentRepository):
             self.process_body(p,fragment,uri)
 
     def prep_annotation_file(self,basefile):
-        # step 1: Find out all eurlex:Articles that are part of the
-        # current treaty (could be done through a simple regex match,
-        # if we don't want to mess with dct:isPartOf
+        print "prep_annotation_file"
 
-        # Step 2: Load all EurlexCaselaw documents into Whoosh (or
-        # maybe rather initiate a Whoosh database that was
-        # prepopulated by EurlexCaselaw.relate)
+        baseline = self.ranked_set_baseline(basefile)
+        # goldstandard = self.ranked_set_goldstandard(basefile)
+
+
+    # computes a ranked set for each baseline using a naive search
+    # (using the most significant words of each article) and the
+    # standard BM25F ranking function
+    def ranked_set_baseline(self,basefile):
+        # Helper from http://effbot.org/zone/element-lib.htm
+        def flatten(elem, include_tail=0):
+            text = elem.text or ""
+            for e in elem:
+                text += flatten(e, 1)
+                if include_tail and elem.tail: text += elem.tail
+            return text
+        # step 1: Create a temporary whoosh index in order to find out
+        # the most significant words for each article
+
+        ana = analysis.StandardAnalyzer()
+        # ana = analysis.StemmingAnalyzer()
+        vectorformat = formats.Frequency(ana)
+        schema = fields.Schema(article=fields.ID(unique=True),
+                               title=fields.TEXT(stored=True),
+                               content=fields.TEXT(analyzer=ana,
+                                                   vector=vectorformat))
+
+        st = RamStorage()
+        tmpidx = st.create_index(schema)
+        w = tmpidx.writer()
+
+        XHT_NS = "{http://www.w3.org/1999/xhtml}"
+        tree = ET.parse(self.parsed_path(basefile))
+        els = tree.findall("//"+XHT_NS+"div")
+        articles = []
+        for el in els:
+            if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
+                text = Util.normalizeSpace(flatten(el))
+                article = unicode(el.attrib['id'][1:])
+                articles.append(article)
+                w.update_document(article=article,title="Article "+ article,content=text)
+
+        w.commit()
+        self.log.info("Indexed %d articles" % len(articles))
+
+        # Step 2: Open the large whoosh index containing the text of
+        # all cases. Then, for each article, use the 20 most distinctive terms
+        # (filtering away numbers) to create a query against that index
+
+        # things to vary:
+        # * numterms
+        # * connector (AND or OR)
+        # * scoring (weighting=scoring.Cosine())
+        numterms = 5
+        connector = " AND "
+        indexdir = os.path.sep.join([self.config['datadir'],'ecj','index'])
+        storage = FileStorage(indexdir)
+        idx = storage.open_index()
+        searcher = idx.searcher(weighting=scoring.BM25F())
+
+        tempsearch = tmpidx.searcher()
+        for article in articles:
+            r = tempsearch.search(query.Term("article",article))
+            terms = [t[0] for t in r.key_terms("content", numterms=numterms+1) if not t[0].isdigit()][:numterms]
+            print "Article %s:%r" % (article, terms)
+            parser = qparser.QueryParser("content")
+            q = parser.parse(connector.join(terms))
+            results = searcher.search(q, limit=10)
+            resultidx = 0
+            for result in results:
+                print "\t%s (%s)" % (result['title'], results.score(resultidx))
+                resultidx += 1
+            
 
         # Step 3: For each article URI, find out the text of it (probably
         # by loading it into ElementTree and finding the node with the
@@ -445,5 +523,6 @@ class EurlexTreaties(DocumentRepository):
         # results as being ir:CitationWeighedResult
         pass
         
+
 if __name__ == "__main__":
     EurlexTreaties.run()

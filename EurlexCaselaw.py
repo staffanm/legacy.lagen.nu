@@ -7,6 +7,9 @@ import datetime
 from rdflib import Namespace, URIRef, Literal, RDF
 from rdflib.Graph import Graph
 from mechanize import LinkNotFoundError
+from whoosh import analysis, qparser
+from whoosh.index import create_in, open_dir
+from whoosh.fields import Schema, TEXT, ID
 
 from DocumentRepository import DocumentRepository
 import Util
@@ -14,8 +17,6 @@ import LegalURI
 from LegalRef import LegalRef, Link
 from DataObjects import UnicodeStructure, CompoundStructure, Stycke
 
-from whoosh.index import create_in, open_dir
-from whoosh.fields import Schema, TEXT, ID
 
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
@@ -187,10 +188,14 @@ class EurlexCaselaw(DocumentRepository):
 
         # convenience nested functions
         def add_literal(predicate,literal):
-            g.add((URIRef(uri), voc[predicate], Literal(literal, lang=lang)))
+            g.add((URIRef(uri),
+                   voc[predicate],
+                   Literal(literal, lang=lang)))
 
         def add_celex_object(predicate,celexno):
-            g.add((URIRef(uri), voc[predicate], URIRef("http://lagen.nu/ext/celex/%s" % celexno)))
+            g.add((URIRef(uri),
+                   voc[predicate],
+                   URIRef("http://lagen.nu/ext/celex/%s" % celexno)))
 
         def get_predicate(predicate):
             predicates = list(g.objects(URIRef(uri),voc[predicate]))
@@ -200,21 +205,26 @@ class EurlexCaselaw(DocumentRepository):
         # relationship. "Cites" doesn't have these (or similar), but
         # "is affected by" has (the inverse properties)
         affects_predicates = {"Interprets": "interprets",
-                              "Interprets the judgment": "interpretsJudgment",
+                              "Interprets the judgment":
+                                  "interpretsJudgment",
                               "Declares void": "declaresVoid",
                               "Confirms": "confirms",
-                              "Declares valid (incidentally)": "declaresValidIncidentally",
-                              "Declares valid (by a preliminary ruling)": "declaresValidByPreliminaryRuling",
-                              "Incidentally declares invalid": "declaresInvalidIncidentally",
-                              "Declares invalid (by a preliminary ruling)":"declaresInvalidByPreliminaryRuling",
+                              "Declares valid (incidentally)":
+                                  "declaresValidIncidentally",
+                              "Declares valid (by a preliminary ruling)":
+                                  "declaresValidByPreliminaryRuling",
+                              "Incidentally declares invalid":
+                                  "declaresInvalidIncidentally",
+                              "Declares invalid (by a preliminary ruling)":
+                                  "declaresInvalidByPreliminaryRuling",
                               "Amends": "amends",
                               "Failure concerning":"failureConcerning"}
 
         isaffected_predicates = {"Interpreted by": "interpretedBy",
                                  "Confirmed by": "confirmedBy",
                                  "Declared void by": "declaredVoidBy",
-                                 "Annulment requested by": "annulmentRequestedBy"}
-
+                                 "Annulment requested by":
+                                     "annulmentRequestedBy"}
 
         # 1. Express metadata about our document as a RDF graph
         g = Graph()
@@ -314,8 +324,6 @@ class EurlexCaselaw(DocumentRepository):
                             p = predicate
                             if subpredicate:
                                 p = subpredicate
-                            # self.log.debug("adding %s as %s" % (node.string.strip(),p))
-
                             # FIXME: If the
                             # predicate is "cites", the celex number
                             # may have extra crap
@@ -323,18 +331,8 @@ class EurlexCaselaw(DocumentRepository):
                             # pinpoint location. Transform these to a
                             # fragment identifier.
                             add_celex_object(p,node.string.strip())
-                        #else:
-                        #    self.log.warning("HALP: " + repr(node))
-                            
-                        
 
-                                
-                            
-
-        # 3 Create RDF graph from basic metadata (deliverable B)
-        # add more later...
-
-        # 4 Process text and create DOM (deliverable C)
+        # Process text and create DOM
         self.parser = LegalRef(LegalRef.EGRATTSFALL)
         body = Body()
 
@@ -361,22 +359,27 @@ class EurlexCaselaw(DocumentRepository):
 
 
     @classmethod
-    def relate_all_setup_inactive(cls, config):
+    def relate_all_setup(cls, config):
         # before extracting all RDFa, create a Whoosh index
         print "Doing subclass-specific setup (that can be done w/o an instance)"
-
+        if ('whoosh_indexing' in config[cls.module_dir] and
+            config[cls.module_dir]['whoosh_indexing'] == 'True'):
+            print "We're doing whoosh_indexing!"
+        else:
+            print "No whoosh_indexing :-("
+        
         indexdir = os.path.sep.join([config['datadir'],cls.module_dir,'index'])
         if not os.path.exists(indexdir):
             os.mkdir(indexdir)
 
         print "Creating a new index"
+        ana = analysis.StemmingAnalyzer()
         schema = Schema(title=TEXT(stored=True),
                         basefile=ID(stored=True, unique=True),
                         content=TEXT)
         # FIXME: Get a keyword list, correct title, and list of treaty
         # references (celex nums as keywords or uris or...)
         whoosh_ix = create_in(indexdir, schema)
-        writer = whoosh_ix.writer()
 
         base_dir = config['datadir']
         
@@ -396,18 +399,20 @@ class EurlexCaselaw(DocumentRepository):
             text = ''.join(soup.findAll(text=True))
             # Skip the first 150 chars (XML junk) and normalize space
             text = ' '.join(text[150:].split())
-            indexstart = time()
-            writer.update_document(title="Case "+ basefile,basefile=basefile,content=text)
-            writer.commit()
-            print "Added %s '%s...' %.1f kb in %.3f + %.3f s" % (basefile, text[:39], len(text)/1024, indexstart-readstart, time()-indexstart) 
+            if text:
+                indexstart = time()
+                writer = whoosh_ix.writer()
+                writer.update_document(title="Case "+ basefile,basefile=basefile,content=text)
+                writer.commit()
+                print "Added %s '%s...' %.1f kb in %.3f + %.3f s" % (basefile, text[:39], len(text)/1024, indexstart-readstart, time()-indexstart)
+            else:
+                print "Noadd %s (no text)" % (basefile)
             
-        writer.commit()
+
         searcher = whoosh_ix.searcher()
-        results = searcher.find("content", "citizen move reside", limit=10)
+        results = searcher.find("content", "quantitative imports equivalent prohibited", limit=10)
         for i in range(len(results)):
             print "%s: %s" % (results[i]['title'], results.score(i))
-
-        # then call the super method to clear the RDF DB
 
     # skip the actual relation 
     # def relate(self,basefile):
