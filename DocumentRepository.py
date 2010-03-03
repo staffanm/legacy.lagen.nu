@@ -659,7 +659,8 @@ class DocumentRepository(object):
             # The actual function code
             annotation_file = self.prep_annotation_file(basefile)
             if annotation_file:
-                params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
+                # params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
+                params = {'annotationfile':annotationfile}
             else:
                 params = {}
             Util.transform(self.xslt_template,
@@ -683,6 +684,11 @@ class DocumentRepository(object):
         return None
 
 
+    # helper for the prep_annotation_file helper -- it expects a
+    # complex struct, and returns the same in RDF format.
+    def format_annotation_file(self,struct):
+        pass
+    
     def generated_path(self,basefile):
         return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
 

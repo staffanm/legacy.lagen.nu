@@ -425,10 +425,108 @@ class EurlexTreaties(DocumentRepository):
     def prep_annotation_file(self,basefile):
         print "prep_annotation_file"
 
-        baseline = self.ranked_set_baseline(basefile)
+        # baseline = self.ranked_set_baseline(basefile)
         # goldstandard = self.ranked_set_goldstandard(basefile)
+        rs1 = self.ranked_set_fake1(basefile)
+        rs2 = self.ranked_set_fake2(basefile)
+        rs3 = self.ranked_set_fake3(basefile)
+        rs4 = self.ranked_set_fake4(basefile)
+        goldstandard = {'11997E001': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
+        print "Ranked set 1"
+        self.calculate_map(rs1,goldstandard)
+        print "Ranked set 2"
+        self.calculate_map(rs2,goldstandard)
+        print "Ranked set 3"
+        self.calculate_map(rs3,goldstandard)
+        print "Ranked set 4"
+        self.calculate_map(rs4,goldstandard)
+
+        sets = [{'label':'Naive set 1'
+                 'predicate',TEMP['naive1'],
+                 'data',rs1},
+                {'label':'Naive set 2',
+                 'predicate', TEMP['naive2'],
+                 'data',rs2},
+                {'label':'Naive set 3',
+                 'predicate', TEMP['naive3'],
+                 'data',rs3},
+                {'label':'Naive set 4',
+                 'predicate', TEMP['naive4'],
+                 'data',rs4}]
+        
+        root_node = PET.Element("rdf:RDF")
+        
+        XHT_NS = "{http://www.w3.org/1999/xhtml}"
+        tree = ET.parse(self.parsed_path(basefile))
+        els = tree.findall("//"+XHT_NS+"div")
+        articles = []
+        for el in els:
+            if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
+                articles.append(article)
 
 
+        for article in articles:
+            for s in sets:
+                for result in s[article]:
+                    
+
+        
+    def calculate_map(self,rankedset,goldstandard):
+        aps = []
+        for key in goldstandard.keys():
+            ranking = [x[0] for x in rankedset[key]]
+            precisions = []
+            relevant_hits = 0
+            total_hits = 0 
+            for r in ranking:
+                total_hits += 1
+                if r in goldstandard[key]:
+                # if r in goldstandard[key][:total_hits]:
+                    relevant_hits += 1
+                precisions.append(relevant_hits/float(total_hits))
+                print "        Precision at %s: %d" % (total_hits, precisions[total_hits-1])
+            ap = sum(precisions) / float(len(precisions))
+            print "    Average precision: %s" % ap
+            aps.append(ap)
+
+        meanap = sum(aps) / float(len(aps))
+        print "Mean average precision: %s" % meanap
+        return meanap
+
+                
+
+    def ranked_set_fake1 (self,basefile):
+        return {'11997E001': [['62009J0014','Genc v Land Berlin (100%)'],
+                              ['62009J0197','Agence européenne des médicaments (90%)'],
+                              ['62009J0357','Huchbarov (80%)'],
+                              ['62009J0403','Jasna Deticke (70%)'],
+                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+
+    def ranked_set_fake2 (self,basefile):
+        return {'11997E001': [['62009J0197','Agence européenne des médicaments (100%)'],
+                              ['62009J0014','Genc v Land Berlin (90%)'],
+                              ['62009J0357','Huchbarov (80%)'],
+                              ['62009J0403','Jasna Deticke (70%)'],
+                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+
+
+    def ranked_set_fake3 (self,basefile):
+        return {'11997E001': [['62009J0357','Huchbarov (100%)'],
+                              ['62009J0403','Jasna Deticke (90%)'],
+                              ['62009J0014','Genc v Land Berlin (800%)'],
+                              ['62009J0187','Commission v United Kingdom (70%)'],
+                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+                              
+    def ranked_set_fake4 (self,basefile):
+        return {'11997E001': [['62009J0014','Genc v Land Berlin (100%)'],
+                              ['62009J0197','Agence européenne des médicaments (90%)'],
+                              ['62009J0357','Huchbarov (80%)'],
+                              ['62009A0027','Stella Kunststofftechnik(70%)'],
+                              ['62009J0403','Jasna Deticke (60%)']
+                              ]}
+
+
+        
     # computes a ranked set for each baseline using a naive search
     # (using the most significant words of each article) and the
     # standard BM25F ranking function
@@ -461,9 +559,9 @@ class EurlexTreaties(DocumentRepository):
         articles = []
         for el in els:
             if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
+                articles.append(article)
                 text = Util.normalizeSpace(flatten(el))
                 article = unicode(el.attrib['id'][1:])
-                articles.append(article)
                 w.update_document(article=article,title="Article "+ article,content=text)
 
         w.commit()

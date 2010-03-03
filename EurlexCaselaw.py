@@ -32,31 +32,6 @@ class EurlexCaselaw(DocumentRepository):
     source_encoding = "utf-8"
 
     re_celexno = re.compile('(6)(\d{4})(\w)(\d{4})(\(\d{2}\)|)')
-    def download_everything_old(self,cache=False):
-        # Request every month from now back to circa 1990 (the DB
-        # *should* contain earlier cases, but it doesn't - an
-        # alternative way might be to just guess CELEX numbers by
-        # incrementing year and case numbers, and see if they exist)
-        for year in reversed(range(1990,datetime.date.today().year+1)):
-            for month in reversed(range(1,13)):
-                list_url = "http://eur-lex.europa.eu/JURISMonth.do?year=%d&month=%02d" % (year,month)
-                self.log.debug("Downloading list for %d/%d" % (year,month))
-                self.browser.open(list_url)
-                links = list(self.browser.links(text='Bibliographic notice'))
-                self.log.debug("%d/%d has %s documents" % (year,month, len(links)))
-                for link in links:
-                    m = self.re_celexno.search(link.url)
-                    if m:
-                        celexno = m.group(0)
-                        # only download actual judgements
-                        # J: Judgment of the Court
-                        # A: Judgment of the Court of First Instance
-                        # W: Judgement of the Civil Service Tribunal
-                        # T: (old) Judgement of the Court
-                        if ('J' in m or 'A' in m or 'W' in m):
-                            self.log.debug("Downloading case %s" % celexno)
-                            self.download_single(celexno,cache=True)
-
 
     def download_everything(self,cache=False):
         startyear = 2009 # eg 1954
