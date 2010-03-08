@@ -441,18 +441,19 @@ class EurlexTreaties(DocumentRepository):
         print "Ranked set 4"
         self.calculate_map(rs4,goldstandard)
 
-        sets = [{'label':'Naive set 1'
-                 'predicate',TEMP['naive1'],
-                 'data',rs1},
+        sets = [{'label':'Naive set 1',
+                 'predicate':TEMP['naive1'],
+                 'data':rs1},
                 {'label':'Naive set 2',
-                 'predicate', TEMP['naive2'],
-                 'data',rs2},
+                 'predicate':TEMP['naive2'],
+                 'data':rs2},
                 {'label':'Naive set 3',
-                 'predicate', TEMP['naive3'],
-                 'data',rs3},
+                 'predicate':TEMP['naive3'],
+                 'data':rs3},
                 {'label':'Naive set 4',
-                 'predicate', TEMP['naive4'],
-                 'data',rs4}]
+                 'predicate':TEMP['naive4'],
+                 'data':rs4}]
+        
         
         root_node = PET.Element("rdf:RDF")
         
@@ -468,7 +469,7 @@ class EurlexTreaties(DocumentRepository):
         for article in articles:
             for s in sets:
                 for result in s[article]:
-                    
+                    pass
 
         
     def calculate_map(self,rankedset,goldstandard):
