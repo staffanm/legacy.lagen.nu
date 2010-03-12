@@ -462,10 +462,6 @@ class DVParser(LegalSource.Parser):
 
         head[u'Referat'] = UnicodeSubject(referat,
                                           predicate=self.labels[u'Referat'])
-        if not head[u'Referat']:
-            # För specialdomstolarna kan man lista ut referatnumret
-            # från målnumret - det borde vi försöka göra här
-            raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % docbookfile)
 
         # Hitta övriga enkla metadatafält i sidhuvudet
         for key in self.labels.keys():
@@ -510,6 +506,14 @@ class DVParser(LegalSource.Parser):
                                 l.append(node)
 
                         head[key].append(l)
+
+        if not head[u'Referat']:
+            # För specialdomstolarna kan man lista ut referatnumret
+            # från målnumret
+            if head[u'Domstol'] == u'Marknadsdomstolen':
+                head[u'Referat'] = u'MD %s' % head[u'Domsnummer'].replace('-',':')
+            else:
+                raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % docbookfile)
 
         # Hitta själva referatstexten... här kan man göra betydligt
         # mer, exv hitta avsnitten för de olika instanserna, hitta

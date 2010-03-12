@@ -1172,8 +1172,11 @@ class SFSParser(LegalSource.Parser):
             elif key == u'Omtryck':
                 val = val.replace(u'SFS ','')
                 val = val.replace(u'SFS','')
-                uri = self.lagrum_parser.parse(val)[0].uri
-                meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+                try:
+                    uri = self.lagrum_parser.parse(val)[0].uri
+                    meta[key] = UnicodeSubject(val,predicate=self.labels[key])
+                except AttributeError: # 'unicode' object has no attribute 'uri'
+                    pass
             elif key == u'Författningen har upphävts genom':
                 val = val.replace(u'SFS ','')
                 val = val.replace(u'SFS','')
@@ -1647,7 +1650,6 @@ class SFSParser(LegalSource.Parser):
                 return unicode(self._from_roman(roman))
         elif p.startswith(u"Avdelning "):
             roman = re.split(r'\s+',p)[1]
-            print "P: %s, roman: %s" % (p,roman)
             if self.re_roman_numeral_matcher(roman):
                 return unicode(self._from_roman(roman))
         elif p[2:6] == "avd.":

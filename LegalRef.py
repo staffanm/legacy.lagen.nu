@@ -469,7 +469,11 @@ class LegalRef:
                 uri = uriformatter(self.find_attributes([part]))
             else:
                 uri = self.sfs_format_uri(self.find_attributes([part]))
+        except AttributeError:
+            # Normal error from eglag_format_uri
+            return part.text
         except:
+            exc = sys.exc_info()
             # If something else went wrong, just return the plaintext
             log.warning("(unknown): Unable to format link for text %s (production %s)" % (part.text, part.tag))
             return part.text
@@ -991,7 +995,8 @@ class LegalRef:
             elif 'direktiv' in attributes:
                 attributes['akttyp'] = u'direktiv';
 
-        assert 'akttyp' in attributes, u"Okand akttyp"
+        if 'akttyp' not in attributes:
+            raise AttributeError("Akttyp saknas")
         # Om hur CELEX-nummer konstrueras
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celn.htm
         # https://www.infotorg.sema.se/infotorg/itweb/handbook/rb/hlp_celf.htm
