@@ -680,6 +680,6 @@ class Manager(object):
             (o,p,s) = tup
             if isinstance(s,Literal):
                 graph.remove(tup)
-                l = Literal(u' '.join(s.split()), lang=s.language)
+                l = Literal(u' '.join(s.split()), lang=s.language, datatype=s.datatype)
                 graph.add((o,p,l))
 

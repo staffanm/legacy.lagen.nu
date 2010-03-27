@@ -70,7 +70,7 @@ body {
     font: 10pt/1.2 Times;
     text-align: justify;
     hyphens: auto;
-    prince-hyphenate-patterns: "sv.hyp"; 
+    prince-hyphenate-patterns: url("hyph_sv_SE.dic"); 
     margin-outside: 3cm;
 }
 

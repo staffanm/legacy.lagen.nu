@@ -5,6 +5,7 @@ import re
 import datetime
 from collections import deque, defaultdict
 import xml.etree.cElementTree as ET
+import xml.etree.ElementTree as PET
 
 from rdflib import Namespace, URIRef, Literal, RDF
 from rdflib.Graph import Graph
@@ -67,6 +68,7 @@ DCT = Namespace(Util.ns['dct'])
 XSD = Namespace(Util.ns['xsd'])
 RINFO = Namespace(Util.ns['rinfo'])
 RINFOEX = Namespace(Util.ns['rinfoex'])
+EX = Namespace(URIRef("http://www.example.org/"))
 class EurlexTreaties(DocumentRepository):
     # overrides of superclass variables 
     module_dir = "eut" # European Union Treaties
@@ -431,7 +433,7 @@ class EurlexTreaties(DocumentRepository):
         rs2 = self.ranked_set_fake2(basefile)
         rs3 = self.ranked_set_fake3(basefile)
         rs4 = self.ranked_set_fake4(basefile)
-        goldstandard = {'11997E001': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
+        goldstandard = {'1': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
         print "Ranked set 1"
         self.calculate_map(rs1,goldstandard)
         print "Ranked set 2"
@@ -442,16 +444,16 @@ class EurlexTreaties(DocumentRepository):
         self.calculate_map(rs4,goldstandard)
 
         sets = [{'label':'Naive set 1',
-                 'predicate':TEMP['naive1'],
+                 'predicate':EX['naive1'],
                  'data':rs1},
                 {'label':'Naive set 2',
-                 'predicate':TEMP['naive2'],
+                 'predicate':EX['naive2'],
                  'data':rs2},
                 {'label':'Naive set 3',
-                 'predicate':TEMP['naive3'],
+                 'predicate':EX['naive3'],
                  'data':rs3},
                 {'label':'Naive set 4',
-                 'predicate':TEMP['naive4'],
+                 'predicate':EX['naive4'],
                  'data':rs4}]
         
         
@@ -463,14 +465,19 @@ class EurlexTreaties(DocumentRepository):
         articles = []
         for el in els:
             if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
+                article = unicode(el.attrib['id'][1:])
                 articles.append(article)
 
 
         for article in articles:
+            if int(article) > 1: continue
+            print "Results for article %s" % article
             for s in sets:
-                for result in s[article]:
-                    pass
-
+                if article in s['data']:
+                    print "    Set %s" % s['label']
+                    for result in s['data'][article]:
+                        print "        %s" % result[1]
+                    
         
     def calculate_map(self,rankedset,goldstandard):
         aps = []
@@ -490,41 +497,41 @@ class EurlexTreaties(DocumentRepository):
             print "    Average precision: %s" % ap
             aps.append(ap)
 
-        meanap = sum(aps) / float(len(aps))
-        print "Mean average precision: %s" % meanap
-        return meanap
+        res = sum(aps) / float(len(aps))
+        print "Mean average precision: %s" % res
+        return res
 
                 
 
     def ranked_set_fake1 (self,basefile):
-        return {'11997E001': [['62009J0014','Genc v Land Berlin (100%)'],
-                              ['62009J0197','Agence européenne des médicaments (90%)'],
-                              ['62009J0357','Huchbarov (80%)'],
-                              ['62009J0403','Jasna Deticke (70%)'],
-                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+        return {'1': [['62009J0014',u'Genc v Land Berlin (100%)'],
+                      ['62009J0197',u'Agence européenne des médicaments (90%)'],
+                      ['62009J0357',u'Huchbarov (80%)'],
+                      ['62009J0403',u'Jasna Deticke (70%)'],
+                      ['62009A0027',u'Stella Kunststofftechnik(60%)']]}
 
     def ranked_set_fake2 (self,basefile):
-        return {'11997E001': [['62009J0197','Agence européenne des médicaments (100%)'],
-                              ['62009J0014','Genc v Land Berlin (90%)'],
-                              ['62009J0357','Huchbarov (80%)'],
-                              ['62009J0403','Jasna Deticke (70%)'],
-                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+        return {'1': [['62009J0197',u'Agence européenne des médicaments (100%)'],
+                      ['62009J0014',u'Genc v Land Berlin (90%)'],
+                      ['62009J0357',u'Huchbarov (80%)'],
+                      ['62009J0403',u'Jasna Deticke (70%)'],
+                      ['62009A0027',u'Stella Kunststofftechnik(60%)']]}
 
 
     def ranked_set_fake3 (self,basefile):
-        return {'11997E001': [['62009J0357','Huchbarov (100%)'],
-                              ['62009J0403','Jasna Deticke (90%)'],
-                              ['62009J0014','Genc v Land Berlin (800%)'],
-                              ['62009J0187','Commission v United Kingdom (70%)'],
-                              ['62009A0027','Stella Kunststofftechnik(60%)']]}
+        return {'1': [['62009J0357',u'Huchbarov (100%)'],
+                      ['62009J0403',u'Jasna Deticke (90%)'],
+                      ['62009J0014',u'Genc v Land Berlin (800%)'],
+                      ['62009J0187',u'Commission v United Kingdom (70%)'],
+                      ['62009A0027',u'Stella Kunststofftechnik(60%)']]}
                               
     def ranked_set_fake4 (self,basefile):
-        return {'11997E001': [['62009J0014','Genc v Land Berlin (100%)'],
-                              ['62009J0197','Agence européenne des médicaments (90%)'],
-                              ['62009J0357','Huchbarov (80%)'],
-                              ['62009A0027','Stella Kunststofftechnik(70%)'],
-                              ['62009J0403','Jasna Deticke (60%)']
-                              ]}
+        return {'1': [['62009J0014',u'Genc v Land Berlin (100%)'],
+                      ['62009J0197',u'Agence européenne des médicaments (90%)'],
+                      ['62009J0357',u'Huchbarov (80%)'],
+                      ['62009A0027',u'Stella Kunststofftechnik(70%)'],
+                      ['62009J0403',u'Jasna Deticke (60%)']
+                      ]}
 
 
         
@@ -560,9 +567,9 @@ class EurlexTreaties(DocumentRepository):
         articles = []
         for el in els:
             if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
-                articles.append(article)
                 text = Util.normalizeSpace(flatten(el))
                 article = unicode(el.attrib['id'][1:])
+                articles.append(article)
                 w.update_document(article=article,title="Article "+ article,content=text)
 
         w.commit()
@@ -593,7 +600,7 @@ class EurlexTreaties(DocumentRepository):
             results = searcher.search(q, limit=10)
             resultidx = 0
             for result in results:
-                print "\t%s (%s)" % (result['title'], results.score(resultidx))
+                print u"\t%s (%s)" % (result['title'], results.score(resultidx))
                 resultidx += 1
             
 
