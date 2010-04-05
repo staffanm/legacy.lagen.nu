@@ -152,7 +152,7 @@ class DocumentRepository(object):
     generate
         generated_file
         prep_annotation_file
-
+            graph_to_annotation_file
     toc
         toc_navigation
         toc_title
@@ -685,12 +685,24 @@ class DocumentRepository(object):
 
 
     # helper for the prep_annotation_file helper -- it expects a
-    # complex struct, and returns the same in RDF format.
-    def format_annotation_file(self,struct):
-        pass
+    # RDFLib graph, and returns (the path to a file with) the same in
+    # Grit format.
+    def graph_to_annotation_file(self,graph,basename):
+        infile = mktemp()
+        fp = open(infile,"w")
+        fp.write(graph.serialize(format="pretty-xml"))
+        fp.close()
+        outfile = self.annotation_path(basename)
+        Util.transform("xsl/rdfxml-grit.xslt",
+                       infile,
+                       outfile,
+                       validate=False)
     
     def generated_path(self,basefile):
         return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
+
+    def annotation_path(self,basefile):
+        return os.path.sep.join((self.base_dir, self.module_dir, u'intermediate', '%s.ann.xml' % basefile))
 
     ################################################################
     #

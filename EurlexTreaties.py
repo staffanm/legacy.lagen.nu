@@ -7,7 +7,7 @@ from collections import deque, defaultdict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
-from rdflib import Namespace, URIRef, Literal, RDF
+from rdflib import Namespace, URIRef, Literal, RDF, BNode, Collection
 from rdflib.Graph import Graph
 from whoosh import analysis, fields, formats, query, qparser, scoring
 from whoosh.filedb.filestore import RamStorage, FileStorage
@@ -17,6 +17,7 @@ import Util
 import LegalURI
 from LegalRef import LegalRef, Link
 from DataObjects import UnicodeStructure, CompoundStructure, OrdinalStructure, serialize
+
 
 
 __version__ = (1,6)
@@ -430,34 +431,33 @@ class EurlexTreaties(DocumentRepository):
         # baseline = self.ranked_set_baseline(basefile)
         # goldstandard = self.ranked_set_goldstandard(basefile)
         rs1 = self.ranked_set_fake1(basefile)
-        rs2 = self.ranked_set_fake2(basefile)
-        rs3 = self.ranked_set_fake3(basefile)
-        rs4 = self.ranked_set_fake4(basefile)
+        #rs2 = self.ranked_set_fake2(basefile)
+        #rs3 = self.ranked_set_fake3(basefile)
+        #rs4 = self.ranked_set_fake4(basefile)
         goldstandard = {'1': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
         print "Ranked set 1"
         self.calculate_map(rs1,goldstandard)
-        print "Ranked set 2"
-        self.calculate_map(rs2,goldstandard)
-        print "Ranked set 3"
-        self.calculate_map(rs3,goldstandard)
-        print "Ranked set 4"
-        self.calculate_map(rs4,goldstandard)
+        #print "Ranked set 2"
+        #self.calculate_map(rs2,goldstandard)
+        #print "Ranked set 3"
+        #self.calculate_map(rs3,goldstandard)
+        #print "Ranked set 4"
+        #self.calculate_map(rs4,goldstandard)
+
 
         sets = [{'label':'Naive set 1',
-                 'predicate':EX['naive1'],
                  'data':rs1},
-                {'label':'Naive set 2',
-                 'predicate':EX['naive2'],
-                 'data':rs2},
-                {'label':'Naive set 3',
-                 'predicate':EX['naive3'],
-                 'data':rs3},
-                {'label':'Naive set 4',
-                 'predicate':EX['naive4'],
-                 'data':rs4}]
+#                {'label':'Naive set 2',
+#                 'data':rs2},
+#                {'label':'Naive set 3',
+#                 'data':rs3},
+#                {'label':'Naive set 4',
+#                 'data':rs4}
+                ]
         
-        
-        root_node = PET.Element("rdf:RDF")
+        g = Graph()
+        g.bind('dct',self.ns['dct'])
+        g.bind('rinfoex',self.ns['rinfoex'])
         
         XHT_NS = "{http://www.w3.org/1999/xhtml}"
         tree = ET.parse(self.parsed_path(basefile))
@@ -467,17 +467,66 @@ class EurlexTreaties(DocumentRepository):
             if 'typeof' in el.attrib and el.attrib['typeof'] == "eurlex:Article":
                 article = unicode(el.attrib['id'][1:])
                 articles.append(article)
-
-
         for article in articles:
             if int(article) > 1: continue
             print "Results for article %s" % article
             for s in sets:
+                resultsnode = BNode()
+                listnode = BNode()
+                articlenode = URIRef("http://rinfo.lagrummet.se/extern/celex/12008E%03d" % int(article))
+                g.add((articlenode, DCT["relation"], resultsnode))
+                g.add((resultsnode, RDF.type, RINFOEX["RelatedContentCollection"]))
+                g.add((resultsnode, DCT["title"], Literal(s["label"])))
+                g.add((resultsnode, DCT["hasPart"], listnode))
+                c = Collection.Collection(g,listnode)
+                g.add((listnode, RDF.type, RDF.List))
                 if article in s['data']:
                     print "    Set %s" % s['label']
+                    #newlistnode = None
                     for result in s['data'][article]:
+                    #    if newlistnode:
+                    #        g.add((listnode,RDF.rest,newlistnode))
+                    #        listnode = newlistnode
+                        resnode = BNode()
+                        g.add((resnode, DCT["references"], Literal(result[0])))
+                        g.add((resnode, DCT["title"], Literal(result[1])))
+                        # g.add((listnode,RDF.first,resnode))
+                        c.append(resnode)
+                        # newlistnode = BNode()
+                        # g.add((newlistnode, RDF.type, RDF.List))
                         print "        %s" % result[1]
+
+                    # g.add((listnode, RDF.rest, RDF.nil))
                     
+        self.graph_to_image(g,"png",self.annotation_path(basefile)+".png")
+        return self.graph_to_annotation_file(g, basefile)
+
+    def graph_to_image(self,graph,imageformat,filename):
+        import pydot
+        import rdflib
+        dot = pydot.Dot()
+        dot.progs = {"dot": "c:/Program Files/Graphviz2.26.3/bin/dot.exe"}
+
+        # code from rdflib.util.graph_to_dot, but adjusted to handle unicode
+        nodes = {}
+        for s, o in graph.subject_objects():
+            for i in s,o:
+                if i not in nodes.keys():
+                    if type(i) == rdflib.BNode:
+                        nodes[i] = repr(i)[7:]
+                    elif type(i) == rdflib.Literal:
+                        nodes[i] = repr(i)[16:-1]
+                    elif type(i) == rdflib.URIRef:
+                        nodes[i] = repr(i)[22:-2]
+                        
+        for s, p, o in graph.triples((None,None,None)):
+            dot.add_edge(pydot.Edge(nodes[s], nodes[o], label=repr(p)[22:-2]))
+
+        print "Writing %s format to %s" % (imageformat, filename)
+        dot.write(path=filename,prog="dot",format=imageformat)
+        print "Wrote %s" % filename
+                  
+        
         
     def calculate_map(self,rankedset,goldstandard):
         aps = []
