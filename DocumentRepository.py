@@ -660,7 +660,7 @@ class DocumentRepository(object):
             annotation_file = self.prep_annotation_file(basefile)
             if annotation_file:
                 # params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
-                params = {'annotationfile':annotationfile}
+                params = {'annotationfile':annotation_file}
             else:
                 params = {}
             Util.transform(self.xslt_template,
@@ -697,6 +697,7 @@ class DocumentRepository(object):
                        infile,
                        outfile,
                        validate=False)
+        return outfile
     
     def generated_path(self,basefile):
         return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))

@@ -431,28 +431,28 @@ class EurlexTreaties(DocumentRepository):
         # baseline = self.ranked_set_baseline(basefile)
         # goldstandard = self.ranked_set_goldstandard(basefile)
         rs1 = self.ranked_set_fake1(basefile)
-        #rs2 = self.ranked_set_fake2(basefile)
-        #rs3 = self.ranked_set_fake3(basefile)
-        #rs4 = self.ranked_set_fake4(basefile)
+        rs2 = self.ranked_set_fake2(basefile)
+        rs3 = self.ranked_set_fake3(basefile)
+        rs4 = self.ranked_set_fake4(basefile)
         goldstandard = {'1': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
         print "Ranked set 1"
         self.calculate_map(rs1,goldstandard)
-        #print "Ranked set 2"
-        #self.calculate_map(rs2,goldstandard)
-        #print "Ranked set 3"
-        #self.calculate_map(rs3,goldstandard)
-        #print "Ranked set 4"
-        #self.calculate_map(rs4,goldstandard)
+        print "Ranked set 2"
+        self.calculate_map(rs2,goldstandard)
+        print "Ranked set 3"
+        self.calculate_map(rs3,goldstandard)
+        print "Ranked set 4"
+        self.calculate_map(rs4,goldstandard)
 
 
         sets = [{'label':'Naive set 1',
                  'data':rs1},
-#                {'label':'Naive set 2',
-#                 'data':rs2},
-#                {'label':'Naive set 3',
-#                 'data':rs3},
-#                {'label':'Naive set 4',
-#                 'data':rs4}
+                {'label':'Naive set 2',
+                 'data':rs2},
+                {'label':'Naive set 3',
+                 'data':rs3},
+                {'label':'Naive set 4',
+                 'data':rs4}
                 ]
         
         g = Graph()
@@ -470,33 +470,28 @@ class EurlexTreaties(DocumentRepository):
         for article in articles:
             if int(article) > 1: continue
             print "Results for article %s" % article
+            articlenode = URIRef("http://rinfo.lagrummet.se/extern/celex/12008E%03d" % int(article))
+            resultsetcollectionnode = BNode()
+            g.add((resultsetcollectionnode, RDF.type, RDF.List))
+            rc = Collection.Collection(g,resultsetcollectionnode)
+            g.add((articlenode, DCT["relation"], resultsetcollectionnode))
             for s in sets:
-                resultsnode = BNode()
+                resultsetnode = BNode()
                 listnode = BNode()
-                articlenode = URIRef("http://rinfo.lagrummet.se/extern/celex/12008E%03d" % int(article))
-                g.add((articlenode, DCT["relation"], resultsnode))
-                g.add((resultsnode, RDF.type, RINFOEX["RelatedContentCollection"]))
-                g.add((resultsnode, DCT["title"], Literal(s["label"])))
-                g.add((resultsnode, DCT["hasPart"], listnode))
+                rc.append(resultsetnode)
+                g.add((resultsetnode, RDF.type, RINFOEX["RelatedContentCollection"]))
+                g.add((resultsetnode, DCT["title"], Literal(s["label"])))
+                g.add((resultsetnode, DCT["hasPart"], listnode))
                 c = Collection.Collection(g,listnode)
                 g.add((listnode, RDF.type, RDF.List))
                 if article in s['data']:
                     print "    Set %s" % s['label']
-                    #newlistnode = None
                     for result in s['data'][article]:
-                    #    if newlistnode:
-                    #        g.add((listnode,RDF.rest,newlistnode))
-                    #        listnode = newlistnode
                         resnode = BNode()
                         g.add((resnode, DCT["references"], Literal(result[0])))
                         g.add((resnode, DCT["title"], Literal(result[1])))
-                        # g.add((listnode,RDF.first,resnode))
                         c.append(resnode)
-                        # newlistnode = BNode()
-                        # g.add((newlistnode, RDF.type, RDF.List))
                         print "        %s" % result[1]
-
-                    # g.add((listnode, RDF.rest, RDF.nil))
                     
         self.graph_to_image(g,"png",self.annotation_path(basefile)+".png")
         return self.graph_to_annotation_file(g, basefile)
@@ -505,7 +500,8 @@ class EurlexTreaties(DocumentRepository):
         import pydot
         import rdflib
         dot = pydot.Dot()
-        dot.progs = {"dot": "c:/Program Files/Graphviz2.26.3/bin/dot.exe"}
+        # dot.progs = {"dot": "c:/Program Files/Graphviz2.26.3/bin/dot.exe"}
+        dot.progs = {"dot": "c:/Program Files (x86)/Graphviz2.26.3/bin/dot.exe"}
 
         # code from rdflib.util.graph_to_dot, but adjusted to handle unicode
         nodes = {}
@@ -523,6 +519,7 @@ class EurlexTreaties(DocumentRepository):
             dot.add_edge(pydot.Edge(nodes[s], nodes[o], label=repr(p)[22:-2]))
 
         print "Writing %s format to %s" % (imageformat, filename)
+        Util.ensureDir(filename)
         dot.write(path=filename,prog="dot",format=imageformat)
         print "Wrote %s" % filename
                   
