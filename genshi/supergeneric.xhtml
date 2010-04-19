@@ -69,13 +69,13 @@
       --></py:for>
     </div>
     
-    <div class="main">
+    <!--<div class="main">-->
       <py:for each="part in doc.body" py:choose="">
 	<div py:when="isinstance(part, Paragraph)" py:strip="">${render_paragraph(part)}</div>
 	<div py:when="isinstance(part, CompoundStructure)" py:strip="">${render_compound(part,depth=0)}</div>
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
-    </div>
+    <!--</div>-->
   </body>
 </html>
 

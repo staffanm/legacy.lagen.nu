@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    $("#toc").treeview({
+    $("#toc ul").treeview({
 	persist: "location",
         collapsed: true
 	});

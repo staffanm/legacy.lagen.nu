@@ -500,8 +500,8 @@ class EurlexTreaties(DocumentRepository):
         import pydot
         import rdflib
         dot = pydot.Dot()
-        # dot.progs = {"dot": "c:/Program Files/Graphviz2.26.3/bin/dot.exe"}
-        dot.progs = {"dot": "c:/Program Files (x86)/Graphviz2.26.3/bin/dot.exe"}
+        dot.progs = {"dot": "c:/Program Files/Graphviz2.26.3/bin/dot.exe"}
+        # dot.progs = {"dot": "c:/Program Files (x86)/Graphviz2.26.3/bin/dot.exe"}
 
         # code from rdflib.util.graph_to_dot, but adjusted to handle unicode
         nodes = {}

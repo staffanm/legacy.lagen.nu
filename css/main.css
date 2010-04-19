@@ -98,6 +98,7 @@
         border-top: dotted black 1px;
 	padding: 4pt;
         margin: 4pt;
+	float: clear;
       }
 
       #frontpage {
@@ -283,5 +284,13 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
 	font-size: 10pt !important;
 	line-height: 12pt !important;
         padding: 1pt 1pt 2pt 3pt !important;
+    }
+    .articlecontent {
+	width: 50%;
+	float: left;
+    }
+    .articleannotations {
+	width: 49%;
+	border: solid 1px red;
     }
 
