@@ -9,7 +9,7 @@ import shutil
 import pprint
 import types
 import codecs
-from time import time, mktime
+from time import time, mktime, sleep
 from tempfile import mktemp
 from datetime import datetime
 import xml.etree.cElementTree as ET # Python 2.5 spoken here
@@ -795,6 +795,7 @@ WHERE {
                        outfile,
                        parameters = params,
                        validate=False)
+        sleep(1) # let sesame catch it's breath
         
 
     def GenerateAll(self):

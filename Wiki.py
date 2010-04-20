@@ -87,10 +87,10 @@ class WikiDownloader(LegalSource.Downloader):
 
         for f in downloaded_files:
             log.debug("Removing %s" % f)
-            Util.robust_remove(f)
-        
-
-            
+            try:
+                Util.robust_remove(f)
+            except OSError, e:
+                log.warning("Can't remove %s: %s" % (f, e))
                 
     def DownloadNew(self):
         self.DownloadAll()

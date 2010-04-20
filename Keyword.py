@@ -8,7 +8,7 @@ import logging
 import sys, os, re, shutil
 from collections import defaultdict
 from pprint import pprint
-from time import time
+from time import time, sleep
 from tempfile import mktemp
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
@@ -329,12 +329,12 @@ class KeywordManager(LegalSource.Manager):
             print "Setting verbosity"
             log.setLevel(logging.DEBUG)
         start = time()
-        basefile = basefile.replace(":","/")
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'downloaded', basefile]) + ".txt"
         if (not os.path.exists(infile)) and wiki_keyword:
             fp = open(infile,"w")
             fp.write("wiki\n")
             fp.close()
+        basefile = basefile.replace(":","/")
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
         force = self.config[__moduledir__]['parse_force'] == 'True'
         if not force and self._outfile_is_newer([infile],outfile):
@@ -360,6 +360,7 @@ class KeywordManager(LegalSource.Manager):
         # note: infile is e.g. parsed/K/Konsument.xht2, but outfile is generated/Konsument.html
         infile = Util.relpath(self._xmlFileName(basefile))
         outfile = Util.relpath(self._htmlFileName(keyword))
+
         # Use SPARQL queries to create a rdf graph (to be used by the
         # xslt transform) containing enough information about all
         # cases using this term, as well as the wiki authored
@@ -526,6 +527,7 @@ WHERE {
         Util.robust_remove(tmpfile)
         
         log.info(u'%s: OK (%s, %.3f sec)', basefile, outfile, time()-start)
+        sleep(1) # let sesame catch it's breath
         return
 
     def GenerateAll(self):

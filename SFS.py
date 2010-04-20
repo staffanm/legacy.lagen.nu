@@ -7,7 +7,7 @@ from __future__ import with_statement
 # system libraries
 from pprint import pprint
 from tempfile import mktemp
-from time import time
+from time import time,sleep
 import codecs
 import difflib
 import htmlentitydefs
@@ -2676,8 +2676,7 @@ WHERE {
                        parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-        #from time import sleep
-        #sleep(1)
+        sleep(1) # let sesame catch it's breath
         return
 
     def display_title(self,uri,form="absolute"):
