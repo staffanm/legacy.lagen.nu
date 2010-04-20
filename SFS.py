@@ -1034,7 +1034,7 @@ class SFSParser(LegalSource.Parser):
                         # print "Parsing %s" % " ".join(p.split())
                         # print "Calling parse w %s" % baseuri+"#"+prefix
                         parsednodes = self.lagrum_parser.parse(" ".join(p.split()),
-                                                               baseuri+"#"+prefix,
+                                                               baseuri+prefix,
                                                                "dct:references")
                         for n in parsednodes:
                             if term and isinstance(n,unicode) and term in n:
