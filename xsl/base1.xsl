@@ -14,6 +14,9 @@
   <xsl:param name="outfile">unknown-outfile</xsl:param>
   <xsl:param name="annotationfile"/>
 
+  <xsl:variable name="annotations" select="document($annotationfile)/graph"/>
+  <!-- <xsl:variable name="annotations" select="document('../data/eut/intermediate/tfeu-r.ann.xml')/graph"/> -->
+
   <xsl:output method="xml"
   	    doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
   	    doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"

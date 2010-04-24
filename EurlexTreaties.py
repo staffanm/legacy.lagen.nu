@@ -428,32 +428,27 @@ class EurlexTreaties(DocumentRepository):
     def prep_annotation_file(self,basefile):
         print "prep_annotation_file"
 
-        # baseline = self.ranked_set_baseline(basefile)
+
+
+        baseline = self.ranked_set_baseline(basefile)
+        
         # goldstandard = self.ranked_set_goldstandard(basefile)
-        rs1 = self.ranked_set_fake1(basefile)
         rs2 = self.ranked_set_fake2(basefile)
         rs3 = self.ranked_set_fake3(basefile)
         rs4 = self.ranked_set_fake4(basefile)
-        goldstandard = {'1': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
-        print "Ranked set 1"
-        self.calculate_map(rs1,goldstandard)
-        print "Ranked set 2"
-        self.calculate_map(rs2,goldstandard)
-        print "Ranked set 3"
-        self.calculate_map(rs3,goldstandard)
-        print "Ranked set 4"
-        self.calculate_map(rs4,goldstandard)
+        # goldstandard = {'1': ['62009J0014','62009J0197','62009J0357','62009J0403','62009A0027']}
+        # self.calculate_map(rs1,goldstandard)
 
-
-        sets = [{'label':'Naive set 1',
-                 'data':rs1},
-                {'label':'Naive set 2',
-                 'data':rs2},
-                {'label':'Naive set 3',
-                 'data':rs3},
-                {'label':'Naive set 4',
-                 'data':rs4}
-                ]
+        goldstandard = {'1': [['62009J0014',u'Genc v Land Berlin (100%)'],
+                              ['62009J0197',u'Agence européenne des médicaments (90%)'],
+                              ['62009J0357',u'Huchbarov (80%)'],
+                              ['62009J0403',u'Jasna Deticke (70%)'],
+                              ['62009A0027',u'Stella Kunststofftechnik(60%)']]}
+        
+        sets = [{'label':'Baseline',
+                 'data':baseline},
+                {'label':'Gold standard',
+                 'data':goldstandard}]
         
         g = Graph()
         g.bind('dct',self.ns['dct'])
@@ -468,7 +463,6 @@ class EurlexTreaties(DocumentRepository):
                 article = unicode(el.attrib['id'][1:])
                 articles.append(article)
         for article in articles:
-            if int(article) > 1: continue
             print "Results for article %s" % article
             articlenode = URIRef("http://rinfo.lagrummet.se/extern/celex/12008E%03d" % int(article))
             resultsetcollectionnode = BNode()
@@ -493,7 +487,7 @@ class EurlexTreaties(DocumentRepository):
                         c.append(resnode)
                         print "        %s" % result[1]
                     
-        self.graph_to_image(g,"png",self.annotation_path(basefile)+".png")
+        # self.graph_to_image(g,"png",self.annotation_path(basefile)+".png")
         return self.graph_to_annotation_file(g, basefile)
 
     def graph_to_image(self,graph,imageformat,filename):
@@ -637,7 +631,11 @@ class EurlexTreaties(DocumentRepository):
         searcher = idx.searcher(weighting=scoring.BM25F())
 
         tempsearch = tmpidx.searcher()
+
+        rankedset = {}
+        
         for article in articles:
+            rankedset[article] = []
             r = tempsearch.search(query.Term("article",article))
             terms = [t[0] for t in r.key_terms("content", numterms=numterms+1) if not t[0].isdigit()][:numterms]
             print "Article %s:%r" % (article, terms)
@@ -646,34 +644,13 @@ class EurlexTreaties(DocumentRepository):
             results = searcher.search(q, limit=10)
             resultidx = 0
             for result in results:
+                reslbl = "%s (%s)"%(result['title'],results.score(resultidx))
+                rankedset[article].append([result['basefile'],reslbl])
                 print u"\t%s (%s)" % (result['title'], results.score(resultidx))
                 resultidx += 1
-            
 
-        # Step 3: For each article URI, find out the text of it (probably
-        # by loading it into ElementTree and finding the node with the
-        # right @about attribute)
+        return rankedset
 
-        # Step 4: Perform a query with the article text against the
-        # Whoosh DB (with appropriate stemming and whatnot). Put the
-        # top 15 results as being in a ir:BM25NaiveResult with this
-        # article as object. This is our baseline.
-
-        # Step 5: Perform a query with the article text against the
-        # Whoosh DB, but filter cases so that only cases that
-        # explicitly refer to the article in question (or any of it's
-        # earlier incarnations) are selected. Put the top 15 results
-        # as being ir:BM25FilteredResult
-
-        # Step 6: Do whatever magic citation network analysis needed
-        # to get a relevance score based on internal citation
-        # patterns. Put the top 15 results as being
-        # ir:CitationInternalResult
-
-        # Step 7: Do a similar analysis, but use other citation
-        # datasets as well, appropriately weighed. Put the top 15
-        # results as being ir:CitationWeighedResult
-        pass
         
 
 if __name__ == "__main__":

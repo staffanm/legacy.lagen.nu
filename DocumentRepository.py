@@ -660,7 +660,7 @@ class DocumentRepository(object):
             annotation_file = self.prep_annotation_file(basefile)
             if annotation_file:
                 # params = {'annotationfile':'../data/sfs/intermediate/%s.ann.xml' % basefile}
-                params = {'annotationfile':annotation_file}
+                params = {'annotationfile':'../'+annotation_file.replace("\\","/")}
             else:
                 params = {}
             Util.transform(self.xslt_template,

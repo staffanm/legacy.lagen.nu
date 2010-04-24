@@ -199,8 +199,8 @@ def tidy(tagsoup):
 def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
 
-    parameters['infile'] = infile;
-    parameters['outfile'] = outfile;
+    #parameters['infile'] = infile;
+    #parameters['outfile'] = outfile;
     
     param_str = ""
     for p in parameters.keys():

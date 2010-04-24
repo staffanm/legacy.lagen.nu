@@ -28,13 +28,30 @@
   </xsl:template>
 
   <xsl:template match="*[@typeof='eurlex:Article']">
+    <xsl:variable name="uri" select="@about"/>
+    <!-- <xsl:variable name="collections" select="$annotations/resource[@uri='$uri']/dct:relation/li[a/rinfoex:RelatedContentCollection]"/> -->
+    <xsl:variable name="collections" select="$annotations/resource[@uri=$uri]/dct:relation/li[a/rinfoex:RelatedContentCollection]"/>
+
     <div class="articlecontainer">
       <div class="articlecontent">
 	<!-- strip the containing <div>, we should copy the id field though -->
 	<xsl:apply-templates/>
       </div>
       <div class="articleannotations">
-	The awesome annotations go here
+	<ul>
+	  <xsl:for-each select="$collections">
+	    <li><xsl:value-of select="dct:title"/>
+	    <ul>
+	      <xsl:for-each select="dct:hasPart/li">
+		<li>
+		  <xsl:value-of select="dct:references"/>:
+		  <xsl:value-of select="dct:title"/>
+		</li>
+	      </xsl:for-each>
+	    </ul>
+	    </li>
+	  </xsl:for-each>
+	</ul>
       </div>
     </div>
   </xsl:template>
