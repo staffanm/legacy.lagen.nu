@@ -389,10 +389,6 @@ class EurlexCaselaw(DocumentRepository):
         for i in range(len(results)):
             print "%s: %s" % (results[i]['title'], results.score(i))
 
-    # skip the actual relation 
-    # def relate(self,basefile):
-        # pass
-
             
 if __name__ == "__main__":
     EurlexCaselaw.run()
