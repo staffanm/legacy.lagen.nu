@@ -49,27 +49,26 @@ digit	     ::= [0-9]
 
 
 # Skiljetecken som hittats i SFST-datat:
-# * the – and — are windows-1252-dashes, 
-# * “ and ” are "smart quotes", 
-# * „ is smart quoutes, subscripted
-# * › is larger-than-or-equal, 
-# * ‹ is less-than-or-equal,
-# * ˜ is a superscript-tilde. 
-# * ‡ is a double-dagger, 
-# * • is typography-bullet, 
-# * ‘ and ’ are single-smartquotes. 
 # * \177 is DEL, which is present in 1977:1194, 
+# * € is (windows 1252) euro
+# * „ is smart quoutes, subscripted
+# * ‡ is a double-dagger, 
+# * ‰ is per-mille sign. 
+# * ‹ is less-than-or-equal,
 # *  is unmapped, but present in 1993:1199. 
-# * ‰ is unknown to me. 
-# * ¥ is (erronosly?) used in 2005:837.
-# * ± is plus-minus
-# * ¼, ½, ¾ are fractions (1/4, 1/2, 3/4 - should these be digits?)
+# * ‘ and ’ are single-smartquotes. 
+# * “ and ” are "smart quotes", 
+# * • is typography-bullet, 
+# * – and — are windows-1252-dashes, 
+# * ˜ is a superscript-tilde. 
+# * › is larger-than-or-equal, 
 # * ¡ and ¿ is upside-down exclaimation point and question mark
 # * ¢ is a cent sign
-# * × is multiplication sign
+# * ¥ is (erronosly?) used in 2005:837.
 # * ¯ is macron
-# * € is (windows 1252) euro
-# punctuation  ::= [][!@#$£¤%^&()+=|\{}:;<>,.?¿/§­"“”°¹²³·µ«»º´_~'‘’*`–—›‹˜‡•‰¥±¼½¾¡¢„×¯®€©-]
-punctuation    ::= [][!"#$%&'()*+,-./:;<=>?@\^_`{}~€‚ƒ„…†‡ˆ‰‹‘’“”•–—˜™›¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿÷]
+# * ± is plus-minus
+# * ¼, ½, ¾ are fractions (1/4, 1/2, 3/4 - should these be digits?)
+# * × is multiplication sign
+punctuation    ::= [][!"#$%&'()*+,-./:;<=>?@\^_`{}~€‚ƒ„…†‡ˆ‰‹‘’“”•–—˜™›¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿÷]
 
 # ------------ end of base.ebnf ----------------
