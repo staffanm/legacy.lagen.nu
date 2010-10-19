@@ -34,6 +34,7 @@ class EurlexCaselaw(DocumentRepository):
     re_celexno = re.compile('(6)(\d{4})(\w)(\d{4})(\(\d{2}\)|)')
 
     def download_everything(self,cache=False):
+        self.log.debug("Downloading, use_cache is %s" % cache)
         startyear = 2009 # eg 1954
         for year in range(startyear,datetime.date.today().year+1):
             list_url = "http://eur-lex.europa.eu/Result.do?T1=V6&T2=%d&T3=&RechType=RECH_naturel" % year
@@ -61,7 +62,7 @@ class EurlexCaselaw(DocumentRepository):
                     if ('J' in celexno or 'A' in celexno
                         or 'W' in celexno or 'T' in celexno):
                         self.log.debug("Downloading case %s" % celexno)
-                        self.download_single(celexno,cache=True)
+                        self.download_single(celexno,cache=cache)
                     else:
                         pass
                         #self.log.debug("Not downloading doc %s" % celexno)
@@ -335,14 +336,15 @@ class EurlexCaselaw(DocumentRepository):
 
     @classmethod
     def relate_all_setup(cls, config):
-        # before extracting all RDFa, create a Whoosh index
-        print "Doing subclass-specific setup (that can be done w/o an instance)"
         if ('whoosh_indexing' in config[cls.module_dir] and
             config[cls.module_dir]['whoosh_indexing'] == 'True'):
             print "We're doing whoosh_indexing!"
+            create_whoosh_index(cls)
         else:
             print "No whoosh_indexing :-("
-        
+        super(EurlexCaselaw,cls).relate_all_setup(config)
+
+    def create_whoosh_index(cls):
         indexdir = os.path.sep.join([config['datadir'],cls.module_dir,'index'])
         if not os.path.exists(indexdir):
             os.mkdir(indexdir)

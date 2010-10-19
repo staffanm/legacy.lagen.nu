@@ -218,6 +218,7 @@ class DocumentRepository(object):
                 if len(parts) == 1:
                     options[parts[0]] = value
                 elif len(parts) == 2:
+                    print "options[%s][%s] = %r" % (parts[0], parts[1], value)
                     options[parts[0]][parts[1]] = value
                 elif len(parts) == 3:
                     options[parts[0]][parts[1]][parts[2]] = value

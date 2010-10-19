@@ -6,6 +6,7 @@ from cStringIO import StringIO
 from rdflib import Literal, BNode, Namespace, URIRef, RDF
 from rdflib.Graph import Graph
 import pydot
+import networkx as nx
 
 from SesameStore import SesameStore
 
@@ -15,6 +16,7 @@ TRIPLESTORE = "http://localhost:8080/openrdf-sesame"
 REPOSITORY = "lagen.nu"
 DCT = Namespace('http://purl.org/dc/terms/')
 RINFO = Namespace('http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#')
+EURLEX = Namespace('http://lagen.nu/eurlex#')
 
 def sfs_label_transform(label):
     if "(1960:729)" in label:
@@ -29,20 +31,24 @@ def sfs_type_transform(rdftype):
         return "box"
     else:
         return "ellipse"
-    
+
+# TODO: implement parametrization (once we learn in what way we wish
+# it to work)
 def parametrize_query(q,args):
-    return None
+    return q
 
 def get_rdf_graph(store,queries):
     g = Graph()
     if not queries:
+        # get every single triple in the store
         print "getting serialized"
         nt = store.get_serialized("nt")
         print "parsing graph"
         g.parse(StringIO(nt),format="nt")
     else:
         for q in queries:
-            g.add(store.construct(query))
+            nt = store.construct(q,format="nt")
+            g.parse(StringIO(nt),format="nt")
     return g   
 
 def rdf_to_dot(rdfgraph, label, link, labeltransform, typetransform):
@@ -61,7 +67,17 @@ def rdf_to_dot(rdfgraph, label, link, labeltransform, typetransform):
             dotgraph.add_edge(node,target)
 
     return dotgraph
-            
+
+def rdf_to_nx(rdfgraph):
+    nxgraph = nx.DiGraph()
+    for (s,p,o) in rdfgraph:
+        if p == EURLEX["cites"]:
+            s1 = s.split("/")[-1]
+            o1 = o.split("/")[-1]
+            print "Adding %s -> %s" % (s1,o1)
+            nxgraph.add_edge(s1,o1)
+    return nxgraph
+
 configs = {'sfs':{'context':'<urn:x-local:sfs>',
                  'label':DCT['title'],
                  'labeltransform':sfs_label_transform,
@@ -69,6 +85,16 @@ configs = {'sfs':{'context':'<urn:x-local:sfs>',
                  'link':DCT['references'],
                  'format':'dot', #maybe GEXF in the future
                  'renderer':'twopi'},
+           'ecj': {'queries':["""PREFIX eurlex: <http://lagen.nu/eurlex#>
+                                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+                                 CONSTRUCT { ?x eurlex:casenum ?z .
+                                             ?x eurlex:cites ?y }
+                                 WHERE { ?x eurlex:cites ?y . 
+                                         ?y rdf:type ?w . 
+                                         ?x eurlex:casenum ?z }"""],
+                   'label':EURLEX['casenum'],
+                   'context':'<urn:x-local:ecj>',
+                   'format':'networkx'}
           }
 
 
@@ -87,9 +113,10 @@ if __name__ == "__main__":
         for q in conf['queries']:
             queries.append(parametrize_query(q,args))
 
-    print "Imma get graph!"
+    print "Getting graph from %d queries" % len(queries)
     rdfgraph = get_rdf_graph(store,queries)
-
+    print "Graph contains %s triples" % len(rdfgraph)
+    
     if conf['format'] == 'dot':
         print "converting rdf graph to dot graph"
         dotgraph = rdf_to_dot(rdfgraph,
@@ -102,3 +129,15 @@ if __name__ == "__main__":
         if 'renderer' in conf:
             print "rendering dot graph"
             dotgraph.write_png("out.png", prog=conf['renderer'])
+    elif conf['format'] == 'networkx':
+        print "Converting rdf graph to networkx graph"
+        nxgraph = rdf_to_nx(rdfgraph)
+        import matplotlib.pyplot as plt
+        nx.write_graphml(nxgraph, "out.graphml")
+        print "out.graphml created"
+        ranked = nx.pagerank(nxgraph)
+        import pprint
+        pprint.pprint(ranked)
+    else:
+        print "Unknown graph format %s" % conf['format']
+

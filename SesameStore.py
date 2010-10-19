@@ -86,10 +86,30 @@ class SesameStore():
         # results = treeify_results(sparql.queryAndConvert())
 
         # This code instead uses the raw REST API found in SesameStore
-        url = self.endpoint_url + "?query=" + urllib.quote(query.replace("\n", " "))
+        url = self.endpoint_url
+        if not self.context:
+            url += "?"
+        url += "query=" + urllib.quote(query.replace("\n", " "))
+
         # print url
         req = Request(url)
         
+        req.add_header('Accept',self.contenttype[format])
+        req.data = query
+        try:
+            results = self.__urlopen(req)
+            return results
+        except HTTPError, e:
+            raise SparqlError(e.read())
+
+    def construct(self,query,format="nt"):
+        query = " ".join(query.split()) # normalize space 
+        url = self.endpoint_url
+        if not self.context:
+            url += "?"
+        url += "query=" + urllib.quote(query.replace("\n", " "))
+        print url
+        req = Request(url)
         req.add_header('Accept',self.contenttype[format])
         req.data = query
         try:
@@ -98,7 +118,7 @@ class SesameStore():
             return results
         except HTTPError, e:
             raise SparqlError(e.read())
-
+        
     def clear(self):
         # print "Deleting all triples from %s" % self.statements_url
         req = Request(self.statements_url)
