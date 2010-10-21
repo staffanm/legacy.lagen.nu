@@ -323,7 +323,7 @@ class Manager(object):
                 triples += len(graph)
                 store.add_graph(graph)
                 store.commit()
-                if c % 100 == 0:
+                if c % 10 == 0:
                     log.info("Related %d documents (%d triples total)" % (c, triples))
 
             log.info("Serializing to %s" % rdffile)
@@ -653,10 +653,9 @@ class Manager(object):
         # typed. Should we use DataObjects instead?
         store = SesameStore(self.config['triplestore'], self.config['repository'])
         results = store.select(query)
-        # print results.decode("utf-8")
-        tree = ET.fromstring(results)
-        #print "iterating rows"
         res = []
+        # return res
+        tree = ET.fromstring(results)
         for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
             d = {}
             for element in row:
@@ -665,8 +664,6 @@ class Manager(object):
                 value = element[0].text
                 d[key] = value
             res.append(d)
-                
-        # convert the resulting SPARQL-result XML into a list of python dicts
         return res
     
     ################################################################

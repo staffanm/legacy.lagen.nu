@@ -729,7 +729,7 @@ class DVManager(LegalSource.Manager):
         m = self.re_xmlbase(head)
         if m:
             uri = "http://rinfo.lagrummet.se/publ/rattsfall/%s" % m.group(1)
-            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map'])
+            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map.new'])
             Util.ensureDir(mapfile)
             f = codecs.open(mapfile,'a',encoding='iso-8859-1')
             f.write(u"%s\t%s\n" % (m.group(1),basefile))
@@ -799,9 +799,12 @@ WHERE {
         
 
     def GenerateAll(self):
-        Util.robust_remove(os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map']))
+        mapfile = os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map'])
+        Util.robust_remove(mapfile+".new")
+
         parsed_dir = os.path.sep.join([self.baseDir, u'dv', 'parsed'])
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
+        Util.robustRename(mapfile+".new", mapfile)
         
     def ParseGen(self,basefile):
         self.Parse(basefile)
@@ -848,9 +851,14 @@ WHERE {
         for obj in by_pred_obj[publ_pred]:
             label = self.publikationer[obj]
             for subject in list(set(by_pred_obj[publ_pred][obj])):
+                if not desc_pred in by_subj_pred[subject]:
+                    log.warning("No description for %s, skipping" % subject)
+                    continue
+                if not id_pred in by_subj_pred[subject]:
+                    log.warning("No identifier for %s, skipping" % subject)
+                    continue
                 year = by_subj_pred[subject][year_pred]
                 identifier = by_subj_pred[subject][id_pred]
-                
                 desc = by_subj_pred[subject][desc_pred]
                 if len(desc) > 80:
                     desc = desc[:80].rsplit(' ',1)[0]+'...'

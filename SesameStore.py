@@ -95,6 +95,9 @@ class SesameStore():
         req = Request(url)
         
         req.add_header('Accept',self.contenttype[format])
+        # These don't make Sesame go any faster...
+        # req.add_header('Accept',"application/sparql-results+json")
+        # req.add_header('Accept',"application/x-binary-rdf-results-table")
         req.data = query
         try:
             results = self.__urlopen(req)
