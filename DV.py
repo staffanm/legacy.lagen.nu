@@ -26,7 +26,11 @@ import textwrap
 from genshi.template import TemplateLoader
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
-from rdflib.Graph import Graph
+try: 
+    from rdflib.Graph import Graph
+except ImportError:
+    from rdflib import Graph
+    
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
@@ -203,8 +207,9 @@ class DVDownloader(LegalSource.Downloader):
                     self.browser.retrieve(l.absolute_url, localfile)
                     self.process_zipfile(localfile)
 
-    re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)')
-    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*(_\d|)?)_BYTUT_\d+-\d+-\d+_?(\d*)')
+    re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)\.(docx?)')
+    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*(_\d|)?)_BYTUT_\d+-\d+-\d+\.(docx?)')
+    
     def process_zipfile(self, zipfilename):
         removed = replaced = created = untouched = 0
         zipf = zipfile.ZipFile(zipfilename, "r")
@@ -212,18 +217,19 @@ class DVDownloader(LegalSource.Downloader):
             # Namnen i zipfilen använder codepage 437 - retro!
             uname = name.decode('cp437')
             uname = os.path.split(uname)[1]
-            #log.debug("In: %s" % uname)
+            log.debug("In: %s" % uname)
             if 'BYTUT' in name:
                 m = self.re_bytut_malnr.match(uname)
             else:
                 m = self.re_malnr.match(uname)
             if m:
-                (court, malnr, referatnr) = (m.group(1), m.group(2), m.group(3))
-                # log.info("court %s, malnr %s, referatnr %s" % (court,malnr, referatnr))
+                (court, malnr, referatnr, suffix) = (m.group(1), m.group(2), m.group(3), m.group(4))
+                # log.debug("court %s, malnr %s, referatnr %s, suffix %s" % (court,malnr, referatnr, suffix))
+                assert ((suffix == "doc") or (suffix == "docx")), "Unknown suffix %s in %r" % (suffix, uname)
                 if referatnr:
-                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s_%s.doc" % (malnr,referatnr)])
+                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s_%s.%s" % (malnr,referatnr,suffix)])
                 else:
-                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s.doc" % (malnr)])
+                    outfilename = os.path.sep.join([self.intermediate_dir, court, "%s.%s" % (malnr,suffix)])
 
                 if "_notis_" in name:
                     continue
@@ -260,7 +266,7 @@ class DVDownloader(LegalSource.Downloader):
                     os.utime(outfilename, (ts,ts))
                     #log.debug("Out: %s" % outfilename)
             else:
-                log.warning(u'Kunde inte tolka filnamnet %s i %s' % (name, zipfilename))
+                log.warning(u'Kunde inte tolka filnamnet %r i %s' % (name, zipfilename))
         log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
 
 
@@ -343,10 +349,19 @@ class DVParser(LegalSource.Parser):
         self.config = config
         self.lagrum_parser = LegalRef(LegalRef.LAGRUM)
         self.rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
+
+        # Parsing is a two step process: First extract some version of
+        # the text from the binary blob (either through running
+        # antiword for old-style doc documents, or by unzipping
+        # document.xml, for new-style docx documents)
         
-        docbookfile = docfile.replace('word','docbook').replace('.doc','.xml')
-        # Util.word_to_html(docfile,docbookfile)
-        self.word_to_docbook(docfile,docbookfile)
+        if docfile.endswith("docx"):
+            ooxmlfile = docfile.replace('word','ooxml').replace('.docx','.xml')
+            self.word_to_ooxml(docfile,ooxmlfile)
+        else:
+            docbookfile = docfile.replace('word','docbook').replace('.doc','.xml')
+            self.word_to_docbook(docfile,docbookfile)
+            
         
         # FIXME: This is almost identical to the code in
         # SFSManager.Parse - should be refactored somehow
@@ -368,21 +383,36 @@ class DVParser(LegalSource.Parser):
                 assert os.path.exists(descfile), "No description of patch %s found" % patchfile
                 patchdesc = codecs.open(descfile,encoding='utf-8').read().strip()
 
-                # Uncomment below if for some reason we need to do a
-                # unix2dos lineending conversion
-                
-                # cmd = 'unix2dos %s' % patchedfile
-                # log.debug(u'%s: running %s' % (id, cmd))
-                # (ret, stdout, stderr) = Util.runcmd(cmd)
-                # if ret == 0: 
-                #     docbookfile = patchedfile
-                # else:
-                #     log.warning(u"%s: Failed lineending conversion: %s" % (id, stderr))
             else:
-                log.warning(u"%s: Could not apply patch %s: %s" % (id, patchfile, stdout.strip()))
+                # If patching fails, do not continue (patching
+                # generally done for privacy reasons -- if it fails
+                # and we go on, we could expose sensitive information)
+                raise Util.ExternalCommandError(u"%s: Could not apply patch %s: %s" % (id, patchfile, stdout.strip()))
+                # log.warning(u"%s: Could not apply patch %s: %s" % (id, patchfile, stdout.strip()))
             
-        # return self.parse_msword_html(htmlfile)
-        return self.parse_antiword_docbook(docbookfile, patchdesc)
+
+        # The second step is to mangle the crappy XML produced by
+        # antiword (docbook) or Word 2007 (OOXML) into a nice XHTML2
+        # structure.
+        if docfile.endswith("docx"):
+            return self.parse_ooxml(ooxmlfile, patchdesc)
+        else:
+            return self.parse_antiword_docbook(docbookfile, patchdesc)
+
+
+    def word_to_ooxml(self,indoc, outdoc):
+        name = "word/document.xml"
+        zipf = zipfile.ZipFile(indoc,"r")
+        assert name in zipf.namelist(), "No %s in zipfile %s" % (name,indoc)
+        data = zipf.read(name)
+        Util.ensureDir(outdoc)
+        outfile = open(outdoc,"wb")
+        outfile.write(data)
+        outfile.close()
+        zi = zipf.getinfo(name)
+        dt = datetime(*zi.date_time)
+        ts = mktime(dt.timetuple())
+        os.utime(outdoc, (ts,ts))
 
     def word_to_docbook(self,indoc,outdoc):
         from string import Template
@@ -428,6 +458,141 @@ class DVParser(LegalSource.Parser):
     def _sokord_to_subject(self, sokord):
         return u'http://lagen.nu/concept/%s' % sokord.capitalize().replace(' ','_')
     
+    def parse_ooxml(self,ooxmlfile,patchdescription=None):
+        # FIXME: Change this code bit by bit to handle OOXML instead
+        # of docbook (generalizing where possible)
+        soup = Util.loadSoup(ooxmlfile,encoding='utf-8')
+        head = Metadata()
+
+
+        # Högst uppe på varje domslut står domstolsnamnet ("Högsta
+        # domstolen") följt av referatnumret ("NJA 1987
+        # s. 113"). 
+
+        #find first w:tr, then it's first 
+
+        firstfields = soup.findAll("w:t",limit=4)
+        
+        domstol = Util.elementText(firstfields[0])
+        referat = Util.elementText(firstfields[1])
+        tmp = Util.elementText(firstfields[3])
+        if tmp.startswith("NJA "):
+            referat += " (" + tmp + ")"
+
+        # FIXME: Could be generalized
+        domstolsuri = self.domstolsforkortningar[self.id.split("/")[0]]
+        head[u'Domstol'] = LinkSubject(domstol,
+                                       uri=domstolsuri,
+                                       predicate=self.labels[u'Domstol'])
+
+        head[u'Referat'] = UnicodeSubject(referat,
+                                          predicate=self.labels[u'Referat'])
+
+        # Hitta övriga enkla metadatafält i sidhuvudet
+        for key in self.labels.keys():
+            node = soup.find(text=re.compile(key+u':'))
+            if node:
+                txt = Util.elementText(node.findNext("w:t"))
+                if txt: # skippa fält med tomma strängen-värden
+                    head[key] = UnicodeSubject(txt, predicate=self.labels[key])
+
+        # Hitta sammansatta metadata i sidhuvudet
+        for key in [u"Lagrum", u"Rättsfall"]:
+            node = soup.find(text=re.compile(key+u':'))
+            if node:
+                items = []
+                textnodes = node.findParent('w:tc').findNextSibling('w:tc')
+                for textnode in textnodes.findAll('w:t'):
+                    items.append(Util.elementText(textnode))
+
+                if items and items != ['']:
+                    if key == u'Lagrum':
+                        containercls = Lagrum
+                        parsefunc = self.lagrum_parser.parse
+                    elif key == u'Rättsfall':
+                        containercls = Rattsfall
+                        parsefunc = self.rattsfall_parser.parse
+
+                    head[key] = []
+                    for i in items:
+                        l = containercls()
+                        # Modify the result of parsing for references
+                        # and change all Link objects to LinkSubject
+                        # objects with an extra RDF predicate
+                        # property. Maybe the link class should be
+                        # changed to do this instead?
+                        for node in parsefunc(i):
+                            if isinstance(node,Link):
+                                l.append(LinkSubject(unicode(node),
+                                                     uri=unicode(node.uri),
+                                                     predicate=self.multilabels[key]))
+                            else:
+                                l.append(node)
+
+                        head[key].append(l)
+
+        if not head[u'Referat']:
+            # För specialdomstolarna kan man lista ut referatnumret
+            # från målnumret
+            if head[u'Domstol'] == u'Marknadsdomstolen':
+                head[u'Referat'] = u'MD %s' % head[u'Domsnummer'].replace('-',':')
+            else:
+                raise AssertionError(u"Kunde inte hitta referatbeteckningen i %s" % docbookfile)
+
+        # Hitta själva referatstexten... här kan man göra betydligt
+        # mer, exv hitta avsnitten för de olika instanserna, hitta
+        # dissenternas domskäl, ledamöternas namn, hänvisning till
+        # rättsfall och lagrum i löpande text...
+        body = Referatstext()
+        for p in soup.find(text=re.compile('EFERAT')).findParent('w:tr').findNextSibling('w:tr').findAll('w:p'):
+            body.append(Stycke([Util.elementText(p)]))
+
+        print "Found %s p" % len(body)
+        
+        # Hitta sammansatta metadata i sidfoten
+
+        txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findNext('w:t'))
+        sokord = []
+        for s in self.re_delimSplit(txt):
+            s = Util.normalizeSpace(s)
+            if not s:
+                continue
+            # terms longer than 72 chars are not legitimate
+            # terms. more likely descriptions. If a term has a - in
+            # it, it's probably a separator between a term and a
+            # description
+            while len(s) >= 72 and " - " in s:
+                h, s = s.split(" - ",1)
+                sokord.append(h)
+            if len(s) < 72:
+                sokord.append(s)
+
+        # Using LinkSubjects (below) is more correct, but we need some
+        # way of expressing the relation:
+        # <http://lagen.nu/concept/Förhandsbesked> rdfs:label "Förhandsbesked"@sv
+        head[u'Sökord'] = [UnicodeSubject(x,
+                                          predicate=self.multilabels[u'Sökord'])
+                           for x in sokord]
+        #head[u'Sökord'] = [LinkSubject(x,
+        #                               uri=self._sokord_to_subject(x),
+        #                               predicate=self.multilabels[u'Sökord'])
+        #                   for x in sokord]
+
+        if soup.find(text=re.compile(u'^\s*Litteratur:\s*$')):
+            n = soup.find(text=re.compile(u'^\s*Litteratur:\s*$')).findNext('w:t')
+            txt = Util.elementText(n)
+            head[u'Litteratur'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Litteratur'])
+                                   for x in txt.split(";")]
+
+        self.polish_metadata(head)
+        if patchdescription:
+            head[u'Textändring'] = UnicodeSubject(patchdescription,
+                                                  predicate=RINFOEX['patchdescription'])
+        
+        xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
+        return xhtml
+
+
     def parse_antiword_docbook(self,docbookfile,patchdescription=None):
         soup = Util.loadSoup(docbookfile,encoding='utf-8')
         head = Metadata()
@@ -566,6 +731,7 @@ class DVParser(LegalSource.Parser):
         xhtml = self.generate_xhtml(head,body,None,__moduledir__,globals())
         return xhtml
 
+
     def polish_metadata(self,head):
         # Putsa upp metadatan på olika sätt
         #
@@ -693,6 +859,10 @@ class DVManager(LegalSource.Manager):
             return
 
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
+        if not os.path.exists(infile):
+            log.info(u"%s: Can't find doc file, trying docx")
+            infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".docx"
+            
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
 
         # check to see if the outfile is newer than all ingoing files and don't parse if so
@@ -719,6 +889,7 @@ class DVManager(LegalSource.Manager):
     def ParseAll(self):
         intermediate_dir = os.path.sep.join([self.baseDir, u'dv', 'intermediate','word'])
         self._do_for_all(intermediate_dir, '.doc',self.Parse)
+        self._do_for_all(intermediate_dir, '.docx',self.Parse)
 
     def Generate(self,basefile):
         infile = Util.relpath(self._xmlFileName(basefile))
