@@ -1,0 +1,10 @@
+--- data/dv/intermediate/ooxml/MÖD/M6883-09.xml	1980-01-01 00:00:00.000000000 -0800
++++ /tmp/tmplrWXJ2	2010-11-09 11:21:17.636861000 -0800
+@@ -133,7 +133,6 @@
+                 <w:sz w:val="16" />
+                 <w:szCs w:val="16" />
+               </w:rPr>
+-              <w:t>-</w:t>
+             </w:r>
+             <w:r w:rsidR="008625DE" w:rsidRPr="008625DE">
+               <w:rPr>
