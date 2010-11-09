@@ -1,34 +1,11 @@
---- data\dv\intermediate\docbook\HDO\�367-01_1.xml	2009-01-18 01:05:26.410000000 +0100
-+++ data\dv\intermediate\docbook\HDO\�367-01_1-mod.xml	2009-01-18 01:08:29.456000000 +0100
-@@ -214,7 +214,7 @@
- 
-        <entry>Allmän åklagare yrkade vid Skövde TR ansvar å C. C., född 1956, för
- sexuellt ofredande med följande gärningsbeskrivning: C. C., som är
--styrelseledamot i Swerotec i Skövde AB och som handhar den faktiska
-+styrelseledamot i S. AB och som handhar den faktiska
- ledningen av bolaget, har under tiden d. 15 febr. 1999 till d. 16 april
- 1999 i bolagets lokaler på Varolavägen i Skövde genom ord och handling
- uppträtt anstötligt mot bolagets praktikant J. Å. C. C. har därvid vid
-@@ -231,9 +231,9 @@
- domskälen upptogs följande av vad J. Å., född 1978, och C. C. uppgivit
- vid förhör:
- 
--J. Å.: Hon presenterades för Swerotec i Skövde AB hösten 1998 genom J.
-+J. Å.: Hon presenterades för S. AB hösten 1998 genom J.
- E., praktikplatshandläggare hos kommunen. Hon erhöll lärlingsplats på
--företaget. Hennes arbetsuppgifter hos Swerotec var att svara i telefon,
-+företaget. Hennes arbetsuppgifter hos S. var att svara i telefon,
- ta emot order, bokföringsarbete och packningsarbete. Bokföringen tyckte
- hon var svårt. Det gick bra att svara i telefon. Det hände att hon fick
- skäll av C. C. för att hon skulle ha missat telefonsamtal. Hon tyckte
-@@ -304,8 +304,8 @@
- handlade om. Det är först efteråt hon förstått att det handlade om
+--- data/dv/intermediate/docbook/HDO/Ö367-01_1.xml	2010-11-09 10:40:42.306862131 -0800
++++ /tmp/tmpZQx2xY	2010-11-09 10:40:11.278861000 -0800
+@@ -305,7 +305,7 @@
  sexuella trakasserier.
  
--C. C.: Han är ägare till Swerotec. Via kommunen fick J. Å. en
--praktikantplats på Swerotec. Hennes arbetsuppgifter var bl.a. att svara
-+C. C.: Han är ägare till S. Via kommunen fick J. Å. en
-+praktikantplats på S. Hennes arbetsuppgifter var bl.a. att svara
- i telefon och arbeta med ekonomiska uppgifter. Hon skulle läras upp och
- tanken var att det skulle kunna leda till en fast anställning. Efter
- fjorton dagar ringde de från kommunen och sade att J. Å. inte trivdes.
+ C. C.: Han är ägare till S. Via kommunen fick J. Å. en praktikantplats
+-på Swerotec. Hennes arbetsuppgifter var bl.a. att svara i telefon och
++på S. Hennes arbetsuppgifter var bl.a. att svara i telefon och
+ arbeta med ekonomiska uppgifter. Hon skulle läras upp och tanken var att
+ det skulle kunna leda till en fast anställning. Efter fjorton dagar
+ ringde de från kommunen och sade att J. Å. inte trivdes. Han frågade
