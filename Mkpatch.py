@@ -8,13 +8,15 @@ from shutil import copy2
 import Util
 
 if __name__ == "__main__":
+    coding = 'utf-8' if sys.stdin.encoding == 'UTF-8' else 'iso-8859-1'
+    myargs = [arg.decode(coding) for arg in sys.argv]
+
     # ask for description and place it alongside
 
     # copy the modified file to a safe place
-    file_to_patch = sys.argv[1].replace("\\","/") # normalize
+    file_to_patch = myargs[1].replace("\\","/") # normalize
     tmpfile = mktemp()
     copy2(file_to_patch,tmpfile)
-
         
     # Run SFSParser._extractSFST() (and place the file in the correct location)
     # or DVParser.word_to_docbook() 
@@ -41,6 +43,16 @@ if __name__ == "__main__":
         os.remove(file_to_patch)
         p.word_to_docbook(sourcefile, file_to_patch)
         
+    elif "/dv/intermediate/ooxml/" in file_to_patch:
+        source = "dv"
+        basefile = file_to_patch.split("/dv/intermediate/ooxml/")[1]
+        import DV
+        p = DV.DVParser()
+        sourcefile = file_to_patch.replace("/ooxml/", "/word/").replace(".xml", ".docx")
+        print "source %r, basefile %r, sourcefile %r" % (source,basefile,sourcefile)
+        os.remove(file_to_patch)
+        p.word_to_ooxml(sourcefile, file_to_patch)
+
     # calculate place in patch tree
     patchfile = "patches/%s/%s.patch" % (source, os.path.splitext(basefile)[0])
     Util.ensureDir(patchfile)
@@ -48,7 +60,7 @@ if __name__ == "__main__":
     # run diff on the original and the modified file, placing the patch right in the patch tree
     cmd = "diff -u %s %s > %s" % (file_to_patch, tmpfile, patchfile)
     print "Running %r" % cmd
-    os.system(cmd)
+    (ret, stdout, stderr) = Util.runcmd(cmd)
 
     if os.stat(patchfile).st_size == 0:
         print "FAIL: Patchfile is empty"

@@ -13,10 +13,8 @@ Note that your class cannot have a method called `Dispatch`.
     """
 
     def Dispatch(self,argv):
-        # FIXME: there are bound to be cases when argv isn't
-        # iso-8859-1-coded. Can we in some reliable way find out what
-        # encoding argv uses?
-        myargs = [arg.decode('iso-8859-1') for arg in argv]
+        coding = 'utf-8' if sys.stdin.encoding == 'UTF-8' else 'iso-8859-1'
+        myargs = [arg.decode(coding) for arg in argv]
         if len(myargs) < 2:
             print "No command argument given"
             self.__printValidCommands()

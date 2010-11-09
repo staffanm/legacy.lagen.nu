@@ -203,23 +203,31 @@ class DVDownloader(LegalSource.Downloader):
 
                 localfile = "%s/%s" % (self.download_dir, fullname)
                 if not os.path.exists(localfile):
-                    log.info("Downloading %s to %s" % (l.absolute_url, localfile))
+                    log.info("Downloading %s" % (l.absolute_url))
                     self.browser.retrieve(l.absolute_url, localfile)
                     self.process_zipfile(localfile)
 
+    # eg. HDO_T3467-96.doc or HDO_T3467-96_1.doc
     re_malnr = re.compile(r'([^_]*)_([^_\.]*)_?(\d*)\.(docx?)')
-    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*(_\d|)?)_BYTUT_\d+-\d+-\d+\.(docx?)')
-    
+    # eg. HDO_T3467-96_BYTUT_2010-03-17.doc or HDO_T3467-96_BYTUT_2010-03-17_1.doc
+    re_bytut_malnr = re.compile(r'([^_]*)_([^_\.]*)_BYTUT_\d+-\d+-\d+_?(\d*)\.(docx?)')
+    re_tabort_malnr = re.compile(r'([^_]*)_([^_\.]*)_TABORT_\d+-\d+-\d+_?(\d*)\.(docx?)')
+
     def process_zipfile(self, zipfilename):
         removed = replaced = created = untouched = 0
         zipf = zipfile.ZipFile(zipfilename, "r")
         for name in zipf.namelist():
+            if "_notis_" in name:
+                continue
             # Namnen i zipfilen använder codepage 437 - retro!
             uname = name.decode('cp437')
             uname = os.path.split(uname)[1]
             log.debug("In: %s" % uname)
             if 'BYTUT' in name:
                 m = self.re_bytut_malnr.match(uname)
+            elif 'TABORT' in name:
+                m = self.re_tabort_malnr.match(uname)
+                # log.info(u'Ska radera!')
             else:
                 m = self.re_malnr.match(uname)
             if m:
@@ -231,11 +239,12 @@ class DVDownloader(LegalSource.Downloader):
                 else:
                     outfilename = os.path.sep.join([self.intermediate_dir, court, "%s.%s" % (malnr,suffix)])
 
-                if "_notis_" in name:
-                    continue
-                elif "BORT" in name:
+                if "TABORT" in name:
                     log.info(u'Raderar befintligt referat %s %s' % (court,malnr))
-                    os.unlink(outfilename)
+                    if not os.path.exists(outfilename):
+                        log.warning(u'Filen %s som ska tas bort fanns inte' % outfilename)
+                    else:
+                        os.unlink(outfilename)
                     removed += 1
                 else:
                     # log.debug(u'%s: Packar upp %s' % (zipfilename, outfilename))
@@ -266,8 +275,8 @@ class DVDownloader(LegalSource.Downloader):
                     os.utime(outfilename, (ts,ts))
                     #log.debug("Out: %s" % outfilename)
             else:
-                log.warning(u'Kunde inte tolka filnamnet %r i %s' % (name, zipfilename))
-        log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s files' % (zipfilename,created,replaced,removed,untouched))
+                log.warning(u'Kunde inte tolka filnamnet %r i %s' % (name, Util.relpath(zipfilename)))
+        log.info(u'Processade %s, skapade %s,  bytte ut %s, tog bort %s, lät bli %s filer' % (Util.relpath(zipfilename),created,replaced,removed,untouched))
 
 
 DCT = Namespace(Util.ns['dct'])
@@ -350,19 +359,26 @@ class DVParser(LegalSource.Parser):
         self.lagrum_parser = LegalRef(LegalRef.LAGRUM)
         self.rattsfall_parser = LegalRef(LegalRef.RATTSFALL)
 
+        filetype = "docx" if docfile.endswith("docx") else "doc"
+
         # Parsing is a two step process: First extract some version of
         # the text from the binary blob (either through running
         # antiword for old-style doc documents, or by unzipping
         # document.xml, for new-style docx documents)
-        
-        if docfile.endswith("docx"):
-            ooxmlfile = docfile.replace('word','ooxml').replace('.docx','.xml')
-            self.word_to_ooxml(docfile,ooxmlfile)
+        if filetype == "docx":
+            parsablefile = docfile.replace('word','ooxml').replace('.docx','.xml')
+            self.word_to_ooxml(docfile,parsablefile)
         else:
-            docbookfile = docfile.replace('word','docbook').replace('.doc','.xml')
-            self.word_to_docbook(docfile,docbookfile)
-            
-        
+            parsablefile = docfile.replace('word','docbook').replace('.doc','.xml')
+            try:
+                self.word_to_docbook(docfile,parsablefile)
+            except Util.ExternalCommandError:
+                # Some .doc files are .docx with wrong suffix
+                parsablefile = docfile.replace('word','ooxml').replace('.doc','.xml')
+                self.word_to_ooxml(docfile,parsablefile)
+                filetype = "docx"
+                
+                
         # FIXME: This is almost identical to the code in
         # SFSManager.Parse - should be refactored somehow
         #
@@ -375,11 +391,11 @@ class DVParser(LegalSource.Parser):
             patchedfile = mktemp()
             # we don't want to sweep the fact that we're patching under the carpet
             log.warning(u'%s: Applying patch %s' % (id, patchfile))
-            cmd = 'patch -s %s %s -o %s' % (docbookfile, patchfile, patchedfile)
+            cmd = 'patch -s %s %s -o %s' % (parsablefile, patchfile, patchedfile)
             log.debug(u'%s: running %s' % (id, cmd))
             (ret, stdout, stderr) = Util.runcmd(cmd)
             if ret == 0: # successful patch
-                docbookfile = patchedfile
+                parsablefile = patchedfile
                 assert os.path.exists(descfile), "No description of patch %s found" % patchfile
                 patchdesc = codecs.open(descfile,encoding='utf-8').read().strip()
 
@@ -394,10 +410,10 @@ class DVParser(LegalSource.Parser):
         # The second step is to mangle the crappy XML produced by
         # antiword (docbook) or Word 2007 (OOXML) into a nice XHTML2
         # structure.
-        if docfile.endswith("docx"):
-            return self.parse_ooxml(ooxmlfile, patchdesc)
+        if filetype == "docx":
+            return self.parse_ooxml(parsablefile, patchdesc)
         else:
-            return self.parse_antiword_docbook(docbookfile, patchdesc)
+            return self.parse_antiword_docbook(parsablefile, patchdesc)
 
 
     def word_to_ooxml(self,indoc, outdoc):
@@ -409,6 +425,7 @@ class DVParser(LegalSource.Parser):
         outfile = open(outdoc,"wb")
         outfile.write(data)
         outfile.close()
+        Util.indent_xml_file(outdoc)
         zi = zipf.getinfo(name)
         dt = datetime(*zi.date_time)
         ts = mktime(dt.timetuple())
@@ -468,16 +485,22 @@ class DVParser(LegalSource.Parser):
         # Högst uppe på varje domslut står domstolsnamnet ("Högsta
         # domstolen") följt av referatnumret ("NJA 1987
         # s. 113"). 
+        firstfield = soup.find("w:t")
+        domstol = Util.elementText(firstfield)
+        nextfield = firstfield.findParent("w:tc").findNext("w:tc")
+        referat = u''
+        for e in nextfield.findAll("w:t"):
+            referat += e.string
+        referat = Util.normalizeSpace(referat)
 
-        #find first w:tr, then it's first 
-
-        firstfields = soup.findAll("w:t",limit=4)
-        
-        domstol = Util.elementText(firstfields[0])
-        referat = Util.elementText(firstfields[1])
-        tmp = Util.elementText(firstfields[3])
-        if tmp.startswith("NJA "):
-            referat += " (" + tmp + ")"
+        # log.info(u"Domstol: %r, referat: %r" % (domstol,referat))
+        #firstfields = soup.findAll("w:t",limit=4)
+        #if not re.search('\d{4}', referat):
+        #    referat += " " + Util.elementText(firstfields[2])
+        #    
+        #tmp = Util.elementText(firstfields[3])
+        #if tmp.startswith("NJA "):
+        #    referat += " (" + tmp + ")"
 
         # FIXME: Could be generalized
         domstolsuri = self.domstolsforkortningar[self.id.split("/")[0]]
@@ -495,7 +518,20 @@ class DVParser(LegalSource.Parser):
                 txt = Util.elementText(node.findNext("w:t"))
                 if txt: # skippa fält med tomma strängen-värden
                     head[key] = UnicodeSubject(txt, predicate=self.labels[key])
-
+            else:
+                # Sometimes these text fields are broken up
+                # (eg "<w:t>Avgörand</w:t>...<w:t>a</w:t>...<w:t>tum</w:t>")
+                # Use (ridiculous) fallback method
+                nodes = soup.findAll('w:statustext',attrs={'w:val':key})
+                if nodes:
+                    node = nodes[-1]
+                    txt = Util.elementText(node.findNext("w:t"))
+                    if txt: # skippa fält med tomma strängen-värden
+                        # log.info("Fallback %r=%r" % (key,txt))
+                        head[key] = UnicodeSubject(txt, predicate=self.labels[key])
+                #else:
+                #    log.warning("%s: Couldn't find field %r" % (self.id,key))
+                
         # Hitta sammansatta metadata i sidhuvudet
         for key in [u"Lagrum", u"Rättsfall"]:
             node = soup.find(text=re.compile(key+u':'))
@@ -547,10 +583,7 @@ class DVParser(LegalSource.Parser):
         for p in soup.find(text=re.compile('EFERAT')).findParent('w:tr').findNextSibling('w:tr').findAll('w:p'):
             body.append(Stycke([Util.elementText(p)]))
 
-        print "Found %s p" % len(body)
-        
         # Hitta sammansatta metadata i sidfoten
-
         txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findNext('w:t'))
         sokord = []
         for s in self.re_delimSplit(txt):
@@ -584,6 +617,7 @@ class DVParser(LegalSource.Parser):
             head[u'Litteratur'] = [UnicodeSubject(Util.normalizeSpace(x),predicate=self.multilabels[u'Litteratur'])
                                    for x in txt.split(";")]
 
+        # pprint.pprint(head)
         self.polish_metadata(head)
         if patchdescription:
             head[u'Textändring'] = UnicodeSubject(patchdescription,
@@ -798,6 +832,7 @@ class DVParser(LegalSource.Parser):
             log.error(u'%s: Could not find out URI for this doc automatically (%s)' % (self.id, head[u'Referat']))
 
         # Putsa till avgörandedatum - det är ett date, inte en string
+        # pprint.pprint(head)
         head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
                                               predicate=self.labels[u'Avgörandedatum'])
 
@@ -858,10 +893,11 @@ class DVManager(LegalSource.Manager):
             log.debug(u"%s: Överhoppad", basefile)
             return
 
-        infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".doc"
+        suffix = ".doc"
+        infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + suffix
         if not os.path.exists(infile):
-            log.info(u"%s: Can't find doc file, trying docx")
-            infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + ".docx"
+            suffix = ".docx"
+            infile = os.path.sep.join([self.baseDir, __moduledir__, 'intermediate', 'word', basefile]) + suffix
             
         outfile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
 
@@ -884,7 +920,7 @@ class DVManager(LegalSource.Manager):
         out.close()
         # Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
-        log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
+        log.info(u'%s: OK (%.3f sec, %s)', basefile,time()-start, suffix)
 
     def ParseAll(self):
         intermediate_dir = os.path.sep.join([self.baseDir, u'dv', 'intermediate','word'])

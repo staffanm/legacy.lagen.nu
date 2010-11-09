@@ -150,6 +150,7 @@ def indent_xml_file(infile):
     """Neatifies an existing XML file in-place"""
     tmpfile = mktemp()
     cmd = "tidy -q -xml -asxml -utf8 -w 95 -i %s > %s" % (infile, tmpfile)
+    # print cmd
     (ret,stdout,stderr) = runcmd(cmd)
     if (ret != 0):
         raise TransformError(stderr)
@@ -257,7 +258,8 @@ def runcmd(cmdline):
         # FIXME: How do we detect the proper encoding? Using
         # sys.stdout.encoding gives 'cp850' on windows, which is not
         # what xsltproc expects
-        cmdline = cmdline.encode('iso-8859-1')
+        coding = 'utf-8' if sys.stdin.encoding == 'UTF-8' else 'iso-8859-1'
+        cmdline = cmdline.encode(coding)
 
     p = subprocess.Popen(cmdline,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
