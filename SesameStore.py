@@ -1,6 +1,11 @@
 from rdflib import Literal, BNode, Namespace, URIRef
-from rdflib.Graph import Graph
-from rdflib.syntax.parsers.ntriples import NTriplesParser
+try:
+    from rdflib.Graph import Graph
+    from rdflib.syntax.parsers.ntriples import NTriplesParser
+except:
+    from rdflib import Graph
+    from rdflib.plugins.parsers.ntriples import NTriplesParser
+    
 
 from urllib2 import urlopen, Request, HTTPError
 import urllib
