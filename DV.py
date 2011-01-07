@@ -453,7 +453,7 @@ class DVParser(LegalSource.Parser):
 
         if ret != 0:
             log.error("Docbook conversion failed: %s" % stderr)
-            raise Util.ExternalCommandError("Docbook conversion failed: %s" % stderr)
+            raise Util.ExternalCommandError("Docbook conversion failed: %s" % stderr.strip())
             
         if not os.path.exists(tmpfile):
             log.warning("tmp file %s wasn't created, that can't be good?" % tmpfile)
