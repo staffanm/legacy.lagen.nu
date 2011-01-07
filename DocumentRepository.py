@@ -27,10 +27,19 @@ from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
-from rdflib.Graph import Graph, ConjunctiveGraph
-from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
-from rdflib.syntax import NamespaceManager
-import pyRdfa
+try: 
+    from rdflib.Graph import Graph, ConjunctiveGraph
+    from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
+    from rdflib.syntax import NamespaceManager
+except ImportError:
+    from rdflib import Graph, ConjunctiveGraph
+    from rdflib.plugins.parsers.ntriples import unquote as ntriple_unquote
+    
+try:
+    import pyRdfa
+except ImportError:
+    pass # not needed with rdflib 3.0
+
 
 # mine
 import Util
@@ -445,6 +454,20 @@ class DocumentRepository(object):
 
 
     def download_single(self,basefile,cache=False):
+        """Downloads the document from the web (the URL to download is
+        determined by self.document_url combined with basefile, the
+        location on disk is determined by the function
+        self.download_path). If cache is set and the document exists
+        on disk no download is attempted.
+
+        Otherwise, if the document exists on disk, but the version on
+        the web is unchanged, the file on disk is left unchanged
+        (i.e. the timestamp is not modified).
+
+        Returns True if the document was downloaded and stored on
+        disk, False if the file on disk was not updated.
+        """
+        
         url = self.document_url % basefile
         filename = self.downloaded_path(basefile)
         if not cache or not os.path.exists(filename):
@@ -453,8 +476,13 @@ class DocumentRepository(object):
                 # let's make a note of this in the RDF graph!
                 uri = self.canonical_uri(basefile)
                 self.store_triple(URIRef(uri), self.ns['dct']['modified'], Literal(datetime.now()))
+                return True
+                self.log.debug("%s was downloaded" % filename)
             else:
-                self.log.info("Don't need to store info about %s" % basefile)
+                self.log.debug("%s exists and is unchanged" % filename)
+        else:
+            self.log.debug("%s already exists" % (filename))
+        return False
 
 
     def download_if_needed(self,url,filename):
@@ -844,6 +872,7 @@ class DocumentRepository(object):
             self.render_xhtml('genshi/news.xhtml',None,tmpfile,{title:selection,
                                                                 entries:result})
             Util.transform('xsl/news.xsl',tmpfile,outfile)
+
             self.render_atom('genshi/news.atom')
 
 
@@ -856,8 +885,10 @@ class DocumentRepository(object):
     def news_selection(self, selection_name, cutoff_date):
         """Returns a list of news entries for a particular news page."""
         if selection_name == "Nya och ändrade dokument":
+            # FIXME: This should either be a list of RDF graphs or a
+            # list of Atom-Entry objects
             return ({'title': 'Lag (2009:123) om blahonga',
-                     'date': '2009-11-27',
+                     'date': '2009-11-27', # published or updated
                      'uri':'urn:lex:sv:sfs:2009:123',
                      'body':'<p>A typical text with some <b>HTML</b> and <a href="urn:lex:sfs:2009:123">canonical linkz</a></p>',
                      'readmore':'Författningstext'})

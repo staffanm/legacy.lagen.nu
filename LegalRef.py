@@ -17,8 +17,13 @@ import urllib
 # 3rdparty libs
 from simpleparse.parser import Parser
 from simpleparse.stt.TextTools.TextTools import tag
-from rdflib.Graph import Graph
-from rdflib.BNode import BNode
+try:
+    from rdflib.Graph import Graph
+    from rdflib.BNode import BNode
+except ImportError:
+    from rdflib import Graph
+    from rdflib import BNode
+    
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries

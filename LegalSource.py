@@ -31,12 +31,21 @@ from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 from rdflib import plugin
-from rdflib.Graph import Graph, ConjunctiveGraph
 from rdflib.store import Store
-from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
 
-# from rdflib.syntax import NamespaceManager
-import pyRdfa
+# rdflib 2.4 v 3.0
+try:
+    from rdflib.Graph import Graph, ConjunctiveGraph
+    from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
+except ImportError:
+    from rdflib import Graph, ConjunctiveGraph
+    from rdflib.plugins.parsers.ntriples import unquote as ntriple_unquote
+    
+
+try:
+    import pyRdfa
+except ImportError:
+    pass
 
 # my own code
 import Util
@@ -630,10 +639,16 @@ class Manager(object):
         log.info("rendered %s (%s)" % (htmlfile, atomfile))
 
     def _extract_rdfa(self, filename):
-        dom  = xml.dom.minidom.parse(filename)
-        o = pyRdfa.Options()
-        o.warning_graph = None
-        g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
+        try:
+            o = pyRdfa.Options()
+            dom  = xml.dom.minidom.parse(filename)
+            o.warning_graph = None
+            g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
+        except:
+            # if we don't have pyRdfa, we hopefully have rdflib 3.0
+            # and it's included rdfa parser
+            g = Graph()
+            g.parse(filename,format="rdfa")
         self.__tidy_graph(g)
 
         return g

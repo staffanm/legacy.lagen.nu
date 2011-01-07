@@ -10,9 +10,15 @@ import re
 from pprint import pformat
 
 # 3rdparty libs
-from rdflib.Graph import Graph
-from rdflib.BNode import BNode
+
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
+try:  
+    from rdflib.Graph import Graph
+    from rdflib.BNode import BNode
+except ImportError:
+    from rdflib import Graph
+    from rdflib import BNode
+    
 
 # my own libraries
 from FilebasedTester import FilebasedTester
