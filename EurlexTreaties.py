@@ -7,8 +7,14 @@ from collections import deque, defaultdict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
-from rdflib import Namespace, URIRef, Literal, RDF, BNode, Collection
-from rdflib.Graph import Graph
+try:
+    from rdflib import Namespace, URIRef, Literal, RDF, BNode, Collection
+    from rdflib.Graph import Graph
+except ImportError:
+    from rdflib import Namespace, URIRef, Literal, RDF, BNode
+    from rdflib import Graph
+    from rdflib.collection import Collection
+
 from whoosh import analysis, fields, formats, query, qparser, scoring
 from whoosh.filedb.filestore import RamStorage, FileStorage
 
