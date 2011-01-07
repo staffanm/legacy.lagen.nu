@@ -35,8 +35,17 @@ class EurlexCaselaw(DocumentRepository):
 
     def download_everything(self,cache=False):
         self.log.debug("Downloading, use_cache is %s" % cache)
-        startyear = 2009 # eg 1954
+        if cache and 'startyear' in self.moduleconfig:
+            startyear = int(self.moduleconfig['startyear'])
+        else:
+            startyear = 1954 # The first verdicts were published in this year
         for year in range(startyear,datetime.date.today().year+1):
+            # We use self.configfile directly rather than
+            # self.moduleconfig, since the latter cannot be persisted
+            # across sessions (as it is a subset of a composite
+            # between the config file and command line options)
+            self.configfile[self.module_dir]['startyear'] = year
+            self.configfile.write()
             list_url = "http://eur-lex.europa.eu/Result.do?T1=V6&T2=%d&T3=&RechType=RECH_naturel" % year
             self.log.debug("Searching for %d"% year)
             self.browser.open(list_url)
@@ -61,8 +70,10 @@ class EurlexCaselaw(DocumentRepository):
                     # T: (old) Judgement of the Court
                     if ('J' in celexno or 'A' in celexno
                         or 'W' in celexno or 'T' in celexno):
-                        self.log.debug("Downloading case %s" % celexno)
-                        self.download_single(celexno,cache=cache)
+                        if self.download_single(celexno,cache=cache):
+                            self.log.info("Downloaded %s" % celexno)
+                        else:
+                            self.log.info("Skipped %s" % celexno)
                     else:
                         pass
                         #self.log.debug("Not downloading doc %s" % celexno)
