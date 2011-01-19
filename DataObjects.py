@@ -353,8 +353,12 @@ class RDFString(PredicateType,UnicodeStructure):
 
 
 class UnicodeSubject(PredicateType,UnicodeStructure): pass
+
 class Stycke(CompoundStructure): pass
+class Paragraph(CompoundStructure): pass
+
 class Sektion(CompoundStructure): pass
+class Section(CompoundStructure): pass
 
 
 if __name__ == '__main__':

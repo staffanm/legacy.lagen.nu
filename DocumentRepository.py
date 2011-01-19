@@ -27,26 +27,16 @@ from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError
 from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
-try: 
-    from rdflib.Graph import Graph, ConjunctiveGraph
-    from rdflib.syntax.parsers.ntriples import unquote as ntriple_unquote
-    from rdflib.syntax import NamespaceManager
-except ImportError:
-    from rdflib import Graph, ConjunctiveGraph
-    from rdflib.plugins.parsers.ntriples import unquote as ntriple_unquote
-    
-try:
-    import pyRdfa
-except ImportError:
-    pass # not needed with rdflib 3.0
-
+# Assume RDFLib 3.0
+from rdflib import Graph, ConjunctiveGraph
+from rdflib.plugins.parsers.ntriples import unquote as ntriple_unquote
 
 # mine
 import Util
 from LegalRef import LegalRef, Link
 from DataObjects import UnicodeStructure, CompoundStructure, \
      MapStructure, IntStructure, DateStructure, PredicateType, \
-     UnicodeSubject, Stycke, Sektion, \
+     UnicodeSubject, Paragraph, Section, \
      serialize
 from SesameStore import SesameStore
 
@@ -55,7 +45,6 @@ __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 
 # Magicality to make sure printing of unicode objects work no matter
 # what platform we're running on
-# 
 if sys.platform == 'win32':
     if sys.stdout.encoding:
         defaultencoding = sys.stdout.encoding
@@ -154,7 +143,6 @@ class DocumentRepository(object):
         soup_from_basefile
         parse_from_soup
         render_xhtml
-            extract_rdfa -> .rdf
         
     relate
 
@@ -162,7 +150,8 @@ class DocumentRepository(object):
         generated_file
         prep_annotation_file
             graph_to_annotation_file
-    toc
+
+    toc 
         toc_navigation
         toc_title
         toc_style
@@ -525,7 +514,8 @@ class DocumentRepository(object):
 
         You will need to provide your own parsing logic, but often
         it's easier to just override parse_from_soup (assuming your
-        indata is in a HTML format parseable by BeautifulSoup)."""
+        indata is in a HTML format parseable by BeautifulSoup) and let
+        the base class read and write the files."""
         try:
             start = time()
             infile = self.downloaded_path(basefile)
@@ -543,18 +533,20 @@ class DocumentRepository(object):
             self.render_xhtml(self.genshi_tempate, doc,
                               self.parsed_path(basefile), self.get_globals())
 
-            # Check to see that all metadata contained in doc.meta is present in the serialized file
-            distilled_graph = self.extract_rdfa(outfile)
+            # Check to see that all metadata contained in doc.meta is
+            # present in the serialized file.
+            distilled_graph = Graph()
+            distilled_graph.parse(outfile,format="rdfa")
             distilled_file = self.distilled_path(basefile)
             Util.ensureDir(distilled_file)
-            distilled_graph.serialize(distilled_file,format="rdf/xml", encoding="utf-8")
+            distilled_graph.serialize(distilled_file,format="pretty-xml", encoding="utf-8")
             self.log.debug(u'%s: %s triples extracted', basefile, len(distilled_graph))
             for triple in distilled_graph:
                 doc['meta'].remove(triple)
 
             if doc['meta']:
-                self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file (possibly due to incorrect language tags or typed literals)" % len(doc['meta']))
-                print unicode(doc['meta'].serialize(format="nt", encoding="utf-8"), "utf-8")
+                self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file (possibly due to incorrect language tags or typed literals):" % len(doc['meta']))
+                print doc['meta'].serialize(format="nt")
 
             self.log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
@@ -573,10 +565,57 @@ class DocumentRepository(object):
             convertEntities='html')
 
     def parse_from_soup(self,soup,basefile):
-        """Returns a dict with the keys meta, body, uri and lang"""
-        return {'doc':{},
-                'meta':{},
-                'uri':self.canonical_uri()}
+        """Returns a dict with the keys 'meta', 'body', 'uri' and
+        'lang'.
+
+        body should be an iterable object, but in particular
+        it must be compatible with whatever template you've set
+        genshi_template to (the default generic.xhtml assumes a tree
+        of iterable objects built upon the DataObjects base
+        classes).
+
+        meta should be a RDFLib graph.
+
+        uri should be the canonical uri for this document, as used by
+        the above graph.
+
+        lang should be a ISO language code, eg 'sv' or 'en'.
+
+        The default implementation creates a simple representation of
+        the page body, a small metadatagraph containing the title, and
+        a generic uri based on the module_dir and basefile.
+        """
+        lang = 'en' # (unless someone has a better idea)
+        
+        title = soup.find('title').string
+        # self.log.info("Title: %s" % title)
+
+        uri = self.canonical_uri(basefile)
+        # self.log.info("URI: %s" % uri)
+
+        meta = Graph()
+        meta.bind('dct',self.ns['dct'])
+        meta.add((URIRef(uri), self.ns['dct']['title'], Literal(title,lang=lang)))
+
+        # remove all HTML comments, script tags
+        comments = soup.findAll(text=lambda text:isinstance(text, BeautifulSoup.Comment))
+        [comment.extract() for comment in comments]        
+        scripts = soup.findAll('script')
+        [script.extract() for script in scripts]
+        
+        # block-level elements that commonly directly contain text
+        body = CompoundStructure()
+        for block in soup.findAll(['blockquote', 'center','dt','dd','li','th','td','h1','h2','h3','h4','h5','h6','p', 'pre']):
+            t = Util.normalizeSpace(''.join(block.findAll(text=True)))
+            block.extract() # to avoid seeing it again
+            if t:
+                # self.log.info("Paragraph (%s %s): '%s...'" % (block.name, id(block), t[:20]))
+                body.append(Paragraph([t]))
+            
+        return {'body':body,
+                'meta':meta,
+                'uri': uri,
+                'lang':'en'}
     
     def render_xhtml(self,template,doc,outfile,globals):
         """Serializes the parsed object structure into a XML file with
@@ -638,6 +677,8 @@ class DocumentRepository(object):
         """Helper function to extract RDF data from any XML document
         containing RDFa attributes. Returns a RDFlib graph of the
         triples found."""
+
+        
         dom  = xml.dom.minidom.parse(filename)
         o = pyRdfa.Options(space_preserve=False)
         o.warning_graph = None

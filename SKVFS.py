@@ -16,6 +16,8 @@ __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 class SKVFS(DocumentRepository):
     module_dir = "skvfs"
 
+    source_encoding = "utf-8"
+
     # start_url = "http://www.skatteverket.se/rattsinformation/foreskrifter/tidigarear.4.1cf57160116817b976680001670.html"
 
     # This url contains slightly more (older) links (and a different layout)?

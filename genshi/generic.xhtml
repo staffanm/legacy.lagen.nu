@@ -16,34 +16,67 @@
   <head>
     ${render_metadata_graph(doc.meta)}
     <base href="${doc.uri}"/>
+    <!--! render_metadata_graph creates title elements for all dct:titles it finds -->
+    <!--! <title>${doc.title}</title> -->
   </head>
 
   <body>
     <!--! the empty comments are for whitespace control -->
-    <p py:def="render_stycke(stycke)">
-      <py:for each="part in stycke" py:choose=""><!--!
+    <p py:def="render_paragraph(p)">
+      <py:for each="part in p" py:choose=""><!--!
 	--><div py:when="isinstance(part, Link)" py:strip="">${render_link(part)}</div><!--!
 	--><div py:when="isinstance(part, unicode)" py:strip="">${part}</div><!--!
-	--><div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_stycke</div><!--!
+	--><div py:otherwise="" class="warning">${part.__class__.__name__} omitted due to internal error in render_paragraph</div><!--!
 	--></py:for>
     </p>
 
-    <div py:def="render_sektion(sektion)">
-      <h>${sektion.rubrik}</h>
-      <py:for each="part in sektion" py:choose="">
-	<div py:when="isinstance(part, Sektion)" py:strip="">${render_sektion(part)}</div>
-	<div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
-	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i render_sektion</div>
-      </py:for>
+    <div py:def="render_compound(c,depth=0)" py:attrs="c.attrs">
+      <!--! if c.ordinal is defined, do something with that -->
+      <!--! if c.id is defined, set either @id or @about (or both?) -->
+
+      <!--! this is a little ugly, maybe there's a better way to
+      dynamically create the right H level tag? -->
+      <py:if test="depth==0">
+	<h1 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h1>
+	<!--! (e.g. "Chapter 1") -->
+	<h1 py:if="c.title" py:content="c.title">Subject title</h1>
+	<!--! (e.g. "General provisions on the Union's external action") -->
+      </py:if>
+      <py:if test="depth==1">
+	<h2 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h2>
+	<h2 py:if="c.title" py:content="c.title">Subject title</h2>
+      </py:if>
+      <py:if test="depth==2">
+	<h3 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h3>
+	<h3 py:if="c.title" py:content="c.title">Subject title</h3>
+      </py:if>
+      <py:if test="depth==3">
+	<h4 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h4>
+	<h4 py:if="c.title" py:content="c.title">Subject title</h4>
+      </py:if>
+      <py:if test="depth==4">
+	<h5 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h5>
+	<h5 py:if="c.title" py:content="c.title">Subject title</h5>
+      </py:if>
+      <py:if test="depth &gt;= 5">
+	<h6 py:if="c.ordinaltitle" py:content="c.ordinaltitle">Ordinal title</h6>
+	<h6 py:if="c.title" py:content="c.title">Subject title</h6>
+      </py:if>
+      
+      <py:for each="part in c" py:choose=""><!--!
+	--><div py:when="isinstance(part, Paragraph) or isinstance(part,ListItem)" py:strip="">${render_paragraph(part)}</div><!--!
+	--><div py:when="isinstance(part, CompoundStructure)" py:strip="">${render_compound(part,depth=depth+1)}</div><!--!
+	--><div py:otherwise="" class="warning">${part.__class__.__name__} omitted due to internal error in render_compound</div><!--!
+      --></py:for>
     </div>
     
-    <div class="main">
+    <!--<div class="main">-->
       <py:for each="part in doc.body" py:choose="">
-	<div py:when="isinstance(part, Sektion)" py:strip="">${render_sektion(part)}</div>
-	<div py:when="isinstance(part, Stycke)" py:strip="">${render_stycke(part)}</div>
+	<div py:when="isinstance(part, Paragraph)" py:strip="">${render_paragraph(part)}</div>
+	<div py:when="isinstance(part, CompoundStructure)" py:strip="">${render_compound(part,depth=0)}</div>
 	<div py:otherwise="" class="warning">${part.__class__.__name__} utelämnad pga internt fel i main</div>
       </py:for>
-    </div>
+    <!--</div>-->
   </body>
 </html>
 
