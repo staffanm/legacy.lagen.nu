@@ -541,11 +541,17 @@ class DocumentRepository(object):
             Util.ensureDir(distilled_file)
             distilled_graph.serialize(distilled_file,format="pretty-xml", encoding="utf-8")
             self.log.debug(u'%s: %s triples extracted', basefile, len(distilled_graph))
+            
             for triple in distilled_graph:
+                len_before = len(doc['meta'])
                 doc['meta'].remove(triple)
+                len_after = len(doc['meta'])
+                if len_before == len_after:
+                    (s,p,o) = triple
+                    self.log.warning("The triple '%s %s %s .' from the XHTML file was not found in the original metadata" % (s.n3(),p.n3(), o.n3()))
 
             if doc['meta']:
-                self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file (possibly due to incorrect language tags or typed literals):" % len(doc['meta']))
+                self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file:" % len(doc['meta']))
                 print doc['meta'].serialize(format="nt")
 
             self.log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
@@ -596,6 +602,7 @@ class DocumentRepository(object):
         meta = Graph()
         meta.bind('dct',self.ns['dct'])
         meta.add((URIRef(uri), self.ns['dct']['title'], Literal(title,lang=lang)))
+        meta.add((URIRef(uri), self.ns['dct']['identifier'], Literal(basefile)))
 
         # remove all HTML comments, script tags
         comments = soup.findAll(text=lambda text:isinstance(text, BeautifulSoup.Comment))

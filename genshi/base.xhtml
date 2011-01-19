@@ -17,8 +17,13 @@
 	<div py:when="obj.datatype" py:strip="">
 	  <meta property="${graph.qname(pred)}" datatype="${graph.qname(obj.datatype)}" content="${obj}"/>
 	</div>
+	<div py:when="obj.language" py:strip="">
+	  <meta property="${graph.qname(pred)}" xml:lang="${obj.language}" content="${obj}"/>
+	</div>
 	<div py:otherwise="" py:strip="">
-	  <meta property="${graph.qname(pred)}" content="${obj}"/>
+          <!--! explicitly use an empty xml:lang tag, otherwise the
+               xml:lang of the root element gets used -->
+	  <meta property="${graph.qname(pred)}" content="${obj}" xml:lang=""/>
 	</div>
       </py:for>
     </div>
