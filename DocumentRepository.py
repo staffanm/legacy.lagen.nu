@@ -355,7 +355,7 @@ class DocumentRepository(object):
 
     def __init__(self,options):
         (self.configfile,self.config,self.moduleconfig) = self.initialize_config(options)
-        # If we have a particular log level for this method, use that,
+        # If we have a particular log level for this module, use that,
         # otherwise use the global log level. If that isn't defined
         # either, use the INFO loglevel.
         if 'log' in self.moduleconfig:
@@ -520,8 +520,8 @@ class DocumentRepository(object):
             start = time()
             infile = self.downloaded_path(basefile)
             outfile = self.parsed_path(basefile)
-            force = ('parse_force' in self.moduleconfig and
-                     self.moduleconfig['parse_force'] == 'True')
+            force = ('parse-force' in self.moduleconfig and
+                     self.moduleconfig['parse-force'] == 'True')
             if not force and Util.outfile_is_newer([infile],outfile):
                 self.log.debug(u"%s: Överhoppad", basefile)
                 return

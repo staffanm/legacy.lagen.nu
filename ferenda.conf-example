@@ -2,12 +2,19 @@
 # DocumentRepository-based architecture. It's not ready for prime time
 # yet.
 
-datadir = mydata
-processes = 1
+# override with --log=INFO
 log = DEBUG
+datadir = data
+processes = 1
+triplestore = http://localhost:8080/openrdf-sesame
+repository = lagen.nu
 
-[example]
-magic = "Blahonga!"
+[ecj]
+# override with --ecj-startyear=2011
+startyear = 2010
 
-[[special]]
-magic = "Bazinga!"
+[skvfs]
+# override with --skvfs-parse-force=True
+parse-force = False
+# override with --skvfs-log=DEBUG
+log = INFO
