@@ -167,7 +167,6 @@ class DocumentRepository(object):
     tabs
     """
     
-    
     module_dir = "base"
     """The directory where this module will store downloaded, parsed
     and generated files. You need to override this."""
@@ -789,6 +788,8 @@ class DocumentRepository(object):
     #
     ################################################################
 
+    
+    
     def toc(self):
         """Creates a set of pages that together acts as a table of
         contents for all documents in the repository. For smaller
@@ -797,117 +798,128 @@ class DocumentRepository(object):
         usually be one page for all documents starting with A,
         starting with B, and so on. There might be different ways of
         browseing/drilling down, i.e. both by title, publication year,
-        keyword and so on.
+        keyword and so on."""
 
-        Normally you don't have to overide toc to get better control
-        over TOC page generation -- override toc_navigation and
-        toc_page instead."""
-        nav = self.toc_navigation()
-        used_nav = []
-        for section in nav:
-            used_criteria = []
-            criteria_type = section[0]
-            criteria = section[1:]
-            for criterium in criteria:
-                lines = self.toc_style(criteria_type, criterium)
-                title = self.toc_title(criteria_type,criterium)
-                if lines != False:
-                    used_critera.append([criteria,lines,title])
-            if used_criteria:
-                used_nav.append(used_criteria)
+        # Step 1: Select a table that contains most of the interesting
+        # info, eg:
+        #
+        # URI dct:title dct:issued dct:identifier
+        #
+        # and convert it to a list of dicts
 
+        # GENERALIZE: Subclasses should be able to change the query by
+        # implementing eg self.toc_query()
+        sq = """PREFIX dct:<http://purl.org/dc/terms/>
+                SELECT ?uri ?title ?id
+                WHERE {?uri dct:title ?title .
+                       ?uri dct:identifier ?id  }"""
+        store = SesameStore(self.config['triplestore'],
+                            self.config['repository'],
+                            self.context())
+        data = store.select(sq,"python")
+        
+        # Step 2: For each criterion (a criterion is a rdf predicate +
+        # selector function like first_letter or year_part + sort
+        # function) defined for the class:
 
-        # OK, used_nav now contains good stuff. Now to instansiate it!
-        for section in used_criteria:
-            for criterium in section:
-                # Step 1 is to serialize our stuff into the simplest
-                # XHTML that could possibly work (one section that
-                # contains the entire 2-level navigation structure, one
-                # that contains all documents for a particular
-                # type and criteria
-                tmpfile = mktemp()
-                page = toc_page(section, criterium)
-                self.render_xhtml('genshi/toc.xhtml',None,tmpfile,{nav:used_nav,
-                                                                   page:page})
+        # GENERALIZE: criteria should be initalized from a list in
+        # self.toc_categories. The list should be able to be very sparse,
+        # like [self.ns['dct']['title'],self.ns['dct']['issued']], and
+        # the initialization routine should add the appropriate
+        # bindning, label, selector and sorter (at least for standard
+        # DCT predicates. 
+        criteria = ({'predicate':self.ns['dct']['title'],
+                     'binding':'title', # must match sparql query
+                     'label':'Sorted by title', # GENERALIZE: This string must me controllable/localizable
+                     'selector':lambda x: x[0],
+                     'sorter':cmp,
+                     'pages': []},
+                    {'predicate':self.ns['dct']['identifier'],
+                     'binding':'id',
+                     'label':'Sorted by identifier',
+                     'selector':lambda x: x[0],
+                     'sorter':cmp,
+                     'pages': []})
 
-                # Step 2 is to create a browser-ready HTML file from
-                # that XHTML.
-                outfile = "%s/generated/index/%s.html" % self.module_dir, criterium
-                Util.transform('xsl/toc.xsl',tmpfile, outfile)
+        for criterion in criteria:
+        # 2.1 Create the list of possible values from the selector
+        # function and...
+            selector_values = {}
+            selector = criterion['selector']
+            binding = criterion['binding']
+            qname = criterion['predicate'].qname()
+            for row in data:
+                selector_values[selector(row[binding])] = True
+            
+            # 2.1 cont: For each value:
+            for value in sorted(selector_values.keys,cmp=criterion['sorter']):
+                # 2.1.1 Prepare a filename based on the rdf predicate and the selector
+                #       func value, eg. toc/dct/title/a.xhtml
+                tmpfile = os.path.sep.join((self.base_dir,
+                                           self.module_dir,
+                                           u'toc',
+                                           qname.split(":")[0],
+                                           qname.split(":")[1],
+                                           value.tolower(),
+                                           u".xhtml"))
 
-        return "AWESOME!"
+                # 2.1.2 Collate all selector func values into a list of dicts:
+                # [{'label':'A','outfile':'toc/dct/title/a.xhtml',...},
+                #   'label':'B:,'outfile':'toc/dct/title/b.xhtml',...}
+                criterion['pages'].append({'label':value,
+                                           'title':'Documents starting with "%s"' % label, # GENERALIZE: make localizable (toc_page(predicate,label))
+                                           'tmpfile':tmpfile,
+                                           'outfile':tmpfile.replace(".xhtml",".html")})
 
+        # 4: Now that we've created neccessary base data for criterion,
+        #    iterate through it again
 
-    # The default implementation will find the title of each resource
-    # that has the relevant rdf:type (self.rdf_type)
-    #
-    # You might want to do a SPARQL query to find out possible values
-    # for criteria, but it's probably easier if you enumerate all of
-    # them, and let toc_page return False when there are no hits.
-    def toc_navigation(self):
-        """Returns a list of lists, where the first element in each list is
-        the name or description of a certain selection criterium, and the
-        remaining elements are instances of that criterium, e.g.
-        (('By title', 'A','B','C'...)"""
-        return (('Efter titel','A','B','C','D','E','F','G','H','I'),
-                ('Efter år',2009,2008,2007,2006))
+        # GENERALIZE: from this point, criteria is fully loaded and
+        # not neccessarily structured around RDF predicates. Sources
+        # with more specialized toc requirements (such as having each
+        # possible dct:creator as a primary criterion, and years in
+        # dct:issued as a secondary) can construct thei criteria
+        # structure themselves. Therefore, all code above should be a call to toc_criteria() or maybe toc_navigation()              
+        for criterion in criteria:
+            selector = criterion['selector']
+            binding = criterion['binding']
+            # 4.1 For each selector value (reuse list from 2.1):
+            for page in criterion['pages']:
+                label = page['label']
+                title = page['title']
+                content = []
+                # Find documents that match this particular selector value
+                for row in data:
+                    if selector_values[selector(row[binding])] == value:
+                        # 4.1.2 Prepare a list of dicts called content, like:
+                        #   [{'uri':'http://example.org/res/basefile',
+                        #     'title':'Basefile title'}]
+                        content.append({'uri':row['uri'],
+                                        'label':row[binding]})
+                # 4.1.4 Prepare a non-browser ready XHTML page using
+                #       genshi/generic-toc.xhtml and navigation (3), title
+                #       (4.1.1) and content (4.1.2)
 
+                # GENERALIZE: Allow for other genshi templates
+                # implementing eg table, column or tag-cloud based
+                # layouts
+                self.rendex_html("genshi/generic-toc.xhtml",
+                                 page['filename'],
+                                 {'navigation':criteria,
+                                  'title':title,
+                                  'content':content},
+                                 self.get_globals())
+                # 4.1.5 Prepare a browser-ready HTML page using generic.xsl
+                Util.transform('xsl/generic.xsl',page['tmpfile'],page['outfile'])
+                self.log("Created %s" % outfile)
 
-    # this might be called as .tocpage('Efter titel', 'A'), or
-    # .tocpage('Högsta domstolen', '2009')
-    #
-    # You probably want to do a SPARQL query, then filter/massage the
-    # results somewhat as you create your list of dicts.
-    def toc_page(self, criterium_type, criterium):
-        """Returns a list of dict, where each dict represents one
-        document. The two required fields are 'uri', which is the
-        (relative) uri of the document, and 'title' is the display
-        title of the document (the text of which will be linked). You
-        can also provide the optional 'leader' and 'trailer' fields,
-        which contains text that will be presented before and after
-        the linked title, respectively.
-
-        If you return a empty list, the criterium appears in the
-        navigation list. If you return False, it's removed. That way,
-        you can easily make your tocnavigation return every possible
-        value (e.g. all years from 2009 to 1600), and still have a
-        compact navigation list as unused criteria gets removed."""
-
-        return ({'uri':'/publ/sfs/1995:1331',
-                 'title':'Oskäliga avtalsvillkor',
-                 'leader':'Lag (1995:1331) om '})
-
-
-    # is called just like tocpage, but only returns a string
-    def toc_title(self, section, idx):
-        return "Dokument som börjar på %s" % idx
-
-    # called with the lines from tocpage to provide a HTML blob. Is
-    # that really a good idea?
-    def toc_style(self,lines):
-        """A formatting function for displaying the list of documents
-        on an individual page. The default implementation styles them
-        as a simple unordered list (toc_style_list), but you can
-        choose from other formatters (toc_style_table,
-        toc_style_multicol) or implement your own."""
-        return self.tocstyle_list(lines)
-
-
-    def toc_style_list(self,lines):
-        """Styles the list of documents as a simple unordered HTML list."""
-        pass
-
-
-    def toc_style_table(self,lines):
-        """Styles the list of documents as a table, one row per
-        element, and a column for eacch field."""
-        pass
-
-
-    def toc_style_multicol(self,lines,columns):
-        """Styles the list of documents as a series of columns
-        (implemented as a HTML table)."""
-        pass
+        # 5. as a final step, make an index.html by copying the very first page
+        mainindex = os.path.sep.join((self.base_dir,
+                                      self.module_dir,
+                                      u'toc',
+                                      u'index.html'))
+        Util.copy_if_different(criteria[0]['pages'][0]['outfile'], mainindex)
+                               
 
 
     def news(self):

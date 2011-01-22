@@ -9,6 +9,7 @@ except:
 
 from urllib2 import urlopen, Request, HTTPError
 import urllib
+import xml.etree.cElementTree as ET
 
 class SparqlError(Exception): pass
 class SesameError(Exception): pass
@@ -26,7 +27,9 @@ class SesameStore():
                    "ttl":"application/x-turtle",
                    "n3":"text/rdf+n3",
                    "trix":"application/trix",
-                   "trig":"application/x-trig"}
+                   "trig":"application/x-trig",
+                   "json":"application/sparql-results+json",
+                   "binary":"application/x-binary-rdf-results-table"}
 
     def __init__(self,url,repository,context=None):
         self.url = url
@@ -79,6 +82,14 @@ class SesameStore():
         return self.__urlopen(req)
 
     def select(self,query,format="sparql"):
+        """query: A SPARQL query with all neccessary prefixes defined.
+
+        format: Either one of the standard Sesame formats for queries
+        ("sparql", "json" or "binary") -- returns whatever
+        urlopen.read() returns -- or the special value "python" which
+        returns a python list of dicts representing rows and columns.
+        """
+        
         # Tried briefly to use SPARQLtree to get the selected graph as
         # a nice tree, but never really figured out how to do it --
         # but below is how you use treeify_results with SPARQLwrapper.
@@ -98,18 +109,35 @@ class SesameStore():
 
         # print url
         req = Request(url)
-        
-        req.add_header('Accept',self.contenttype[format])
-        # These don't make Sesame go any faster...
-        # req.add_header('Accept',"application/sparql-results+json")
-        # req.add_header('Accept',"application/x-binary-rdf-results-table")
+
+        if format == "python":
+            req.add_header('Accept',self.contenttype["sparql"])
+        else:
+            req.add_header('Accept',self.contenttype[format])
         req.data = query
         try:
             results = self.__urlopen(req)
-            return results
+            if format == "python":
+                return self.sparql_results_to_list(results)
+            else:
+                return results
         except HTTPError, e:
             raise SparqlError(e.read())
 
+    def sparql_results_to_list(self,results):
+        res = []
+        tree = ET.fromstring(results)
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            d = {}
+            for element in row:
+                #print element.tag # should be "binding"
+                key = element.attrib['name']
+                value = element[0].text
+                d[key] = value
+            res.append(d)
+        return res
+        
+        
     def construct(self,query,format="nt"):
         query = " ".join(query.split()) # normalize space 
         url = self.endpoint_url
