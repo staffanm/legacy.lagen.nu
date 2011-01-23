@@ -27,7 +27,11 @@ import xml.etree.ElementTree as PET
 # 3rdparty libs
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError, urlopen
-from rdflib.Graph import Graph
+try: 
+    from rdflib.Graph import Graph
+except ImportError:
+    from rdflib import Graph
+
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my own libraries

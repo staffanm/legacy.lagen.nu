@@ -36,16 +36,22 @@ class SKVFS(DocumentRepository):
         for link in sorted(self.browser.links(text_regex=r'^\d{4}$'),
                            key=attrgetter('text')):
             year = int(link.text)
-            url = link.absolute_url
-            if year not in years:
-                self.download_year(year,url)
+            # Documents for the years 1985-2003 are all on one page
+            # (with links leading to different anchors). To avoid
+            # re-downloading stuff when cache=False, make sure we
+            # haven't seen this url (sans fragment) before
+            url = link.absolute_url.split("#")[0]
+            if year not in years and url not in years.values():
+                self.download_year(year,url,cache=cache)
                 years[year] = url
 
+    # just download the most recent year
     def download_new(self):
-        self.log.info("Starting at %s" % start_url)
-        self.browser.open(start_url)
+        self.log.info("Starting at %s" % self.start_url)
+        self.browser.open(self.start_url)
         link = sorted(self.browser.links(text_regex=r'^\d{4}$'),
                         key=attrgetter('text'), reverse=True)[0]
+        
         self.download_year(int(link.text),link.absolute_url, cache=True)
 
     def download_year(self, year, url, cache=False):
@@ -60,7 +66,7 @@ class SKVFS(DocumentRepository):
             linktext = re.match("\w+FS \d+:\d+", link.text).group(0)
             # something like skvfs/2010/23 or rsfs/1996/9
             basefile = linktext.strip().lower().replace(" ", "/").replace(":","/")
-            self.download_single(basefile,link.absolute_url)
+            self.download_single(basefile,link.absolute_url,cache=cache)
 
     def download_single(self, basefile, url, cache=False):
         self.log.info("Downloading %s from %s" % (basefile, url))

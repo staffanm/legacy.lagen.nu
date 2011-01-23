@@ -51,7 +51,12 @@ def mkdir(newdir):
 def ensureDir(filename):
     d = os.path.dirname(filename)
     if d and not os.path.exists(d):
-        mkdir(d)
+        try:
+            mkdir(d)
+        except WindowsError:
+            # A separate process (when running multiprocessing) might
+            # have created the directory
+            pass
 
 # Util.File
 def robustRename(old,new):

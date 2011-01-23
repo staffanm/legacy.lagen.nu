@@ -211,6 +211,8 @@ class DocumentRepository(object):
                     (key,value) = arg.split("=",1)
                 else:
                     (key,value) = (arg, 'True')
+                # Note: Options may not contains hyphens (ie they can't
+                # be called "parse-force")
                 parts = key[2:].split("-")
                 if len(parts) == 1:
                     options[parts[0]] = value
@@ -226,7 +228,7 @@ class DocumentRepository(object):
             args.append(arg)
             
         (configfile,config,moduleconfig) = cls.initialize_config(options)
-        #from pprint import pprint
+        from pprint import pprint
         #pprint(config)
         #pprint(moduleconfig)
         
@@ -519,8 +521,9 @@ class DocumentRepository(object):
             start = time()
             infile = self.downloaded_path(basefile)
             outfile = self.parsed_path(basefile)
-            force = ('parse-force' in self.moduleconfig and
-                     self.moduleconfig['parse-force'] == 'True')
+
+            force = ('parseforce' in self.moduleconfig and
+                     self.moduleconfig['parseforce'] == 'True')
             if not force and Util.outfile_is_newer([infile],outfile):
                 self.log.debug(u"%s: Överhoppad", basefile)
                 return
@@ -725,8 +728,8 @@ class DocumentRepository(object):
             start = time()
             infile = self.parsed_path(basefile)
             outfile = self.generated_path(basefile)
-            force = ('generate_force' in self.moduleconfig and
-                    self.moduleconfig['generate_force'] == 'True')
+            force = ('generateforce' in self.moduleconfig and
+                    self.moduleconfig['generateforce'] == 'True')
             if not force and Util.outfile_is_newer([infile],outfile):
                 self.log.debug(u"%s: Överhoppad", basefile)
                 return
@@ -841,18 +844,22 @@ class DocumentRepository(object):
                      'sorter':cmp,
                      'pages': []})
 
+        g = Graph()
+        for qname in self.ns:
+            g.bind(qname, self.ns[qname])
+                
         for criterion in criteria:
         # 2.1 Create the list of possible values from the selector
         # function and...
             selector_values = {}
             selector = criterion['selector']
             binding = criterion['binding']
-            qname = criterion['predicate'].qname()
+            qname = g.qname(criterion['predicate'])
             for row in data:
                 selector_values[selector(row[binding])] = True
             
             # 2.1 cont: For each value:
-            for value in sorted(selector_values.keys,cmp=criterion['sorter']):
+            for value in sorted(selector_values.keys(),cmp=criterion['sorter']):
                 # 2.1.1 Prepare a filename based on the rdf predicate and the selector
                 #       func value, eg. toc/dct/title/a.xhtml
                 tmpfile = os.path.sep.join((self.base_dir,
@@ -860,14 +867,13 @@ class DocumentRepository(object):
                                            u'toc',
                                            qname.split(":")[0],
                                            qname.split(":")[1],
-                                           value.tolower(),
-                                           u".xhtml"))
+                                           value.lower()+u".xhtml"))
 
                 # 2.1.2 Collate all selector func values into a list of dicts:
                 # [{'label':'A','outfile':'toc/dct/title/a.xhtml',...},
                 #   'label':'B:,'outfile':'toc/dct/title/b.xhtml',...}
                 criterion['pages'].append({'label':value,
-                                           'title':'Documents starting with "%s"' % label, # GENERALIZE: make localizable (toc_page(predicate,label))
+                                           'title':'Documents starting with "%s"' % value, # GENERALIZE: make localizable (toc_page(predicate,value))
                                            'tmpfile':tmpfile,
                                            'outfile':tmpfile.replace(".xhtml",".html")})
 
@@ -879,7 +885,9 @@ class DocumentRepository(object):
         # with more specialized toc requirements (such as having each
         # possible dct:creator as a primary criterion, and years in
         # dct:issued as a secondary) can construct thei criteria
-        # structure themselves. Therefore, all code above should be a call to toc_criteria() or maybe toc_navigation()              
+        # structure themselves. Therefore, all code above should be a call to toc_criteria() or maybe toc_navigation()
+        import pprint
+        pprint.pprint(criteria)
         for criterion in criteria:
             selector = criterion['selector']
             binding = criterion['binding']
@@ -890,6 +898,8 @@ class DocumentRepository(object):
                 content = []
                 # Find documents that match this particular selector value
                 for row in data:
+                    # FIXME: We need to recreate selector_values for
+                    # each new criterion
                     if selector_values[selector(row[binding])] == value:
                         # 4.1.2 Prepare a list of dicts called content, like:
                         #   [{'uri':'http://example.org/res/basefile',
