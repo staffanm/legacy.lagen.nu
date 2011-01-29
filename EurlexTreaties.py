@@ -24,8 +24,6 @@ import LegalURI
 from LegalRef import LegalRef, Link
 from DataObjects import UnicodeStructure, CompoundStructure, OrdinalStructure, serialize
 
-
-
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
+    "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="${doc.lang}"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:dct="http://purl.org/dc/terms/"
+      xmlns:rinfo="http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#"
+      xmlns:rinfoex="http://lagen.nu/terms#"
+      xmlns:eurlex="http://lagen.nu/eurlex#"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+      xmlns:cal="http://www.w3.org/2002/12/cal/ical#"
+      >
+  <xi:include href="base.xhtml"/>
+  <head>
+    <title>${doc.title}</title>
+  </head>
+
+  <body>
+    <h1>${doc.title}</h1>
+    <div role="navigation">
+      <dl>
+        <py:for each="part in doc.navigation" py:choose="">
+          <dt>${part.label}</dt>
+          <py:for each="page in part.pages" py:choose="">
+            <!--! FIXME: transform this to correct URL (how?) -->
+            <dd><a href="${page.outfile}">${page.label}</a></dd>
+          </py:for>
+        </py:for>
+      </dl>
+    </div>
+    <div role="main">
+      <ul>
+
+      <py:for each="part in doc.content" py:choose="">
+        <li><a href="${part.uri}">${part.label}</a></li>
+      </py:for>
+      </ul>
+    </div>
+  </body>
+</html>
+

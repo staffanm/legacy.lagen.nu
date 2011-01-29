@@ -4,8 +4,9 @@ import sys,os
 import re
 import datetime
 
-from rdflib import Namespace, URIRef, Literal, RDF
-from rdflib.Graph import Graph
+# Assume RDFLib 3.0
+from rdflib import Namespace, URIRef, Literal, RDF, Graph
+
 from mechanize import LinkNotFoundError
 from whoosh import analysis, qparser
 from whoosh.index import create_in, open_dir
@@ -15,17 +16,18 @@ from DocumentRepository import DocumentRepository
 import Util
 import LegalURI
 from LegalRef import LegalRef, Link
-from DataObjects import UnicodeStructure, CompoundStructure, Stycke
+from DataObjects import UnicodeStructure, CompoundStructure, Paragraph
 
 
 __version__ = (1,6)
 __author__  = u"Staffan Malmgren <staffan@tomtebo.org>"
 
 class Body(CompoundStructure): pass
-class Paragraph(Stycke): pass
+class ListItem(CompoundStructure): pass # needed for genshi/generic.xhtml
 
 class EurlexCaselaw(DocumentRepository):
     module_dir = "ecj" # European Court of Justice
+    
     start_url = "http://eur-lex.europa.eu/JURISIndex.do"
     document_url = "http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:%s:EN:NOT"
     vocab_url = "http://lagen.nu/eurlex#"
@@ -33,9 +35,9 @@ class EurlexCaselaw(DocumentRepository):
 
     re_celexno = re.compile('(6)(\d{4})(\w)(\d{4})(\(\d{2}\)|)')
 
-    def download_everything(self,cache=False):
-        self.log.debug("Downloading, use_cache is %s" % cache)
-        if cache and 'startyear' in self.moduleconfig:
+    def download_everything(self,usecache=False):
+        self.log.debug("Downloading, usecache is %s" % usecache)
+        if usecache and 'startyear' in self.moduleconfig:
             startyear = int(self.moduleconfig['startyear'])
         else:
             startyear = 1954 # The first verdicts were published in this year
@@ -70,7 +72,7 @@ class EurlexCaselaw(DocumentRepository):
                     # T: (old) Judgement of the Court
                     if ('J' in celexno or 'A' in celexno
                         or 'W' in celexno or 'T' in celexno):
-                        if self.download_single(celexno,cache=cache):
+                        if self.download_single(celexno,usecache=usecache):
                             self.log.info("Downloaded %s" % celexno)
                         else:
                             self.log.info("Skipped %s" % celexno)

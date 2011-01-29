@@ -69,6 +69,7 @@ digit	     ::= [0-9]
 # * ± is plus-minus
 # * ¼, ½, ¾ are fractions (1/4, 1/2, 3/4 - should these be digits?)
 # * × is multiplication sign
-punctuation    ::= [][!"#$%&'()*+,-./:;<=>?@\^_`{}~€‚ƒ„…†‡ˆ‰‹‘’“”•–—˜™›¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿÷]
+# * Â­ is soft hyphen
+punctuation    ::= [][!"#$%&'()*+,-./:;<=>?@\^_`{}~€‚ƒ„…†‡ˆ‰‹‘’“”•–—˜™›¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿÷Â­]
 
 # ------------ end of base.ebnf ----------------

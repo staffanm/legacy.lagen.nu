@@ -150,6 +150,7 @@ class LegalRef:
         self.namedlaws = {}
         self.load_ebnf(scriptdir+"/etc/base.ebnf")
 
+        self.args = args
         if self.LAGRUM in args:
             productions = self.load_ebnf(scriptdir+"/etc/lagrum.ebnf")
             for p in productions:
@@ -198,7 +199,7 @@ class LegalRef:
             for p in productions:
                 self.uriformatter[p] = self.egrattsfall_format_uri
             self.roots.append("ecjcaseref")
-
+            
         self.decl += "root ::= (%s/plain)+\n" % "/".join(self.roots)
         # pprint(productions)
         # print self.decl.decode(SP_CHARSET,'ignore')
@@ -261,9 +262,20 @@ class LegalRef:
         # vi indatasträngen och stoppar in ett '|'-tecken innan vissa
         # suffix. Vi transformerar även 'Radio- och TV-lagen' till
         # 'Radio-_och_TV-lagen'
-        fixedindata = self.re_escape_compound.sub(r'\1_\2_\3\4', indata)
-        fixedindata = self.re_escape_named.sub(r'|\1', fixedindata)
-
+        #
+        # FIXME: Obviously, this shouldn't be done in a general class,
+        # but rather in a subclas or via proxy/adapter
+        # if we don't do the unicode conversion and pass
+        # BeautifulSoup.NavigableString, the later .encode call fails
+        # (since it's not a real unicode string)
+            
+        fixedindata = unicode(indata)
+        # print "Before: %r" % type(fixedindata)
+        
+        if self.LAGRUM in self.args:
+            fixedindata = self.re_escape_compound.sub(r'\1_\2_\3\4', fixedindata)
+            fixedindata = self.re_escape_named.sub(r'|\1', fixedindata)
+        # print "After: %r" % type(fixedindata)
         
         # SimpleParse har inget stöd för unicodesträngar, så vi
         # konverterar intdatat till en bytesträng. Tyvärr får jag inte
@@ -305,6 +317,7 @@ class LegalRef:
             raise ParseError, "parsed %s chars of %s (...%s...)" %  (taglist[-1], len(indata),
                                                                                indata[(taglist[-1]-2):taglist[-1]+3])
 
+
         # Normalisera resultatet, dvs konkatenera intilliggande
         # textnoder, och ta bort ev '|'-tecken som vi stoppat in
         # tidigare.
@@ -313,8 +326,9 @@ class LegalRef:
             if not self.re_descape_named.search(result[i]):
                 node = result[i]
             else:
-                text = self.re_descape_named.sub(r'\1',result[i])
-                text = self.re_descape_compound.sub(r'\1 \2 \3\4', text)
+                if self.LAGRUM in self.args:
+                    text = self.re_descape_named.sub(r'\1',result[i])
+                    text = self.re_descape_compound.sub(r'\1 \2 \3\4', text)
                 if isinstance(result[i], Link):
                     # Eftersom Link-objekt är immutable måste vi skapa
                     # ett nytt och kopiera dess attribut

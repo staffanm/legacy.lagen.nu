@@ -29,7 +29,7 @@ class SKVFS(DocumentRepository):
     # URL's are highly unpredictable. We must find the URL for every
     # resource we want to download, we cannot transform the resource
     # id into a URL
-    def download_everything(self,cache=False):
+    def download_everything(self,usecache=False):
         self.log.info("Starting at %s" % self.start_url)
         self.browser.open(self.start_url)
         years = {}
@@ -38,11 +38,11 @@ class SKVFS(DocumentRepository):
             year = int(link.text)
             # Documents for the years 1985-2003 are all on one page
             # (with links leading to different anchors). To avoid
-            # re-downloading stuff when cache=False, make sure we
+            # re-downloading stuff when usecache=False, make sure we
             # haven't seen this url (sans fragment) before
             url = link.absolute_url.split("#")[0]
             if year not in years and url not in years.values():
-                self.download_year(year,url,cache=cache)
+                self.download_year(year,url,usecache=usecache)
                 years[year] = url
 
     # just download the most recent year
@@ -52,9 +52,9 @@ class SKVFS(DocumentRepository):
         link = sorted(self.browser.links(text_regex=r'^\d{4}$'),
                         key=attrgetter('text'), reverse=True)[0]
         
-        self.download_year(int(link.text),link.absolute_url, cache=True)
+        self.download_year(int(link.text),link.absolute_url, usecache=True)
 
-    def download_year(self, year, url, cache=False):
+    def download_year(self, year, url, usecache=False):
         self.log.info("Downloading year %s from %s" % (year, url))
         self.browser.open(url)
         for link in (self.browser.links(text_regex=r'FS \d+:\d+')):
@@ -66,17 +66,17 @@ class SKVFS(DocumentRepository):
             linktext = re.match("\w+FS \d+:\d+", link.text).group(0)
             # something like skvfs/2010/23 or rsfs/1996/9
             basefile = linktext.strip().lower().replace(" ", "/").replace(":","/")
-            self.download_single(basefile,link.absolute_url,cache=cache)
+            self.download_single(basefile,link.absolute_url,usecache=usecache)
 
-    def download_single(self, basefile, url, cache=False):
+    def download_single(self, basefile, url, usecache=False):
         self.log.info("Downloading %s from %s" % (basefile, url))
         self.document_url = url + "#%s"
-        html_downloaded = super(SKVFS,self).download_single(basefile,cache)
+        html_downloaded = super(SKVFS,self).download_single(basefile,usecache)
         year = int(basefile.split("/")[1])
         if year >= 2007: # download pdf as well
             filename = self.downloaded_path(basefile)
             pdffilename = os.path.splitext(filename)[0]+".pdf"
-            if not cache or not os.path.exists(pdffilename):
+            if not usecache or not os.path.exists(pdffilename):
                 soup = self.soup_from_basefile(basefile)
                 pdflink = soup.find(href=re.compile(u'\.pdf$'))
                 if not pdflink:

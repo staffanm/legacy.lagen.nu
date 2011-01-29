@@ -217,8 +217,8 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
 
     if xinclude:
         tmpfile = mktemp()
-        cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
-        # print cmdline
+        # cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
+        print cmdline
         (ret,stdout,stderr) = runcmd(cmdline)
         #if (ret != 0):
         #    raise TransformError(stderr)
@@ -228,7 +228,7 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         infile = '"%s"' % infile
     tmpfile = mktemp()
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    # print cmdline
+    print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)

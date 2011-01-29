@@ -20,6 +20,7 @@ import functools
 import xml.etree.cElementTree as ET
 import xml.dom.minidom
 from datetime import datetime
+import re
 
 # 3rd party
 import BeautifulSoup
@@ -191,6 +192,10 @@ class DocumentRepository(object):
     source_encoding = "iso-8859-1"
     """The character set that the source HTML documents use (if applicable)"""
     
+    lang = "en"
+    """The language that the source documents are written in (unless
+    otherwise specified, and that output document should use"""
+
     # this is a replacement for DispatchMixin.dispatch with built-in
     # support for running the *_all methods (parse_all, relate_all and
     # generate_all) in parallell using multiprocessing
@@ -435,19 +440,19 @@ class DocumentRepository(object):
     #
     ################################################################
 
-    def download_everything(self,cache=False):
+    def download_everything(self,usecache=False):
         log.error("You need to implement download_everything in your subclass")
 
 
     def download_new(self):
-        self.download_everything(cache=True)
+        self.download_everything(usecache=True)
 
 
-    def download_single(self,basefile,cache=False):
+    def download_single(self,basefile,usecache=False):
         """Downloads the document from the web (the URL to download is
         determined by self.document_url combined with basefile, the
         location on disk is determined by the function
-        self.download_path). If cache is set and the document exists
+        self.download_path). If usecache is set and the document exists
         on disk no download is attempted.
 
         Otherwise, if the document exists on disk, but the version on
@@ -457,17 +462,21 @@ class DocumentRepository(object):
         Returns True if the document was downloaded and stored on
         disk, False if the file on disk was not updated.
         """
-        
-        url = self.document_url % basefile
+        url = self.remote_url(basefile)
         filename = self.downloaded_path(basefile)
-        if not cache or not os.path.exists(filename):
+        # self.log.debug("Usecache is %s, existance of %s is %s" % (usecache, filename,os.path.exists(filename)))
+        if not usecache or not os.path.exists(filename):
+            existed = os.path.exists(filename)
             if self.download_if_needed(url,filename):
                 # the downloaded file was updated (or created) --
                 # let's make a note of this in the RDF graph!
                 uri = self.canonical_uri(basefile)
                 self.store_triple(URIRef(uri), self.ns['dct']['modified'], Literal(datetime.now()))
+                if existed:
+                    self.log.debug("%s existed, but a new version was downloaded" % filename)
+                else:
+                    self.log.debug("%s did not exist, so it was downloaded" % filename)
                 return True
-                self.log.debug("%s was downloaded" % filename)
             else:
                 self.log.debug("%s exists and is unchanged" % filename)
         else:
@@ -476,6 +485,9 @@ class DocumentRepository(object):
 
 
     def download_if_needed(self,url,filename):
+        """Downloads the url to local filename if it's needed. The
+        default implementation always downloads the url, and if the
+        local file is already present, replaces it."""
         # FIXME: Check the timestamp of filename (if it exists), and
         # do a if-modified-since request.
         tmpfile = mktemp()
@@ -483,9 +495,17 @@ class DocumentRepository(object):
         self.browser.retrieve(url,tmpfile)
         return Util.replace_if_different(tmpfile,filename)
 
+    def remote_url(self,basefile):
+        return self.document_url % basefile        
 
+    def generic_path(self,basefile,maindir,suffix):
+        segments = [self.base_dir, self.module_dir, maindir]
+        segments.extend(re.split("[/:]", basefile))
+        return os.path.sep.join(segments)+suffix
+        
+    
     def downloaded_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'downloaded', '%s.html' % basefile))
+        return self.generic_path(basefile,u'downloaded','.html')
 
 
     ################################################################
@@ -521,7 +541,6 @@ class DocumentRepository(object):
             start = time()
             infile = self.downloaded_path(basefile)
             outfile = self.parsed_path(basefile)
-
             force = ('parseforce' in self.moduleconfig and
                      self.moduleconfig['parseforce'] == 'True')
             if not force and Util.outfile_is_newer([infile],outfile):
@@ -537,8 +556,15 @@ class DocumentRepository(object):
 
             # Check to see that all metadata contained in doc.meta is
             # present in the serialized file.
+            
+            #print "doc['meta']:"
+            #print doc['meta'].serialize(format="nt")
+            #print
             distilled_graph = Graph()
             distilled_graph.parse(outfile,format="rdfa")
+            #print "distilled_graph:"
+            #print distilled_graph.serialize(format="nt")
+            #print
             distilled_file = self.distilled_path(basefile)
             Util.ensureDir(distilled_file)
             distilled_graph.serialize(distilled_file,format="pretty-xml", encoding="utf-8")
@@ -548,9 +574,10 @@ class DocumentRepository(object):
                 len_before = len(doc['meta'])
                 doc['meta'].remove(triple)
                 len_after = len(doc['meta'])
-                if len_before == len_after:
-                    (s,p,o) = triple
-                    self.log.warning("The triple '%s %s %s .' from the XHTML file was not found in the original metadata" % (s.n3(),p.n3(), o.n3()))
+                # should this even be a warning? The parse step may add extra metadata in the text (eg inserting links, which may become dct:references triples)
+                #if len_before == len_after:
+                #    (s,p,o) = triple
+                #    self.log.warning("The triple '%s %s %s .' from the XHTML file was not found in the original metadata" % (s.n3(),p.n3(), o.n3()))
 
             if doc['meta']:
                 self.log.warning("%d triple(s) from the original metadata was not found in the serialized XHTML file:" % len(doc['meta']))
@@ -593,7 +620,17 @@ class DocumentRepository(object):
         the page body, a small metadatagraph containing the title, and
         a generic uri based on the module_dir and basefile.
         """
-        lang = 'en' # (unless someone has a better idea)
+
+        # Default language unless we can find out from source doc?
+        # Check html/@xml:lang || html/@lang
+        root = soup.find('html')
+        try:
+            lang = root['xml:lang']
+        except KeyError:
+            try:
+                lang = root['lang']
+            except KeyError:
+                lang = self.lang
         
         title = soup.find('title').string
         # self.log.info("Title: %s" % title)
@@ -623,8 +660,8 @@ class DocumentRepository(object):
             
         return {'body':body,
                 'meta':meta,
-                'uri': uri,
-                'lang':'en'}
+                'uri':uri,
+                'lang':lang}
     
     def render_xhtml(self,template,doc,outfile,globals):
         """Serializes the parsed object structure into a XML file with
@@ -655,10 +692,10 @@ class DocumentRepository(object):
 
 
     def parsed_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'parsed', '%s.xhtml' % basefile))
+        return self.generic_path(basefile,u'parsed','.xhtml')
 
     def distilled_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'distilled', '%s.rdf' % basefile))
+        return self.generic_path(basefile,u'distilled','.rdf')
 
     ################################################################
     #
@@ -779,10 +816,10 @@ class DocumentRepository(object):
         return outfile
     
     def generated_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'generated', '%s.html' % basefile))
+        return self.generic_path(basefile,u'generated','.html')
 
     def annotation_path(self,basefile):
-        return os.path.sep.join((self.base_dir, self.module_dir, u'intermediate', '%s.ann.xml' % basefile))
+        return self.generic_path(basefile,u'intermediate','.ann.xml')
 
     ################################################################
     #
@@ -834,13 +871,13 @@ class DocumentRepository(object):
         criteria = ({'predicate':self.ns['dct']['title'],
                      'binding':'title', # must match sparql query
                      'label':'Sorted by title', # GENERALIZE: This string must me controllable/localizable
-                     'selector':lambda x: x[0],
+                     'selector':lambda x: x[0].lower(),
                      'sorter':cmp,
                      'pages': []},
                     {'predicate':self.ns['dct']['identifier'],
                      'binding':'id',
                      'label':'Sorted by identifier',
-                     'selector':lambda x: x[0],
+                     'selector':lambda x: x[0].lower(),
                      'sorter':cmp,
                      'pages': []})
 
@@ -873,9 +910,12 @@ class DocumentRepository(object):
                 # [{'label':'A','outfile':'toc/dct/title/a.xhtml',...},
                 #   'label':'B:,'outfile':'toc/dct/title/b.xhtml',...}
                 criterion['pages'].append({'label':value,
-                                           'title':'Documents starting with "%s"' % value, # GENERALIZE: make localizable (toc_page(predicate,value))
+                                           # GENERALIZE: make localizable
+                                           # (toc_page(predicate,value))
+                                           'title':'Documents starting with "%s"' % value, 
                                            'tmpfile':tmpfile,
                                            'outfile':tmpfile.replace(".xhtml",".html")})
+            selector_values = {}
 
         # 4: Now that we've created neccessary base data for criterion,
         #    iterate through it again
@@ -884,13 +924,13 @@ class DocumentRepository(object):
         # not neccessarily structured around RDF predicates. Sources
         # with more specialized toc requirements (such as having each
         # possible dct:creator as a primary criterion, and years in
-        # dct:issued as a secondary) can construct thei criteria
-        # structure themselves. Therefore, all code above should be a call to toc_criteria() or maybe toc_navigation()
-        import pprint
-        pprint.pprint(criteria)
+        # dct:issued as a secondary) can construct the criteria
+        # structure themselves. Therefore, all code above should be a
+        # call to toc_criteria() or maybe toc_navigation()
         for criterion in criteria:
             selector = criterion['selector']
             binding = criterion['binding']
+            selector_values = [x['label'] for x in criterion['pages']]
             # 4.1 For each selector value (reuse list from 2.1):
             for page in criterion['pages']:
                 label = page['label']
@@ -898,9 +938,7 @@ class DocumentRepository(object):
                 content = []
                 # Find documents that match this particular selector value
                 for row in data:
-                    # FIXME: We need to recreate selector_values for
-                    # each new criterion
-                    if selector_values[selector(row[binding])] == value:
+                    if selector(row[binding]) == label:
                         # 4.1.2 Prepare a list of dicts called content, like:
                         #   [{'uri':'http://example.org/res/basefile',
                         #     'title':'Basefile title'}]
@@ -913,15 +951,18 @@ class DocumentRepository(object):
                 # GENERALIZE: Allow for other genshi templates
                 # implementing eg table, column or tag-cloud based
                 # layouts
-                self.rendex_html("genshi/generic-toc.xhtml",
-                                 page['filename'],
-                                 {'navigation':criteria,
-                                  'title':title,
-                                  'content':content},
-                                 self.get_globals())
+                self.log.debug("Rendering XHTML to %s" % page['tmpfile'])
+                self.render_xhtml("genshi/generic-toc.xhtml",
+                                  {'navigation':criteria,
+                                   'title':title,
+                                   'content':content,
+                                   'lang':self.lang},
+                                  page['tmpfile'],
+                                  self.get_globals())
                 # 4.1.5 Prepare a browser-ready HTML page using generic.xsl
-                Util.transform('xsl/generic.xsl',page['tmpfile'],page['outfile'])
-                self.log("Created %s" % outfile)
+                self.log.debug("Rendering HTML to %s" % page['tmpfile'])
+                Util.transform('xsl/generic.xsl',page['tmpfile'],page['outfile'], validate=False)
+                self.log.info("Created %s" % page['outfile'])
 
         # 5. as a final step, make an index.html by copying the very first page
         mainindex = os.path.sep.join((self.base_dir,

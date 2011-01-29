@@ -50,17 +50,17 @@
 	  </xsl:choose>
 	</xsl:variable>
 
-	<xsl:variable name="tuned-width">
-	  <xsl:call-template name="tune-width">
-	    <xsl:with-param name="txt" select="$rawtitle"/>
-	    <xsl:with-param name="width" select="150"/>
-	    <xsl:with-param name="def" select="150"/>
-	  </xsl:call-template>
-	</xsl:variable>
 
 	<xsl:variable name="title">
 	  <xsl:choose>
 	    <xsl:when test="string-length($rawtitle) > 150">
+              <xsl:variable name="tuned-width">
+                <xsl:call-template name="tune-width">
+                  <xsl:with-param name="txt" select="$rawtitle"/>
+                  <xsl:with-param name="width" select="150"/>
+                  <xsl:with-param name="def" select="150"/>
+                </xsl:call-template>
+              </xsl:variable>
 	      <xsl:value-of select="substring($rawtitle, 1, $tuned-width - 1)" />...</xsl:when>
 	    <xsl:otherwise>
 	      <xsl:value-of select="$rawtitle"/>
