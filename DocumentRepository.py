@@ -21,11 +21,12 @@ import xml.etree.cElementTree as ET
 import xml.dom.minidom
 from datetime import datetime
 import re
+import urllib
 
 # 3rd party
 import BeautifulSoup
 from configobj import ConfigObj
-from mechanize import Browser, LinkNotFoundError
+from mechanize import Browser, LinkNotFoundError, RobustFactory, URLError
 from genshi.template import TemplateLoader
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 # Assume RDFLib 3.0
@@ -61,10 +62,14 @@ else:
         import locale
         locale.setlocale(locale.LC_ALL,'')
         defaultencoding = locale.getpreferredencoding()
-        
-# print "setting sys.stdout to a '%s' writer" % defaultencoding
-sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
-sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+
+# for some reason, resetting sys.stdout to a more forgiving writer on
+# OSX (builtin python 2.6) results in a strict ascii
+# writer. Investigate further...
+if sys.platform != "darwin":
+    sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+    sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+
 
 # Global/static functions - global_init and global_run are used when
 # running actions in parallel using multiprocessing.Pool. The argument
@@ -196,6 +201,23 @@ class DocumentRepository(object):
     """The language that the source documents are written in (unless
     otherwise specified, and that output document should use"""
 
+    start_url = "http://example.org/"
+    """The main entry page for the remote web store of documents. May
+    be a list of documents, a search form or whatever. If it's
+    something more complicated than a simple list of documents, you
+    need to override download_everything in order to tell which
+    documents are to be downloaded."""
+
+    document_url = "http://example.org/docs/%s.html"
+
+    basefile_template = ".*"
+
+    # If set, uses BeautifulSoup as parser even for downloading
+    # (parsing the navigation/search/index pages). It's more robust
+    # aginst invalid HTML, but might be slower and seems to return
+    # incorrect results for link.text if the link text contain markup
+    browser_use_robustfactory = False
+    
     # this is a replacement for DispatchMixin.dispatch with built-in
     # support for running the *_all methods (parse_all, relate_all and
     # generate_all) in parallell using multiprocessing
@@ -372,8 +394,19 @@ class DocumentRepository(object):
 
         self.base_dir = self.config['datadir']
 
-        self.browser = Browser()
+        if self.browser_use_robustfactory:
+            self.browser = Browser(factory=RobustFactory())
+        else:
+            self.browser = Browser()
         self.browser.addheaders = [('User-agent', 'lagen.nu-bot (staffan@lagen.nu)')]
+
+        # logger = logging.getLogger("mechanize")
+        # logger.addHandler(logging.StreamHandler(sys.stdout))
+        # logger.setLevel(logging.DEBUG)
+        # self.browser.set_debug_http(True)
+        # self.browser.set_debug_responses(True)
+        # self.browser.set_debug_redirects(True)
+
 
         self.ns = {'rinfo':  Namespace(Util.ns['rinfo']),
                    'rinfoex':Namespace(Util.ns['rinfoex']),
@@ -440,20 +473,35 @@ class DocumentRepository(object):
     #
     ################################################################
 
+    # this could be a generic implementation. Assumes all documents
+    # are linked from a single page, that they all have URLs matching
+    # the document_url template, and that the link text is always
+    # equal to basefile
     def download_everything(self,usecache=False):
-        log.error("You need to implement download_everything in your subclass")
-
+        self.log.info("Starting at %s" % self.start_url)
+        self.browser.open(self.start_url)
+        url_regex = self.document_url.replace("%s", "(.*)")
+        # self.log.info("url_regex: %s" % url_regex)
+        for link in self.browser.links(predicate=lambda l:re.match(url_regex,l.absolute_url)):
+            # self.log.debug("Found link (%r)" % (link))
+            try:
+                basefile = re.search(self.basefile_template, link.text).group(0)
+                # self.log.debug("Transformed into basefile %s" % (basefile))
+                self.download_single(basefile,usecache,link.absolute_url)
+            except AttributeError:
+                self.log.error("Couldn't find basefile information in link text %s" % link.text)
 
     def download_new(self):
         self.download_everything(usecache=True)
 
 
-    def download_single(self,basefile,usecache=False):
-        """Downloads the document from the web (the URL to download is
-        determined by self.document_url combined with basefile, the
-        location on disk is determined by the function
-        self.download_path). If usecache is set and the document exists
-        on disk no download is attempted.
+    def download_single(self,basefile,usecache=False,url=None):
+        """Downloads the document from the web (unless explicitly
+        specified, the URL to download is determined by
+        self.document_url combined with basefile, the location on disk
+        is determined by the function self.download_path). If usecache
+        is set and the document exists on disk no download is
+        attempted.
 
         Otherwise, if the document exists on disk, but the version on
         the web is unchanged, the file on disk is left unchanged
@@ -462,7 +510,8 @@ class DocumentRepository(object):
         Returns True if the document was downloaded and stored on
         disk, False if the file on disk was not updated.
         """
-        url = self.remote_url(basefile)
+        if not url:
+            url = self.remote_url(basefile)
         filename = self.downloaded_path(basefile)
         # self.log.debug("Usecache is %s, existance of %s is %s" % (usecache, filename,os.path.exists(filename)))
         if not usecache or not os.path.exists(filename):
@@ -491,12 +540,15 @@ class DocumentRepository(object):
         # FIXME: Check the timestamp of filename (if it exists), and
         # do a if-modified-since request.
         tmpfile = mktemp()
-        #self.log.debug("Retrieving %s to %s" % (url,filename))
-        self.browser.retrieve(url,tmpfile)
-        return Util.replace_if_different(tmpfile,filename)
+        # self.log.debug("Retrieving %s to %s" % (url,filename))
+        try:
+            self.browser.retrieve(url,tmpfile)
+            return Util.replace_if_different(tmpfile,filename)
+        except URLError, e:
+            self.log.error("Failed to fetch %s: %s" % (url, e))
 
     def remote_url(self,basefile):
-        return self.document_url % basefile        
+        return self.document_url % urllib.quote(basefile)
 
     def generic_path(self,basefile,maindir,suffix):
         segments = [self.base_dir, self.module_dir, maindir]
