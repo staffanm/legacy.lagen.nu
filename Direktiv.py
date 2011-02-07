@@ -45,7 +45,6 @@ class DirTrips(DocumentRepository):
                 self.log.info(u'No next page link found, this was the last page')
                 done = True
     
-
 class DirAsp(DocumentRepository):
     module_dir = "dir-asp"
 
@@ -129,7 +128,6 @@ class DirPolopoly(DocumentRepository):
         # 6 SÖ
         self.browser["contentTypes"] = ["1"]
         self.browser.submit()
-        print self.browser.encoding()
         done = False
         pagecnt = 1
         while not done:
@@ -148,7 +146,7 @@ if __name__ == "__main__":
         DirAsp.run(sys.argv[2:])
     elif sys.argv[1] == "sou":
         DirSou.run(sys.argv[2:])
-    elif sys.argv[1] == "poly":
+    elif sys.argv[1] == "polo":
         DirPolopoly.run(sys.argv[2:])
     else:
         DirTrips.run()

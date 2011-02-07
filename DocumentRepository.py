@@ -66,7 +66,7 @@ else:
 # for some reason, resetting sys.stdout to a more forgiving writer on
 # OSX (builtin python 2.6) results in a strict ascii
 # writer. Investigate further...
-if sys.platform != "darwin":
+if (sys.platform != "darwin" and sys.platform != "linux2"):
     sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
     sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
 
@@ -132,8 +132,7 @@ class DocumentRepository(object):
 
     You use it by creating a new class that inherits from this class,
     and overriding methods in that class. To get a very simple example
-    going, you don't need to override anything other than the
-    L{download_everything} function.
+    going, you only need to specify start_url and document_url
 
     To get more control over parsing and HTML generation, you override
     additional methods. There are eight main entry points into the
@@ -144,6 +143,7 @@ class DocumentRepository(object):
             download_single
                 downloaded_path
                 download_if_needed
+                remote_url
     parse
         parsed_path
         soup_from_basefile
@@ -473,10 +473,11 @@ class DocumentRepository(object):
     #
     ################################################################
 
-    # this could be a generic implementation. Assumes all documents
-    # are linked from a single page, that they all have URLs matching
-    # the document_url template, and that the link text is always
-    # equal to basefile
+    # This is a very simple generic implementation. Assumes all
+    # documents are linked from a single page, that they all have URLs
+    # matching the document_url template, and that the link text is
+    # always equal to basefile. If these assumptions don't hold, you
+    # need to override this method.
     def download_everything(self,usecache=False):
         self.log.info("Starting at %s" % self.start_url)
         self.browser.open(self.start_url)
@@ -550,9 +551,11 @@ class DocumentRepository(object):
     def remote_url(self,basefile):
         return self.document_url % urllib.quote(basefile)
 
+    # Splits the basefile on a few common delimiters (/, : and space)
+    # and constructs a path from the segments
     def generic_path(self,basefile,maindir,suffix):
         segments = [self.base_dir, self.module_dir, maindir]
-        segments.extend(re.split("[/:]", basefile))
+        segments.extend(re.split("[/: ]", basefile))
         return os.path.sep.join(segments)+suffix
         
     
