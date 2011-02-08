@@ -116,6 +116,35 @@ class DirPolopoly(Regeringen):
     def __init__(self,options):
         super(DirPolopoly,self).__init__(options) 
         self.document_type = self.KOMMITTEDIREKTIV
+# Does parsing, generating etc from base files:
+class Direktiv(DocumentRepository):
+    subrepos = DirTrips, DirPolopoly, DirAsp, DirSou
+
+    @classmethod
+    def basefile_from_path(cls,path):
+        # data/dir-trips/downloaded/2011/7.html => 2011:7
+        seg = os.path.splitext(path)[0].split(os.sep)
+        return ":".join(seg[seg.index(cls.module_dir)+2:])
+    
+    @classmethod
+    def get_iterable_for(cls,funcname,base_dir):
+        if funcname == "parse_all":
+            documents = set()
+            for c in cls.subrepos:
+                instance = c(options={})
+                for basefile in c.get_iterable_for("parse_all",base_dir):
+                    if basefile not in documents:
+                        documents.add(basefile)
+                        yield basefile
+        else:
+            super(Direktiv,cls).get_iterable_for(funcname,base_dir)
+
+    def parse(self,basefile):
+        self.log.info("Creating %s (soon)" % self.parsed_path(basefile))
+        for c in self.subrepos:
+            inst = c(options={})
+            self.log.info("%s: %s %s %s" % (basefile,c.__name__, inst.downloaded_path(basefile), os.path.exists(inst.downloaded_path(basefile))))
+
     
 if __name__ == "__main__":
     if sys.argv[1] == "trips":
@@ -127,6 +156,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == "polo":
         DirPolopoly.run(sys.argv[2:])
     else:
-        DirTrips.run()
+        Direktiv.run()
         
 

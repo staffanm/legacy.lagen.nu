@@ -362,7 +362,7 @@ class DocumentRepository(object):
     @classmethod
     def basefile_from_path(cls,path):
         seg = os.path.splitext(path)[0].split(os.sep)
-        return "/".join(seg[seg.index(cls.module_dir)+2:])
+        return ":".join(seg[seg.index(cls.module_dir)+2:])
 
     @classmethod
     def context(cls):
@@ -523,7 +523,7 @@ class DocumentRepository(object):
                 uri = self.canonical_uri(basefile)
                 self.store_triple(URIRef(uri), self.ns['dct']['modified'], Literal(datetime.now()))
                 if existed:
-                    self.loga.debug("%s existed, but a new version was downloaded" % filename)
+                    self.log.debug("%s existed, but a new version was downloaded" % filename)
                 else:
                     self.log.debug("%s did not exist, so it was downloaded" % filename)
                 return True
@@ -623,7 +623,6 @@ class DocumentRepository(object):
             Util.ensureDir(distilled_file)
             distilled_graph.serialize(distilled_file,format="pretty-xml", encoding="utf-8")
             self.log.debug(u'%s: %s triples extracted', basefile, len(distilled_graph))
-            
             for triple in distilled_graph:
                 len_before = len(doc['meta'])
                 doc['meta'].remove(triple)
