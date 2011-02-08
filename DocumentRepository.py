@@ -523,7 +523,7 @@ class DocumentRepository(object):
                 uri = self.canonical_uri(basefile)
                 self.store_triple(URIRef(uri), self.ns['dct']['modified'], Literal(datetime.now()))
                 if existed:
-                    self.log.debug("%s existed, but a new version was downloaded" % filename)
+                    self.loga.debug("%s existed, but a new version was downloaded" % filename)
                 else:
                     self.log.debug("%s did not exist, so it was downloaded" % filename)
                 return True
@@ -557,7 +557,6 @@ class DocumentRepository(object):
         segments = [self.base_dir, self.module_dir, maindir]
         segments.extend(re.split("[/: ]", basefile))
         return os.path.sep.join(segments)+suffix
-        
     
     def downloaded_path(self,basefile):
         return self.generic_path(basefile,u'downloaded','.html')

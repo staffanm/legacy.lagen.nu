@@ -4,10 +4,13 @@
 # A number of different classes each fetching the same data from
 # different sources
 import sys,os,re,datetime
-import urllib 
+import urllib
+import urlparse
 import logging
 
 from mechanize import LinkNotFoundError
+import BeautifulSoup
+from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 from DocumentRepository import DocumentRepository
 import Util
@@ -104,40 +107,15 @@ class DirSou(DocumentRepository):
         segment = "%s/dir%s_%s" % (year,year,num)
         return self.document_url % segment
 
-
-# Maybe we should have a intermediate class called PolopolyRepository? 
-class DirPolopoly(DocumentRepository):
+from Regeringen import Regeringen
+class DirPolopoly(Regeringen):
     module_dir = "dir-polo"
-    start_url = "http://regeringen.se/sb/d/108"
+    re_basefile_strict = re.compile(r'Dir\. (\d{4}:\d+)')
+    re_basefile_lax = re.compile(r'(?:[Dd]ir\.?|) ?(\d{4}:\d+)')
 
-    def download_everything(self,usecache=False):
-        self.log.info("Starting at %s" % self.start_url)
-        self.browser.open(self.start_url)
-        # tried self.browser.select_form(predicate=lambda
-        # f:f.action.endswith("/sb/d/108")), but that doesn't work
-        # with the self.browser["contentType"] = ["1"] call below
-        for f in self.browser.forms():
-            if f.action.endswith("/sb/d/108"):
-                self.browser.form = f
-
-        # 1 Kommittedirektiv
-        # 2 Ds
-        # 3 Proposition
-        # 4 Skrivelse
-        # 5 SOU
-        # 6 SÖ
-        self.browser["contentTypes"] = ["1"]
-        self.browser.submit()
-        done = False
-        pagecnt = 1
-        while not done:
-            self.log.info(u'Result page #%s' % pagecnt)
-            for link in self.browser.links(url_regex=r'/sb/d/108/a/\d+'):
-                t = unicode(link.text,self.browser.encoding())
-                self.log.info(t)
-            pagecnt += 1
-            done = True
-
+    def __init__(self,options):
+        super(DirPolopoly,self).__init__(options) 
+        self.document_type = self.KOMMITTEDIREKTIV
     
 if __name__ == "__main__":
     if sys.argv[1] == "trips":
