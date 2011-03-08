@@ -515,7 +515,15 @@ class DVParser(LegalSource.Parser):
         for key in self.labels.keys():
             node = soup.find(text=re.compile(key+u':'))
             if node:
-                txt = Util.elementText(node.findNext("w:t"))
+                # can't just use the next w:t element, sometimes the
+                # text field is broken up (so that "20" is in one
+                # cell, "10" in another, and "-06-09" in a third...)
+                next_text = node.findNext("w:t")
+                text_root = next_text.findParent("w:p")
+                txt = ""
+                for text_el in text_root.findAll("w:t"):
+                    txt += Util.elementText(text_el)
+                
                 if txt: # skippa fält med tomma strängen-värden
                     head[key] = UnicodeSubject(txt, predicate=self.labels[key])
             else:
@@ -833,7 +841,9 @@ class DVParser(LegalSource.Parser):
 
         # Putsa till avgörandedatum - det är ett date, inte en string
         # pprint.pprint(head)
-        head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum']),'%Y-%m-%d'),
+        
+        head[u'Avgörandedatum'] = DateSubject(datetime.strptime(unicode(head[u'Avgörandedatum'].replace(" ","")),
+                                                                '%Y-%m-%d'),
                                               predicate=self.labels[u'Avgörandedatum'])
 
         

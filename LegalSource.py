@@ -56,28 +56,30 @@ if not os.path.sep in __file__:
 else:
     __scriptdir__ = os.path.dirname(__file__)
 
-# Do required codec/locale magic right away, since this is included by
-# all runnable scripts
-if sys.platform == 'win32':
-    if sys.stdout.encoding:
-        defaultencoding = sys.stdout.encoding
-    else:
-        print "sys.stdout.encoding not set"
-        defaultencoding = 'cp850'
-else:
-    if sys.stdout.encoding:
-        defaultencoding = sys.stdout.encoding
-        if defaultencoding == 'ANSI_X3.4-1968': # really?!
-            defaultencoding = 'iso-8859-1'
-    else:
-        import locale
-        locale.setlocale(locale.LC_ALL,'')
-        defaultencoding = locale.getpreferredencoding()
-        
-# print "setting sys.stdout to a '%s' writer" % defaultencoding
-sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
-sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
-
+# Magicality seems to harm more than it helps nowadays
+# 
+# # Do required codec/locale magic right away, since this is included by
+# # all runnable scripts
+# if sys.platform == 'win32':
+#     if sys.stdout.encoding:
+#         defaultencoding = sys.stdout.encoding
+#     else:
+#         print "sys.stdout.encoding not set"
+#         defaultencoding = 'cp850'
+# else:
+#     if sys.stdout.encoding:
+#         defaultencoding = sys.stdout.encoding
+#         if defaultencoding == 'ANSI_X3.4-1968': # really?!
+#             defaultencoding = 'iso-8859-1'
+#     else:
+#         import locale
+#         locale.setlocale(locale.LC_ALL,'')
+#         defaultencoding = locale.getpreferredencoding()
+#         
+# # print "setting sys.stdout to a '%s' writer" % defaultencoding
+# sys.stdout = codecs.getwriter(defaultencoding)(sys.__stdout__, 'replace')
+# sys.stderr = codecs.getwriter(defaultencoding)(sys.__stderr__, 'replace')
+# 
 
 
 

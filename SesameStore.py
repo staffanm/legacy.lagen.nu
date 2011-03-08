@@ -51,8 +51,10 @@ class SesameStore():
                                    (self.url, self.repository))
 
         # Ping the server and see what we have
-        # req = Request(self.url+'/protocol')
-        # proto = urlopen(req).read()
+        print "Pinging the server at %s" % self.url
+        
+        req = Request(self.url+'/protocol')
+        self.protocol = urlopen(req).read()
         # req = Request(self.url+'/repositories/'+self.repository+'/size')
         # statements = urlopen(req).read()
 
