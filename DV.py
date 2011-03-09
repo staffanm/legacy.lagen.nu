@@ -375,6 +375,7 @@ class DVParser(LegalSource.Parser):
             except Util.ExternalCommandError:
                 # Some .doc files are .docx with wrong suffix
                 parsablefile = docfile.replace('word','ooxml').replace('.doc','.xml')
+                log.info("%s: Retrying as OOXML" % id)
                 self.word_to_ooxml(docfile,parsablefile)
                 filetype = "docx"
                 
@@ -589,7 +590,10 @@ class DVParser(LegalSource.Parser):
         # rättsfall och lagrum i löpande text...
         body = Referatstext()
         for p in soup.find(text=re.compile('EFERAT')).findParent('w:tr').findNextSibling('w:tr').findAll('w:p'):
-            body.append(Stycke([Util.elementText(p)]))
+            ptext = u''
+            for e in p.findAll("w:t"):
+                ptext += e.string
+            body.append(Stycke([ptext]))
 
         # Hitta sammansatta metadata i sidfoten
         txt = Util.elementText(soup.find(text=re.compile(u'Sökord:')).findNext('w:t'))
@@ -950,6 +954,7 @@ class DVManager(LegalSource.Manager):
             Util.ensureDir(mapfile)
             f = codecs.open(mapfile,'a',encoding='iso-8859-1')
             f.write(u"%s\t%s\n" % (m.group(1),basefile))
+	    f.close()
         else:
             log.warning("could not find xml:base in %s" % infile)
 
@@ -1124,7 +1129,8 @@ WHERE {
         for base in basefile.keys():
             entries[base] = []
         for (timestamp,message) in messages:
-            f = message.replace('\\','/').replace('intermediate/word','parsed').replace('.doc','.xht2')
+            # f = message.replace('\\','/').replace('intermediate/word','parsed').replace('.doc','.xht2')
+	    f = message.replace('\\','/').replace('intermediate/word','parsed').replace('.docx','.xht2')
             if not os.path.exists(f):
                 # kan hända om parsandet gick snett
                 log.warning("File %s not found" % f)

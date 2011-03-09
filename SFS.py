@@ -234,8 +234,8 @@ class SFSDownloader(LegalSource.Downloader):
         super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
                                      
     def DownloadAll(self):
-        #self._setLastSFSnr()
-        #return
+        # self._setLastSFSnr()
+        # return
         start = 1600
         end = datetime.today().year
         self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
@@ -263,6 +263,7 @@ class SFSDownloader(LegalSource.Downloader):
         return __moduledir__
 
     def _setLastSFSnr(self,last_sfsnr=None):
+        maxyear = datetime.today().year+1
         if not last_sfsnr:
             log.info(u'Letar efter senaste SFS-nr i  %s/sfst"' % self.download_dir)
             last_sfsnr = "1600:1"
@@ -271,6 +272,10 @@ class SFSDownloader(LegalSource.Downloader):
                     continue
 
                 tmp = self._findUppdateradTOM(FilenameToSFSnr(f[len(self.download_dir)+6:-5].replace("\\", "/")), f)
+                tmpyear = int(tmp.split(":")[0])
+                if tmpyear > maxyear:
+                    log.warning('%s is probably not correct, ignoring (%s)' % (tmp,f))
+                    continue
                 if Util.numcmp(tmp, last_sfsnr) > 0:
                     log.info(u'%s > %s (%s)' % (tmp, last_sfsnr, f))
                     last_sfsnr = tmp
@@ -2312,357 +2317,357 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         outfile = Util.relpath(self._htmlFileName(basefile))
         start = time()
         sfsnr = FilenameToSFSnr(basefile)
-        p = LegalRef(LegalRef.LAGRUM)
-
-        baseuri = p.parse(sfsnr)[0].uri
-        # Putting togeher a (non-normalized) RDF/XML file, suitable
-        # for XSLT inclusion in six easy steps
-        stuff = {}
-        #
-        # 1. all rinfo:Rattsfallsreferat that has baseuri as a
-        # rinfo:lagrum, either directly or through a chain of
-        # dct:isPartOf statements
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?uri ?id ?desc ?lagrum
-WHERE {
-   { ?uri rinfo:lagrum <%s> .
-     ?uri dct:identifier ?id .
-     ?uri dct:description ?desc }  
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf ?e .
-           ?e dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-}
-""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-        # print sq
-        rattsfall = self._store_select(sq)
-
-        log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
-        stuff[baseuri] = {}
-        stuff[baseuri]['rattsfall'] = []
-        
-        specifics = {}
-        for row in rattsfall:
-            if 'lagrum' not in row:
-                lagrum = baseuri
-            else:
-                # truncate 1998:204#P7S2 to just 1998:204#P7
-                if "S" in row['lagrum']:
-                    lagrum = row['lagrum'][:row['lagrum'].index("S")]
-                else:
-                    lagrum = row['lagrum']
-                specifics[row['id']] = True
-            # we COULD use a tricky defaultdict for stuff instead of
-            # this initializing code, but defauldicts don't pprint
-            # so pretty...
-            if not lagrum in stuff:
-                stuff[lagrum] = {}
-            if not 'rattsfall' in stuff[lagrum]:
-                stuff[lagrum]['rattsfall'] = []
-
-            record = {'id':row['id'],
-                      'desc':row['desc'],
-                      'uri':row['uri']}
-
-            # if one case references two or more paragraphs in a
-            # particular section (ie "6 kap 1 § 1 st. och 6 kap 1 § 2
-            # st.") we will get duplicates that we can't (easily)
-            # filter out in the SPARQL query. Filter them out here
-            # instead.
-            if not record in stuff[lagrum]['rattsfall']:
-                stuff[lagrum]['rattsfall'].append(record)
-
-        # remove cases that refer to the law itself and a specific
-        # paragraph (ie only keep cases that only refer to the law
-        # itself)
-        filtered = []
-        for r in stuff[baseuri]['rattsfall']:
-            if r['id'] not in specifics:
-                filtered.append(r)
-        stuff[baseuri]['rattsfall'] = filtered
-
-
-        # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
-        #
-        # FIXME: ?label doesn't select anything (afraid we have
-        # to do a dct:ispartof combinatorial explosion)
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?uri ?label ?lagrum
-WHERE {
-   { ?uri dct:references <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf ?e .
-           ?e dct:isPartOf <%s> }
-}
-ORDER BY ?uri ?lagrum
-""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-
-        # FIXME: This query makes tomcat/sesame unbearably slow...
-        inboundlinks = self._store_select(sq)
-        # inboundlinks = []
-        
-        log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
-        stuff[baseuri]['inboundlinks'] = []
-
-        # mapping <http://rinfo.lagrummet.se/publ/sfs/1999:175> =>
-        # "Rättsinformationsförordning (1999:175)"
-        doctitles = {} 
-        specifics = {}
-        for row in inboundlinks:
-            if 'lagrum' not in row:
-                lagrum = baseuri
-            else:
-                # truncate 1998:204#P7S2 to just 1998:204#P7
-                if "S" in row['lagrum']:
-                    lagrum = row['lagrum'][:row['lagrum'].index("S")]
-                else:
-                    lagrum = row['lagrum']
-                lagrum = row['lagrum'] 
-                specifics[row['uri']] = True
-            # we COULD use a tricky defaultdict for stuff instead of
-            # this initializing code, but defauldicts don't pprint
-            # so pretty...
-            if not lagrum in stuff:
-                stuff[lagrum] = {}
-            if not 'inboundlinks' in stuff[lagrum]:
-                stuff[lagrum]['inboundlinks'] = []
-            #print "adding %s under %s" % (row['id'],lagrum)
-            stuff[lagrum]['inboundlinks'].append({'uri':row['uri']})
-
-        # remove inbound links that refer to the law itself plus at
-        # least one specific paragraph (ie only keep cases that only
-        # refer to the law itself)
-        filtered = []
-        for r in stuff[baseuri]['inboundlinks']:
-            if r['uri'] not in specifics:
-                filtered.append(r)
-        stuff[baseuri]['inboundlinks'] = filtered
-
-        # pprint (stuff)
-        # 3. all wikientries that dct:description this
-    
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?lagrum ?desc
-WHERE {
-   { <%s> dct:description ?desc }  
-   UNION { ?lagrum dct:isPartOf <%s> . ?lagrum dct:description ?desc } 
-   UNION { ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> . ?lagrum dct:description ?desc} 
-}
-""" % (baseuri,baseuri,baseuri)
-        wikidesc = self._store_select(sq)
-        for row in wikidesc:
-            if not 'lagrum' in row:
-                lagrum = baseuri
-            else:
-                lagrum = row['lagrum']
-                
-            if not lagrum in stuff:
-                stuff[lagrum] = {}
-            stuff[lagrum]['desc'] = row['desc']
-
-        log.debug(u'%s: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
-
-        
-        # pprint(wikidesc)
-        # (4. eurlex.nu data (mapping CELEX ids to titles))
-        # (5. Propositionstitlar)
-        # 6. change entries for each section
-        # FIXME: we need to differentiate between additions, changes and deletions
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?change ?id ?lagrum
-WHERE {
-   { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-}
-        """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-        changes = self._store_select(sq)
-
-        log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
-
-        for row in changes:
-            lagrum = row['lagrum']
-            if not lagrum in stuff:
-                stuff[lagrum] = {}
-            if not 'changes' in stuff[lagrum]:
-                stuff[lagrum]['changes'] = []
-            stuff[lagrum]['changes'].append({'uri':row['change'],
-                                          'id':row['id']})
-
-        # then, construct a single de-normalized rdf/xml dump, sorted
-        # by root/chapter/section/paragraph URI:s. We do this using
-        # raw XML, not RDFlib, to avoid normalizing the graph -- we
-        # need repetition in order to make the XSLT processing simple.
-        #
-        # The RDF dump looks something like:
-        #
-        # <rdf:RDF>
-        #   <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/1998:204#P1">
-        #     <rinfo:isLagrumFor>
-        #       <rdf:Description about="http://rinfo.lagrummet.se/publ/dom/rh/2004:51">
-        #           <dct:identifier>RH 2004:51</dct:identifier>
-        #           <dct:description>Hemsida på Internet. Fråga om...</dct:description>
-        #       </rdf:Description>
-        #     </rinfo:isLagrumFor>
-        #     <dct:description>Personuppgiftslagens syfte är att skydda...</dct:description>
-        #     <rinfo:isChangedBy>
-        #        <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/2003:104">
-        #           <dct:identifier>SFS 2003:104</dct:identifier>
-        #           <rinfo:proposition>
-        #             <rdf:Description about="http://rinfo.lagrummet.se/publ/prop/2002/03:123">
-        #               <dct:title>Översyn av personuppgiftslagen</dct:title>
-        #               <dct:identifier>Prop. 2002/03:123</dct:identifier>
-        #             </rdf:Description>
-        #           </rinfo:proposition>
-        #        </rdf:Description>
-        #     </rinfo:isChangedBy>
-        #   </rdf:Description>
-        # </rdf:RDF>
-        
-        root_node = PET.Element("rdf:RDF")
-        for prefix in Util.ns:
-            # we need this in order to make elementtree not produce
-            # stupid namespaces like "xmlns:ns0" when parsing an external
-            # string like we do below (the PET.fromstring call)
-            PET._namespace_map[Util.ns[prefix]] = prefix
-            root_node.set("xmlns:" + prefix, Util.ns[prefix])
-
-        for l in sorted(stuff.keys(),cmp=Util.numcmp):
-            lagrum_node = PET.SubElement(root_node, "rdf:Description")
-            lagrum_node.set("rdf:about",l)
-            if 'rattsfall' in stuff[l]:
-                for r in stuff[l]['rattsfall']:
-                    islagrumfor_node = PET.SubElement(lagrum_node, "rinfo:isLagrumFor")
-                    rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
-                    rattsfall_node.set("rdf:about",r['uri'])
-                    id_node = PET.SubElement(rattsfall_node, "dct:identifier")
-                    id_node.text = r['id']
-                    desc_node = PET.SubElement(rattsfall_node, "dct:description")
-                    desc_node.text = r['desc']
-            if 'inboundlinks' in stuff[l]:
-                inbound = stuff[l]['inboundlinks']
-                inboundlen = len(inbound)
-                prev_uri = None
-                for i in range(inboundlen):
-                    if "#" in inbound[i]['uri']:
-                        (uri,fragment) = inbound[i]['uri'].split("#")
-                    else:
-                        (uri,fragment) = (inbound[i]['uri'], None)
-                        
-                    # 1) if the baseuri differs from the previous one,
-                    # create a new dct:references node
-                    if uri != prev_uri:
-                        references_node = PET.Element("dct:references")
-                        # 1.1) if the baseuri is the same as the uri
-                        # for the law we're generating, place it first
-                        if uri == baseuri:
-                            # If the uri is the same as baseuri (the law
-                            # we're generating), place it first.
-                            lagrum_node.insert(0,references_node)
-                        else:
-                            lagrum_node.append(references_node)
-                    # Find out the next uri safely
-                    if (i+1 < inboundlen):
-                        next_uri = inbound[i+1]['uri'].split("#")[0]
-                    else:
-                        next_uri = None
-                        
-                    # If uri is the same as the next one OR uri is the
-                    # same as baseuri, use relative form for creating
-                    # dct:identifer
-                    # print "uri: %s, next_uri: %s, baseuri: %s" % (uri[35:],next_uri[35:],baseuri[35:])
-                    if (uri == next_uri) or (uri == baseuri):
-                        form = "relative"
-                    else:
-                        form = "absolute"
-
-                    inbound_node = PET.SubElement(references_node, "rdf:Description")
-                    inbound_node.set("rdf:about",inbound[i]['uri'])
-                    id_node = PET.SubElement(inbound_node, "dct:identifier")
-                    id_node.text = self.display_title(inbound[i]['uri'],form)
-
-                    prev_uri = uri
-
-            if 'changes' in stuff[l]:
-                for r in stuff[l]['changes']:
-                    ischanged_node = PET.SubElement(lagrum_node, "rinfo:isChangedBy")
-                    #rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
-                    #rattsfall_node.set("rdf:about",r['uri'])
-                    id_node = PET.SubElement(ischanged_node, "rinfo:fsNummer")
-                    id_node.text = r['id']
-            if 'desc' in stuff[l]:
-                desc_node = PET.SubElement(lagrum_node, "dct:description")
-                xhtmlstr = "<xht2:div xmlns:xht2='%s'>%s</xht2:div>" % (Util.ns['xht2'], stuff[l]['desc'])
-                xhtmlstr = xhtmlstr.replace(' xmlns="http://www.w3.org/2002/06/xhtml2/"','')
-                desc_node.append(PET.fromstring(xhtmlstr.encode('utf-8')))
-                
-        Util.indent_et(root_node)
-        tree = PET.ElementTree(root_node)
-        tmpfile = mktemp()
-        tree.write(tmpfile, encoding="utf-8")
 
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
+
+	if not os.path.exists(annotations):
+            p = LegalRef(LegalRef.LAGRUM)
+            baseuri = p.parse(sfsnr)[0].uri
+            # Putting togeher a (non-normalized) RDF/XML file, suitable
+            # for XSLT inclusion in six easy steps
+            stuff = {}
+            #
+            # 1. all rinfo:Rattsfallsreferat that has baseuri as a
+            # rinfo:lagrum, either directly or through a chain of
+            # dct:isPartOf statements
+            sq = """
+    PREFIX dct:<http://purl.org/dc/terms/>
+    PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+    
+    SELECT ?uri ?id ?desc ?lagrum
+    WHERE {
+       { ?uri rinfo:lagrum <%s> .
+         ?uri dct:identifier ?id .
+         ?uri dct:description ?desc }  
+       UNION { ?uri rinfo:lagrum ?lagrum .
+               ?lagrum dct:isPartOf <%s> .
+               ?uri dct:identifier ?id .
+               ?uri dct:description ?desc } 
+       UNION { ?uri rinfo:lagrum ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf <%s> .
+               ?uri dct:identifier ?id .
+               ?uri dct:description ?desc } 
+       UNION { ?uri rinfo:lagrum ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf <%s> .
+               ?uri dct:identifier ?id .
+               ?uri dct:description ?desc } 
+       UNION { ?uri rinfo:lagrum ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf ?d .
+               ?d dct:isPartOf <%s> .
+               ?uri dct:identifier ?id .
+               ?uri dct:description ?desc } 
+       UNION { ?uri rinfo:lagrum ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf ?d .
+               ?d dct:isPartOf ?e .
+               ?e dct:isPartOf <%s> .
+               ?uri dct:identifier ?id .
+               ?uri dct:description ?desc } 
+    }
+    """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+            # print sq
+            rattsfall = self._store_select(sq)
+    
+            log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
+            stuff[baseuri] = {}
+            stuff[baseuri]['rattsfall'] = []
+            
+            specifics = {}
+            for row in rattsfall:
+                if 'lagrum' not in row:
+                    lagrum = baseuri
+                else:
+                    # truncate 1998:204#P7S2 to just 1998:204#P7
+                    if "S" in row['lagrum']:
+                        lagrum = row['lagrum'][:row['lagrum'].index("S")]
+                    else:
+                        lagrum = row['lagrum']
+                    specifics[row['id']] = True
+                # we COULD use a tricky defaultdict for stuff instead of
+                # this initializing code, but defauldicts don't pprint
+                # so pretty...
+                if not lagrum in stuff:
+                    stuff[lagrum] = {}
+                if not 'rattsfall' in stuff[lagrum]:
+                    stuff[lagrum]['rattsfall'] = []
+    
+                record = {'id':row['id'],
+                          'desc':row['desc'],
+                          'uri':row['uri']}
+    
+                # if one case references two or more paragraphs in a
+                # particular section (ie "6 kap 1 § 1 st. och 6 kap 1 § 2
+                # st.") we will get duplicates that we can't (easily)
+                # filter out in the SPARQL query. Filter them out here
+                # instead.
+                if not record in stuff[lagrum]['rattsfall']:
+                    stuff[lagrum]['rattsfall'].append(record)
+    
+            # remove cases that refer to the law itself and a specific
+            # paragraph (ie only keep cases that only refer to the law
+            # itself)
+            filtered = []
+            for r in stuff[baseuri]['rattsfall']:
+                if r['id'] not in specifics:
+                    filtered.append(r)
+            stuff[baseuri]['rattsfall'] = filtered
+    
+    
+            # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
+            #
+            # FIXME: ?label doesn't select anything (afraid we have
+            # to do a dct:ispartof combinatorial explosion)
+            sq = """
+    PREFIX dct:<http://purl.org/dc/terms/>
+    PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+    
+    SELECT ?uri ?label ?lagrum
+    WHERE {
+       { ?uri dct:references <%s> }
+       UNION { ?uri dct:references ?lagrum .
+               ?lagrum dct:isPartOf <%s> }
+       UNION { ?uri dct:references ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf <%s> }
+       UNION { ?uri dct:references ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf <%s> }
+       UNION { ?uri dct:references ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf ?d .
+               ?d dct:isPartOf <%s> }
+       UNION { ?uri dct:references ?lagrum .
+               ?lagrum dct:isPartOf ?b .
+               ?b dct:isPartOf ?c .
+               ?c dct:isPartOf ?d .
+               ?d dct:isPartOf ?e .
+               ?e dct:isPartOf <%s> }
+    }
+    ORDER BY ?uri ?lagrum
+    """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+    
+            # FIXME: This query makes tomcat/sesame unbearably slow...
+            inboundlinks = self._store_select(sq)
+            # inboundlinks = []
+            
+            log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+            stuff[baseuri]['inboundlinks'] = []
+    
+            # mapping <http://rinfo.lagrummet.se/publ/sfs/1999:175> =>
+            # "Rättsinformationsförordning (1999:175)"
+            doctitles = {} 
+            specifics = {}
+            for row in inboundlinks:
+                if 'lagrum' not in row:
+                    lagrum = baseuri
+                else:
+                    # truncate 1998:204#P7S2 to just 1998:204#P7
+                    if "S" in row['lagrum']:
+                        lagrum = row['lagrum'][:row['lagrum'].index("S")]
+                    else:
+                        lagrum = row['lagrum']
+                    lagrum = row['lagrum'] 
+                    specifics[row['uri']] = True
+                # we COULD use a tricky defaultdict for stuff instead of
+                # this initializing code, but defauldicts don't pprint
+                # so pretty...
+                if not lagrum in stuff:
+                    stuff[lagrum] = {}
+                if not 'inboundlinks' in stuff[lagrum]:
+                    stuff[lagrum]['inboundlinks'] = []
+                #print "adding %s under %s" % (row['id'],lagrum)
+                stuff[lagrum]['inboundlinks'].append({'uri':row['uri']})
+    
+            # remove inbound links that refer to the law itself plus at
+            # least one specific paragraph (ie only keep cases that only
+            # refer to the law itself)
+            filtered = []
+            for r in stuff[baseuri]['inboundlinks']:
+                if r['uri'] not in specifics:
+                    filtered.append(r)
+            stuff[baseuri]['inboundlinks'] = filtered
+    
+            # pprint (stuff)
+            # 3. all wikientries that dct:description this
         
-        Util.replace_if_different(tmpfile,annotations)
-        log.debug(u'%s: Serialized annotation (%.3f sec)', basefile, time()-start)
+            sq = """
+    PREFIX dct:<http://purl.org/dc/terms/>
+    PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+    
+    SELECT ?lagrum ?desc
+    WHERE {
+       { <%s> dct:description ?desc }  
+       UNION { ?lagrum dct:isPartOf <%s> . ?lagrum dct:description ?desc } 
+       UNION { ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> . ?lagrum dct:description ?desc} 
+    }
+    """ % (baseuri,baseuri,baseuri)
+            wikidesc = self._store_select(sq)
+            for row in wikidesc:
+                if not 'lagrum' in row:
+                    lagrum = baseuri
+                else:
+                    lagrum = row['lagrum']
+                    
+                if not lagrum in stuff:
+                    stuff[lagrum] = {}
+                stuff[lagrum]['desc'] = row['desc']
+    
+            log.debug(u'%s: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
+    
+            
+            # pprint(wikidesc)
+            # (4. eurlex.nu data (mapping CELEX ids to titles))
+            # (5. Propositionstitlar)
+            # 6. change entries for each section
+            # FIXME: we need to differentiate between additions, changes and deletions
+            sq = """
+    PREFIX dct:<http://purl.org/dc/terms/>
+    PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+    
+    SELECT ?change ?id ?lagrum
+    WHERE {
+       { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+       UNION { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+       UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+       UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+       UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
+       UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
+    }
+            """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
+            changes = self._store_select(sq)
+    
+            log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
+    
+            for row in changes:
+                lagrum = row['lagrum']
+                if not lagrum in stuff:
+                    stuff[lagrum] = {}
+                if not 'changes' in stuff[lagrum]:
+                    stuff[lagrum]['changes'] = []
+                stuff[lagrum]['changes'].append({'uri':row['change'],
+                                              'id':row['id']})
+    
+            # then, construct a single de-normalized rdf/xml dump, sorted
+            # by root/chapter/section/paragraph URI:s. We do this using
+            # raw XML, not RDFlib, to avoid normalizing the graph -- we
+            # need repetition in order to make the XSLT processing simple.
+            #
+            # The RDF dump looks something like:
+            #
+            # <rdf:RDF>
+            #   <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/1998:204#P1">
+            #     <rinfo:isLagrumFor>
+            #       <rdf:Description about="http://rinfo.lagrummet.se/publ/dom/rh/2004:51">
+            #           <dct:identifier>RH 2004:51</dct:identifier>
+            #           <dct:description>Hemsida på Internet. Fråga om...</dct:description>
+            #       </rdf:Description>
+            #     </rinfo:isLagrumFor>
+            #     <dct:description>Personuppgiftslagens syfte är att skydda...</dct:description>
+            #     <rinfo:isChangedBy>
+            #        <rdf:Description about="http://rinfo.lagrummet.se/publ/sfs/2003:104">
+            #           <dct:identifier>SFS 2003:104</dct:identifier>
+            #           <rinfo:proposition>
+            #             <rdf:Description about="http://rinfo.lagrummet.se/publ/prop/2002/03:123">
+            #               <dct:title>Översyn av personuppgiftslagen</dct:title>
+            #               <dct:identifier>Prop. 2002/03:123</dct:identifier>
+            #             </rdf:Description>
+            #           </rinfo:proposition>
+            #        </rdf:Description>
+            #     </rinfo:isChangedBy>
+            #   </rdf:Description>
+            # </rdf:RDF>
+            
+            root_node = PET.Element("rdf:RDF")
+            for prefix in Util.ns:
+                # we need this in order to make elementtree not produce
+                # stupid namespaces like "xmlns:ns0" when parsing an external
+                # string like we do below (the PET.fromstring call)
+                PET._namespace_map[Util.ns[prefix]] = prefix
+                root_node.set("xmlns:" + prefix, Util.ns[prefix])
+    
+            for l in sorted(stuff.keys(),cmp=Util.numcmp):
+                lagrum_node = PET.SubElement(root_node, "rdf:Description")
+                lagrum_node.set("rdf:about",l)
+                if 'rattsfall' in stuff[l]:
+                    for r in stuff[l]['rattsfall']:
+                        islagrumfor_node = PET.SubElement(lagrum_node, "rinfo:isLagrumFor")
+                        rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
+                        rattsfall_node.set("rdf:about",r['uri'])
+                        id_node = PET.SubElement(rattsfall_node, "dct:identifier")
+                        id_node.text = r['id']
+                        desc_node = PET.SubElement(rattsfall_node, "dct:description")
+                        desc_node.text = r['desc']
+                if 'inboundlinks' in stuff[l]:
+                    inbound = stuff[l]['inboundlinks']
+                    inboundlen = len(inbound)
+                    prev_uri = None
+                    for i in range(inboundlen):
+                        if "#" in inbound[i]['uri']:
+                            (uri,fragment) = inbound[i]['uri'].split("#")
+                        else:
+                            (uri,fragment) = (inbound[i]['uri'], None)
+                            
+                        # 1) if the baseuri differs from the previous one,
+                        # create a new dct:references node
+                        if uri != prev_uri:
+                            references_node = PET.Element("dct:references")
+                            # 1.1) if the baseuri is the same as the uri
+                            # for the law we're generating, place it first
+                            if uri == baseuri:
+                                # If the uri is the same as baseuri (the law
+                                # we're generating), place it first.
+                                lagrum_node.insert(0,references_node)
+                            else:
+                                lagrum_node.append(references_node)
+                        # Find out the next uri safely
+                        if (i+1 < inboundlen):
+                            next_uri = inbound[i+1]['uri'].split("#")[0]
+                        else:
+                            next_uri = None
+                            
+                        # If uri is the same as the next one OR uri is the
+                        # same as baseuri, use relative form for creating
+                        # dct:identifer
+                        # print "uri: %s, next_uri: %s, baseuri: %s" % (uri[35:],next_uri[35:],baseuri[35:])
+                        if (uri == next_uri) or (uri == baseuri):
+                            form = "relative"
+                        else:
+                            form = "absolute"
+    
+                        inbound_node = PET.SubElement(references_node, "rdf:Description")
+                        inbound_node.set("rdf:about",inbound[i]['uri'])
+                        id_node = PET.SubElement(inbound_node, "dct:identifier")
+                        id_node.text = self.display_title(inbound[i]['uri'],form)
+    
+                        prev_uri = uri
+    
+                if 'changes' in stuff[l]:
+                    for r in stuff[l]['changes']:
+                        ischanged_node = PET.SubElement(lagrum_node, "rinfo:isChangedBy")
+                        #rattsfall_node = PET.SubElement(islagrumfor_node, "rdf:Description")
+                        #rattsfall_node.set("rdf:about",r['uri'])
+                        id_node = PET.SubElement(ischanged_node, "rinfo:fsNummer")
+                        id_node.text = r['id']
+                if 'desc' in stuff[l]:
+                    desc_node = PET.SubElement(lagrum_node, "dct:description")
+                    xhtmlstr = "<xht2:div xmlns:xht2='%s'>%s</xht2:div>" % (Util.ns['xht2'], stuff[l]['desc'])
+                    xhtmlstr = xhtmlstr.replace(' xmlns="http://www.w3.org/2002/06/xhtml2/"','')
+                    desc_node.append(PET.fromstring(xhtmlstr.encode('utf-8')))
+                    
+            Util.indent_et(root_node)
+            tree = PET.ElementTree(root_node)
+            tmpfile = mktemp()
+            tree.write(tmpfile, encoding="utf-8")
+            Util.replace_if_different(tmpfile,annotations)
+            log.debug(u'%s: Serialized annotation (%.3f sec)', basefile, time()-start)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
         if not force and self._outfile_is_newer([infile,annotations],outfile):

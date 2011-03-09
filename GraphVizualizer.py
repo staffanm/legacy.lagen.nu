@@ -5,8 +5,11 @@ from cStringIO import StringIO
 
 from rdflib import Literal, BNode, Namespace, URIRef, RDF
 from rdflib.Graph import Graph
-import pydot
-import networkx as nx
+try: 
+    import pydot
+    import networkx as nx
+except ImportError:
+    pass
 
 from SesameStore import SesameStore
 

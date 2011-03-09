@@ -11,5 +11,6 @@ Separator         ::= ((Whitespace/Hyphen), 'ref'/'nr', Period?, Whitespace?)/(W
 NJASeparator      ::= Whitespace,'s',Period?, Whitespace?
 LopnrRefID        ::= number
 
+
 # ------------ end of rattsfall.ebnf ----------------
 

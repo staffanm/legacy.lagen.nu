@@ -148,7 +148,10 @@ class KeywordDownloader(LegalSource.Downloader):
         # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
         # -- term set "wikipedia"
         # FIXME: only download when needed
-        self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+        try:
+            self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+        except Exception:
+            pass
         from gzip import GzipFile
         wikipediaterms = GzipFile(self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
         for utf8_term in wikipediaterms:

@@ -334,7 +334,7 @@ class Manager(object):
                 triples += len(graph)
                 store.add_graph(graph)
                 store.commit()
-                if c % 10 == 0:
+                if c % 100 == 0:
                     log.info("Related %d documents (%d triples total)" % (c, triples))
 
             log.info("Serializing to %s" % rdffile)
