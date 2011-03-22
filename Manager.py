@@ -49,7 +49,10 @@ class Manager:
         for f in [f for f in os.listdir(".") if f.endswith(".py") and f != "sitecustomize.py"]:
             modulename = inspect.getmodulename(f)
             # print "importing %s from %s" % (modulename,f)
-            m = __import__(modulename,globals(),locals(),[])
+            try:
+                m = __import__(modulename,globals(),locals(),[])
+            except ImportError:
+                continue
             c = self._findManager(m)
             if c:
                 if '__shortdesc__' in dir(m):
