@@ -1,0 +1,11 @@
+--- data/dv/intermediate/ooxml/HVS/B4891-09.xml	1980-01-01 00:00:00.000000000 +0100
++++ /tmp/tmpweBYNj	2011-03-23 09:53:45.000000000 +0100
+@@ -142,7 +142,7 @@
+                 <w:sz w:val="16" />
+                 <w:szCs w:val="16" />
+               </w:rPr>
+-              <w:t>RH2010:113</w:t>
++              <w:t>RH 2010:113</w:t>
+             </w:r>
+             <w:r w:rsidRPr="00621FC3">
+               <w:rPr>

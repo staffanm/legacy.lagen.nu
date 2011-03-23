@@ -124,8 +124,8 @@ class ARNParser(LegalSource.Parser):
 
         body = []
         while node and node.name == 'p':
-            #if node.string:
-            body.append(Stycke(parser.parse(Util.elementText(node), predicate="rinfo:lagrum")))
+            nodetext = Util.elementText(node).replace('\x1a','')
+            body.append(Stycke(parser.parse(nodetext, predicate="rinfo:lagrum")))
             node = node.nextSibling
 
         xhtml = self.generate_xhtml(meta, body, None, __moduledir__, globals())

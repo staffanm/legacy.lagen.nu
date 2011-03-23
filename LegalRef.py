@@ -291,7 +291,6 @@ class LegalRef:
         if self.verbose: print u"calling tag with '%s'" % (fixedindata.decode(SP_CHARSET))
         # print "tagger length: %d" % len(repr(self.tagger))
         taglist = tag(fixedindata, self.tagger,0,len(fixedindata))
-        
         result = []
 
         root = NodeTree(taglist,fixedindata)

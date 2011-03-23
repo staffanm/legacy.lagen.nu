@@ -941,22 +941,7 @@ class DVManager(LegalSource.Manager):
         self._do_for_all(intermediate_dir, '.doc',self.Parse)
         self._do_for_all(intermediate_dir, '.docx',self.Parse)
 
-    def Generate(self,basefile):
-        infile = Util.relpath(self._xmlFileName(basefile))
-        outfile = Util.relpath(self._htmlFileName(basefile))
-
-        # get URI from basefile as fast as possible
-        head = codecs.open(infile,encoding='utf-8').read(1024)
-        m = self.re_xmlbase(head)
-        if m:
-            uri = "http://rinfo.lagrummet.se/publ/rattsfall/%s" % m.group(1)
-            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map.new'])
-            Util.ensureDir(mapfile)
-            f = codecs.open(mapfile,'a',encoding='iso-8859-1')
-            f.write(u"%s\t%s\n" % (m.group(1),basefile))
-	    f.close()
-        else:
-            log.warning("could not find xml:base in %s" % infile)
+    def _generateAnnotations(self,annotationfile,basefile):
 
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
@@ -993,18 +978,41 @@ WHERE {
         tree = PET.ElementTree(root_node)
         tmpfile = mktemp()
         tree.write(tmpfile, encoding="utf-8")
+        Util.replace_if_different(tmpfile,annotationfile)
+        
 
+    def Generate(self,basefile):
+        start = time()
+        infile = Util.relpath(self._xmlFileName(basefile))
+        outfile = Util.relpath(self._htmlFileName(basefile))
         annotations = "%s/%s/intermediate/annotations/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
 
-        Util.replace_if_different(tmpfile,annotations)
+        infile = Util.relpath(self._xmlFileName(basefile))
+        # get URI from basefile as fast as possible
+        head = codecs.open(infile,encoding='utf-8').read(1024)
+        m = self.re_xmlbase(head)
+        if m:
+            uri = "http://rinfo.lagrummet.se/publ/rattsfall/%s" % m.group(1)
+            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map.new'])
+            Util.ensureDir(mapfile)
+            f = codecs.open(mapfile,'a',encoding='iso-8859-1')
+            f.write(u"%s\t%s\n" % (m.group(1),basefile))
+	    f.close()
+        else:
+            log.warning("could not find xml:base in %s" % infile)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
+	if force or (not os.path.exists(annotations)):
+            log.info(u"%s: Generating annotation file", basefile)
+            self._generateAnnotations(annotations,basefile)
+            sleep(1) # let sesame catch it's breath
+
         if not force and self._outfile_is_newer([infile,annotations], outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
 
         Util.mkdir(os.path.dirname(outfile))
-        log.info(u'Transformerar %s > %s' % (infile,outfile))
+
         # xsltproc silently fails to open files through the document()
         # functions if the filename has non-ascii
         # characters. Therefore, we copy the annnotation file to a
@@ -1017,9 +1025,8 @@ WHERE {
                        outfile,
                        parameters = params,
                        validate=False)
-        sleep(1) # let sesame catch it's breath
+        log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
         
-
     def GenerateAll(self):
         mapfile = os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map'])
         Util.robust_remove(mapfile+".new")

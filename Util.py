@@ -202,7 +202,7 @@ def tidy(tagsoup):
     return result
     
 # Util.XML
-def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False):
+def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=False,keep_unchanged=False):
     """Does a XSLT transform with the selected stylesheet. Afterwards, formats the resulting HTML tree and validates it"""
 
     #parameters['infile'] = infile;
@@ -217,8 +217,8 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
 
     if xinclude:
         tmpfile = mktemp()
-        # cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
-        print cmdline
+        cmdline = "xmllint --xinclude --encode utf-8 %s > %s" % (infile, tmpfile)
+        # print cmdline
         (ret,stdout,stderr) = runcmd(cmdline)
         #if (ret != 0):
         #    raise TransformError(stderr)
@@ -228,16 +228,21 @@ def transform(stylesheet,infile,outfile,parameters={},validate=True,xinclude=Fal
         infile = '"%s"' % infile
     tmpfile = mktemp()
     cmdline = "xsltproc %s %s %s > %s" % (param_str,stylesheet,infile,tmpfile)
-    print cmdline
+    # print cmdline
     (ret,stdout,stderr) = runcmd(cmdline)
     if (ret != 0):
         raise TransformError(stderr)
     if stderr:
         print "Transformation error: %s" % stderr
 
-    # indent_xml_file(tmpfile)
-
-    replace_if_different(tmpfile, outfile)
+    # Default behaviour is now to change the resulting file so that
+    # timestamps reflect the fact that the transformed file is more
+    # recent than the ingoing files.
+    if keep_unchanged:
+        replace_if_different(tmpfile, outfile)
+    else:
+        robustRename(tmpfile, outfile)
+        
     if os.path.exists(tmpfile):
         os.unlink(tmpfile)
     if xinclude:
@@ -446,7 +451,7 @@ def outfile_is_newer(infiles,outfile):
     for f in infiles:
         # print "Testing whether %s is newer than %s" % (f, outfile)
         if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
-            # print "%s was newer than %s" % (f, outfile)
+            print "%s was newer than %s" % (f, outfile)
             return False
     # print "%s is newer than %r" % (outfile, infiles)
     return True

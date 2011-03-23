@@ -1,0 +1,13 @@
+--- data/dv/intermediate/ooxml/ADO/2011-17.xml	1980-01-01 00:00:00.000000000 +0100
++++ /tmp/tmpzL-3-R	2011-03-23 10:03:43.000000000 +0100
+@@ -141,9 +141,7 @@
+                 <w:sz w:val="16" />
+                 <w:szCs w:val="16" />
+               </w:rPr>
+-              <w:t xml:space="preserve">
+- 2
+-</w:t>
++              <w:t xml:space="preserve"> 2</w:t>
+             </w:r>
+             <w:r w:rsidR="003F292C">
+               <w:rPr>

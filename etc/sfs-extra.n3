@@ -141,6 +141,7 @@
 <http://rinfo.lagrummet.se/publ/sfs/1991:900> rdfs:label "kommunallagen" ; dct:alternate "KomL" ; dct:alternate "KL".
 <http://rinfo.lagrummet.se/publ/sfs/1992:1433> rdfs:label "sametingslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1992:1434> rdfs:label "högskolelagen" .
+<http://rinfo.lagrummet.se/publ/sfs/1992:1672> rdfs:label "paketreselagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1992:1685> dct:alternate "KML" .
 <http://rinfo.lagrummet.se/publ/sfs/1992:18> rdfs:label "produktansvarslagen" .
 <http://rinfo.lagrummet.se/publ/sfs/1992:191> dct:alternate "Avgift" .

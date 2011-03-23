@@ -290,24 +290,24 @@ class KeywordManager(LegalSource.Manager):
                     mg.add((URIRef(termuri), DCT['description'], Literal(textdesc, lang="sv")))
 
         log.info("Serializing the minimal graph")
-        f = open(minixmlfile, 'w')
+        tempfile = mktemp()
+        f = open(tempfile, 'w')
         f.write(mg.serialize(format="pretty-xml"))
         f.close()
+        Util.replace_if_different(tempfile,minixmlfile)
+
         log.info("Serializing to NTriples")
-        
-        f = open(ntfile, 'w')
+        tempfile = mktemp()
+        f = open(tempfile, 'w')
         # The nt serializer is broken (http://code.google.com/p/rdflib/issues/detail?id=78)
         nt_utf8 = mg.serialize(format="nt").decode('utf-8')
-        #nt_stringliterals = ''
         for c in nt_utf8:
             if ord(c) > 127:
-                #nt_stringliterals += '\u%04X' % ord(c)
                 f.write('\u%04X' % ord(c))
             else:
-                #nt_stringliterals += c
                 f.write(c)
-
         f.close()
+        Util.replace_if_different(tempfile,ntfile)
         
     def _htmlFileName(self,basefile):
         """Returns the generated, browser-ready XHTML 1.0 file name for the given basefile"""
@@ -356,8 +356,7 @@ class KeywordManager(LegalSource.Manager):
         os.utime(outfile,None)
         log.info(u'%s: OK (%.3f sec)', basefile,time()-start)
 
-
-    def Generate(self,basefile):
+    def _generateAnnotations(self,annotationfile,basefile):
         start = time()
         keyword = basefile.split("/",1)[1]
         # note: infile is e.g. parsed/K/Konsument.xht2, but outfile is generated/Konsument.html
@@ -498,13 +497,23 @@ WHERE {
         tmpfile = mktemp()
         tree.write(tmpfile, encoding="utf-8")
 
+        log.debug("Saving annotation file %s "% annotationfile)
+        Util.replace_if_different(tmpfile,annotationfile)
+
+    def Generate(self,basefile):
+        start = time()
+        infile = Util.relpath(self._xmlFileName(basefile))
+        keyword = basefile.split("/",1)[1]
+        outfile = Util.relpath(self._htmlFileName(keyword))
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
         terms = "%s/%s/parsed/rdf-mini.xml" % (self.baseDir, self.moduleDir)
-        log.debug("Saving annotation file %s "% annotations)
-
-        Util.replace_if_different(tmpfile,annotations)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
+	if force or (not os.path.exists(annotations)):
+            log.info(u"%s: Generating annotation file", basefile)
+            self._generateAnnotations(annotations,basefile)
+            sleep(1) # let sesame catch it's breath
+
         if not force and self._outfile_is_newer([infile,annotations,terms],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
@@ -530,7 +539,6 @@ WHERE {
         Util.robust_remove(tmpfile)
         
         log.info(u'%s: OK (%s, %.3f sec)', basefile, outfile, time()-start)
-        sleep(1) # let sesame catch it's breath
         return
 
     def GenerateAll(self):

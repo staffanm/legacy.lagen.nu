@@ -276,7 +276,10 @@ class WikiParser(LegalSource.Parser):
         p = LegalRef(LegalRef.LAGRUM, LegalRef.KORTLAGRUM, LegalRef.FORARBETEN, LegalRef.RATTSFALL)
         # find out the URI that this wikitext describes
         if basefile.startswith("SFS/"):
-            sfs = FilenameToSFSnr(basefile.split("/",1)[1])
+            filename = basefile.split("/",1)[1]
+            if len(filename.split("/")) > 2:
+	        filename = filename.rsplit("/",1)[0]
+            sfs = FilenameToSFSnr(filename)
             nodes = p.parse(sfs)
             uri = nodes[0].uri
             rdftype = None

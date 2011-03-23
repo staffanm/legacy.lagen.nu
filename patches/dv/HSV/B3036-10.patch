@@ -1,0 +1,11 @@
+--- data/dv/intermediate/ooxml/HSV/B3036-10.xml	1980-01-01 00:00:00.000000000 +0100
++++ /tmp/tmphBcaQu	2011-03-23 09:54:58.000000000 +0100
+@@ -160,7 +160,7 @@
+                 <w:sz w:val="16" />
+                 <w:szCs w:val="16" />
+               </w:rPr>
+-              <w:t>2010 :</w:t>
++              <w:t>2010:</w:t>
+             </w:r>
+             <w:proofErr w:type="gramEnd" />
+             <w:r w:rsidR="00A671A3">
