@@ -1055,6 +1055,7 @@ class LegalRef:
                        u'RH': '/publ/rattsfall/rh/',
                        u'MÖD': '/publ/rattsfall/mod/',
                        u'RÅ': '/publ/rattsfall/ra/',
+                       u'HFD': '/publ/rattsfall/hfd/',
                        u'RK': '/publ/rattsfall/rk/',
                        u'MIG': '/publ/rattsfall/mig/',
                        u'AD': '/publ/rattsfall/ad/',

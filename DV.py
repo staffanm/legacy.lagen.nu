@@ -332,7 +332,8 @@ class DVParser(LegalSource.Parser):
                        u'MIG': u'http://rinfo.lagrummet.se/ref/rff/mig',
                        u'AD': u'http://rinfo.lagrummet.se/ref/rff/ad',
                        u'MD': u'http://rinfo.lagrummet.se/ref/rff/md',
-                       u'FÖD': u'http://rinfo.lagrummet.se/ref/rff/fod'}
+                       u'FÖD': u'http://rinfo.lagrummet.se/ref/rff/fod',
+                       u'HFD': u'http://rinfo.lagrummet.se/ref/rff/hfd'}
 
     domstolsforkortningar = {u'ADO': 'http://lagen.nu/org/2008/arbetsdomstolen',
                              u'HDO': 'http://lagen.nu/org/2008/hogsta-domstolen',
@@ -346,7 +347,8 @@ class DVParser(LegalSource.Parser):
                              u'MIG': 'http://lagen.nu/org/2008/migrationsoverdomstolen',
                              u'MÖD': 'http://lagen.nu/org/2008/miljooverdomstolen',
                              u'REG': 'http://lagen.nu/org/2008/regeringsratten',
-                             u'KST': 'http://lagen.nu/org/2008/kammarratten-i-stockholm'}
+                             u'KST': 'http://lagen.nu/org/2008/kammarratten-i-stockholm',
+                             u'HFD': 'http://lagen.nu/org/2011/hogsta-forvaltningsdomstolen'}
 
 
     wrapper = textwrap.TextWrapper(break_long_words=False,
@@ -941,7 +943,7 @@ class DVManager(LegalSource.Manager):
         self._do_for_all(intermediate_dir, '.doc',self.Parse)
         self._do_for_all(intermediate_dir, '.docx',self.Parse)
 
-    def _generateAnnotations(self,annotationfile,basefile):
+    def _generateAnnotations(self,annotationfile,basefile,uri):
 
         sq = """
 PREFIX dct:<http://purl.org/dc/terms/>
@@ -998,13 +1000,15 @@ WHERE {
             f = codecs.open(mapfile,'a',encoding='iso-8859-1')
             f.write(u"%s\t%s\n" % (m.group(1),basefile))
 	    f.close()
+            #log.info("%s ok" % basefile)
+            #return
         else:
             log.warning("could not find xml:base in %s" % infile)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
 	if force or (not os.path.exists(annotations)):
             log.info(u"%s: Generating annotation file", basefile)
-            self._generateAnnotations(annotations,basefile)
+            self._generateAnnotations(annotations,basefile,uri)
             sleep(1) # let sesame catch it's breath
 
         if not force and self._outfile_is_newer([infile,annotations], outfile):
@@ -1062,6 +1066,7 @@ WHERE {
                      u'http://rinfo.lagrummet.se/ref/rff/rh':  u'Hovrätterna',
                      u'http://rinfo.lagrummet.se/ref/rff/rk':  u'Kammarrätterna',
                      u'http://rinfo.lagrummet.se/ref/rff/ra':  u'Regeringsrätten',
+                     u'http://rinfo.lagrummet.se/ref/rff/hfd': u'Högsta förvaltningsdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/ad':  u'Arbetsdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/fod': u'Försäkringsöverdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/md':  u'Marknadsdomstolen',
@@ -1162,9 +1167,11 @@ WHERE {
                                       'http://rinfo.lagrummet.se/ref/rff/rh'):
                             slot = u'de allmänna domstolarna'
                         elif e.text in ('http://rinfo.lagrummet.se/ref/rff/ra',
-                                        'http://rinfo.lagrummet.se/ref/rff/rk'):
+                                        'http://rinfo.lagrummet.se/ref/rff/rk',
+                                        'http://rinfo.lagrummet.se/ref/rff/hfd'):
                             slot = u'förvaltningsdomstolarna'
                         else:
+                            # print "Slot = %s, e.text = %s" % (self.publikationer[e.text], e.text)
                             slot = self.publikationer[e.text]
                 elif ('rel' in e.attrib):
                     if e.attrib['rel'] == "rinfo:rattsfallspublikation":
@@ -1172,7 +1179,8 @@ WHERE {
                                              'http://rinfo.lagrummet.se/ref/rff/rh'):
                             slot = u'de allmänna domstolarna'
                         elif e.attrib['href'] in ('http://rinfo.lagrummet.se/ref/rff/ra',
-                                                  'http://rinfo.lagrummet.se/ref/rff/rk'):
+                                                  'http://rinfo.lagrummet.se/ref/rff/rk',
+                                                  'http://rinfo.lagrummet.se/ref/rff/hfd'):
                             slot = u'förvaltningsdomstolarna'
                         else:
                             slot = None

@@ -128,15 +128,13 @@
 	  <li><a href="/begrepp/index/">Begrepp</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
-	<form method="get" action="http://www.google.com/custom">
-	  <p>
-	    <input type="text" name="q" id="q" size="40" maxlength="255" value="" accesskey="S"/>
-	    <input type="hidden" name="cof" value="S:http://blog.tomtebo.org/;AH:center;AWFID:22ac01fa6655f6b6;"/>
-	    <input type="hidden" name="domains" value="lagen.nu"/>
-	    <input type="hidden" name="sitesearch" value="lagen.nu" checked="checked"/>
-	    <input type="submit" value="Sök"/>
-	  </p>
 
+	<form action='https://encrypted.google.com/search' id='searchForm'>
+	  <div>
+	    <input name='q' type='hidden' value='site:lagen.nu' />
+	    <input name='q' size='40' type='text' />
+	    <input name='sa' type='submit' value='Sök' />
+	  </div>
 	</form>
       </div>
       <div id="innehallsforteckning">

@@ -451,7 +451,7 @@ def outfile_is_newer(infiles,outfile):
     for f in infiles:
         # print "Testing whether %s is newer than %s" % (f, outfile)
         if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
-            print "%s was newer than %s" % (f, outfile)
+            # print "%s was newer than %s" % (f, outfile)
             return False
     # print "%s is newer than %r" % (outfile, infiles)
     return True

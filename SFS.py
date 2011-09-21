@@ -2302,9 +2302,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         except UpphavdForfattning:
             log.debug(u'%s: Upphävd', basefile)
             Util.robust_remove(filename)
+            Util.robust_remove(Util.relpath(self._htmlFileName(basefile)))
         except IckeSFS:
             log.debug(u'%s: Ingen SFS', basefile)
             Util.robust_remove(filename)
+            Util.robust_remove(Util.relpath(self._htmlFileName(basefile)))
                      
     def ParseAll(self):
         downloaded_dir = os.path.sep.join([self.baseDir, u'sfs', 'downloaded', 'sfst'])

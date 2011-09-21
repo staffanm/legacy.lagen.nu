@@ -418,6 +418,7 @@ class Manager:
             import SFS
             sfsnr = wikipage.split("/",1)[1]
             sfsmgr = SFS.SFSManager()
+            sfsmgr.config['sfs']['generate_force'] = 'True'
             sfsmgr.Generate(sfsnr)
         elif wikipage.startswith("Dom/"):
             pass
@@ -427,6 +428,8 @@ class Manager:
                 firstletter = re_firstchar(localpage).group(0)
                 basefile = u'%s/%s' % (firstletter,localpage)
                 kwmgr = Keyword.KeywordManager()
+                kwmgr.config['keyword']['parse_force'] = 'True'
+                kwmgr.config['keyword']['generate_force'] = 'True'
                 kwmgr.Parse(basefile,wiki_keyword=True) # needed for new terms
                 kwmgr.Generate(basefile)
             elif namespace == "Lagen.nu" and localpage == "Huvudsida":
@@ -439,6 +442,8 @@ class Manager:
             firstletter = re_firstchar(wikipage).group(0)
             basefile = u'%s/%s' % (firstletter,wikipage)
             kwmgr = Keyword.KeywordManager()
+            kwmgr.config['keyword']['parse_force'] = 'True'
+            kwmgr.config['keyword']['generate_force'] = 'True'
             kwmgr.Parse(basefile,wiki_keyword=True) # needed for new terms
             # raise ValueError(repr(basefile))
             kwmgr.Generate(basefile)
