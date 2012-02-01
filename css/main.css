@@ -263,7 +263,7 @@ a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
 
     .platsmarkor {
         position: absolute;
-        left: -36px;
+        left: -42px;
         font-size: 0.6em;
         color: #999;
         font-family: Arial;

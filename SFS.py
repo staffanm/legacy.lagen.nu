@@ -1037,13 +1037,16 @@ class SFSParser(LegalSource.Parser):
                                   # if the Stycke has a NumreradLista
                                   # or similar
                     if isinstance(p,unicode): # look for stuff
+                        # normalize and convert some characters
+                        s = " ".join(p.split())
+                        s = s.replace(u"\x96","-")
                         # Make all links have a dct:references
                         # predicate -- not that meaningful for the
                         # XHTML2 code, but needed to get useful RDF
                         # triples in the RDFa output
                         # print "Parsing %s" % " ".join(p.split())
                         # print "Calling parse w %s" % baseuri+"#"+prefix
-                        parsednodes = self.lagrum_parser.parse(" ".join(p.split()),
+                        parsednodes = self.lagrum_parser.parse(s,
                                                                baseuri+prefix,
                                                                "dct:references")
                         for n in parsednodes:

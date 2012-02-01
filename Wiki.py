@@ -91,7 +91,7 @@ class WikiDownloader(LegalSource.Downloader):
             try:
                 Util.robust_remove(f)
             except OSError, e:
-                log.warning("Can't remove %s: %s" % (f, e))
+                log.warning(u"Can't remove %r: %r" % (f, e))
                 
     def DownloadNew(self):
         self.DownloadAll()
@@ -102,7 +102,7 @@ class WikiDownloader(LegalSource.Downloader):
             encodedterm = quote(term.encode('utf-8'))
         else:
             encodedterm = quote(term)
-        url = "http://wiki.lagen.nu/index.php/Special:Exportera/%s" % encodedterm
+        url = "https://lagen.nu/wiki/Special:Exportera/%s" % encodedterm
         # FIXME: if outfile already exist, only save if wiki resource is modified since
         outfile = "%s/%s.xml" % (self.download_dir, term.replace(":","/"))
         Util.ensureDir(outfile)
@@ -191,11 +191,11 @@ class LinkedWikimarkup(wikimarkup.Parser):
         return '<a class="hcwl" rel="dct:subject" href="%s"/>' % uri
 
     def imageLink(self,m):
-        uri = 'http://wiki.lagen.nu/images/%s' % m.group(1).strip()
+        uri = 'https://lagen.nu/w/images/%s' % m.group(1).strip()
         return '<img class="iwl" src="%s" />' % uri
 
     def authorLink(self,m):
-        uri = u'http://wiki.lagen.nu/index.php/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
+        uri = u'https://lagen.nu/wiki/%s' % Util.ucfirst(m.group(1)).replace(' ','_')
         return '<a class="awl" href="%s">%s</a>' % (uri,m.group(2))
 
     def replaceWikiLinks(self,text):

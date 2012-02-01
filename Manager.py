@@ -46,7 +46,8 @@ class Manager:
     
     def _findModules(self):
         res = {}
-        for f in [f for f in os.listdir(".") if f.endswith(".py") and f != "sitecustomize.py"]:
+        for f in [f for f in os.listdir(".")
+                  if f.endswith(".py") and f != "sitecustomize.py" and not f.startswith(".#")]:
             modulename = inspect.getmodulename(f)
             # print "importing %s from %s" % (modulename,f)
             try:

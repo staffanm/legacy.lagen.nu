@@ -57,10 +57,12 @@ class ARNDownloader(LegalSource.Downloader):
         return __moduledir__
     
     def DownloadAll(self):
-        self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=%40DOCN&s2=&s3=&s4=&s5=&s6=")
+        return
+        # self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=%40DOCN&s2=&s3=&s4=&s5=&s6=")
         
     def DownloadNew(self):
-        self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=&s2=&s3=&s4=&s5=" + str(datetime.now().year) +"*&s6=")
+        return
+        # self.__download("http://www.arn.se/netacgi/brs.pl?d=REFE&l=20&p=1&u=%2Freferat.htm&r=0&f=S&Sect8=PLSCRIPT&s1=&s2=&s3=&s4=&s5=" + str(datetime.now().year) +"*&s6=")
 
     def __download(self,url):
         log.debug("Opening %s" % url)

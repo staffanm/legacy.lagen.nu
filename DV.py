@@ -484,13 +484,20 @@ class DVParser(LegalSource.Parser):
         soup = Util.loadSoup(ooxmlfile,encoding='utf-8')
         head = Metadata()
 
-
         # Högst uppe på varje domslut står domstolsnamnet ("Högsta
         # domstolen") följt av referatnumret ("NJA 1987
         # s. 113"). 
         firstfield = soup.find("w:t")
-        domstol = Util.elementText(firstfield)
-        nextfield = firstfield.findParent("w:tc").findNext("w:tc")
+        # domstol = Util.elementText(firstfield)
+        # Ibland är
+        # domstolsnamnet uppsplittat på två w:r-element. Bäst att gå
+        # på all text i föräldra-w:tc-cellen
+        firstfield = firstfield.findParent("w:tc")
+        domstol = ""
+        for text_el in firstfield.findAll("w:t"):
+            domstol += Util.elementText(text_el)
+        # nextfield = firstfield.findParent("w:tc").findNext("w:tc")
+        nextfield = firstfield.findNext("w:tc")
         referat = u''
         for e in nextfield.findAll("w:t"):
             referat += e.string
@@ -981,7 +988,6 @@ WHERE {
         tmpfile = mktemp()
         tree.write(tmpfile, encoding="utf-8")
         Util.replace_if_different(tmpfile,annotationfile)
-        
 
     def Generate(self,basefile):
         start = time()
@@ -1030,7 +1036,7 @@ WHERE {
                        parameters = params,
                        validate=False)
         log.info(u'%s: OK (%s, %.3f sec)', basefile,outfile, time()-start)
-        
+
     def GenerateAll(self):
         mapfile = os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map'])
         Util.robust_remove(mapfile+".new")
@@ -1039,6 +1045,33 @@ WHERE {
         self._do_for_all(parsed_dir, '.xht2',self.Generate)
         Util.robustRename(mapfile+".new", mapfile)
         
+    def GenerateMapAll(self):
+        mapfile = os.path.sep.join([self.baseDir, u'dv', 'generated', 'uri.map'])
+        Util.robust_remove(mapfile+".new")
+
+        parsed_dir = os.path.sep.join([self.baseDir, u'dv', 'parsed'])
+        self._do_for_all(parsed_dir, '.xht2',self.GenerateMap)
+        Util.robustRename(mapfile+".new", mapfile)
+        
+
+    def GenerateMap(self,basefile):
+        start = time()
+        infile = Util.relpath(self._xmlFileName(basefile))
+        head = codecs.open(infile,encoding='utf-8').read(1024)
+        m = self.re_xmlbase(head)
+        if m:
+            uri = "http://rinfo.lagrummet.se/publ/rattsfall/%s" % m.group(1)
+            mapfile = os.path.sep.join([self.baseDir, self.moduleDir, u'generated', u'uri.map.new'])
+            Util.ensureDir(mapfile)
+            f = codecs.open(mapfile,'a',encoding='iso-8859-1')
+            f.write(u"%s\t%s\n" % (m.group(1),basefile))
+	    f.close()
+            log.info("%s ok" % basefile)
+            return
+        else:
+            log.warning("could not find xml:base in %s" % infile)
+
+
     def ParseGen(self,basefile):
         self.Parse(basefile)
         self.Generate(basefile)
@@ -1134,7 +1167,7 @@ WHERE {
                     u'Arbetsdomstolen': 'ad',
                     u'Marknadsdomstolen': 'md',
                     u'Migrationsöverdomstolen': 'mig',
-                    u'Miljööverdomstolen': 'mod'}
+                    u'Mark- och miljööverdomstolen': 'mod'}
 
         #entries = defaultdict(list)
         entries = {}
@@ -1147,7 +1180,6 @@ WHERE {
                 # kan hända om parsandet gick snett
                 log.warning("File %s not found" % f)
                 continue
-
             tree,ids = ET.XMLID(open(f).read())
             metadata = tree.find(".//{http://www.w3.org/2002/06/xhtml2/}dl")
             sokord = []
@@ -1171,7 +1203,7 @@ WHERE {
                                         'http://rinfo.lagrummet.se/ref/rff/hfd'):
                             slot = u'förvaltningsdomstolarna'
                         else:
-                            # print "Slot = %s, e.text = %s" % (self.publikationer[e.text], e.text)
+                            print "Slot = %s, e.text = %s" % (self.publikationer[e.text], e.text)
                             slot = self.publikationer[e.text]
                 elif ('rel' in e.attrib):
                     if e.attrib['rel'] == "rinfo:rattsfallspublikation":
@@ -1182,6 +1214,8 @@ WHERE {
                                                   'http://rinfo.lagrummet.se/ref/rff/rk',
                                                   'http://rinfo.lagrummet.se/ref/rff/hfd'):
                             slot = u'förvaltningsdomstolarna'
+                        elif e.attrib['href'] in ('http://rinfo.lagrummet.se/ref/rff/mod'):
+                            slot = u'Mark- och miljööverdomstolen'
                         else:
                             slot = None
                     elif e.attrib['rel'] == "dct:creator":
