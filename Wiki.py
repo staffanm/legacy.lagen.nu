@@ -54,7 +54,7 @@ class WikiDownloader(LegalSource.Downloader):
         self.browser.open(url)
         xml = ET.parse(self.browser.response())
 
-        for ns_el in xml.findall("//"+MW_NS+"namespace"):
+        for ns_el in xml.findall(".//"+MW_NS+"namespace"):
             wikinamespaces.append(ns_el.text)
 
         # Get list of currently downloaded pages - if any of those
@@ -240,7 +240,7 @@ class WikiParser(LegalSource.Parser):
     # This is getting complex... we should write some test cases. 
     def Parse(self,basefile,infile,config=None):
         xml = ET.parse(open(infile))
-        wikitext = xml.find("//"+MW_NS+"text").text
+        wikitext = xml.find(".//"+MW_NS+"text").text
         #if wikitext:
         #    return wikitext.encode('iso-8859-1',"replace")
         #else:
@@ -474,8 +474,8 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         store = SesameStore(self.config['triplestore'], self.config['repository'],context)
 
         infile = os.path.sep.join([self.baseDir, __moduledir__, 'parsed', basefile]) + ".xht2"
-        # print "loading triples from %s" % infile
-        graph = self._extract_rdfa(infile)
+        # print "loading triples from %r" % Util.relpath(infile)
+        graph = self._extract_rdfa(Util.relpath(infile))
         store.clear()
         triples = 0
         triples += len(graph)

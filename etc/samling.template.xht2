@@ -32,7 +32,7 @@
       </section>
       <py:for each="omrade in data.keys()">
 	<py:for each="forfattning in data[omrade]">
-	  <section id="L${forfattning['sfsnr'].split('#')[0]}" class="kapitelindelning">
+	  <section id="L${forfattning['sfsnr'].split('#')[0]}" class="${forfattning['indelning']}">
 
 	    <!-- ${Markup('&lt;xi:include href="data/sfs/parsed/%s.xht2#xmlns(h=http://www.w3.org/2002/06/xhtml2/)xpointer(h:html/h:head/h:meta[@property=\'dct:alternate\'])"/&gt;' % forfattning['sfsnr'].replace(':', '/'))} -->
 	    

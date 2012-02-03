@@ -653,7 +653,7 @@ class Manager(object):
             # if we don't have pyRdfa, we hopefully have rdflib 3.0
             # and it's included rdfa parser
             g = Graph()
-            g.parse(filename,format="rdfa")
+            g.parse(open(filename),format="rdfa")
         self.__tidy_graph(g)
 
         return g

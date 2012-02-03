@@ -36,21 +36,21 @@ def parseAccessExport(s):
                               'rubrik': name})
     return res
         
-def parseSimpleList(s):
+def parseSimpleList(s,title):
     res = []
     for l in s.split("\n"):
         if l:
-            (sfsnr, rubrik) = l.split("\t")
-            res.append({'sfsnr':sfsnr,'rubrik':rubrik})
-    return {u'main':res}
+            (sfsnr, rubrik,indelning) = l.split("\t")
+            res.append({'sfsnr':sfsnr,'rubrik':rubrik,'indelning':indelning})
+    return {title:res}
 
 def download_config(configpage):
     import Wiki
     wd = Wiki.WikiDownloader()
     wd._downloadSingle(configpage)
 
-def old_main():
-    res = parseSimpleList(open(sys.argv[1]).read().decode('iso-8859-1'))
+def main(listfile,title=u"Lagtextsamling"):
+    res = parseSimpleList(open(listfile).read().decode('iso-8859-1'),title)
     for area in sorted(res.keys()):
         for f in res[area]:
             pass
@@ -65,7 +65,7 @@ def old_main():
         # (is useful for debugging though)
         cmd = "xmllint --xinclude --format tmp.xht2 > out.xht2" 
         os.system(cmd)
-        cmd = '"C:\\Program Files\\Prince\\Engine\\bin\\prince.exe" -s css\\xht2-print.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
+        cmd = '"C:\\Program Files (x86)\\Prince\\Engine\\bin\\prince.exe" -s css\\xht2-print.css out.xht2 -o %s.pdf' % area.encode('iso-8859-1').replace(" ", "")
         print cmd
         os.system(cmd)
     
@@ -73,7 +73,7 @@ def old_main():
 if __name__ == "__main__":
     import logging.config
     logging.config.fileConfig('etc/log.conf')
-
+    main(sys.argv[1])
 
     
 
