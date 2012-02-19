@@ -333,6 +333,8 @@ class Manager(object):
             for f in files:
                 c += 1
                 graph = self._extract_rdfa(f)
+                self._add_deps(graph)
+                
                 triples += len(graph)
                 store.add_graph(graph)
                 store.commit()
@@ -657,7 +659,44 @@ class Manager(object):
         self.__tidy_graph(g)
 
         return g
-                            
+
+    _rf_lookup = None
+    def _add_deps(self, dependency, graph):
+        # Step 1: Filter all triples that has a URIRef object
+        for (o,p,s) in graph:
+            if type(s) != URIRef:
+                continue
+            uri = unicode(s)
+            
+            # Step 2: Depending on the URI, transform into a
+            # dependency file name for that URI (eg
+            # "http://rinfo.lagrummet.se/publ/sfs/1973:877#P4" ->
+            # "data/sfs/intermediate/1973/877.deps")
+            if uri.startswith("http://rinfo.lagrummet.se/publ/sfs/"):
+                basefile = uri.split("/")[-1].split("#")[0].replace(":","/")
+                filename = "data/sfs/intermediate/%s.deps" % basefile
+            elif uri.startswith("http://rinfo.lagrummet.se/publ/rattsfall/"):
+                if not self._rf_lookup:
+                    # load lookup table from data/dv/generated/uri.map
+                basefile = self._rf_lookup[uri[41:]]
+                filename = "data/dv/intermediate/%s.deps" % basefile
+            elif uri.startswith("http://lagen.nu/concept/"):
+                basefile = uri[24:].replace("_"," ")
+                filename = "data/wiki/intermediate/%s.deps" % basefile
+
+            # Step 3: Open file, add dependency if not already present
+            present = False
+            for line in open(filename):
+                if line.strip() == dependency:
+                    present = True
+            if not present:
+                fp = open(filename,"w")
+                fp.write(dependency+"\n")
+                fp.close()
+            
+            
+
+    
     def _store_select(self,query):
         """Send a SPARQL formatted SELECT query to the Sesame
            store. Returns the result as a list of dicts"""

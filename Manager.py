@@ -233,8 +233,9 @@ class Manager:
             log.warning("Marker %s not found at %s" % (marker,url))
 
     def _make_images(self):
-        for i in range(1,100):
-            self.make_image("K%d"%i,"%d kap."%i)
+        for i in range(1,150):
+            for j in ('','a','b'):
+                self.make_image("K%d%s"%(i,j),"%d%s kap."%(i,j))
         for i in range(1,100):
             self.make_image("S%d"%i,"%d st."%i)
 
@@ -242,7 +243,7 @@ class Manager:
         filename = "img/%s.png" % basename
         if not os.path.exists(filename):
             log.info("Creating img %s with label %s" % (basename,label))
-            cmd = 'convert -background transparent -fill Grey -font Arial -pointsize 10 -size 36x14 -gravity East label:"%s" %s' % (label,filename)
+            cmd = 'convert -background transparent -fill Grey -font Arial -pointsize 10 -size 44x14 -gravity East label:"%s " %s' % (label,filename)
             os.system(cmd)
         
     def _static_indexpages(self):
@@ -250,7 +251,8 @@ class Manager:
         log.info("Generating site global static pages")
 
         self._make_images()
-
+        return
+    
         self._prep_frontpage()
                        
         # we need to copy the following four file to the base dir,

@@ -12,7 +12,10 @@ from time import time
 from StringIO import StringIO
 import xml.etree.cElementTree as ET
 
-from rdflib.Graph import Graph
+try:
+    from rdflib.Graph import Graph
+except ImportError:
+    from rdflib import Graph
 from rdflib import URIRef, Literal
 
 import Util
@@ -138,7 +141,7 @@ def create_graph(f, engine="dot", arguments="", filename="tmp.png", filetype="pn
     dotfile.close()
     cmdline = "%s %s -T%s -o%s tmp.dot" % (engine, arguments, filetype, filename)
     print "Running %s" % cmdline
-    p = subprocess.Popen(cmdline)
+    p = subprocess.Popen(cmdline, shell=True)
     ret = p.wait()
     print "Graph %s created in %.3f sec" % (filename, time() - start)
 
@@ -149,7 +152,8 @@ def build_csvfile_from_sparql_results(res):
     writer.writerows(res)
     
 def sparql_select(sq):
-    store = SesameStore("http://localhost:8080/openrdf-sesame", "lagen.nu")
+    # store = SesameStore("http://localhost:8080/openrdf-sesame", "lagen.nu")
+    store = SesameStore("http://localhost:8080/openrdf-sesame", "mysite")
     results = store.select(sq)
     tree = ET.fromstring(results)
     res = []
