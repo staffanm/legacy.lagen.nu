@@ -301,7 +301,8 @@ class Manager(object):
 
         context = "<urn:x-local:%s>" % self.moduleDir
 
-        if self._outfile_is_newer(files,rdffile):
+        # if self._outfile_is_newer(files,rdffile):
+        if False:
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
             # return
             log.info("Fast-loading store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
@@ -333,7 +334,9 @@ class Manager(object):
             for f in files:
                 c += 1
                 graph = self._extract_rdfa(f)
-                self._add_deps(graph)
+                relfile = Util.relpath(f)
+                log.debug("Processing %s " % relfile)
+                self._add_deps(relfile,graph)
                 
                 triples += len(graph)
                 store.add_graph(graph)
@@ -525,6 +528,9 @@ class Manager(object):
             raise Exception("WARNING: _xmlFileName called with non-unicode name")
         return u'%s/%s/parsed/%s.xht2' % (self.baseDir, self.moduleDir,basefile)     
 
+    def _depsFileName(self,basefile): 
+        return u'%s/%s/intermediate/%s.deps' % (self.baseDir, self.moduleDir,basefile)     
+
     def _build_indexpages(self,by_pred_obj, by_subj_pred):
         displaypredicates = {'http://purl.org/dc/terms/title':
                              u'titel',
@@ -660,9 +666,10 @@ class Manager(object):
 
         return g
 
-    _rf_lookup = None
+    _rf_lookup = {}
     def _add_deps(self, dependency, graph):
         # Step 1: Filter all triples that has a URIRef object
+        filenames = {}
         for (o,p,s) in graph:
             if type(s) != URIRef:
                 continue
@@ -672,30 +679,67 @@ class Manager(object):
             # dependency file name for that URI (eg
             # "http://rinfo.lagrummet.se/publ/sfs/1973:877#P4" ->
             # "data/sfs/intermediate/1973/877.deps")
+            # log.debug("Adding %s as dep for %s" % (dependency,uri))
+            filename = None
             if uri.startswith("http://rinfo.lagrummet.se/publ/sfs/"):
                 basefile = uri.split("/")[-1].split("#")[0].replace(":","/")
-                filename = "data/sfs/intermediate/%s.deps" % basefile
+                #log.debug("Basefile: %s, comparison: %s" %
+                #          (basefile,"/".join(dependency.split("/")[-2:])[:-5]))
+                if "/" not in basefile:
+                    # avoid non-resource refs
+                    # log.debug("  Skipping non-resource ref %s"%basefile)
+                    pass
+                elif basefile == "/".join(dependency.split("/")[-2:])[:-5]:
+                    # avoid self refs
+                    pass
+                else:
+                    filename = "data/sfs/intermediate/%s.deps" % basefile
             elif uri.startswith("http://rinfo.lagrummet.se/publ/rattsfall/"):
                 if not self._rf_lookup:
-                    # load lookup table from data/dv/generated/uri.map
-                basefile = self._rf_lookup[uri[41:]]
-                filename = "data/dv/intermediate/%s.deps" % basefile
+                    log.debug("Loading uri.map")
+                    self._load_rf_lookup("data/dv/generated/uri.map")
+                    log.debug("%s items in mapping" % len(self._rf_lookup))
+
+                if uri[41:] in self._rf_lookup:
+                    basefile = self._rf_lookup[uri[41:]]
+                    filename = "data/dv/intermediate/%s.deps" % basefile
             elif uri.startswith("http://lagen.nu/concept/"):
                 basefile = uri[24:].replace("_"," ")
-                filename = "data/wiki/intermediate/%s.deps" % basefile
+                firstletter = basefile[0]
+                filename = "data/keyword/intermediate/%s/%s.deps" % (firstletter,basefile)
+            if not filename:
+                continue
+            if filename in filenames:
+                continue
 
+            filenames[filename] = True
+            log.debug("Adding %r as dep for %r" % (dependency,filename))
+                
             # Step 3: Open file, add dependency if not already present
             present = False
-            for line in open(filename):
-                if line.strip() == dependency:
-                    present = True
+            if os.path.exists(filename):
+                for line in open(filename):
+                    if line.strip() == dependency:
+                        present = True
             if not present:
-                fp = open(filename,"w")
+                Util.ensureDir(filename)
+                fp = open(filename,"a")
                 fp.write(dependency+"\n")
                 fp.close()
             
+    def _load_rf_lookup(self,mapfile):
+        for line in open(mapfile):
+            line = line.strip()
+            (baseuri,basefile) = line.split("\t")
+            self._rf_lookup[baseuri] = basefile
             
-
+    def _load_deps(self,basefile):
+        depsfile = self._depsFileName(basefile)
+        deps = []
+        if os.path.exists(depsfile):
+            for dep in open(depsfile):
+                deps.append(dep.strip())
+        return deps
     
     def _store_select(self,query):
         """Send a SPARQL formatted SELECT query to the Sesame

@@ -16,7 +16,10 @@ import xml.etree.ElementTree as PET
 # 3rdparty libs
 from configobj import ConfigObj
 from genshi.template import TemplateLoader
-from rdflib.Graph import Graph
+try: 
+    from rdflib.Graph import Graph
+except ImportError:
+    from rdflib import Graph
 from rdflib import Literal, Namespace, URIRef, RDF, RDFS
 
 # my libs
@@ -509,7 +512,20 @@ WHERE {
         terms = "%s/%s/parsed/rdf-mini.xml" % (self.baseDir, self.moduleDir)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-	if force or (not os.path.exists(annotations)):
+
+        dependencies = self._load_deps(basefile)
+        wiki_comments = "data/wiki/parsed/%s.xht2" % basefile.split("/",1)[-1]
+        if os.path.exists(wiki_comments):
+            dependencies.append(wiki_comments)
+
+        if not force and self._outfile_is_newer(dependencies,annotations):
+            if os.path.exists(self._depsFileName(basefile)):
+                log.debug(u"%s: All %s dependencies untouched in rel to %s" %
+                          (basefile, len(dependencies), Util.relpath(annotations)))
+            else:
+                log.debug(u"%s: Has no dependencies" % basefile)
+                
+        else:
             log.info(u"%s: Generating annotation file", basefile)
             self._generateAnnotations(annotations,basefile)
             sleep(1) # let sesame catch it's breath

@@ -2677,7 +2677,21 @@ WHERE {
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-	if force or (not os.path.exists(annotations)):
+        
+
+        dependencies = self._load_deps(basefile)
+        wiki_comments = "data/wiki/parsed/SFS/%s.xht2" % basefile
+        if os.path.exists(wiki_comments):
+            dependencies.append(wiki_comments)
+
+        if not force and self._outfile_is_newer(dependencies,annotations):
+            if os.path.exists(self._depsFileName(basefile)):
+                log.debug(u"%s: All %s dependencies untouched in rel to %s" %
+                          (basefile, len(dependencies), Util.relpath(annotations)))
+            else:
+                log.debug(u"%s: Has no dependencies" % basefile)
+                
+        else:
             log.info(u"%s: Generating annotation file", basefile)
             self._generateAnnotations(annotations,basefile)
             sleep(1) # let sesame catch it's breath

@@ -1012,7 +1012,16 @@ WHERE {
             log.warning("could not find xml:base in %s" % infile)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
-	if force or (not os.path.exists(annotations)):
+
+        dependencies = self._load_deps(basefile)
+
+        if not force and self._outfile_is_newer(dependencies,annotations):
+            if os.path.exists(self._depsFileName(basefile)):
+                log.debug(u"%s: All %s dependencies untouched in rel to %s" %
+                          (basefile, len(dependencies), Util.relpath(annotations)))
+            else:
+                log.debug(u"%s: Has no dependencies" % basefile)
+        else:
             log.info(u"%s: Generating annotation file", basefile)
             self._generateAnnotations(annotations,basefile,uri)
             sleep(1) # let sesame catch it's breath
