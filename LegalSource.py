@@ -768,6 +768,10 @@ class Manager(object):
                 d[key] = value
             res.append(d)
         return res
+
+    def _store_run_query(self, queryfile, **kwargs):
+        sq = open(queryfile).read() % kwargs
+        return self._store_select(sq)
     
     ################################################################
     # PURELY INTERNAL FUNCTIONS

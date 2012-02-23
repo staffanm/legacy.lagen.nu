@@ -2328,50 +2328,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # 1. all rinfo:Rattsfallsreferat that has baseuri as a
         # rinfo:lagrum, either directly or through a chain of
         # dct:isPartOf statements
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?uri ?id ?desc ?lagrum
-WHERE {
-   { ?uri rinfo:lagrum <%s> .
-     ?uri dct:identifier ?id .
-     ?uri dct:description ?desc }  
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-   UNION { ?uri rinfo:lagrum ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf ?e .
-           ?e dct:isPartOf <%s> .
-           ?uri dct:identifier ?id .
-           ?uri dct:description ?desc } 
-}
-""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-        # print sq
-        rattsfall = self._store_select(sq)
-
+        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref.sq", uri=baseuri)
         log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
         stuff[baseuri] = {}
         stuff[baseuri]['rattsfall'] = []
@@ -2418,44 +2375,7 @@ WHERE {
 
 
         # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
-        #
-        # FIXME: ?label doesn't select anything (afraid we have
-        # to do a dct:ispartof combinatorial explosion)
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?uri ?label ?lagrum
-WHERE {
-   { ?uri dct:references <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf <%s> }
-   UNION { ?uri dct:references ?lagrum .
-           ?lagrum dct:isPartOf ?b .
-           ?b dct:isPartOf ?c .
-           ?c dct:isPartOf ?d .
-           ?d dct:isPartOf ?e .
-           ?e dct:isPartOf <%s> }
-}
-ORDER BY ?uri ?lagrum
-""" % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-
-        # FIXME: This query makes tomcat/sesame unbearably slow...
-        inboundlinks = self._store_select(sq)
-        # inboundlinks = []
-
+        inboundlinks = self._store_run_query("sparql/sfs_inboundlinks.sq",uri=baseuri)
         log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
         stuff[baseuri]['inboundlinks'] = []
 
@@ -2495,19 +2415,7 @@ ORDER BY ?uri ?lagrum
 
         # pprint (stuff)
         # 3. all wikientries that dct:description this
-
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?lagrum ?desc
-WHERE {
-   { <%s> dct:description ?desc }  
-   UNION { ?lagrum dct:isPartOf <%s> . ?lagrum dct:description ?desc } 
-   UNION { ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> . ?lagrum dct:description ?desc} 
-}
-""" % (baseuri,baseuri,baseuri)
-        wikidesc = self._store_select(sq)
+        wikidesc = self._store_run_query("sparql/sfs_wikientries.sq",uri=baseuri)
         for row in wikidesc:
             if not 'lagrum' in row:
                 lagrum = baseuri
@@ -2525,22 +2433,9 @@ WHERE {
         # (4. eurlex.nu data (mapping CELEX ids to titles))
         # (5. Propositionstitlar)
         # 6. change entries for each section
-        # FIXME: we need to differentiate between additions, changes and deletions
-        sq = """
-PREFIX dct:<http://purl.org/dc/terms/>
-PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
-
-SELECT ?change ?id ?lagrum
-WHERE {
-   { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%s> }
-}
-        """ % (baseuri,baseuri,baseuri,baseuri,baseuri,baseuri)
-        changes = self._store_select(sq)
+        # FIXME: we need to differentiate between additions, changes
+        # and deletions
+        changes = self._store_run_query("sparql/sfs_changes.sq",uri=baseuri)
 
         log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
 
