@@ -2328,8 +2328,15 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # 1. all rinfo:Rattsfallsreferat that has baseuri as a
         # rinfo:lagrum, either directly or through a chain of
         # dct:isPartOf statements
-        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref.sq", uri=baseuri)
-        log.debug(u'%s: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
+        start = time()
+        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref_orig.sq", uri=baseuri)
+        log.debug(u'%s: Orig: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
+        # pprint(rattsfall)
+        start = time()
+        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref_proppath.sq", uri=baseuri)
+        log.debug(u'%s:  New: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
+        # pprint(rattsfall)
+        # rattsfall = []
         stuff[baseuri] = {}
         stuff[baseuri]['rattsfall'] = []
 
@@ -2375,8 +2382,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
 
         # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
+        start = time()
+        inboundlinks = self._store_run_query("sparql/sfs_inboundlinks_orig.sq",uri=baseuri)
+        log.debug(u'%s: Orig: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+        start = time()
         inboundlinks = self._store_run_query("sparql/sfs_inboundlinks.sq",uri=baseuri)
-        log.debug(u'%s: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+        log.debug(u'%s:  New: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+        # inboundlinks = []
         stuff[baseuri]['inboundlinks'] = []
 
         # mapping <http://rinfo.lagrummet.se/publ/sfs/1999:175> =>
@@ -2415,7 +2427,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         # pprint (stuff)
         # 3. all wikientries that dct:description this
+        start = time()
+        wikidesc = self._store_run_query("sparql/sfs_wikientries_orig.sq",uri=baseuri)
+        log.debug(u'%s: Orig: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
+        start = time()
         wikidesc = self._store_run_query("sparql/sfs_wikientries.sq",uri=baseuri)
+        log.debug(u'%s:  New: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
+        # wikidesc = []
         for row in wikidesc:
             if not 'lagrum' in row:
                 lagrum = baseuri
@@ -2426,7 +2444,6 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 stuff[lagrum] = {}
             stuff[lagrum]['desc'] = row['desc']
 
-        log.debug(u'%s: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
 
 
         # pprint(wikidesc)
@@ -2435,9 +2452,14 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # 6. change entries for each section
         # FIXME: we need to differentiate between additions, changes
         # and deletions
-        changes = self._store_run_query("sparql/sfs_changes.sq",uri=baseuri)
 
-        log.debug(u'%s: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
+        start = time()
+        changes = self._store_run_query("sparql/sfs_changes_orig.sq",uri=baseuri)
+        log.debug(u'%s: Orig: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
+        start = time()
+        changes = self._store_run_query("sparql/sfs_changes.sq",uri=baseuri)
+        log.debug(u'%s:  New: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
+        # changes = []
 
         for row in changes:
             lagrum = row['lagrum']
@@ -2478,6 +2500,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         #   </rdf:Description>
         # </rdf:RDF>
 
+        start = time()
         root_node = PET.Element("rdf:RDF")
         for prefix in Util.ns:
             # we need this in order to make elementtree not produce
@@ -2551,6 +2574,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                     id_node.text = r['id']
             if 'desc' in stuff[l]:
                 desc_node = PET.SubElement(lagrum_node, "dct:description")
+                # xhtmlstr = "<xht2:div>%s</xht2:div>" % (stuff[l]['desc'])
                 xhtmlstr = "<xht2:div xmlns:xht2='%s'>%s</xht2:div>" % (Util.ns['xht2'], stuff[l]['desc'])
                 xhtmlstr = xhtmlstr.replace(' xmlns="http://www.w3.org/2002/06/xhtml2/"','')
                 desc_node.append(PET.fromstring(xhtmlstr.encode('utf-8')))
@@ -2558,7 +2582,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         Util.indent_et(root_node)
         tree = PET.ElementTree(root_node)
         tmpfile = mktemp()
-        tree.write(tmpfile, encoding="utf-8")
+        treestring = PET.tostring(root_node,encoding="utf-8").replace(' xmlns:xht2="http://www.w3.org/2002/06/xhtml2/"','',1)
+        fp = open(tmpfile,"w")
+        fp.write(treestring)
+        fp.close()
+        #tree.write(tmpfile, encoding="utf-8")
         Util.replace_if_different(tmpfile,annotationfile)
         log.debug(u'%s: Serialized annotation (%.3f sec)', basefile, time()-start)
         

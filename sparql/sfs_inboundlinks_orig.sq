@@ -1,0 +1,28 @@
+PREFIX dct:<http://purl.org/dc/terms/>
+PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
+
+SELECT ?uri ?label ?lagrum
+WHERE {
+   { ?uri dct:references <%(uri)s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf <%(uri)s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf <%(uri)s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf <%(uri)s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf <%(uri)s> }
+   UNION { ?uri dct:references ?lagrum .
+           ?lagrum dct:isPartOf ?b .
+           ?b dct:isPartOf ?c .
+           ?c dct:isPartOf ?d .
+           ?d dct:isPartOf ?e .
+           ?e dct:isPartOf <%(uri)s> }
+}
+ORDER BY ?uri ?lagrum

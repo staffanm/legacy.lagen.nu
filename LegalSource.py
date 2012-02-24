@@ -771,6 +771,7 @@ class Manager(object):
 
     def _store_run_query(self, queryfile, **kwargs):
         sq = open(queryfile).read() % kwargs
+        # print sq
         return self._store_select(sq)
     
     ################################################################

@@ -2,11 +2,7 @@ PREFIX dct:<http://purl.org/dc/terms/>
 PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 
 SELECT ?change ?id ?lagrum
-WHERE {
-   { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%(uri)s> }
-   UNION { ?change rinfo:ersatter ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%(uri)s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%(uri)s> }
-   UNION { ?change rinfo:inforsI ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%(uri)s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf <%(uri)s> }
-   UNION { ?change rinfo:upphaver ?lagrum . ?change rinfo:fsNummer ?id . ?lagrum dct:isPartOf ?a . ?a dct:isPartOf <%(uri)s> }
+WHERE { ?change (rinfo:ersatter|rinfo:inforsI|rinfo:upphaver) ?lagrum.
+        ?change rinfo:fsNummer ?id . 
+        ?lagrum dct:isPartOf{1,2} <%(uri)s>
 }
