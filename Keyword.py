@@ -502,6 +502,10 @@ WHERE {
 
         log.debug("Saving annotation file %s "% annotationfile)
         Util.replace_if_different(tmpfile,annotationfile)
+        # Update timestamp -- really makes Util.replace_if_different
+        # redundant Ideally we should change the timestamp to same as
+        # the newest dependency plus one second?
+        os.utime(annotationfile,None)
 
     def Generate(self,basefile):
         start = time()
@@ -528,8 +532,13 @@ WHERE {
         else:
             log.info(u"%s: Generating annotation file", basefile)
             self._generateAnnotations(annotations,basefile)
-            sleep(1) # let sesame catch it's breath
-
+            if time()-start > 5:
+                log.info("openrdf-sesame is getting slow, reloading")
+                cmd = "curl -u %s:%s http://localhost:8080/manager/reload?path=/openrdf-sesame" % (self.config['tomcatuser'], self.config['tomcatpassword'])
+                Util.runcmd(cmd)
+            else:
+                sleep(0.5) # let sesame catch it's breath
+        # raise KeyboardInterrupt()
         if not force and self._outfile_is_newer([infile,annotations,terms],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return

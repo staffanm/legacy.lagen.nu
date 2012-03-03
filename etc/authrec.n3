@@ -42,6 +42,7 @@
 <http://lagen.nu/org/2008/utbildnings-och-kulturdepartementet> rdfs:label "Utbildnings- och kulturdepartementet" .
 <http://lagen.nu/org/2008/utbildningsdepartementet> rdfs:label "Utbildningsdepartementet" .
 <http://lagen.nu/org/2008/utrikesdepartementet> rdfs:label "Utrikesdepartementet" .
+<http://lagen.nu/org/2012/kungen> rdfs:label "H.M. Konungen" .
 
 <http://lagen.nu/org/2008/marknadsdomstolen> rdfs:label "Marknadsdomstolen" .
 <http://lagen.nu/org/2008/hovratten-for-ovre-norrland> rdfs:label "Hovrätten för Övre Norrland" . 

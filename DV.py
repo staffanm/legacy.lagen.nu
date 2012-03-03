@@ -803,7 +803,7 @@ class DVParser(LegalSource.Parser):
             # print "finding out stuff from %s" % head['Referat']
             txt = unicode(head[u'Referat'])
             for (pred,regex) in {u'rattsfallspublikation':r'([^ ]+)',
-                                 u'publikationsordinal'  :r'(\d{4}:\d+)',
+                                 u'publikationsordinal'  :r'(\d{4} ?: ?\d+)',
                                  u'arsutgava'            :r'(\d{4})',
                                  u'sidnummer'            :r's.? ?(\d+)'}.items():
                 m = re.search(regex,txt)
@@ -817,6 +817,9 @@ class DVParser(LegalSource.Parser):
                         head[u'[%s]'%pred] = LinkSubject(m.group(1),
                                                          uri=self.publikationsuri[m.group(1)],
                                                          predicate=RINFO[pred])
+                        if pred == 'publikationsordinal':
+                            # This field often has erronous spaces, eg "MOD 2012: 33". Fix it.
+                            head[u'[%s]'%pred] = UnicodeSubject(m.group(1).replace(" ",""),predicate=RINFO[pred])
                     else:
                         head[u'[%s]'%pred] = UnicodeSubject(m.group(1),predicate=RINFO[pred])
             if not '[publikationsordinal]' in head: # Workaround för AD-domar
@@ -988,6 +991,7 @@ WHERE {
         tmpfile = mktemp()
         tree.write(tmpfile, encoding="utf-8")
         Util.replace_if_different(tmpfile,annotationfile)
+        os.utime(annotationfile,None)
 
     def Generate(self,basefile):
         start = time()
@@ -1023,8 +1027,14 @@ WHERE {
                 log.debug(u"%s: Has no dependencies" % basefile)
         else:
             log.info(u"%s: Generating annotation file", basefile)
+            start = time()
             self._generateAnnotations(annotations,basefile,uri)
-            sleep(1) # let sesame catch it's breath
+            if time()-start > 5:
+                log.info("openrdf-sesame is getting slow, reloading")
+                cmd = "curl -u %s:%s http://localhost:8080/manager/reload?path=/openrdf-sesame" % (self.config['tomcatuser'], self.config['tomcatpassword'])
+                Util.runcmd(cmd)
+            else:
+                sleep(0.5) # let sesame catch it's breath
 
         if not force and self._outfile_is_newer([infile,annotations], outfile):
             log.debug(u"%s: Överhoppad", basefile)

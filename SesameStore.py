@@ -11,6 +11,8 @@ from urllib2 import urlopen, Request, HTTPError
 import urllib
 import xml.etree.cElementTree as ET
 
+import Util
+
 class SparqlError(Exception): pass
 class SesameError(Exception): pass
 
@@ -20,6 +22,10 @@ class SesameStore():
     interface."""
     # Inspired by http://www.openvest.com/trac/browser/rdfalchemy/trunk/rdfalchemy/sparql/sesame2.py
     # see Sesame REST API doc at http://www.openrdf.org/doc/sesame2/system/ch08.html
+
+    # command-line curl handles some operations (notably bulk upload)
+    # much faster than urllib2
+    use_curl = True
 
     contenttype = {"xml":"application/rdf+xml",
                    "sparql":"application/sparql-results+xml",
@@ -60,7 +66,9 @@ class SesameStore():
 
     def __urlopen(self,req):
         try:
-            res = urlopen(req).read()
+            resp = urlopen(req)
+            res = resp.read()
+            # res = urlopen(req).read()
         except HTTPError, e:
             if e.code == 204:
                 # print "A-OK!"
@@ -69,11 +77,34 @@ class SesameStore():
                 raise e
         return res
 
+    def __curl(self,options):
+        if options['method'] == 'GET':
+            # curl --header "Accept:text/plain;charset:UTF-8" -o out.nt 'http://localhost:8080/openrdf-sesame/repositories/lagen.nu.new/statements?context=<urn:x-local:sfs>' > out.nt
+            cmd = 'curl -o "%(filename)s" --header "Accept:%(accept)s" "%(url)s"' % options
+        elif options['method'] == 'POST':
+            cmd = 'curl -X POST --data-binary "@%(filename)s" --header "Content-Type:%(contenttype)s" "%(url)s"' % options
+        print cmd
+        (ret,stdout,stderr) = Util.runcmd(cmd)
+        if ret != 0:
+            raise Util.ExternalCommandError(stderr)
+        return stdout
+
     def bind(self,prefix, namespace):
         self.namespaces[prefix] = namespace
         # print "binding %s as %s" % (namespace,prefix)
         self.pending_graph.bind(prefix, namespace)
 
+    def get_serialized_file(self,filename,format="nt"):
+        Util.ensureDir(filename)
+        if self.use_curl:
+            opt = {'url':self.statements_url,
+                   'accept':self.contenttype[format],
+                   'method':'GET',
+                   'filename':filename}
+            return self.__curl(opt)
+        else:
+            raise InternalError("TBW: urllib2 implementation of get_serialized_file")
+            
     def get_serialized(self,format="nt"):
         """Returns a string containing all statements in the store,
         serialized in the selected format"""
@@ -193,6 +224,17 @@ class SesameStore():
             self.pending_graph.bind(prefix,namespace)
 
         return self.add_serialized(data,"nt")
+
+    def add_serialized_file(self,filename,format="nt"):
+        if self.use_curl:
+            opt = {'url':self.statements_url,
+                   'contenttype':self.contenttype[format]+";charset=UTF-8",
+                   'filename':filename,
+                   'method':'POST'}
+            return self.__curl(opt)
+        else:
+            raise InternalError("TBW: urllib2 implementation of add_serialized_file")
+    
 
     def add_serialized(self,data,format="nt"):
         req = Request(self.statements_url)

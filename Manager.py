@@ -180,7 +180,18 @@ class Manager:
         self._doActionFor('Parse',module,docids)
 
     def RelateAll(self,module='all'):
+        if module=='all':
+            pass
+            # FIXME: Detect when this is not needed (when all deps files are newer than all .xht2 files?)
+            # log.info("Cleaning old deps files")
+            # self._clean_deps()
+            # log.info("Done cleaning old deps files")
         self._doAction('RelateAll',module)
+
+    def _clean_deps(self):
+        for f in Util.listDirs(unicode(self.baseDir), '.deps'):
+            Util.robust_remove(f)
+    
 
     def GenerateAll(self,module='all'):
         self._doAction('GenerateAll',module)

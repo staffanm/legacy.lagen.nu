@@ -445,6 +445,7 @@ class WikiManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         out.close()
         # Util.indentXmlFile(tmpfile)
         Util.replace_if_different(tmpfile,outfile)
+        os.utime(outfile,None)
         (chars,words) = self.wc(parsed)
         log.info(u'%s: OK (%.3f sec, %d words, %d chars)', basefile,time()-start, words, chars)
 

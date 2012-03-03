@@ -3,7 +3,7 @@
 """Base classes for Downloaders and Parsers. Also utility classes (should be moved?)"""
 from collections import defaultdict
 from tempfile import mktemp
-from time import time
+from time import time,sleep
 import datetime
 import codecs
 import difflib
@@ -296,15 +296,15 @@ class Manager(object):
         if not os.path.exists(xht2_dir):
             log.warning("Dir %s does not exist" % xht2_dir)
             return
-        files = list(Util.listDirs(xht2_dir, '.xht2'))
+
         rdffile = os.path.sep.join([self.baseDir, self.moduleDir, u'parsed', u'rdf.nt']) 
 
         context = "<urn:x-local:%s>" % self.moduleDir
-
-        # if self._outfile_is_newer(files,rdffile):
-        if False:
+        files = list(Util.listDirs(xht2_dir, '.xht2'))
+        #import pprint
+        #pprint.pprint(files)
+        if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
-            # return
             log.info("Fast-loading store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
             store = SesameStore(self.config['triplestore'], self.config['repository'],context)
             for key, value in Util.ns.items():
@@ -312,10 +312,14 @@ class Manager(object):
 
             log.info("Clearing context %s" % context)
             store.clear()
-            ntriples = open(rdffile).read()
             log.info("Loading ntriples from %s" % rdffile)
-            store.add_serialized(ntriples)
-            
+            #ntriples = open(rdffile).read()
+            #store.add_serialized(ntriples)
+            store.add_serialized_file(rdffile)
+            # FIXME: We need to regenerate the .deps files in this
+            # code branch as well, preferably in a really cheap
+            # way. Or make Manager.RelateAll smart about when .deps
+            # files are removed.
         else:
             log.info("Connecting to store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
             store = SesameStore(self.config['triplestore'], self.config['repository'],context)
@@ -333,22 +337,37 @@ class Manager(object):
             # parallelize things.
             for f in files:
                 c += 1
-                graph = self._extract_rdfa(f)
+                x = f.replace("/parsed/", "/intermediate/").replace(".xht2",".rdf")
+                if os.path.exists(x) and self._outfile_is_newer([f],x):
+                    #log.debug("%s: Fast-loading rdf" % f)
+                    graph = Graph()
+                    graph.parse(open(x))
+                else:
+                    #log.debug("%s: extracting rdfa" % f)
+                    graph = self._extract_rdfa(f)
+                    Util.ensureDir(x)
+                    graph.serialize(x,format="pretty-xml", encoding="utf-8")
                 relfile = Util.relpath(f)
-                log.debug("Processing %s " % relfile)
-                self._add_deps(relfile,graph)
+                # log.debug("Processing %s " % relfile)
+                # self._add_deps(relfile,graph)
                 
                 triples += len(graph)
+                start = time()
                 store.add_graph(graph)
                 store.commit()
+                sleep(0.1)
+                if time()-start > 2:
+                    log.info("openrdf-sesame got slow after %s (%s triples), reloading" % (relfile,len(graph)))
+                    cmd = "curl -u %s:%s http://localhost:8080/manager/reload?path=/openrdf-sesame" % (self.config['tomcatuser'], self.config['tomcatpassword'])
                 if c % 100 == 0:
                     log.info("Related %d documents (%d triples total)" % (c, triples))
 
             log.info("Serializing to %s" % rdffile)
-            statements = store.get_serialized("nt")
-            fp = open(rdffile,"w")
-            fp.write(statements)
-            fp.close()
+            store.get_serialized_file(rdffile,"nt")
+            #statements = store.get_serialized("nt")
+            #fp = open(rdffile,"w")
+            #fp.write(statements)
+            #fp.close()
 
             log.info("All documents related: %d documents, %d triples" % (c, triples))
         
@@ -508,12 +527,13 @@ class Manager(object):
         (which means there's no need to regenerate outfile)"""
         if not os.path.exists(outfile): return False
         outfile_mtime = os.stat(outfile).st_mtime
+        #log.debug("Checking!")
         for f in infiles:
-            # print "Testing whether %s is newer than %s" % (f, outfile)
+            #log.debug("Testing whether %s is newer than %s" % (f, outfile))
             if os.path.exists(f) and os.stat(f).st_mtime > outfile_mtime:
-                # print "%s was newer than %s" % (f, outfile)
+                #log.debug("%s was newer than %s" % (f, outfile))
                 return False
-        # print "%s is newer than %r" % (outfile, infiles)
+        #log.debug("%s is newer than all of %r" % (outfile, infiles))
         return True
 
     def _htmlFileName(self,basefile):
@@ -718,12 +738,12 @@ class Manager(object):
             # Step 3: Open file, add dependency if not already present
             present = False
             if os.path.exists(filename):
-                for line in open(filename):
+                for line in codecs.open(filename,encoding="utf-8"):
                     if line.strip() == dependency:
                         present = True
             if not present:
                 Util.ensureDir(filename)
-                fp = open(filename,"a")
+                fp = codecs.open(filename,"a",encoding="utf-8")
                 fp.write(dependency+"\n")
                 fp.close()
             
@@ -737,7 +757,7 @@ class Manager(object):
         depsfile = self._depsFileName(basefile)
         deps = []
         if os.path.exists(depsfile):
-            for dep in open(depsfile):
+            for dep in codecs.open(depsfile,encoding="utf-8"):
                 deps.append(dep.strip())
         return deps
     

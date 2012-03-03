@@ -2331,12 +2331,9 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         start = time()
         rattsfall = self._store_run_query("sparql/sfs_rattsfallsref_orig.sq", uri=baseuri)
         log.debug(u'%s: Orig: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
-        # pprint(rattsfall)
-        start = time()
-        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref_proppath.sq", uri=baseuri)
-        log.debug(u'%s:  New: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
-        # pprint(rattsfall)
-        # rattsfall = []
+        #start = time()
+        #rattsfall = self._store_run_query("sparql/sfs_rattsfallsref.sq", uri=baseuri)
+        #log.debug(u'%s:  New: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
         stuff[baseuri] = {}
         stuff[baseuri]['rattsfall'] = []
 
@@ -2383,8 +2380,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         # 2. all law sections that has a dct:references that matches this (using dct:isPartOf).
         start = time()
-        inboundlinks = self._store_run_query("sparql/sfs_inboundlinks_orig.sq",uri=baseuri)
-        log.debug(u'%s: Orig: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
+        #inboundlinks = self._store_run_query("sparql/sfs_inboundlinks_orig.sq",uri=baseuri)
+        #log.debug(u'%s: Orig: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
         start = time()
         inboundlinks = self._store_run_query("sparql/sfs_inboundlinks.sq",uri=baseuri)
         log.debug(u'%s:  New: Selected %d inbound links (%.3f sec)', basefile, len(inboundlinks), time()-start)
@@ -2428,8 +2425,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # pprint (stuff)
         # 3. all wikientries that dct:description this
         start = time()
-        wikidesc = self._store_run_query("sparql/sfs_wikientries_orig.sq",uri=baseuri)
-        log.debug(u'%s: Orig: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
+        #wikidesc = self._store_run_query("sparql/sfs_wikientries_orig.sq",uri=baseuri)
+        #log.debug(u'%s: Orig: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
         start = time()
         wikidesc = self._store_run_query("sparql/sfs_wikientries.sq",uri=baseuri)
         log.debug(u'%s:  New: Selected %d wiki comments (%.3f sec)', basefile, len(wikidesc), time()-start)
@@ -2454,8 +2451,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # and deletions
 
         start = time()
-        changes = self._store_run_query("sparql/sfs_changes_orig.sq",uri=baseuri)
-        log.debug(u'%s: Orig: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
+        #changes = self._store_run_query("sparql/sfs_changes_orig.sq",uri=baseuri)
+        #log.debug(u'%s: Orig: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
         start = time()
         changes = self._store_run_query("sparql/sfs_changes.sq",uri=baseuri)
         log.debug(u'%s:  New: Selected %d change annotations (%.3f sec)', basefile, len(changes), time()-start)
@@ -2588,6 +2585,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         fp.close()
         #tree.write(tmpfile, encoding="utf-8")
         Util.replace_if_different(tmpfile,annotationfile)
+        os.utime(annotationfile,None)
         log.debug(u'%s: Serialized annotation (%.3f sec)', basefile, time()-start)
         
 
@@ -2616,8 +2614,14 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 
         else:
             log.info(u"%s: Generating annotation file", basefile)
+            start = time()
             self._generateAnnotations(annotations,basefile)
-            sleep(1) # let sesame catch it's breath
+            if time()-start > 5:
+                log.info("openrdf-sesame is getting slow, reloading")
+                cmd = "curl -u %s:%s http://localhost:8080/manager/reload?path=/openrdf-sesame" % (self.config['tomcatuser'], self.config['tomcatpassword'])
+                Util.runcmd(cmd)
+            else:
+                sleep(0.5) # let sesame catch it's breath
 
         if not force and self._outfile_is_newer([infile,annotations],outfile):
             log.debug(u"%s: Överhoppad", basefile)
