@@ -194,7 +194,12 @@ class ARNManager(LegalSource.Manager):
 
     def _get_module_dir(self):
         return __moduledir__
-    
+
+    def _indexpages_predicates(self):
+        return [Util.ns['rinfo']+'beslutsdatum',
+                Util.ns['dct']+'identifier',
+                Util.ns['dct']+'description']
+        
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}

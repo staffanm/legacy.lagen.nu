@@ -77,9 +77,11 @@ class WikiDownloader(LegalSource.Downloader):
             f.write(ET.tostring(page_el,encoding="utf-8"))
             f.close()
             if Util.replace_if_different(tmpfile,outfile):
-                log.debug("Dumping %s" % outfile)
-            #else:
-            #    log.debug("Not replacing %s" % outfile)
+                #log.debug("Dumping %s" % outfile)
+                pass
+            else:
+                #log.debug("Not replacing %s" % outfile)
+                pass
             try:
                 del downloaded_files[downloaded_files.index(outfile)]
             except ValueError:

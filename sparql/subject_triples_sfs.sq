@@ -1,0 +1,3 @@
+PREFIX dct:<http://purl.org/dc/terms/>
+        
+SELECT DISTINCT ?subj  WHERE { GRAPH <urn:x-local:sfs> { ?uri dct:subject ?subj } }

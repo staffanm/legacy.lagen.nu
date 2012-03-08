@@ -9,6 +9,7 @@ import sys, os, re, shutil
 from collections import defaultdict
 from pprint import pprint
 from time import time, sleep
+from datetime import datetime
 from tempfile import mktemp
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
@@ -52,61 +53,75 @@ def uri_to_keyword(uri):
     
 re_firstchar = re.compile(r'(\w)', re.UNICODE).search
 
+import mechanize
+class HeadRequest(mechanize.Request):
+    def get_method(self):
+        return "HEAD"
+
+
 class KeywordDownloader(LegalSource.Downloader):
     def _get_module_dir(self):
         return __moduledir__
+
+    
+    def _store_select(self,query):
+        """Send a SPARQL formatted SELECT query to the Sesame
+           store. Returns the result as a list of dicts"""
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        results = store.select(query)
+        res = []
+        tree = ET.fromstring(results)
+        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
+            d = {}
+            for element in row:
+                key = element.attrib['name']
+                value = element[0].text
+                d[key] = value
+            res.append(d)
+        return res
+
+    def _store_run_query(self, queryfile, **kwargs):
+        sq = open(queryfile).read() % kwargs
+        return self._store_select(sq)
 
     def DownloadAll(self):
         # Get all "term sets" (used dct:subject Objects, wiki pages
         # describing legal concepts, swedish wikipedia pages...)
         terms = defaultdict(dict)
 
+        subject_triples_sfs = True
+        subject_triples     = True
+        wiki_terms          = True
+        wikipedia_terms     = True
+
         # 1) Query the RDF DB for all dct:subject triples (is this
         # semantically sensible for a "download" action -- the content
         # isn't really external?) -- term set "subjects" (these come
         # from both court cases and legal definitions in law text)
-        sq = """
-        PREFIX dct:<http://purl.org/dc/terms/>
-        
-        SELECT DISTINCT ?subject  WHERE { GRAPH <urn:x-local:sfs> { ?uri dct:subject ?subject } }
-        """
-        store = SesameStore(self.config['triplestore'], self.config['repository'])
-        results = store.select(sq)
 
-        # this is based on LegalSource._store_select -- maybe we
-        # should work that into SesameStore?
-        tree = ET.fromstring(results)
-        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
-            for element in row: # should be only one
-                subj = element[0].text
+        store = SesameStore(self.config['triplestore'], self.config['repository'])
+        if subject_triples_sfs:
+            results = self._store_run_query("sparql/subject_triples_sfs.sq")
+            for row in results:
+                subj = row["subj"]
                 if subj.startswith("http://"):
-                    # we should really select ?uri rdfs:label ?label instead of munging the URI
                     subj = uri_to_keyword(subj)
                 else:
-                    # legacy triples
-                    subj = subj[0].upper() + subj[1:] # uppercase first letter and leave the rest alone
-
-                # for sanity: set max length of a subject to 100 chars
-                subj = subj[:100] 
+                    subj = subj[0].upper() + subj[1:]
+                    # for sanity: set max length of a subject to 100 chars
+                    subj = subj[:100] 
 
                 terms[subj][u'subjects'] = True
 
-        log.debug("Retrieved subject terms from RDF graph <urn:x-local:sfs>, got %s terms" % len(terms))
+            log.debug("Retrieved subject terms from RDF graph <urn:x-local:sfs>, got %s terms" % len(terms))
 
-        # for the dv and arn contexts, we should only use subjects
-        # that appears more than once:
-        sq = """
-        PREFIX dct:<http://purl.org/dc/terms/>
-        
-        SELECT ?subject  WHERE { ?uri dct:subject ?subject }
-        """
-        store = SesameStore(self.config['triplestore'], self.config['repository'])
-        results = store.select(sq)
-        tree = ET.fromstring(results)
-        potential_subj = defaultdict(int)
-        for row in tree.findall(".//{http://www.w3.org/2005/sparql-results#}result"):
-            for element in row: # should be only one
-                subj = element[0].text
+        if subject_triples:
+            # for the dv and arn contexts, we should only use subjects
+            # that appears more than once:
+            results = self._store_run_query("sparql/subject_triples.sq")
+            potential_subj = defaultdict(int)
+            for row in results:
+                subj = row["subj"]
                 if subj.startswith("http://"):
                     # we should really select ?uri rdfs:label ?label instead of munging the URI
                     subj = uri_to_keyword(subj)
@@ -119,51 +134,75 @@ class KeywordDownloader(LegalSource.Downloader):
 
                 potential_subj[subj] += 1
 
-        
-        for (subj,cnt) in potential_subj.items():
-            if cnt > 1:
-                terms[subj][u'subjects'] = True
+
+            for (subj,cnt) in potential_subj.items():
+                if cnt > 1:
+                    terms[subj][u'subjects'] = True
                 
+            log.debug("Retrieved non-unique subject terms from other RDF graphs, got %s terms" % len(terms))
 
-        log.debug("Retrieved non-unique subject terms from other RDF graphs, got %s terms" % len(terms))
-        # print repr(terms.keys()[:10])
-        # 2) Download the wiki.lagen.nu dump from
-        # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
+        if wiki_terms:
+            # print repr(terms.keys()[:10])
+            # 2) Download the wiki.lagen.nu dump from
+            # http://wiki.lagen.nu/pages-articles.xml -- term set "wiki"
 
-        self.browser.set_handle_robots(False) # we can ignore our own robots.txt
-        self.browser.open("https://lagen.nu/wiki-pages-articles.xml")
-        xml = ET.parse(self.browser.response())
-        wikinamespaces = []
-        for ns_el in xml.findall("//"+MW_NS+"namespace"):
-            wikinamespaces.append(ns_el.text)
-        for page_el in xml.findall(MW_NS+"page"):
-            title = page_el.find(MW_NS+"title").text
-            if title == "Huvudsida":
-                continue
-            if ":" in title and title.split(":")[0] in wikinamespaces:
-                continue # only process pages in the main namespace
-            if title.startswith("SFS/"):
-                continue
-            terms[title][u'wiki'] = True
+            self.browser.set_handle_robots(False) # we can ignore our own robots.txt
+            self.browser.open("https://lagen.nu/wiki-pages-articles.xml")
+            xml = ET.parse(self.browser.response())
+            wikinamespaces = []
+            for ns_el in xml.findall("//"+MW_NS+"namespace"):
+                wikinamespaces.append(ns_el.text)
+            for page_el in xml.findall(MW_NS+"page"):
+                title = page_el.find(MW_NS+"title").text
+                if title == "Huvudsida":
+                    continue
+                if ":" in title and title.split(":")[0] in wikinamespaces:
+                    continue # only process pages in the main namespace
+                if title.startswith("SFS/"):
+                    continue
+                terms[title][u'wiki'] = True
 
-        log.debug("Retrieved subject terms from wiki, now have %s terms" % len(terms))
-        # 3) Download the Wikipedia dump from
-        # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
-        # -- term set "wikipedia"
-        # FIXME: only download when needed
-        try:
-            self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
-        except Exception:
-            pass
-        from gzip import GzipFile
-        wikipediaterms = GzipFile(self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
-        for utf8_term in wikipediaterms:
-            term = utf8_term.decode('utf-8').strip()
-            if term in terms:
-                #log.debug(u"%s found in wikipedia" % term)
-                terms[term][u'wikipedia'] = True
+            log.debug("Retrieved subject terms from wiki, now have %s terms" % len(terms))
 
-        log.debug("Retrieved terms from wikipedia, now have %s terms" % len(terms))
+        if wikipedia_terms:
+            # 3) Download the Wikipedia dump from
+            # http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz
+            # -- term set "wikipedia"
+            # FIXME: only download when needed
+            url = "http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz"
+            do_retrieve = True
+            localfile = self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz"
+
+            if os.path.exists(localfile):
+                # conditional GET through a ridiculous amount of work
+                req = HeadRequest(url)
+                resp = self.browser.open(req)
+                import locale
+                tmplocale = locale.getlocale()
+                locale.setlocale(locale.LC_ALL,(None,None))
+                last_modified = datetime.strptime(resp.info()["Last-modified"],
+                                                  "%a, %d %b %Y %H:%M:%S %Z")
+                locale.setlocale(locale.LC_ALL,tmplocale)
+                local_modified = datetime.fromtimestamp(os.path.getmtime(localfile))
+                if local_modified>last_modified:
+                    log.debug("Not fetching %s, local file is newer" % url)
+                    do_retrieve = False
+
+            if do_retrieve:
+                try:
+                    self.browser.retrieve("http://download.wikimedia.org/svwiki/latest/svwiki-latest-all-titles-in-ns0.gz", self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+                except Exception:
+                    pass
+
+            from gzip import GzipFile
+            start = time()
+            wikipediaterms = GzipFile(self.download_dir+"/svwiki-latest-all-titles-in-ns0.gz")
+            for utf8_term in wikipediaterms:
+                term = utf8_term.decode('utf-8').strip()
+                if term in terms:
+                    terms[term][u'wikipedia'] = True
+
+            log.debug("Retrieved terms from wikipedia, now have %s terms (%.3f sec)" % (len(terms), time()-start))
         # 4) Download all pages from Jureka, probably by starting at
         # pageid = 1 and incrementing until done -- term set "jureka"
         #
@@ -513,7 +552,8 @@ WHERE {
         keyword = basefile.split("/",1)[1]
         outfile = Util.relpath(self._htmlFileName(keyword))
         annotations = "%s/%s/intermediate/%s.ann.xml" % (self.baseDir, self.moduleDir, basefile)
-        terms = "%s/%s/parsed/rdf-mini.xml" % (self.baseDir, self.moduleDir)
+        # This was used as a dependency, but it's unneccesary with the new dependency handling
+        # terms = "%s/%s/parsed/rdf-mini.xml" % (self.baseDir, self.moduleDir)
 
         force = (self.config[__moduledir__]['generate_force'] == 'True')
 
@@ -538,13 +578,12 @@ WHERE {
                 Util.runcmd(cmd)
             else:
                 sleep(0.5) # let sesame catch it's breath
-        # raise KeyboardInterrupt()
-        if not force and self._outfile_is_newer([infile,annotations,terms],outfile):
+
+        if not force and self._outfile_is_newer([infile,annotations],outfile):
             log.debug(u"%s: Överhoppad", basefile)
             return
-
+        
         Util.mkdir(os.path.dirname(outfile))
-
         # xsltproc silently fails to open files through the document()
         # functions if the filename has non-ascii
         # characters. Therefore, we copy the annnotation file to a

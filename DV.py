@@ -1125,6 +1125,13 @@ WHERE {
                      u'http://rinfo.lagrummet.se/ref/rff/mig': u'Migrationsöverdomstolen',
                      u'http://rinfo.lagrummet.se/ref/rff/mod': u'Miljööverdomstolen'
                      }
+    def _indexpages_predicates(self):
+        return [Util.ns['rinfo']+'rattsfallspublikation',
+                Util.ns['rinfo']+'arsutgava',
+                Util.ns['dct']+'identifier',
+                Util.ns['dct']+'description',
+                Util.ns['dct']+'subject']
+
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}

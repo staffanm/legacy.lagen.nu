@@ -83,7 +83,7 @@ class SesameStore():
             cmd = 'curl -o "%(filename)s" --header "Accept:%(accept)s" "%(url)s"' % options
         elif options['method'] == 'POST':
             cmd = 'curl -X POST --data-binary "@%(filename)s" --header "Content-Type:%(contenttype)s" "%(url)s"' % options
-        print cmd
+        # print cmd
         (ret,stdout,stderr) = Util.runcmd(cmd)
         if ret != 0:
             raise Util.ExternalCommandError(stderr)

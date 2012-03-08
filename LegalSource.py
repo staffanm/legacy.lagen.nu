@@ -7,6 +7,7 @@ from time import time,sleep
 import datetime
 import codecs
 import difflib
+import filecmp
 import logging
 import os
 import re
@@ -305,21 +306,25 @@ class Manager(object):
         #pprint.pprint(files)
         if self._outfile_is_newer(files,rdffile):
             log.info("%s is newer than all .xht2 files, no need to extract" % rdffile)
-            log.info("Fast-loading store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
+            # 1. download rdfdump to tmpfile
+            # 2. if tmpfile == rdffile: continue
             store = SesameStore(self.config['triplestore'], self.config['repository'],context)
-            for key, value in Util.ns.items():
-                store.bind(key, Namespace(value));
+            tmpfilename = mktemp()
+            store.get_serialized_file(tmpfilename,"nt")
+            if filecmp.cmp(tmpfilename,rdffile):
+                log.info("Store hasn't changed, not reloading it")
+            else: 
+                log.info("Fast-loading store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
+                for key, value in Util.ns.items():
+                    store.bind(key, Namespace(value));
 
-            log.info("Clearing context %s" % context)
-            store.clear()
-            log.info("Loading ntriples from %s" % rdffile)
-            #ntriples = open(rdffile).read()
-            #store.add_serialized(ntriples)
-            store.add_serialized_file(rdffile)
-            # FIXME: We need to regenerate the .deps files in this
-            # code branch as well, preferably in a really cheap
-            # way. Or make Manager.RelateAll smart about when .deps
-            # files are removed.
+                log.info("Clearing context %s" % context)
+                store.clear()
+                store.add_serialized_file(rdffile)
+                # FIXME: We need to regenerate the .deps files in this
+                # code branch as well, preferably in a really cheap
+                # way. Or make Manager.RelateAll smart about when .deps
+                # files are removed.
         else:
             log.info("Connecting to store %s, repo %s, context %s" % (self.config['triplestore'], self.config['repository'],context))
             store = SesameStore(self.config['triplestore'], self.config['repository'],context)
@@ -328,28 +333,39 @@ class Manager(object):
 
             log.info("Clearing context %s" % context)
             store.clear()
-
             c = 0
             triples = 0
-
             log.info("Relating %d documents" % len(files))
             # FIXME: Consider using do_for_all with this to
             # parallelize things.
             for f in files:
+                #if not u'HFD/1458-11' in f:
+                #    continue
                 c += 1
                 x = f.replace("/parsed/", "/intermediate/").replace(".xht2",".rdf")
                 if os.path.exists(x) and self._outfile_is_newer([f],x):
-                    #log.debug("%s: Fast-loading rdf" % f)
+                    log.debug("%s: Fast-loading rdf" % f)
                     graph = Graph()
-                    graph.parse(open(x))
+                    try:
+                        graph.parse(open(x))
+                    except: # when the filename x contains non-ascii chars
+                        log.debug("%s: Couldn't parse from source, working around by parsing from string" % f)
+                        graph.parse(data=open(x).read()) # new rdflib (3.x?) required
                 else:
-                    #log.debug("%s: extracting rdfa" % f)
+                    log.debug("%s: extracting rdfa" % f)
                     graph = self._extract_rdfa(f)
                     Util.ensureDir(x)
-                    graph.serialize(x,format="pretty-xml", encoding="utf-8")
+                    log.debug("%s: serializing rdf/xml" % x)
+                    try:
+                        graph.serialize(x,format="pretty-xml", encoding="utf-8")
+                    except:
+                        log.debug("%s: Working around" % f)
+                        fp = open(x,"w")
+                        fp.write(graph.serialize(None,format="pretty-xml", encoding="utf-8"))
+                        fp.close()
                 relfile = Util.relpath(f)
                 # log.debug("Processing %s " % relfile)
-                # self._add_deps(relfile,graph)
+                self._add_deps(relfile,graph)
                 
                 triples += len(graph)
                 start = time()
@@ -364,10 +380,6 @@ class Manager(object):
 
             log.info("Serializing to %s" % rdffile)
             store.get_serialized_file(rdffile,"nt")
-            #statements = store.get_serialized("nt")
-            #fp = open(rdffile,"w")
-            #fp.write(statements)
-            #fp.close()
 
             log.info("All documents related: %d documents, %d triples" % (c, triples))
         
@@ -384,6 +396,11 @@ class Manager(object):
         which index pages are created"""
         # read the RDF dump (NTriples format) created by RelateAll
         rdffile = Util.relpath("%s/%s/parsed/rdf.nt"%(self.baseDir,self.moduleDir))
+        mainindex = "%s/%s/generated/index/index.html" % (self.baseDir, self.moduleDir)
+        if self._outfile_is_newer([rdffile],mainindex):
+            log.info("%s is newer than last RDF dump, not building index pages" % mainindex)
+            return
+        
         if not os.path.exists(rdffile):
             log.warning("Could not find RDF dump %s" % rdffile)
             return
@@ -395,6 +412,7 @@ class Manager(object):
         # alla filer vi behöver)
         by_pred_obj = defaultdict(lambda:defaultdict(list))
         by_subj_pred = defaultdict(dict)
+        preds = self._indexpages_predicates()
         start = time()
 
         use_rdflib = False # tar för mycket tid+processor
@@ -411,15 +429,19 @@ class Manager(object):
                 subj = unicode(subj)
                 pred = unicode(pred)
                 obj  = unicode(obj)
-                if pred != self.DCT['references']:
+                if str(pred) in preds:
                     by_pred_obj[pred][obj].append(subj)
                     by_subj_pred[subj][pred] = obj
         else:
             fp = open(rdffile)
             count = 0
+            mcount = 0
             for qline in fp:
-                line = ntriple_unquote(qline)
                 count += 1
+                if not any(pred in qline for pred in preds):
+                    continue
+                mcount += 1
+                line = ntriple_unquote(qline)
                 if count % 10000 == 0:
                     sys.stdout.write(".")
                 m = self.re_ntriple.match(line)
@@ -428,23 +450,19 @@ class Manager(object):
                     pred = m.group(2)
                     objUri = m.group(4)
                     objLiteral = m.group(5)
-                    # most of the triples are dct:references, and these
-                    # are not used for indexpage generation - filter these
-                    # out to cut down on memory usage
-                    if pred != 'http://purl.org/dc/terms/references':
-                        if objLiteral:
-                            by_pred_obj[pred][objLiteral].append(subj)
-                            by_subj_pred[subj][pred] = objLiteral
-                        elif objUri:
-                            by_pred_obj[pred][objUri].append(subj)
-                            by_subj_pred[subj][pred] = objUri
-                        else:
-                            pass
+                    if objLiteral:
+                        by_pred_obj[pred][objLiteral].append(subj)
+                        by_subj_pred[subj][pred] = objLiteral
+                    elif objUri:
+                        by_pred_obj[pred][objUri].append(subj)
+                        by_subj_pred[subj][pred] = objUri
+                    else:
+                        pass
                 else:
                     log.warning("Couldn't parse line %s" % line)
         sys.stdout.write("\n")
     
-        log.info("RDF structured (%.3f sec)", time()-start)
+        log.info("RDF structured (%s triples, %s kept, %.3f sec)" % (count, mcount, time()-start))
         self._build_indexpages(by_pred_obj, by_subj_pred)
 
     def News(self):
@@ -550,6 +568,11 @@ class Manager(object):
 
     def _depsFileName(self,basefile): 
         return u'%s/%s/intermediate/%s.deps' % (self.baseDir, self.moduleDir,basefile)     
+
+    def _indexpages_predicates(self):
+        return [Util.ns['dct']+"title",
+                Util.ns['dct']+"identifier",
+                Util.ns['rdfs']+"label"]
 
     def _build_indexpages(self,by_pred_obj, by_subj_pred):
         displaypredicates = {'http://purl.org/dc/terms/title':

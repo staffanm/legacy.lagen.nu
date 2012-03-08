@@ -2837,6 +2837,13 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         if basefile.endswith('_A') or basefile.endswith('_B'): 
             basefile = basefile[:-2] 
         return basefile
+
+    def _indexpages_predicates(self):
+        return [Util.ns['dct']+"title",
+                Util.ns['rinfo']+'fsNummer',
+                Util.ns['rdf']+'type',
+                Util.ns['rinfo']+'KonsolideradGrundforfattning']
+                
     
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
         documents = defaultdict(lambda:defaultdict(list))
@@ -2869,7 +2876,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         fp = codecs.open(outfile,"w",encoding='utf-8')
         fp.write(doc)
         fp.close()
-        print "wrote %s" % outfile
+        log.info("wrote %s" % outfile)
 
 
         # list all subjects that are of rdf:type rinfo:KonsolideradGrundforfattning
