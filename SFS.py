@@ -2329,11 +2329,8 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
         # rinfo:lagrum, either directly or through a chain of
         # dct:isPartOf statements
         start = time()
-        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref_orig.sq", uri=baseuri)
+        rattsfall = self._store_run_query("sparql/sfs_rattsfallsref.sq", uri=baseuri)
         log.debug(u'%s: Orig: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
-        #start = time()
-        #rattsfall = self._store_run_query("sparql/sfs_rattsfallsref.sq", uri=baseuri)
-        #log.debug(u'%s:  New: Selected %d legal cases (%.3f sec)', basefile, len(rattsfall), time()-start)
         stuff[baseuri] = {}
         stuff[baseuri]['rattsfall'] = []
 

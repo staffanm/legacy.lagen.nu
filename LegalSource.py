@@ -813,8 +813,9 @@ class Manager(object):
         return res
 
     def _store_run_query(self, queryfile, **kwargs):
+        if not os.path.exists(queryfile):
+            queryfile = os.path.dirname(__file__) + os.path.sep + queryfile
         sq = open(queryfile).read() % kwargs
-        # print sq
         return self._store_select(sq)
     
     ################################################################
