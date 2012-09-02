@@ -503,6 +503,10 @@ class DVParser(LegalSource.Parser):
             referat += e.string
         referat = Util.normalizeSpace(referat)
 
+        # Change e.g. "MD:2011:24" to "MD 2011:24"
+        if referat.count(":") > 1:
+            referat = referat.replace(":", " ",1)
+
         # log.info(u"Domstol: %r, referat: %r" % (domstol,referat))
         #firstfields = soup.findAll("w:t",limit=4)
         #if not re.search('\d{4}', referat):
@@ -556,6 +560,8 @@ class DVParser(LegalSource.Parser):
             if node:
                 items = []
                 textnodes = node.findParent('w:tc').findNextSibling('w:tc')
+                if not textnodes:
+                    continue
                 for textnode in textnodes.findAll('w:t'):
                     items.append(Util.elementText(textnode))
 
