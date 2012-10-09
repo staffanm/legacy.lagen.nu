@@ -546,8 +546,6 @@ class SFSParser(LegalSource.Parser):
     re_parantesdef   = re.compile(ur'\(([\w ]{3,50})\)\.', re.UNICODE).search
     re_loptextdef    = re.compile(ur'^Med ([\w ]{3,50}) (?:avses|förstås) i denna (förordning|lag|balk)', re.UNICODE).search
     
-                                      
-    
     # use this custom matcher to ensure any strings you intend to convert
     # are legal roman numerals (simpler than having from_roman throwing
     # an exception)
@@ -570,6 +568,8 @@ class SFSParser(LegalSource.Parser):
                          ('V',  5),
                          ('IV', 4),
                          ('I',  1))
+
+    keep_expired = False
 
     def __init__(self):
         self.trace = {'rubrik': logging.getLogger('sfs.trace.rubrik'),
@@ -824,9 +824,10 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Rubrik':
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Observera':
-                            if u'Författningen är upphävd/skall upphävas: ' in val:
-                                if datetime.strptime(val[41:51], '%Y-%m-%d') < datetime.today():
-                                    raise UpphavdForfattning()
+                            if not self.keep_expired:
+                                if u'Författningen är upphävd/skall upphävas: ' in val:
+                                    if datetime.strptime(val[41:51], '%Y-%m-%d') < datetime.today():
+                                        raise UpphavdForfattning()
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Ikraft':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
@@ -873,7 +874,8 @@ class SFSParser(LegalSource.Parser):
                         elif key == u'Tidsbegränsad':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                             if p[key] < datetime.today():
-                                raise UpphavdForfattning()
+                                if not self.keep_expired:
+                                    raise UpphavdForfattning()
                         else:
                             log.warning(u'%s: Obekant nyckel [\'%s\']' % self.id, key)
                 if p:
@@ -1167,7 +1169,8 @@ class SFSParser(LegalSource.Parser):
             elif key == u'Upphävd':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                 if meta[key] < datetime.today():
-                    raise UpphavdForfattning()
+                    if not self.keep_expired:
+                        raise UpphavdForfattning()
             elif key == u'Departement/ myndighet':
                 authrec = self.find_authority_rec(val)
                 meta[key] = LinkSubject(val, uri=unicode(authrec),
@@ -2273,18 +2276,21 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             # plain fast string searching, no fancy HTML parsing and
             # traversing
             t = TextReader(files['sfsr'][0],encoding="iso-8859-1")
-            try:
-                t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
-                datestr = t.readto(u'</i></b>')
-                if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
-                    log.debug(u'%s: Expired' % basefile)
-                    raise UpphavdForfattning()
-            except IOError:
-                pass
+            if self.config[__moduledir__]['keep_expired'] != 'True':
+                try:
+                    t.cuepast(u'<i>Författningen är upphävd/skall upphävas: ')
+                    datestr = t.readto(u'</i></b>')
+                    if datetime.strptime(datestr, '%Y-%m-%d') < datetime.today():
+                        log.debug(u'%s: Expired' % basefile)
+                        raise UpphavdForfattning()
+                except IOError:
+                    pass
 
             # OK, all clear, now begin real parsing
             p = SFSParser()
             p.verbose = verbose
+            if self.config[__moduledir__]['keep_expired'] == 'True':
+                p.keep_expired = True
             # p.references.verbose = verbose
             if not verbose:
                 for k in p.trace.keys():
