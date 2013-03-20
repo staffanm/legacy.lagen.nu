@@ -391,12 +391,11 @@
       </xsl:choose></h2>
       <xsl:if test="(number($year) > 1998) or (number($year) = 1998 and number($nr) >= 306)">
 
-	<p><a href="http://62.95.69.3/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Officiell version (PDF)</a></p>
+	<p><a href="http://rkrattsdb.gov.se/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Officiell version (PDF)</a></p>
       </xsl:if>
       <xsl:apply-templates mode="in-paragraf"/>
     </div>
   </xsl:template>
-
 
   <!-- emit nothing - this is already handled above -->
   <xsl:template match="xht2:span[@class='paragrafbeteckning']"/>

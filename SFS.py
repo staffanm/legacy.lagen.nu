@@ -235,29 +235,29 @@ class SFSDownloader(LegalSource.Downloader):
         super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
                                      
     def DownloadAll(self):
-        # self._setLastSFSnr()
-        # return
-        start = 1600
-        end = datetime.today().year
-        self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
+        # Split search into two (or more) - the result list fails after 440 result pages
+        for start, end in ((1600,2008),(2009,datetime.today().year)):
+            log.info(u'Downloading %s to %s' % (start,end))
 
-        pagecnt = 1
-        done = False
-        while not done:
-            log.info(u'Resultatsida nr #%s' % pagecnt)
-            for l in (self.browser.links(text_regex=r'\d+:\d+')):
-                if not l.text.startswith("N"): # Icke-SFS-författningar
-                                               # som ändå finns i
-                                               # databasen
-                    self._downloadSingle(l.text)
-                # self.browser.back()
-            try:
-                self.browser.find_link(text='Fler poster')
-                self.browser.follow_link(text='Fler poster')
-                pagecnt += 1
-            except LinkNotFoundError:
-                log.info(u'Ingen nästa sida-länk, vi är nog klara')
-                done = True
+            self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
+
+            pagecnt = 1
+            done = False
+            while not done:
+                log.info(u'Resultatsida nr #%s' % pagecnt)
+                for l in (self.browser.links(text_regex=r'\d+:\d+')):
+                    if not l.text.startswith("N"): # Icke-SFS-författningar
+                                                   # som ändå finns i
+                                                   # databasen
+                        self._downloadSingle(l.text)
+                    # self.browser.back()
+                try:
+                    self.browser.find_link(text='Fler poster')
+                    self.browser.follow_link(text='Fler poster')
+                    pagecnt += 1
+                except LinkNotFoundError:
+                    log.info(u'Ingen nästa sida-länk, vi är nog klara')
+                    done = True
         self._setLastSFSnr()
 
     def _get_module_dir(self):
