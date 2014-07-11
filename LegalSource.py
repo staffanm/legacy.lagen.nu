@@ -467,7 +467,7 @@ class Manager(object):
 
     def News(self):
         """Creates one or more pages containing updated and new documents for the datasource"""
-        startdate = datetime.datetime.now() - datetime.timedelta(30)
+        startdate = datetime.datetime.now() - datetime.timedelta(90)
         logfilename = "%s/%s/downloaded/downloaded.log" % (self.baseDir, self.moduleDir)
         if not os.path.exists(logfilename):
             log.warning("Could not find download log %s" % logfilename)
@@ -682,8 +682,8 @@ class Manager(object):
         stream = tmpl.generate(title=title,
                                subtitle=subtitle,
                                entries=entries,
-                               feeduri=u'https://lagen.nu/%s' % atomfile,
-                               pageuri=u'https://lagen.nu/%s' % htmlfile)
+                               feeduri=u'https://lagen.nu/%s' % atomfile.replace("data/", ""),
+                               pageuri=u'https://lagen.nu/%s' % htmlfile.replace("data/", ""))
                                
         tmpfilename = mktemp()
         fp = open(tmpfilename,"w")

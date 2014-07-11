@@ -30,7 +30,7 @@ if not os.path.sep in __file__:
 else:
     __scriptdir__ = os.path.dirname(__file__)
 
-MW_NS = "{http://www.mediawiki.org/xml/export-0.4/}"
+MW_NS = "{http://www.mediawiki.org/xml/export-0.7/}"
 class Manager:
     def __init__(self):
         self.config = ConfigObj(__scriptdir__ + "/conf.ini")
@@ -215,7 +215,7 @@ class Manager:
         # Step 1: Download Wiki frontpage
         browser = Browser()
         browser.set_handle_robots(False) # we can ignore our own robots.txt
-        url = "http://wiki.lagen.nu/index.php/Special:Exportera/Lagen.nu:Huvudsida"
+        url = "https://lagen.nu/wiki/Special:Exportera/Lagen.nu:Huvudsida"
         browser.open(url)
         xml = ET.parse(browser.response())
 

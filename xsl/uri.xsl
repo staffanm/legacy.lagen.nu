@@ -141,7 +141,7 @@
 	    <xsl:with-param name="int" select="$int"/>
 	  </xsl:call-template>
 	</xsl:variable>
-	<xsl:if test="number($year) > 1970">http://www.riksdagen.se/Webbnav/index.aspx?nid=37&amp;dok_id=<xsl:value-of select="$base36year"/>03<xsl:value-of select="$nr"/></xsl:if>
+	<xsl:if test="number($year) > 1970">http://data.riksdagen.se/dokument/<xsl:value-of select="$base36year"/>03<xsl:value-of select="$nr"/></xsl:if>
       </xsl:when>
       <!--       <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/> -->
       <xsl:when test="contains($uri,'/ext/celex')">http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=CELEX:<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>:SV:HTML
@@ -157,7 +157,7 @@
 	    <xsl:with-param name="int" select="$int"/>
 	  </xsl:call-template>
 	</xsl:variable>
-	<xsl:if test="number($year) > 1990">http://www.riksdagen.se/Webbnav/index.aspx?nid=37&amp;dok_id=<xsl:value-of select="$base36year"/>01<xsl:value-of select="$nr"/></xsl:if>
+	<xsl:if test="number($year) > 1990">http://data.riksdagen.se/dokument/<xsl:value-of select="$base36year"/>01<xsl:value-of select="$nr"/></xsl:if>
       </xsl:when>
       <xsl:when test="contains($uri,'/ext/celex')">http://eurlex.nu/doc/<xsl:value-of select="substring-after($uri, '/ext/celex/')"/>
       </xsl:when>

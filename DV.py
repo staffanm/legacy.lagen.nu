@@ -1274,7 +1274,7 @@ WHERE {
             base = basefile[slot]
             htmlfile = Util.relpath("%s/%s/generated/news/%s.html" % (self.baseDir, self.moduleDir, base))
             atomfile = Util.relpath("%s/%s/generated/news/%s.atom" % (self.baseDir, self.moduleDir, base))
-            self._render_newspage(htmlfile, atomfile, u'Nya r\xe4ttsfall fr\xe5n %s'%slot, 'De senaste 30 dagarna', slotentries)
+            self._render_newspage(htmlfile, atomfile, u'Nya r\xe4ttsfall fr\xe5n %s'%slot, 'De senaste 90 dagarna', slotentries)
 
 
     ####################################################################

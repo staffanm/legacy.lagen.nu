@@ -1,0 +1,18 @@
+--- data/dv/intermediate/docbook/HDO/�1954-98_1.xml	2014-07-11 18:35:48.000000000 +0200
++++ /tmp/tmp28cIKS	2014-07-11 18:35:12.000000000 +0200
+@@ -332,7 +332,7 @@
+ hovrättsassessorn Wichmann, referent) handlade målen gemensamt och
+ anförde i slutligt beslut d 7 april 1998: HovR:ns skäl. Utöver vad som
+ redovisats i TR:ns beslut framgår bl a följande av utredningen. K.A:s
+-fastighet Örebro Anstorp 1:47 - som är belägen i Kilsmo - är taxerad
++fastighet [fastighetsbeteckning] - som är belägen i Kilsmo - är taxerad
+ till 120 000 kr. Bland K.A:s skulder finns två lån hos Handelsbanken
+ Finans AB, uppgående till sammanlagt drygt 200 000 kr. Banken har
+ pantsäkerhet i fastigheten till ett belopp om 227 000 kr. Enligt en
+@@ -680,4 +680,4 @@
+ 
+  </chapter>
+ 
+-</book>
+\ Ingen nyrad vid filslut
++</book>
