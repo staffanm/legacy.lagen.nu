@@ -239,7 +239,7 @@ class SFSDownloader(LegalSource.Downloader):
         for start, end in ((1600,2008),(2009,datetime.today().year)):
             log.info(u'Downloading %s to %s' % (start,end))
 
-            self.browser.open("http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
+            self.browser.open("http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
 
             pagecnt = 1
             done = False
@@ -340,7 +340,7 @@ class SFSDownloader(LegalSource.Downloader):
         # Titta först efter grundförfattning
         log.info(u'    Letar efter grundförfattning')
         grundforf = []
-        url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
+        url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
         # FIXME: consider using mechanize
         tmpfile = mktemp()
         self.browser.retrieve(url,tmpfile)
@@ -353,7 +353,7 @@ class SFSDownloader(LegalSource.Downloader):
 
         # Sen efter ändringsförfattning
         log.info(u'    Letar efter ändringsförfattning')
-        url = "http://62.95.69.15/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
+        url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
         self.browser.retrieve(url, tmpfile)
         # maybe this is better done through mechanize?
         t = TextReader(tmpfile,encoding="iso-8859-1")
@@ -391,7 +391,7 @@ class SFSDownloader(LegalSource.Downloader):
 
         upphavd_genom = uppdaterad_tom = old_uppdaterad_tom = None
         for part in parts:
-            sfst_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
+            sfst_url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
             sfst_file = "%s/sfst/%s.html" % (self.download_dir, SFSnrToFilename(part))
             sfst_tempfile = mktemp()
             self.browser.retrieve(sfst_url, sfst_tempfile)
@@ -421,7 +421,7 @@ class SFSDownloader(LegalSource.Downloader):
             else:
                 Util.robustRename(sfst_tempfile, sfst_file)
 
-        sfsr_url = "http://62.95.69.15/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
+        sfsr_url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
         sfsr_file = "%s/sfsr/%s.html" % (self.download_dir, SFSnrToFilename(sfsnr))
         if (old_uppdaterad_tom and
             old_uppdaterad_tom != uppdaterad_tom):
@@ -2871,7 +2871,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
     kanske den har blivit upphävd?</p>
     <p>Om den har blivit upphävd kan den finnas i sin sista lydelse på
     Regeringskansliets rättsdatabaser:
-    <a href="http://62.95.69.15/cgi-bin/thw?${HTML}=sfst_lst&amp;${OOHTML}=sfst_dok&amp;${SNHTML}=sfst_err&amp;${BASE}=SFST&amp;${TRIPSHOW}=format%3DTHW&amp;BET=<!--#echo var="REDIRECT_SFS" -->">Sök efter SFS <!--#echo var="REDIRECT_SFS" --></a>.</p>
+    <a href="http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfst_lst&amp;${OOHTML}=sfst_dok&amp;${SNHTML}=sfst_err&amp;${BASE}=SFST&amp;${TRIPSHOW}=format%3DTHW&amp;BET=<!--#echo var="REDIRECT_SFS" -->">Sök efter SFS <!--#echo var="REDIRECT_SFS" --></a>.</p>
     
   </div><div id="kommentarer"></div><div id="referenser"></div></div></div></div><div id="sidfot"><b>Lagen.nu</b> är en privat webbplats. Informationen här är	inte officiell och kan vara felaktig | <a href="/om/ansvarsfriskrivning.html">Ansvarsfriskrivning</a> | <a href="/om/kontakt.html">Kontaktinformation</a></div><script type="text/javascript">var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));</script><script type="text/javascript">var pageTracker = _gat._getTracker("UA-172287-1"); pageTracker._trackPageview();</script></body></html>'''
 
