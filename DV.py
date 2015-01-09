@@ -165,6 +165,7 @@ class DVDownloader(LegalSource.Downloader):
                 if os.path.exists(os.path.sep.join([self.download_dir,dirname,filename])):
                     pass
                     # localdir = self.download_dir + os.path.sep + dirname
+                    # print("Procesing old zipfile %s" % filename)
                     # self.process_zipfile(localdir + os.path.sep + filename)
                 else:
                     if dirname:
@@ -327,6 +328,7 @@ class DVParser(LegalSource.Parser):
     publikationsuri = {u'NJA': u'http://rinfo.lagrummet.se/ref/rff/nja',
                        u'RH': u'http://rinfo.lagrummet.se/ref/rff/rh',
                        u'MÖD': u'http://rinfo.lagrummet.se/ref/rff/mod',
+                       u'MMD': u'http://rinfo.lagrummet.se/ref/rff/mod',
                        u'RÅ': u'http://rinfo.lagrummet.se/ref/rff/ra',
                        u'RK': u'http://rinfo.lagrummet.se/ref/rff/rk',
                        u'MIG': u'http://rinfo.lagrummet.se/ref/rff/mig',
@@ -346,6 +348,7 @@ class DVParser(LegalSource.Parser):
                              u'MDO': 'http://lagen.nu/org/2008/marknadsdomstolen',
                              u'MIG': 'http://lagen.nu/org/2008/migrationsoverdomstolen',
                              u'MÖD': 'http://lagen.nu/org/2008/miljooverdomstolen',
+                             u'MMD': 'http://lagen.nu/org/2008/miljooverdomstolen',
                              u'REG': 'http://lagen.nu/org/2008/regeringsratten',
                              u'KST': 'http://lagen.nu/org/2008/kammarratten-i-stockholm',
                              u'HFD': 'http://lagen.nu/org/2011/hogsta-forvaltningsdomstolen'}
@@ -747,6 +750,7 @@ class DVParser(LegalSource.Parser):
         # rättsfall och lagrum i löpande text...
         body = Referatstext()
         for p in soup.find(text=re.compile('REFERAT')).findParent('tgroup').findNextSibling('tgroup').find('entry').string.strip().split("\n\n"):
+            # Build fastighetsfilter here
             body.append(Stycke([p]))
 
         # Hitta sammansatta metadata i sidfoten

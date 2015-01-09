@@ -524,7 +524,7 @@ class SFSParser(LegalSource.Parser):
     re_SimpleSfsId     = re.compile(r'(\d{4}:\d+)\s*$')
     re_SearchSfsId     = re.compile(r'\((\d{4}:\d+)\)').search
     re_ChangeNote      = re.compile(ur'(Lag|Förordning) \(\d{4}:\d+\)\.?$')
-    re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk]ap.').match
+    re_ChapterId       = re.compile(r'^(\d+( \w|)) [Kk][Aa][Pp]\.').match
     re_DivisionId      = re.compile(r'^AVD. ([IVX]*)').match
     re_SectionId       = re.compile(r'^(\d+ ?\w?) §[ \.]') # used for both match+sub
     re_SectionIdOld    = re.compile(r'^§ (\d+ ?\w?).')     # as used in eg 1810:0926
