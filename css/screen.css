@@ -1,4 +1,507 @@
-/* @import "debug.css";  */ 
-@import "reset.css";
+/****************************************************************
+ @import "reset.css"; 
+ ****************************************************************/
+
+/* http://meyerweb.com/eric/thoughts/2007/05/01/reset-reloaded/ */ 
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-weight: inherit;
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	vertical-align: baseline;
+}
+/* remember to define focus styles! */
+:focus {
+	outline: 0;
+}
+body {
+	line-height: 1;
+	color: black;
+	background: white;
+}
+ol, ul {
+	list-style: none;
+}
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+caption, th, td {
+	text-align: left;
+	font-weight: normal;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: "";
+}
+blockquote, q {
+	quotes: "" "";
+}
+
+/****************************************************************
 @import "jquery.treeview.css";
+****************************************************************/
+.treeview, .treeview ul { 
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.treeview ul {
+	background-color: white;
+	margin-top: 4px;
+}
+
+.treeview .hitarea {
+	background: url(../img/treeview/treeview-default.gif) -64px -25px no-repeat;
+	height: 16px;
+	width: 16px;
+	margin-left: -16px;
+	float: left;
+	cursor: pointer;
+}
+/* fix for IE6 */
+* html .hitarea {
+	display: inline;
+	float:none;
+}
+
+.treeview li { 
+	margin: 0;
+	padding: 3px 0pt 3px 16px;
+}
+
+.treeview a.selected {
+	background-color: #eee;
+}
+
+#treecontrol { margin: 1em 0; display: none; }
+
+.treeview .hover { color: red; cursor: pointer; }
+
+.treeview li { background: url(../img/treeview/treeview-default-line.gif) 0 0 no-repeat; }
+.treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
+
+.treeview .expandable-hitarea { background-position: -80px -3px; }
+
+.treeview li.last { background-position: 0 -1766px }
+.treeview li.lastCollapsable, .treeview li.lastExpandable { background-image: url(../img/treeview/treeview-default.gif); }  
+.treeview li.lastCollapsable { background-position: 0 -111px }
+.treeview li.lastExpandable { background-position: -32px -67px }
+
+.treeview div.lastCollapsable-hitarea, .treeview div.lastExpandable-hitarea { background-position: 0; }
+
+.treeview-red li { background-image: url(../img/treeview/treeview-red-line.gif); }
+.treeview-red .hitarea, .treeview-red li.lastCollapsable, .treeview-red li.lastExpandable { background-image: url(../img/treeview/treeview-red.gif); } 
+
+.treeview-black li { background-image: url(../img/treeview/treeview-black-line.gif); }
+.treeview-black .hitarea, .treeview-black li.lastCollapsable, .treeview-black li.lastExpandable { background-image: url(../img/treeview/treeview-black.gif); }  
+
+.treeview-gray li { background-image: url(../img/treeview/treeview-gray-line.gif); }
+.treeview-gray .hitarea, .treeview-gray li.lastCollapsable, .treeview-gray li.lastExpandable { background-image: url(../img/treeview/treeview-gray.gif); } 
+
+.treeview-famfamfam li { background-image: url(../img/treeview/treeview-famfamfam-line.gif); }
+.treeview-famfamfam .hitarea, .treeview-famfamfam li.lastCollapsable, .treeview-famfamfam li.lastExpandable { background-image: url(../img/treeview/treeview-famfamfam.gif); } 
+
+
+.filetree li { padding: 3px 0 2px 16px; }
+.filetree span.folder, .filetree span.file { padding: 1px 0 1px 16px; display: block; }
+.filetree span.folder { background: url(../img/treeview/folder.gif) 0 0 no-repeat; }
+.filetree li.expandable span.folder { background: url(../img/treeview/folder-closed.gif) 0 0 no-repeat; }
+.filetree span.file { background: url(../img/treeview/file.gif) 0 0 no-repeat; }
+
+/****************************************************************
 @import "main.css";
+****************************************************************/
+      #vinjett {
+	position:relative;
+        border: 1px solid #748896;
+	/* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+        background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
+        color: #ffffff;
+	outline: none; 
+        margin: 8pt;
+        padding: 12pt 0 24pt 20pt;
+	height: 38pt;
+
+      }
+
+      #vinjett h1 {
+        font-size: 24pt;
+	color: #000;
+        font-family: Arial;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+
+      #vinjett h1 a {
+	text-decoration: none;
+        border-bottom: none;
+	color: #fff;
+      }
+      #navigation {
+        position: absolute;
+  	left:12pt;
+        bottom: -1px;
+  	margin: 0;
+        padding: 6pt;
+	font-weight: bold;
+      }
+      #navigation li {
+  	display: inline;
+  	margin: 0 2pt; 
+  	padding: 6pt 6pt 6pt 6pt;
+  	zoom: 1;
+        border-left: solid 1pt #fff;
+        border-right: solid 1pt #fff;
+        border-top: solid 1pt #fff;
+	/* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+        background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
+      }
+      #navigation li a {
+  	text-decoration: none;
+        border-bottom: none;
+  	color: #fff;
+      }
+
+      #navigation li a:hover {
+        border-bottom: solid 1px;
+      }
+
+      #vinjett form {
+        border-left: solid 1pt #fff;
+        border-right: solid 1pt #fff;
+        border-top: solid 1pt #fff;
+        padding: 6pt;
+        position: absolute;
+  	right:6pt;
+        bottom: -1px;
+  	zoom: 1;
+        /* background: #cb842e url(images/ui-bg_glass_25_cb842e_1x400.png) 50% 50% repeat-x; */
+	background: #687385 url(images/ui-bg_inset-soft_50_687385_1x100.png) 50% 50% repeat-x;
+      }
+      #vinjett form p {
+  	margin: 0;
+        padding: 0;
+      }
+      #vinjett form input {
+  	font-weight: bold;
+        display: inline;
+      }
+  
+      #innehallsforteckning {
+	margin-left: 3pt;
+        width: 150pt;
+        float: left;
+	/*
+	border-right: dotted 1px grey; */
+        overflow: hidden;
+	font-size: 10pt;
+        line-height: 12pt;
+      }
+      #innehallsforteckning ul {
+	  list-style-type: none !important;
+      }
+      
+      #dokument {
+      margin-left: 174pt;
+      position: relative;
+      margin-right: 4pt;
+      }
+      
+      #sidfot {
+        border-top: dotted black 1px;
+	padding: 4pt;
+        margin: 4pt;
+	float: clear;
+      }
+
+      #frontpage {
+	  line-height: 14pt;
+      }
+      #frontpage h2 {
+	  margin-top: 12pt;
+          margin-left: -6pt;
+      }
+      #frontpage h3 {
+	  margin-top: 6pt;
+	  /* border-bottom: solid #748896 1px; */
+          margin-left: -6pt;
+	  margin-right: 12pt;
+          font-style: normal;
+	  font-weight: bold;
+      }
+
+      #frontpage a {
+	  border-bottom: none;
+	  }
+      #frontpage ul {
+	  list-style-type: none !important;
+	  }
+      .sidoruta {
+	  border: solid #939FA8 1px;
+          background-color: #fff;
+	  padding: 3pt;
+          margin-left: 5pt;
+	  margin-bottom: 5pt;
+	  /*
+	  border: solid #c0cfc2 1px;
+          background-color: #f4f0ec;
+          */ 
+       }
+      .sidoruta h2 {
+	  font-size: 10pt;
+      }
+      .referatstext {
+	  width: 66%;
+      }
+      .begreppstext {
+	  width: 50%;
+      }
+      .aux {
+	font-size: 10pt;
+	line-height: 12pt;
+      }
+      .aux p {
+	  margin-bottom: 5pt;
+      }
+      .aux ul {
+	list-style-type: disc;
+        margin-left: 15pt;
+      }
+      .aux ol {
+        list-style-type: decimal;
+        margin-left: 20pt;
+      }  
+
+      td {
+      padding: 0 4pt 3pt 4pt;
+      }
+
+      /* desperate attempts to achieve responsive design */
+      @media (max-width: 768px) {
+	  #innehallsforteckning {
+	      float: none;
+	      display: block;
+	      width: 100%;
+	  }
+	  #dokument {
+	      margin: 3pt;
+	  }
+	  /* only occurs on frontpage, not essential on mobile */
+	  .sidoruta {
+	      display: none;
+	  }
+      }
+      @media (max-width: 320px) {
+	  #vinjett {
+	      padding: 0;
+	  }
+	  #vinjett form {
+	      position: absolute;
+	      right: 0;
+	      border: none;
+	      top: 0;
+	      padding: 1pt;
+	      height: 20px;
+	  }
+	  #vinjett form input[type="text"] {
+	      margin:0;
+	      width: 70px;
+	      display: inline;
+	      content: "Sök...";
+	  }
+	  #vinjett form input[type="submit"] {
+	      display: none;
+	  }
+	  #vinjett #navigation {
+	      position: relative;
+	      left: 0;
+	      padding: 0;
+	      font-size: 10pt;
+	  }
+	  #vinjett #navigation li {
+	      padding: 2px 4px;
+	  }
+	  #vinjett h1 {
+	      font-size: 14pt;
+	      padding: 1pt;
+	  }
+	  div.konsolideradtext > table > tbody > tr > td {
+	      display: block;
+	  }
+	  td.referatstext {
+	      display: block;
+	  }
+	  td.aux {
+	      display: block;
+	  }
+	  .referatstext {
+	      width: 100%;
+	      display: block;
+	  }
+	  .begreppstext {
+	      width: 100%;
+	      display: block;
+	  }
+	  #frontpage td {
+	      display: block;
+	  }
+	  div.konsolideradtext > table table {
+	      /* an attempt to alleviate the effect of wide table cells */
+	      font-size: 9pt;
+	      line-height: 11pt;
+	  }
+
+      }
+      /* basic typography */
+      body {
+	font-size: 11pt;
+        line-height: 14pt;
+	font-family: 'Arial', 'Helvetica', sans-serif;
+      }
+      h1 {
+        font-size: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: bold;
+	margin-bottom: 0.5em;
+        line-height: 1.1em;
+      }
+      h2 {
+        font-size: 1.2em;
+	font-weight: bold;
+        line-height: 1.1em;
+      }
+      h3 {
+        font-style: italic;
+        line-height: 1.1em;
+      }
+
+      p {
+        padding: 0;
+        margin: 0 0 0.5em 0;
+      }
+      dl { display: block }
+
+      dl dt {
+        display: block;
+        float: none;
+        width: inherit;
+        font-weight: bold;
+       }
+    
+       dl dd {
+        display: block;
+        float: none;
+        width: inherit;
+        margin-left: 22.5pt;
+      }
+      ol {
+	  list-style-type: decimal !important;
+          margin: 0 0 0 1.5em;
+      }
+      ul {
+	  list-style-type: disc !important;
+          padding: 0;
+          margin: 0 0 0.5em 1.5em;
+      }
+
+
+a:link    { color: #595D74; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:visited { color: #687385; text-decoration: none; border-bottom: dotted #3f3731 1px;}
+a:hover   { color: #00f; text-decoration: none; border-bottom: solid 1px;}
+a:active  { color: #00f; text-decoration: none; border-bottom: solid 1px;}
+    .ui-widget-content a:link    { color: inherit !important; }
+    .ui-widget-content a:visited { color: inherit !important; }
+    .ui-widget-content a:hover   { color: inherit !important; }
+    .ui-widget-content a:active  { color: inherit !important; }
+
+      
+      /* custom typography for certain classes */
+      ul.numreradlista, ul.bokstavslista, ul.strecksatslista {
+	list-style-type: none !important;
+        text-indent: -10pt;
+        margin-left: 10pt;
+	margin-top: 0;
+	padding-left: 1em;
+	padding-bottom: 0.5em;
+    }
+    ul.lagrumslista {
+	list-style-type: none !important;
+        margin-left: 0;
+    }
+    .paragrafbeteckning, .rattsfallsrubrik {
+	font-weight: bold;
+        text-decoration: none;
+	border-bottom: none !important;
+	color: #000;
+    }
+    .andringsnot, .upphavd {
+	font-style: italic;
+    } 
+
+    .timestamp {
+	font-style: italic;
+        font-size: smaller;
+        margin:0;
+    }
+
+    .warning {
+	background: yellow;
+        border: solid thick red;
+	font-weight: bold;
+     }
+     .patchdescription {
+	 background: #f9f6f5;
+         border: solid 1px #6b482c;
+	 padding: 2pt;
+         font-size: smaller;
+	 line-height: 1.1em;
+     }
+
+    .platsmarkor {
+        position: absolute;
+        left: -42px;
+        font-size: 0.6em;
+        color: #999;
+        font-family: Arial;
+    }
+
+    .andring {
+	margin-bottom: 6pt;
+    }
+    /* styling of jquery UI themed elements */
+    .ui-accordion h3 {
+        font-style: normal;
+	font-size: 10pt !important;
+        padding: 2pt 4pt 2pt 18pt;
+        cursor: pointer;
+      }
+
+    .ui-accordion .ui-accordion-content {
+	font-size: 10pt !important;
+	line-height: 12pt !important;
+        padding: 1pt 1pt 2pt 3pt !important;
+    }
+    .articlecontent {
+	width: 50%;
+	float: left;
+    }
+    .articleannotations {
+	width: 49%;
+	border: solid 1px red;
+    }
+
+

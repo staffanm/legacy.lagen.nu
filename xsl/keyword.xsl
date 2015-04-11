@@ -43,7 +43,7 @@
     
     <table>
       <tr>
-	<td width="50%">
+	<td class="begreppstext">
 	  <h1 property="dct:title"><xsl:value-of select="."/></h1>
 	  <xsl:if test="$wikidesc">
 	    <p class="ui-state-highlight">

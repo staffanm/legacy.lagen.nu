@@ -262,10 +262,7 @@ class Manager:
         log.info("Generating site global static pages")
 
         self._make_images()
-        return
-    
         self._prep_frontpage()
-                       
         # we need to copy the following four file to the base dir,
         # temporarily, in order to avoid spurious xml:base elements 
         # (http://norman.walsh.name/2005/04/01/xinclude#comment0005)

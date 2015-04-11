@@ -75,7 +75,7 @@
     <xsl:variable name="rattsfall" select="$annotations/rdf:Description/dct:subject/rdf:Description"/>
     <table>
       <tr>
-	<td width="66%">
+	<td class="referatstext">
 	  <xsl:if test="//xht2:dd[@property='rinfoex:patchdescription']">
 	    <p class="patchdescription">Texten har ändrats jämfört med ursprungsmaterialet: <xsl:value-of select="//xht2:dd[@property='rinfoex:patchdescription']"/></p>
 	  </xsl:if>
