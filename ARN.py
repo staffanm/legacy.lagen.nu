@@ -201,6 +201,7 @@ class ARNManager(LegalSource.Manager):
                 Util.ns['dct']+'description']
         
     def _build_indexpages(self, by_pred_obj, by_subj_pred):
+        return  # we never use these
         documents = defaultdict(lambda:defaultdict(list))
         pagetitles = {}
         pagelabels = {}

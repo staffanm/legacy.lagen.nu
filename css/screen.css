@@ -305,7 +305,8 @@ blockquote, q {
 	      display: none;
 	  }
       }
-      @media (max-width: 320px) {
+      /* iphone 6 is 414 css pixels wide in portrait */
+      @media (max-width: 414px) {
 	  #vinjett {
 	      padding: 0;
 	  }
