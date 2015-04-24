@@ -610,7 +610,8 @@ class DVParser(LegalSource.Parser):
         for p in soup.find(text=re.compile('EFERAT')).findParent('w:tr').findNextSibling('w:tr').findAll('w:p'):
             ptext = u''
             for e in p.findAll("w:t"):
-                ptext += e.string
+                if e.string:
+                    ptext += e.string
             body.append(Stycke([ptext]))
 
         # Hitta sammansatta metadata i sidfoten

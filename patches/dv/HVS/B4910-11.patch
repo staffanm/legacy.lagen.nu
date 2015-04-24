@@ -1,0 +1,1010 @@
+--- data/dv/intermediate/ooxml/HVS/B4910-11.xml	1980-01-01 00:00:00.000000000 +0100
++++ /tmp/tmph3fwVH	2015-04-24 21:02:39.000000000 +0200
+@@ -1208,7 +1208,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Göteborgs tingsrätt</w:t>
++              <w:t>Tingsrätt</w:t>
+             </w:r>
+           </w:p>
+           <w:p w:rsidR="0074725C" w:rsidRDefault="0074725C" w:rsidP="0074725C">
+@@ -1226,7 +1226,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-Åklagaren yrkade vid tingsrätten ansvar å M.G. och H.M.S. för misshandel och olaga
++Åklagaren yrkade vid tingsrätten ansvar å A och B för misshandel och olaga
+ frihetsberövande och påstod 
+ </w:t>
+             </w:r>
+@@ -1244,11 +1244,11 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>, såsom han slutligen utformade sin talan: M.G. och H.M.S. har den 23 maj
+-              2010 på Vasagatan i Göteborg gemensamt och i samförstånd med varandra
+-              uppsåtligen tillfogat P.T. svullnad, rodnad och smärta genom att ta tag i honom
+-              och trycka ner honom på marken så att hans panna slogs i marken. M.G. och H.M.S.
+-              har vid samma tillfälle gemensamt och i samförstånd berövat P.T. friheten genom
++              <w:t>, såsom han slutligen utformade sin talan: A och B har
++              gemensamt och i samförstånd med varandra
++              uppsåtligen tillfogat C svullnad, rodnad och smärta genom att ta tag i honom
++              och trycka ner honom på marken så att hans panna slogs i marken. A och B
++              har vid samma tillfälle gemensamt och i samförstånd berövat C friheten genom
+               att belägga honom med handfängsel.</w:t>
+             </w:r>
+           </w:p>
+@@ -1266,8 +1266,8 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.T. biträdde åtalet och yrkade att tingsrätten skulle förplikta M.G. och
+-              H.M.S. att solidariskt till honom utge skadestånd med 20 000 kr jämte ränta. Av
++              <w:t>C biträdde åtalet och yrkade att tingsrätten skulle förplikta A och
++              B att solidariskt till honom utge skadestånd med 20 000 kr jämte ränta. Av
+               beloppet avsåg 15 000 kr ersättning för kränkning och 5 000 kr ersättning för
+               sveda och värk.</w:t>
+             </w:r>
+@@ -1379,7 +1379,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-M.G. har bestritt ansvar. Han har 
++A har bestritt ansvar. Han har 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -1397,8 +1397,8 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- förnekat gärningen, dock att han erkänt att han belagt P.T. med handfängsel. Han har gjort
+-gällande att detta inte är straffbart eftersom det var befogat att använda handfängsel på P.T.
++ förnekat gärningen, dock att han erkänt att han belagt C med handfängsel. Han har gjort
++gällande att detta inte är straffbart eftersom det var befogat att använda handfängsel på C
+ med hänsyn till hur denne betedde sig vid tillfället.
+ </w:t>
+             </w:r>
+@@ -1417,7 +1417,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>H.M.S. har förnekat gärningen.</w:t>
++              <w:t>B har förnekat gärningen.</w:t>
+             </w:r>
+           </w:p>
+           <w:p w:rsidR="0074725C" w:rsidRDefault="0074725C" w:rsidP="0074725C">
+@@ -1434,7 +1434,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>I tingsrätten har hörts M.G., H.M.S., P.T. och vittnet E.A. Dessa har
++              <w:t>I tingsrätten har hörts A, B, C och vittnet D. Dessa har
+               berättat bl.a. följande.</w:t>
+             </w:r>
+           </w:p>
+@@ -1453,7 +1453,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-P.T: Han hade varit hemma hos en kompis som fyllde år innan de gick till 
++C: Han hade varit hemma hos en kompis som fyllde år innan de gick till 
+ </w:t>
+             </w:r>
+             <w:r w:rsidRPr="0074725C">
+@@ -1463,7 +1463,7 @@
+               </w:rPr>
+               <w:lastRenderedPageBreak />
+               <w:t xml:space="preserve">
+-Restaurang Valand. Han uppskattar att han druckit sju - åtta öl under hela dagen, med början
++restaurangen. Han uppskattar att han druckit sju - åtta öl under hela dagen, med början
+ ca kl. 
+ </w:t>
+             </w:r>
+@@ -1500,17 +1500,17 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- När han kom till Valand blev han först avvisad på grund av att vakterna tyckte att han var
++ När han kom till restaurangen blev han först avvisad på grund av att vakterna tyckte att han var
+ för berusad. Vakten sa till honom att gå och ”dricka en kopp kaffe”. Han gjorde detta och fick
+-cirka 10-15 minuter senare komma in på Valand. När han varit inne i ungefär 30 minuter kom
+-H.M.S. fram till honom på dansgolvet och sade till honom att gå därifrån. Han vet inte vad
+-anledningen var till avvisningen. H.M.S. följde honom ut och lämnade av honom vid entrén. Ute
+-på gatan stannade P.T. till en kort stund. Han var då några meter utanför avspärrningen med
++cirka 10-15 minuter senare komma in på restaurangen. När han varit inne i ungefär 30 minuter kom
++B fram till honom på dansgolvet och sade till honom att gå därifrån. Han vet inte vad
++anledningen var till avvisningen. B följde honom ut och lämnade av honom vid entrén. Ute
++på gatan stannade C till en kort stund. Han var då några meter utanför avspärrningen med
+ rep som är vid entrén. Det stod en del folk på insidan av repen och köade för att komma in.
+ Medan han stod utanför pratade han med en tjej i närheten. Han var då inte på något sätt i
+ kontakt med någon av vakterna, som stod i dörren. Under tiden rökte han en cigarett, som han
+ sedan släppte och släckte. Han fimpade den framför sig på marken, inte i riktning mot någon
+-person. Samtidigt började han ensam gå i riktning från Valand. När han hade kommit cirka 10-15
++person. Samtidigt började han ensam gå i riktning från restaurangen. När han hade kommit cirka 10-15
+ meter bort från avspärrningarna kom två personer upp bakifrån. De tog tag i hans axlar och
+ överarmar. De var ganska hotfulla och aggressiva och ”buffade” omkring honom. Sättet de
+ uppförde sig på var aggressivt. De tryckte ned honom så att han kom ganska hårt på asfalten.
+@@ -1521,8 +1521,8 @@
+ läget inte vilka det var som kom så här bakifrån och blev därför blivit väldigt rädd. När han
+ låg på marken fick han handfängsel på sig. Först då förstod han att de måste vara
+ ordningsvakter. De sa dock inget själva om att de var ordningsvakter. De sa inte heller något
+-om att de skulle sätta på honom handfängsel. Han är helt säker på att M.G. var en av dem som
+-tryckte ned honom på marken. Han är inte lika säker på att H.M.S. var den andre. Han låg på
++om att de skulle sätta på honom handfängsel. Han är helt säker på att A var en av dem som
++tryckte ned honom på marken. Han är inte lika säker på att B var den andre. Han låg på
+ marken med handfängsel i ungefär 5-10 minuter. Sedan lyfte vakterna upp honom från marken på
+ ett ganska brutalt sätt, som gjorde ont i armarna. Han undrade vad som skulle hända med hänsyn
+ till deras bryska uppträdande. Han leddes därefter av de två vakterna, som gick en på vardera
+@@ -1531,7 +1531,7 @@
+ detta sätt. Det gick att se i rummet men inte så bra för det var ganska mörkt. En annan,
+ tredje, man fanns då i utrymmet och väntade. Några sekunder efter att de båda vakterna hade
+ lämnat rummet fick han ett knytnävsslag i ansiktet av den okände mannen som var där. Efter ett
+-tag kom polisen dit. P.T. hade fått stå på knä i rummet hela tiden till dess. Han stod därför
++tag kom polisen dit. C hade fått stå på knä i rummet hela tiden till dess. Han stod därför
+ på knä i halvmörkret i ungefär 15 minuter innan polisen kom. Tiden var svår att uppskatta för
+ det kändes som en evighet. Han tänkte medan han stod på knä ”varför 
+ </w:t>
+@@ -1635,8 +1635,8 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-M.G: Han har varit ordningsvakt i sju år och arbetade vid det aktuella tillfället som
+-ordningsvakt vid Valand. Han nekade P.T. inträde vid entrén på grund av 
++A: Han har varit ordningsvakt i sju år och arbetade vid det aktuella tillfället som
++ordningsvakt vid restaurangen. Han nekade C inträde vid entrén på grund av 
+ </w:t>
+             </w:r>
+             <w:r w:rsidRPr="0074725C">
+@@ -1646,11 +1646,11 @@
+               </w:rPr>
+               <w:lastRenderedPageBreak />
+               <w:t>berusning och föreslog att denne borde ta något att äta och dricka och
+-              komma tillbaka senare. P.T. blev litet upprörd över detta, men lämnade ändå
+-              platsen. P.T. kom tillbaka lite senare och M.G. släppte då in honom, men
++              komma tillbaka senare. C blev litet upprörd över detta, men lämnade ändå
++              platsen. C kom tillbaka lite senare och A släppte då in honom, men
+               uppmanade honom att ”ta det försiktigt med alkoholen” därinne. En stund senare
+-              blev P.T. avvisad igen på grund av berusning, och var väldigt upprörd när han
+-              kom ut. P.T. kallade då vakterna för glåpord såsom ”vaktjävlar” och ”</w:t>
++              blev C avvisad igen på grund av berusning, och var väldigt upprörd när han
++              kom ut. C kallade då vakterna för glåpord såsom ”vaktjävlar” och ”</w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1667,8 +1667,8 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-”. Sådant är tyvärr vanligt och M.G. brydde sig inte så mycket om det. Han såg sedan att P.T.
+-stod inne i Valands fållor med 
++”. Sådant är tyvärr vanligt och A brydde sig inte så mycket om det. Han såg sedan att C
++stod inne i restaurangens fållor med 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1686,9 +1686,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- och rökte en cigarrett. Cigarretten var nästan upprökt när P.T. knäppte iväg den med
+-fingrarna, så att den träffade H.M.S., som var två - tre meter ifrån, i ryggen. M.G.
+-uppfattade detta som ordningsstörande. M.G. gick då fram till P.T. och tog denne lätt i armen
++ och rökte en cigarrett. Cigarretten var nästan upprökt när C knäppte iväg den med
++fingrarna, så att den träffade B, som var två - tre meter ifrån, i ryggen. A
++uppfattade detta som ordningsstörande. A gick då fram till C och tog denne lätt i armen
+ för att avlägsna honom från det 
+ </w:t>
+             </w:r>
+@@ -1707,7 +1707,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- området. P.T. hade inte 
++ området. C hade inte 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -1725,10 +1725,10 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- avvisningen och därför blev nu ett avlägsnande aktuellt. P.T. blev nu väldigt våldsam och
+-viftade med armarna samt krängde med kroppen då M.G. tog honom i armen. H.M.S. kom då fram på
+-ett par sekunder för att stötta M.G. Det blev handgemäng och de tre hamnade på marken. Han
+-kommer inte ihåg exakt hur de fick ner P.T. på marken, men tror att de tog tag i 
++ avvisningen och därför blev nu ett avlägsnande aktuellt. C blev nu väldigt våldsam och
++viftade med armarna samt krängde med kroppen då A tog honom i armen. B kom då fram på
++ett par sekunder för att stötta A Det blev handgemäng och de tre hamnade på marken. Han
++kommer inte ihåg exakt hur de fick ner C på marken, men tror att de tog tag i 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1737,7 +1737,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1745,7 +1745,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1764,7 +1764,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1772,7 +1772,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1782,10 +1782,10 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- huvud slog i marken. P.T. fortsatte att försöka slingra sig och kränga med kroppen. Han
+-försökte även att sparka bakåt. P.T. låg då på bröstet. M.G. och H.M.S. beslöt då att P.T.
+-skulle beläggas med handfängsel. Så fort situationen lugnade ner sig, hjälpte de P.T. att
+-ställa sig upp. De kontaktade sedan myndigheterna och överlämnade P.T. till polis. 
++ huvud slog i marken. C fortsatte att försöka slingra sig och kränga med kroppen. Han
++försökte även att sparka bakåt. C låg då på bröstet. A och B beslöt då att C
++skulle beläggas med handfängsel. Så fort situationen lugnade ner sig, hjälpte de C att
++ställa sig upp. De kontaktade sedan myndigheterna och överlämnade C till polis. 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -1803,7 +1803,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- Han har ingen minnesbild av att han tagit P.T. till varuintaget, såsom han sagt i tidigare
++ Han har ingen minnesbild av att han tagit C till varuintaget, såsom han sagt i tidigare
+ polisförhör, eller att denne lämnats där på knä med handfängsel. Det har gått lång tid sedan
+ händelsen och det har inträffat många incidenter, vilket gör det lätt att blanda ihop olika
+ tillfällen. Det stämmer att det finns ett varuintag på baksidan. De tar ibland dit personer
+@@ -1826,11 +1826,11 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-H.M.S: Han stod i entrén när M.G. avvisade P.T. P.T. tyckte inte att han var så berusad och
+-började diskutera med M.G. om varför han blev avvisad. Sedan M.G. hade gått in fortsatte P.T.
++B: Han stod i entrén när A avvisade C C tyckte inte att han var så berusad och
++började diskutera med A om varför han blev avvisad. Sedan A hade gått in fortsatte C
+ att störa och kallade en entrévärden för ”fitta” och vakterna för ”vaktjävlar” med mera. Han
+-gick därför fram till P.T. och sa till denne att gå därifrån. P.T. gick inte och han bestämde
+-sig därför för att avlägsna P.T. Han gick utanför avspärrningsrepen och tog tag i 
++gick därför fram till C och sa till denne att gå därifrån. C gick inte och han bestämde
++sig därför för att avlägsna C Han gick utanför avspärrningsrepen och tog tag i 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1839,7 +1839,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1847,7 +1847,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1858,7 +1858,7 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+  vänstra arm och ledde denne bort en bit bortanför VIP-rutan. Han gick sedan tillbaka till
+-entrén och sa till M.G. att han kunde komma ut igen. 
++entrén och sa till A att han kunde komma ut igen. 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -1876,9 +1876,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- Det gick en stund och när han sedan stod med blicken mot såg han att M.G. blev chockad och
+-upprörd. M.G. sa att ”han kastade sin cigg på dig”. M.G. öppnade repet och gick ut och han
+-själv stod kvar eftersom han tänkte att M.G. skulle avlägsna P.T. Han såg att P.T. försökte
++ Det gick en stund och när han sedan stod med blicken mot såg han att A blev chockad och
++upprörd. A sa att ”han kastade sin cigg på dig”. A öppnade repet och gick ut och han
++själv stod kvar eftersom han tänkte att A skulle avlägsna C Han såg att C försökte
+ slita sig och gjorde motstånd och valde därför att gå fram och assistera. Han tog tag i 
+ </w:t>
+             </w:r>
+@@ -1888,7 +1888,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1896,7 +1896,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              <w:t></w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1906,9 +1906,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- vänstra arm, men P.T. blev då våldsam och försökte ta sig loss. Han och M.G. försökte ta med
+-P.T. bort och de kom någon meter utanför VIP-repen. De bestämde sig för att lägga ner P.T. för
+-att lugna ner honom och lugna situationen. P.T. uttalade dock inget hot om våld. De tog tag i 
++ vänstra arm, men C blev då våldsam och försökte ta sig loss. Han och A försökte ta med
++C bort och de kom någon meter utanför VIP-repen. De bestämde sig för att lägga ner C för
++att lugna ner honom och lugna situationen. C uttalade dock inget hot om våld. De tog tag i 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1917,7 +1917,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1925,7 +1925,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              <w:t></w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1935,7 +1935,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- arm och använde kroppsvikten för att få ner honom. P.T. kom ner på marken lite på sidan över 
++ arm och använde kroppsvikten för att få ner honom. C kom ner på marken lite på sidan över 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1944,7 +1944,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>H.M.</w:t>
++              <w:t>B:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -1952,7 +1952,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>S:s</w:t>
++              <w:t></w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -1962,9 +1962,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- ben som han sedan fick dra loss. Han höll i P.T. medan M.G. lade handfängsel. Han och M.G.
+-lämnade sedan över P.T. direkt till en polisbil som stod vid Pressbyrån. M.G. skrev rapporten
+-medan han själv återgick till arbetet. Han såg efteråt något i pannan på P.T. som såg ut som
++ ben som han sedan fick dra loss. Han höll i C medan A lade handfängsel. Han och A
++lämnade sedan över C direkt till en polisbil som stod vid Pressbyrån. A skrev rapporten
++medan han själv återgick till arbetet. Han såg efteråt något i pannan på C som såg ut som
+ damm från asfalten, men det kan även ha varit ett blåmärke, vilket han också berättade för
+ polisen i förhör.
+ </w:t>
+@@ -1985,10 +1985,10 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-E.A: Han är taxichaufför och satt vid det aktuella tillfället i sin taxi omkring 10-15 meter
+-ifrån entrén till Valand. Det kom en ensam kille, P.T., gående fram mot taxibilen med ryggen
+-mot Valand. Han trodde att denne kanske ville ha taxi. När P.T. befann sig cirka två meter
+-från taxibilen kom M.G. och H.M.S. fram bakifrån och en av dem tog tag runt 
++D: Han är taxichaufför och satt vid det aktuella tillfället i sin taxi omkring 10-15 meter
++ifrån entrén till restaurangen. Det kom en ensam kille, C, gående fram mot taxibilen med ryggen
++mot restaurangen. Han trodde att denne kanske ville ha taxi. När C befann sig cirka två meter
++från taxibilen kom A och B fram bakifrån och en av dem tog tag runt 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -1997,7 +1997,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2005,7 +2005,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              <w:t></w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2015,8 +2015,8 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- hals med armen. Sedan tryckte de tillsammans ner P.T. på marken och misshandlade honom. De
+-misshandlade P.T. genom slag, även med batong, och sparkar mot kroppen när denne låg på
++ hals med armen. Sedan tryckte de tillsammans ner C på marken och misshandlade honom. De
++misshandlade C genom slag, även med batong, och sparkar mot kroppen när denne låg på
+ marken. Han är säker på att slagen med batong träffade 
+ </w:t>
+             </w:r>
+@@ -2026,7 +2026,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2034,7 +2034,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              <w:t></w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2044,7 +2044,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- kropp och det såg otäckt ut. P.T. blev ”misshandlad ordentligt” och det var synd om P.T. E.A.
++ kropp och det såg otäckt ut. C blev ”misshandlad ordentligt” och det var synd om C D
+ trodde sådant våld mest förekom i vissa länder utomlands. Han såg 
+ </w:t>
+             </w:r>
+@@ -2054,11 +2054,11 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:lastRenderedPageBreak />
+-              <w:t>knytnävsslag, sparkar och batongslag av vakterna mot P.T. på gatan. Folk i
+-              närheten kom och tittade på det hela. M.G. och H.M.S. hade satt på P.T.
+-              handfängsel medan denne låg på marken. P.T. låg på marken ungefär två till tre
+-              minuter. Efter misshandeln på gatan tog de upp P.T. och förde honom bort till
+-              ett rum vid sidan av Valands entré. E.A. såg när polisen kom och hämtade ut P.T.
++              <w:t>knytnävsslag, sparkar och batongslag av vakterna mot C på gatan. Folk i
++              närheten kom och tittade på det hela. A och B hade satt på C
++              handfängsel medan denne låg på marken. C låg på marken ungefär två till tre
++              minuter. Efter misshandeln på gatan tog de upp C och förde honom bort till
++              ett rum vid sidan av restaurangens entré. D såg när polisen kom och hämtade ut C
+               därifrån ungefär fem minuter senare.</w:t>
+             </w:r>
+           </w:p>
+@@ -2094,9 +2094,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-P.T. har berättat spontant, konsekvent och detaljerat på ett sätt som i hög grad framstår som
++C har berättat spontant, konsekvent och detaljerat på ett sätt som i hög grad framstår som
+ självupplevt. Vad han har berättat vinner starkt stöd av vad vittnet, som var obekant med
+-P.T., har berättat på ett trovärdigt sätt och utan tendens till överdrifter. Vad de har
++C, har berättat på ett trovärdigt sätt och utan tendens till överdrifter. Vad de har
+ berättat vinner 
+ </w:t>
+             </w:r>
+@@ -2116,7 +2116,7 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+  oväsentligt stöd av den av åklagaren åberopade skriftliga bevisningen. Det har inte heller
+-framkommit något skäl för varför både P.T., som inte känner någon av de tilltalade sedan
++framkommit något skäl för varför både C, som inte känner någon av de tilltalade sedan
+ tidigare, och vittnet osant skulle pådyvla båda två tilltalade ansvar för så allvarlig
+ brottslighet som den nu 
+ </w:t>
+@@ -2138,7 +2138,7 @@
+               <w:t>. Det föreligger därför skäl att vid bedömningen nu utgå från målsägandens
+               och vittnets utsagor, varvid tingsrätten även beaktar att den i protokollet över
+               fängselbeläggning ikryssade uppgiften om ”Våldsamt uppförande” synes vara lämnad
+-              av M.G. själv och därför nu inte i samma omfattning kan tillskrivas tilltro som
++              av A själv och därför nu inte i samma omfattning kan tillskrivas tilltro som
+               uppgifter från ett oberoende vittne som hörs under eget straffansvar.</w:t>
+             </w:r>
+           </w:p>
+@@ -2178,7 +2178,7 @@
+               <w:t>, samt att misshandeln därför även har orsakat de skador och men som anges
+               i gärningsbeskrivningen. Det framgår även att omständigheterna inte har varit
+               sådana att det brutala ingripandet och kraftiga övervåldet mot den på marken
+-              liggande och fängslade P.T. kan anses ha varit ursäktligt. Tingsrätten noterar
++              liggande och fängslade C kan anses ha varit ursäktligt. Tingsrätten noterar
+               här särskilt att åklagaren har stannat vid att väcka talan om ansvar för
+               misshandel av normalgraden. Åtalet är sålunda nu helt styrkt mot båda de
+               tilltalade. De skall därför båda dömas för misshandel av normalgraden, som är
+@@ -2216,9 +2216,9 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Vad som tidigare förekommer om M.G. i belastningsregistret avser
++              <w:t>Vad som tidigare förekommer om A i belastningsregistret avser
+               trafikförseelser och påverkar därför nu inte bedömningen. Frivården har i
+-              inhämtat yttrande angivit att behov av övervakning inte föreligger och att M.G.
++              inhämtat yttrande angivit att behov av övervakning inte föreligger och att A
+               är lämplig för samhällstjänst. Han har förklarat sig villig att utföra sådan
+               tjänst.</w:t>
+             </w:r>
+@@ -2238,7 +2238,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-M.G. har uppgivit: Ovissheten om utgången i målet är mycket besvärande för honom. I väntan på 
++A har uppgivit: Ovissheten om utgången i målet är mycket besvärande för honom. I väntan på 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -2277,9 +2277,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t>För nu aktuell brottslighet gör sig fängelse särskilt starkt gällande som
+-              påföljd. M.G. har haft en mer drivande roll i sammanhanget än den medtilltalade,
++              påföljd. A har haft en mer drivande roll i sammanhanget än den medtilltalade,
+               vilket borde medföra viss straffskärpning för hans del. Samtidigt beaktar
+-              tingsrätten att M.G. tidigare i allt väsentligt har varit skötsam och nu genom
++              tingsrätten att A tidigare i allt väsentligt har varit skötsam och nu genom
+               den fällande domen drabbas i väsentlig grad i sin yrkesutövning, vilket enligt
+               lag utgör en strafflindrande omständighet. Påföljden kan vid en sammantagen
+               bedömning därför nu stanna vid villkorlig dom jämte samhällstjänst. Om fängelse
+@@ -2300,7 +2300,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>H.M.S. förekommer inte i belastningsregistret. Frivården har i inhämtat
++              <w:t>B förekommer inte i belastningsregistret. Frivården har i inhämtat
+               yttrande angivit att han i allt väsentligt lever under ordnade förhållanden och
+               att han är lämplig för samhällstjänst. Han har förklarat sig villig att utföra
+               sådan tjänst.</w:t>
+@@ -2321,7 +2321,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-H.M.S. har uppgivit: Han arbetade extra som väktare men läser numera vidare på en
++B har uppgivit: Han arbetade extra som väktare men läser numera vidare på en
+ masterutbildning. Han blev avstängd som väktare i väntan på 
+ </w:t>
+             </w:r>
+@@ -2367,7 +2367,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-För vad H.M.S. nu låtit komma sig till last skall påföljden bestämmas till en 
++För vad B nu låtit komma sig till last skall påföljden bestämmas till en 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+@@ -2385,7 +2385,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- alltför kortvarig tids fängelse om inte särskilda skäl tala i annan riktning. H.M.S. har
++ alltför kortvarig tids fängelse om inte särskilda skäl tala i annan riktning. B har
+ inledningsvis inte haft en lika drivande roll som den medtilltalade, men har sedan i alla fall
+ agerat tillsammans med denne. I 
+ </w:t>
+@@ -2396,7 +2396,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>H.M.</w:t>
++              <w:t>B</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2404,7 +2404,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>S:s</w:t>
++              <w:t>:s</w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2424,7 +2424,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.G:s</w:t>
++              <w:t>A:s</w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2434,7 +2434,7 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+ . Skäl att göra någon egentlig skillnad i påföljd mellan de tilltalade föreligger nu därför
+-inte. Även för H.M.S. beaktar tingsrätten dock att denne tidigare i allt väsentligt har varit
++inte. Även för B beaktar tingsrätten dock att denne tidigare i allt väsentligt har varit
+ skötsam samt att han nu genom den fällande domen dock också drabbas i viss mån genom den 
+ </w:t>
+             </w:r>
+@@ -2491,7 +2491,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-M.G. och H.M.S. har både bestritt yrkandet om skadestånd med hänvisning till sin inställning i
++A och B har både bestritt yrkandet om skadestånd med hänvisning till sin inställning i
+ ansvarsdelen. De har endast 
+ </w:t>
+             </w:r>
+@@ -2528,7 +2528,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- Vid ovan angiven utgång i ansvarsdelen har de tilltalade att solidariskt ersätta P.T. för
++ Vid ovan angiven utgång i ansvarsdelen har de tilltalade att solidariskt ersätta C för
+ liden skada i anledning av gärningen. Jämlikt 35 kap. 5 § rättegångsbalken och vid beaktande
+ av de omständigheter som framkommit kan skälig ersättning för liden skada 
+ </w:t>
+@@ -2602,10 +2602,10 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- av M.G. och H.M.S. för misshandel och olaga frihetsberövande till villkorlig dom med
++ av A och B för misshandel och olaga frihetsberövande till villkorlig dom med
+ samhällstjänst 100 timmar och förklarade att, om fängelse i stället hade valts som påföljd,
+-fängelse tre månader skulle ha dömts ut. Tingsrätten förpliktade vidare M.G. och H.M.S. att
+-solidariskt utge skadestånd till P.T. med 20 000 kr jämte ränta.
++fängelse tre månader skulle ha dömts ut. Tingsrätten förpliktade vidare A och B att
++solidariskt utge skadestånd till C med 20 000 kr jämte ränta.
+ </w:t>
+             </w:r>
+           </w:p>
+@@ -2640,7 +2640,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.G. och H.M.S. överklagade tingsrättens dom och yrkade att hovrätten
++              <w:t>A och B överklagade tingsrättens dom och yrkade att hovrätten
+               skulle ogilla all mot dem förd talan.</w:t>
+             </w:r>
+           </w:p>
+@@ -2658,7 +2658,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Åklagaren och P.T. - som i hovrätten biträdde åtalet - motsatte sig
++              <w:t>Åklagaren och C - som i hovrätten biträdde åtalet - motsatte sig
+               ändring.</w:t>
+             </w:r>
+           </w:p>
+@@ -2768,7 +2768,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t>Hovrätten har tagit del av videoinspelningarna av förhören vid tingsrätten
+-              med P.T., M.G., H.M.S. och E.A. Skriftlig bevisning och fotografier har
++              med C, A, B och D Skriftlig bevisning och fotografier har
+               åberopats.</w:t>
+             </w:r>
+           </w:p>
+@@ -2806,7 +2806,7 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+ Beträffande vad som vid det aktuella tillfället faktiskt utspelade sig gör hovrätten följande
+-överväganden. E.A. var inte bekant med vare sig P.T., M.G. eller H.M.S. Hans uppgifter borde
++överväganden. D var inte bekant med vare sig C, A eller B Hans uppgifter borde
+ därför väga tungt. Samtidigt kan konstateras att det omfattande våld som han beskrivit
+ knappast kan ha ägt rum om man utgår från 
+ </w:t>
+@@ -2817,7 +2817,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2825,7 +2825,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2845,7 +2845,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2853,7 +2853,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2872,7 +2872,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>E.</w:t>
++              <w:t>D:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2880,7 +2880,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>A:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2891,8 +2891,8 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+  berättelse måste därför bedömas vara betydligt överdriven vad gäller våldets omfattning.
+-Samtidigt har det inte framkommit något som talar för att E.A. medvetet skulle vilja lämna
+-oriktiga uppgifter. Under förhöret nämner E.A. att han efter händelsen till polisen uppgav att
++Samtidigt har det inte framkommit något som talar för att D medvetet skulle vilja lämna
++oriktiga uppgifter. Under förhöret nämner D att han efter händelsen till polisen uppgav att
+ vad 
+ </w:t>
+             </w:r>
+@@ -2914,7 +2914,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>E.</w:t>
++              <w:t>D:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2922,7 +2922,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>A:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2960,7 +2960,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>E.</w:t>
++              <w:t>D:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2968,7 +2968,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>A:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -2978,9 +2978,9 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+- uppgifter att han befann sig i sin taxi omkring 10-15 meter från entrén, att P.T. då ensam
+-kom gående mot taxibilen på ett sätt som fick E.A. att tro att han kanske ville ha taxi och
+-att P.T. befann sig på omkring två meters avstånd från taxibilen när vakterna bakifrån ingrep
++ uppgifter att han befann sig i sin taxi omkring 10-15 meter från entrén, att C då ensam
++kom gående mot taxibilen på ett sätt som fick D att tro att han kanske ville ha taxi och
++att C befann sig på omkring två meters avstånd från taxibilen när vakterna bakifrån ingrep
+ mot honom. De nu redovisade uppgifterna bekräftar i allt väsentligt 
+ </w:t>
+             </w:r>
+@@ -2990,7 +2990,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -2998,7 +2998,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -3036,7 +3036,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>E.</w:t>
++              <w:t>D:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -3044,7 +3044,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>A:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -3063,7 +3063,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.T:s</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:r w:rsidRPr="0074725C">
+@@ -3073,11 +3073,11 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+  berättelse att den kan läggas till grund vad gäller skedet när väktarna ingrep mot honom.
+-Hovrätten finner således klarlagt att M.G. och H.M.S. tillfogat P.T. svullnad, rodnad och
++Hovrätten finner således klarlagt att A och B tillfogat C svullnad, rodnad och
+ smärta genom att agera på sätt åklagaren påstått. Vad gäller uppsåtsfrågan i förhållande till
+ skadan konstaterar hovrätten att skadan är av sådan karaktär att den i sig talar för att
+ ingripandet måste ha utförts på ett så våldsamt sätt att det fanns en avsevärd risk för att
+-P.T. skulle skadas vid fallet mot marken och att vakterna insett detta. Även 
++C skulle skadas vid fallet mot marken och att vakterna insett detta. Även 
+ </w:t>
+             </w:r>
+             <w:proofErr w:type="spellStart" />
+@@ -3086,7 +3086,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>P.</w:t>
++              <w:t>C:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -3094,7 +3094,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>T:s</w:t>
++              
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -3105,7 +3105,7 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+  berättelse leder till samma slutsats. Med hänsyn till vad som närmare framkommit om
+-ingripandet mot P.T. får det vidare anses klarlagt att vakterna agerat gemensamt och i
++ingripandet mot C får det vidare anses klarlagt att vakterna agerat gemensamt och i
+ samförstånd.
+ </w:t>
+             </w:r>
+@@ -3124,8 +3124,8 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Fråga är då om M.G. och H.M.S. - som båda innehade
+-              ordningsvaktsförordnanden - gjorde ett befogat ingripande mot P.T.</w:t>
++              <w:t>Fråga är då om A och B - som båda innehade
++              ordningsvaktsförordnanden - gjorde ett befogat ingripande mot C</w:t>
+             </w:r>
+           </w:p>
+           <w:p w:rsidR="0074725C" w:rsidRPr="0074725C" w:rsidRDefault="0074725C"
+@@ -3184,7 +3184,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Eftersom utredningen visar att P.T. var på väg att lämna platsen när
++              <w:t>Eftersom utredningen visar att C var på väg att lämna platsen när
+               vakterna ingrep mot honom har ingripandet inte varit nödvändigt för att
+               ordningen skulle kunna upprätthållas. Ingripandet har således inte varit
+               befogat.</w:t>
+@@ -3244,7 +3244,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.</w:t>
++              <w:t>A:s</w:t>
+             </w:r>
+             <w:proofErr w:type="gramStart" />
+             <w:r w:rsidRPr="0074725C">
+@@ -3252,7 +3252,6 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>G:s</w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:proofErr w:type="gramEnd" />
+@@ -3271,7 +3270,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>H.M.S:s</w:t>
++              <w:t>B:s</w:t>
+             </w:r>
+             <w:proofErr w:type="spellEnd" />
+             <w:r w:rsidRPr="0074725C">
+@@ -3319,7 +3318,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-Hovrätten anser att den brottslighet som M.G. och H.M.S. genom denna dom har övertygats om har
++Hovrätten anser att den brottslighet som A och B genom denna dom har övertygats om har
+ ett straffvärde om tre månaders fängelse. Vid straffmätningen ska dock det men beaktas som
+ följer av att båda tills vidare avstängts från att arbeta som ordningsvakt och att de vid en
+ fällande dom inte kan räkna med något sådant framtida arbete. Menet får till följd att
+@@ -3367,8 +3366,8 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Vid den nu gjorda bedömningen av skuldfrågorna är M.G. och H.M.S. skyldiga
+-              att betala skadestånd till P.T. Som skäligt skadestånd bestämmer hovrätten ett
++              <w:t>Vid den nu gjorda bedömningen av skuldfrågorna är A och B skyldiga
++              att betala skadestånd till C Som skäligt skadestånd bestämmer hovrätten ett
+               belopp om 12 000 kr, varav 10 000 kr avser kränkning och resten sveda och
+               värk.</w:t>
+             </w:r>
+@@ -3406,7 +3405,7 @@
+               </w:rPr>
+               <w:t>Hovrätten ändrar tingsrättens dom när det gäller ansvar på så sätt att
+               hovrätten beträffande brottet olaga frihetsberövande tillämpar 4 kap. 2 § andra
+-              stycket brottsbalken och bestämmer påföljden för såväl M.G. som H.M.S. till
++              stycket brottsbalken och bestämmer påföljden för såväl A som B till
+               villkorlig dom jämte 70 dagsböter å 70 kr.</w:t>
+             </w:r>
+           </w:p>
+@@ -3960,4 +3959,5 @@
+       <w:cols w:space="720" />
+     </w:sectPr>
+   </w:body>
+-</w:document>
++</w:document
++>
