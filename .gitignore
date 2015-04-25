@@ -1,0 +1,8 @@
+*~
+*.pyc
+/data/
+/bin/
+/lib/
+/lib64
+/conf.ini
+/update*sh
