@@ -1,5 +1,6 @@
 *~
 *.pyc
+/w/
 /data/
 /bin/
 /lib/
