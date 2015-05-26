@@ -952,7 +952,7 @@ class DVManager(LegalSource.Manager):
         Util.ensureDir(outfile)
 
         tmpfile = mktemp()
-        out = file(tmpfile, "w")
+        out = codecs.open(tmpfile, "wb", encoding="utf-8")
         out.write(parsed)
         out.close()
         # Util.indentXmlFile(tmpfile)

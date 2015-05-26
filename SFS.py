@@ -2298,7 +2298,7 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
             #parsed = "dummy text"
             parsed = p.Parse(basefile,files)
             tmpfile = mktemp()
-            out = file(tmpfile, "w")
+            out = codecs.open(tmpfile, "wb", encoding="utf-8")
             out.write(parsed)
             out.close()
             if force:

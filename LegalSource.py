@@ -310,6 +310,8 @@ class Manager(object):
             # 2. if tmpfile == rdffile: continue
             store = SesameStore(self.config['triplestore'], self.config['repository'],context)
             tmpfilename = mktemp()
+            with open(tmpfilename, "w") as fp:
+                pass
             store.get_serialized_file(tmpfilename,"nt")
             if filecmp.cmp(tmpfilename,rdffile):
                 log.info("Store hasn't changed, not reloading it")
