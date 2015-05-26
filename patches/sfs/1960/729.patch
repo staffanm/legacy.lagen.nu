@@ -1,6 +1,6 @@
---- data/sfs/intermediate/1960/729.txt	2009-09-26 23:06:51.189000000 +0200
-+++ c:\users\staffan\appdata\local\temp\tmpx7entp	2009-09-26 23:06:32.096600000 +0200
-@@ -940,7 +940,7 @@
+--- data/sfs/intermediate/1960/729.txt	2015-04-27 07:37:47.000000000 +0200
++++ /tmp/tmpgEq61v	2015-04-27 07:37:41.000000000 +0200
+@@ -1041,7 +1041,7 @@
  40 a § Upphovsrätten till ett datorprogram, som skapas av en
  arbetstagare som ett led i hans arbetsuppgifter eller efter
  instruktioner av arbetsgivaren, övergår till arbetsgivaren, såvida inte
@@ -9,3 +9,17 @@
  
  Upphovsrättens övergång vid upphovsmannens död, m.m.
  
+@@ -1197,6 +1197,7 @@
+ upphovsmannen motsätter sig förfogandet. Lag (2013:691).
+ 
+ 4 Kap. Upphovsrättens giltighet
++
+ 43 § Upphovsrätt till ett verk gäller till utgången av
+ sjuttionde året efter det år då upphovsmannen avled eller, i
+ fråga om verk som avses i 6 §, efter den sist avlidne
+@@ -2736,4 +2737,4 @@
+ som konstnären har enligt 45 § till en framställare av
+ ljudupptagningar, anses omfatta även tid efter det att
+ skyddstiden för den utövande konstnärens rätt enligt äldre
+-bestämmelser löpt ut. 
++bestämmelser löpt ut. 
