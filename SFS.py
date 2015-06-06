@@ -2989,11 +2989,11 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
 
         htmlfile = "%s/%s/generated/news/lagar.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/lagar.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade lagar', 'De senaste 90 dagarna', lag_entries)
+        self._render_newspage(htmlfile, atomfile, u'Nya och andrade lagar', 'De senaste 90 dagarna', lag_entries)
 
         htmlfile = "%s/%s/generated/news/forordningar.html" % (self.baseDir, self.moduleDir)
         atomfile = "%s/%s/generated/news/forordningar.atom" % (self.baseDir, self.moduleDir)
-        self._render_newspage(htmlfile, atomfile, u'Nya och ändrade förordningar och övriga författningar', 'De senaste 90 dagarna', ovr_entries)
+        self._render_newspage(htmlfile, atomfile, u'Nya och andrade forordningar och ovriga forfattningar', 'De senaste 90 dagarna', ovr_entries)
 
     def _element_to_string(self,e):
         """Creates a XHTML1 string from a elementtree.Element,

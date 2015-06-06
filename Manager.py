@@ -361,7 +361,7 @@ class Manager:
             Util.ensureDir(tmpfilename)
         else:
             tmpfilename = mktemp()
-        fp = open(tmpfilename,"w")
+        fp = codecs.open(tmpfilename,"w", encoding="utf-8")
         fp.write(stream.render())
         fp.close()
 

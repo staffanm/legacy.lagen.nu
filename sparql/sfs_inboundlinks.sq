@@ -4,6 +4,6 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 SELECT ?uri ?label ?lagrum
 WHERE {
    ?uri dct:references ?lagrum . 
-   ?lagrum dct:isPartOf{0,4} <%(uri)s> .
+   ?lagrum dct:isPartOf* <%(uri)s> .
 }   
 ORDER BY ?uri ?lagrum

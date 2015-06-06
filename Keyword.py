@@ -270,12 +270,11 @@ class KeywordParser(LegalSource.Parser):
             a = ET.SubElement(p,"a")
             a.attrib['href'] = 'http://sv.wikipedia.org/wiki/' + basefile.replace(" ","_")
             a.text = basefile
-            a.tail = ' finns även beskrivet på '
+            a.tail = ' finns beskrivet i '
             a = ET.SubElement(p,"a")
             a.attrib['href'] = 'http://sv.wikipedia.org/'
             a.text = 'svenska Wikipedia'
-        
-        return ET.tostring(root,encoding='utf-8')
+        return ET.tostring(root, encoding="utf-8")
     
 
 class KeywordManager(LegalSource.Manager):

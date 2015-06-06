@@ -3,7 +3,7 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 SELECT ?uri ?id ?desc ?lagrum
 WHERE {
    ?uri rinfo:lagrum ?lagrum . 
-   ?lagrum dct:isPartOf{0,4} <%(uri)s> .
+   ?lagrum dct:isPartOf* <%(uri)s> .
    ?uri dct:identifier ?id .
    ?uri dct:description ?desc
 }

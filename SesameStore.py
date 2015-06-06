@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 from rdflib import Literal, BNode, Namespace, URIRef
 try:
     from rdflib.Graph import Graph

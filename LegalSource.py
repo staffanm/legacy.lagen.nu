@@ -166,7 +166,10 @@ class Parser(object):
         if 'class="warning"' in res:
             start = res.index('class="warning">')
             end = res.index('</',start+16)
-            msg = Util.normalizeSpace(res[start+16:end].decode('utf-8'))
+            msg = res[start+16:end]
+            if not isinstance(msg, unicode):
+                msg = msg.decode("utf-8")
+            msg = Util.normalizeSpace(msg)
             log.error(u'%s: templatefel \'%s\'' % (self.id, msg[:80]))
         return res
 
@@ -646,7 +649,7 @@ class Manager(object):
         #tmpfilename = mktemp()
         tmpfilename = outfile.replace(".html",".xht2")
         Util.ensureDir(tmpfilename)
-        fp = open(tmpfilename,"w")
+        fp = codecs.open(tmpfilename,"w", encoding="utf-8")
         fp.write(stream.render())
         fp.close()
         Util.ensureDir(outfile)
@@ -674,8 +677,9 @@ class Manager(object):
         tmpfilename = htmlfile.replace(".html",".xht2")
         assert(tmpfilename != htmlfile)
         Util.ensureDir(tmpfilename)
-        fp = open(tmpfilename,"w")
-        fp.write(stream.render())
+        fp = codecs.open(tmpfilename,"w", encoding="utf-8")
+        x = stream.render()
+        fp.write(x)
         fp.close()
         Util.ensureDir(htmlfile)
         Util.transform("xsl/static.xsl", tmpfilename, htmlfile, validate=False)
@@ -688,7 +692,7 @@ class Manager(object):
                                pageuri=u'https://lagen.nu/%s' % htmlfile.replace("data/", ""))
                                
         tmpfilename = mktemp()
-        fp = open(tmpfilename,"w")
+        fp = codecs.open(tmpfilename,"w", encoding="utf-8")
         fp.write(stream.render())
         fp.close()
         Util.ensureDir(atomfile)

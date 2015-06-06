@@ -4,5 +4,5 @@ PREFIX rinfo:<http://rinfo.lagrummet.se/taxo/2007/09/rinfo/pub#>
 SELECT ?change ?id ?lagrum
 WHERE { ?change (rinfo:ersatter|rinfo:inforsI|rinfo:upphaver) ?lagrum.
         ?change rinfo:fsNummer ?id . 
-        ?lagrum dct:isPartOf{1,2} <%(uri)s>
+        ?lagrum dct:isPartOf+ <%(uri)s>
 }
