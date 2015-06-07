@@ -701,16 +701,9 @@ class Manager(object):
         log.info("rendered %s (%s)" % (htmlfile, atomfile))
 
     def _extract_rdfa(self, filename):
-        try:
-            o = pyRdfa.Options()
-            dom  = xml.dom.minidom.parse(filename)
-            o.warning_graph = None
-            g = pyRdfa.parseRDFa(dom, "http://example.org/", options=o)
-        except:
-            # if we don't have pyRdfa, we hopefully have rdflib 3.0
-            # and it's included rdfa parser
-            g = Graph()
-            g.parse(open(filename),format="rdfa")
+        g = Graph()
+        g.parse(open(filename),format="rdfa",
+                rdfa_version="1.0")
         self.__tidy_graph(g)
 
         return g
