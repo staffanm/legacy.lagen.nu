@@ -20,7 +20,7 @@ import shutil
 from datetime import date, datetime
 import cgi
 # python 2.5 required
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import xml.etree.cElementTree as ET
 import xml.etree.ElementTree as PET
 
@@ -28,6 +28,7 @@ import xml.etree.ElementTree as PET
 # 3rdparty libs
 from configobj import ConfigObj
 from mechanize import Browser, LinkNotFoundError, urlopen
+from BeautifulSoup import BeautifulSoup
 try: 
     from rdflib.Graph import Graph
 except ImportError:
@@ -235,29 +236,31 @@ class SFSDownloader(LegalSource.Downloader):
         super(SFSDownloader,self).__init__(config) # sets config, logging, initializes browser
                                      
     def DownloadAll(self):
-        # Split search into two (or more) - the result list fails after 440 result pages
-        for start, end in ((1600,2008),(2009,datetime.today().year)):
-            log.info(u'Downloading %s to %s' % (start,end))
-
-            self.browser.open("http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&\xC5R=FR\xC5N+%s&\xC5R=TILL+%s" % (start,end))
-
-            pagecnt = 1
-            done = False
-            while not done:
-                log.info(u'Resultatsida nr #%s' % pagecnt)
-                for l in (self.browser.links(text_regex=r'\d+:\d+')):
-                    if not l.text.startswith("N"): # Icke-SFS-författningar
-                                                   # som ändå finns i
-                                                   # databasen
-                        self._downloadSingle(l.text)
-                    # self.browser.back()
-                try:
-                    self.browser.find_link(text='Fler poster')
-                    self.browser.follow_link(text='Fler poster')
-                    pagecnt += 1
-                except LinkNotFoundError:
-                    log.info(u'Ingen nästa sida-länk, vi är nog klara')
-                    done = True
+        log.info(u'Downloading everything')
+        # add &upph=false to filter out expired things
+        self.browser.open("http://rkrattsbaser.gov.se/sfsr/adv?sort=asc")
+        pagecnt = 1
+        done = False
+        while not done:
+            log.info(u'Resultatsida nr #%s' % pagecnt)
+            soup = BeautifulSoup(self.browser.response().read())
+            for hit in soup.findAll("div", "search-hit-info-num"):
+                sfsnr = hit.text.split("SFS-nummer: ", 1)[1].strip()
+                if not sfsnr.startswith("N"): # Icke-SFS-författningar
+                                               # som ändå finns i
+                                               # databasen
+                    try:
+                        self._downloadSingle(sfsnr)
+                    except IOError as e:
+                        log.error("Failed to download %s: %s" % (sfsnr, e))
+                # self.browser.back()
+            try:
+                self.browser.find_link(text='NÃ¤sta')
+                self.browser.follow_link(text='NÃ¤sta')
+                pagecnt += 1
+            except LinkNotFoundError:
+                log.info(u'Ingen nästa sida-länk, vi är nog klara')
+                done = True
         self._setLastSFSnr()
 
     def _get_module_dir(self):
@@ -340,35 +343,37 @@ class SFSDownloader(LegalSource.Downloader):
         # Titta först efter grundförfattning
         log.info(u'    Letar efter grundförfattning')
         grundforf = []
-        url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=%s:%s&\xC4BET=&ORG=" % (year,nr)
+        url = "http://rkrattsbaser.gov.se/sfsr/adv?bet=%s:%s" % (year, nr) 
         # FIXME: consider using mechanize
         tmpfile = mktemp()
         self.browser.retrieve(url,tmpfile)
-        t = TextReader(tmpfile,encoding="iso-8859-1")
+        t = TextReader(tmpfile,encoding="utf-8")
         try:
-            t.cue(u"<p>Sökningen gav ingen träff!</p>")
+            # t.cue(u"<p>Sökningen gav ingen träff!</p>")
+            t.cue(u"<div>Inga tr\xe4ffar</div>")
         except IOError: # hurra!
             grundforf.append(u"%s:%s" % (year,nr))
             return grundforf
 
         # Sen efter ändringsförfattning
         log.info(u'    Letar efter ändringsförfattning')
-        url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${HTML}=sfsr_lst&${OOHTML}=sfsr_dok&${SNHTML}=sfsr_err&${MAXPAGE}=26&${BASE}=SFSR&${FORD}=FIND&${FREETEXT}=&BET=&\xC4BET=%s:%s&ORG=" % (year,nr)
+        url = "http://rkrattsbaser.gov.se/sfsr/adv?%%C3%%A4bet=%s:%s" % (year, nr)
         self.browser.retrieve(url, tmpfile)
         # maybe this is better done through mechanize?
-        t = TextReader(tmpfile,encoding="iso-8859-1")
+        t = TextReader(tmpfile,encoding="utf-8")
         try:
-            t.cue(u"<p>Sökningen gav ingen träff!</p>")
+            t.cue(u"<div>Inga tr\xe4ffar</div>")
             log.info(u'    Hittade ingen ändringsförfattning')
             return grundforf
         except IOError:
             t.seek(0)
             try:
-                t.cuepast(u'<input type="hidden" name="BET" value="')
-                grundforf.append(t.readto("$"))
+                t.cuepast(u'<a href="/sfst?bet=')
+                grundforf.append(t.readto(u'"'))
                 log.debug(u'    Hittade ändringsförfattning (till %s)' % grundforf[-1])
                 return grundforf
             except IOError:
+                # FIXME: when is this used?
                 t.seek(0)
                 page = t.read(sys.maxint)
                 for m in re.finditer('>(\d+:\d+)</a>',page):
@@ -391,10 +396,16 @@ class SFSDownloader(LegalSource.Downloader):
 
         upphavd_genom = uppdaterad_tom = old_uppdaterad_tom = None
         for part in parts:
-            sfst_url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${OOHTML}=sfst_dok&${HTML}=sfst_lst&${SNHTML}=sfst_err&${BASE}=SFST&${TRIPSHOW}=format=THW&BET=%s" % part.replace(" ","+")
+            sfst_url = "http://rkrattsbaser.gov.se/sfst?bet=%s" % part.replace(" ","%20")
             sfst_file = "%s/sfst/%s.html" % (self.download_dir, SFSnrToFilename(part))
             sfst_tempfile = mktemp()
             self.browser.retrieve(sfst_url, sfst_tempfile)
+            # here, we need to check if tempfile is a real text, or if
+            # it's a search result page like
+            # http://rkrattsbaser.gov.se/sfst?bet=1926:1. If it's the
+            # latter, we need to find the right value in the list,
+            # make note of the post_id parameter in the url, retrieve
+            # it and keep it around for
             if os.path.exists(sfst_file):
                 old_checksum = self._checksum(sfst_file)
                 new_checksum = self._checksum(sfst_tempfile)
@@ -421,7 +432,7 @@ class SFSDownloader(LegalSource.Downloader):
             else:
                 Util.robustRename(sfst_tempfile, sfst_file)
 
-        sfsr_url = "http://rkrattsbaser.gov.se/cgi-bin/thw?${OOHTML}=sfsr_dok&${HTML}=sfst_lst&${SNHTML}=sfsr_err&${BASE}=SFSR&${TRIPSHOW}=format=THW&BET=%s" % sfsnr.replace(" ","+")
+        sfsr_url = "http://rkrattsbaser.gov.se/sfsr?bet=%s" % sfsnr.replace(" ", "%20")
         sfsr_file = "%s/sfsr/%s.html" % (self.download_dir, SFSnrToFilename(sfsnr))
         if (old_uppdaterad_tom and
             old_uppdaterad_tom != uppdaterad_tom):
@@ -457,9 +468,20 @@ class SFSDownloader(LegalSource.Downloader):
             os.rename(filename,archive_filename)
         
     def _findUppdateradTOM(self, sfsnr, filename):
-        reader = TextReader(filename,encoding='iso-8859-1')
+        # the first few bytes tell whether this is a legacy HTML file
+        # downloaded from the old TRIPS system or a new one.
+        with open(filename) as fp:
+            magic = fp.read(46)
         try:
-            reader.cue("&Auml;ndring inf&ouml;rd:<b> t.o.m. SFS")
+            if magic == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">':
+                # old one
+                reader = TextReader(filename,encoding='iso-8859-1')
+                reader.cue("&Auml;ndring inf&ouml;rd:<b> t.o.m. SFS")
+            else:
+                # new one
+                reader = TextReader(filename, encoding='utf-8')
+                reader.cue(u"\xc4ndring inf\xf6rd:</span> t.o.m. SFS")
+            # from here the logic is identical for new and old files
             l = reader.readline()
             m = re.search('(\d+:\s?\d+)',l)
             if m:
@@ -474,14 +496,20 @@ class SFSDownloader(LegalSource.Downloader):
 
 
     def _findUpphavtsGenom(self, filename):
-        reader = TextReader(filename,encoding='iso-8859-1')
+        with open(filename) as fp:
+            magic = fp.read(46)
         try:
-            reader.cue("upph&auml;vts genom:<b> SFS")
-            l = reader.readline()
-            m = re.search('(\d+:\s?\d+)',l)
-            if m:
-                return m.group(1)
+            if magic == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">':
+                reader = TextReader(filename,encoding='iso-8859-1')
+                reader.cue("upph&auml;vts genom:<b> SFS")
+                l = reader.readline()
+                m = re.search('(\d+:\s?\d+)',l)
+                if m:
+                    return m.group(1)
+                else:
+                    return None
             else:
+                # the new SFST files DO NOT CONTAIN THIS INFORMATION! The SFSR files sort of do.
                 return None
         except IOError:
             return None
@@ -498,13 +526,10 @@ class SFSDownloader(LegalSource.Downloader):
         #c.update(data)
         #return c.hexdigest()
         p = SFSParser()
-        try:
-            plaintext = p._extractSFST([filename])
-            # for some insane reason, hashlib:s update method can't seem
-            # to handle ordinary unicode strings
-            c.update(plaintext.encode('iso-8859-1'))
-        except:
-            log.warning("Could not extract plaintext from %s" % filename)
+        plaintext = p._extractSFST([filename])
+        # for some insane reason, hashlib:s update method can't seem
+        # to handle ordinary unicode strings
+        c.update(plaintext.encode('iso-8859-1', errors='xmlcharrefreplace'))
         return c.hexdigest()
 
 
@@ -609,7 +634,7 @@ class SFSParser(LegalSource.Parser):
             plaintextfile = files['sfst'][0].replace(".html", ".txt").replace("downloaded/sfst", "intermediate")
             Util.ensureDir(plaintextfile)
             tmpfile = mktemp()
-            f = codecs.open(tmpfile, "w",'iso-8859-1')
+            f = codecs.open(tmpfile, "w",'iso-8859-1', errors="xmlcharrefreplace")
             f.write(plaintext+"\r\n")
             f.close()
 
@@ -743,6 +768,7 @@ class SFSParser(LegalSource.Parser):
     labels = {u'SFS-nummer':             RINFO['fsNummer'],
               u'SFS nr':                 RINFO['fsNummer'],
               u'Ansvarig myndighet':     DCT['creator'],
+              u'Departement':            DCT['creator'],
               u'Departement/ myndighet': DCT['creator'],
               u'Utgivare':               DCT['publisher'],
               u'Rubrik':                 DCT['title'],
@@ -774,17 +800,44 @@ class SFSParser(LegalSource.Parser):
         r = Register()
         for f in files:
             soup = Util.loadSoup(f)
-            r.rubrik = Util.elementText(soup.body('table')[2]('tr')[1]('td')[0])
-            changes = soup.body('table')[3:-2]
-            for table in changes:
+            if soup.content and soup.content[0] == u'DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"':
+                r.rubrik = Util.elementText(soup.body('table')[2]('tr')[1]('td')[0])
+                changes = []
+                for table in soup.body('table')[3:-2]:
+                    d = OrderedDict()
+                    for row in table('tr'):
+                        key = Util.elementText(row('td')[0])
+                        if key.endswith(":"):  key= key[:-1] # trim ending ":"
+                        if key == '': continue
+                        val = Util.elementText(row('td')[1])
+                        d[key] = val
+                    changes.append[d]
+                    
+            else:
+                soup = Util.loadSoup(f, encoding="utf-8")
+                content = soup.find('div', 'search-results-content')
+                innerboxes = content.findAll('div', 'result-inner-box')
+                r.rubrik = innerboxes[1].text.strip()
+                d = OrderedDict()
+                d['SFS-nummer'] = innerboxes[0].text.split(u"\xb7")[1].strip()
+                for innerbox in innerboxes[2:]:
+                    key, val = innerbox.text.split(":", 1)
+                    d[key] = val
+                changes = [d]
+                for c in content.findAll('div', 'result-inner-sub-box-container'):
+                    d = OrderedDict()
+                    d[u'SFS-nummer'] = c.find('div', 'result-inner-sub-box-header').text.split("SFS ")[1]
+                    for row in c.findAll('div', 'result-inner-sub-box'):
+                        key, val = row.text.split(":", 1)
+                        d[key] = val
+                    changes.append(d)
+                
+            for rowdict in changes:
                 kwargs = {'id': 'undefined',
                           'uri': u'http://rinfo.lagrummet.se/publ/sfs/undefined'}
                 p = Registerpost(**kwargs)
-                for row in table('tr'):
-                    key = Util.elementText(row('td')[0])
-                    if key.endswith(":"):  key= key[:-1] # trim ending ":"
-                    if key == '': continue
-                    val = Util.elementText(row('td')[1]).replace(u'\xa0',' ') # no nbsp's, please
+                for key, val in rowdict.items():
+                    val = Util.normalizeSpace(val.replace(u'\xa0',' ')) # no nbsp's, please
                     if val != "":
                         if key == u'SFS-nummer':
                             if val.startswith('N'):
@@ -814,7 +867,7 @@ class SFSParser(LegalSource.Parser):
                             else:
                                 log.warning(u'Kunde inte tolka [%s] som ett SFS-nummer' % val)
                             
-                        elif key == u'Ansvarig myndighet':
+                        elif key == u'Ansvarig myndighet' or key == u'Departement':
                             try:
                                 authrec = self.find_authority_rec(val)
                                 p[key] = LinkSubject(val, uri=unicode(authrec[0]),
@@ -829,6 +882,11 @@ class SFSParser(LegalSource.Parser):
                                     if datetime.strptime(val[41:51], '%Y-%m-%d') < datetime.today():
                                         raise UpphavdForfattning()
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
+                        elif key == u'Upphävd':
+                            if datetime.strptime(val, '%Y-%m-%d') < datetime.today():
+                                raise UpphavdForfattning()
+                            # p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+                            p[u'Observera'] = UnicodeSubject(u'Författningen är upphävd/skall upphävas: ' + val, predicate=self.labels[u'Observera'])
                         elif key == u'Ikraft':
                             p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                             #if val.find(u'\xf6verg.best.') != -1):
@@ -877,7 +935,8 @@ class SFSParser(LegalSource.Parser):
                                 if not self.keep_expired:
                                     raise UpphavdForfattning()
                         else:
-                            log.warning(u'%s: Obekant nyckel [\'%s\']' % self.id, key)
+                            import pudb; pu.db
+                            log.warning(u'%s: Obekant nyckel [\'%s\']' % (self.id, key))
                 if p:
                     r.append(p)
                 # else:
@@ -891,20 +950,61 @@ class SFSParser(LegalSource.Parser):
         if not files:
             return ""
 
-        t = TextReader(files[0], encoding="iso-8859-1")
-        if keepHead:
-            t.cuepast(u'<pre>')
-        else:
-            t.cuepast(u'<hr>')
+        with open(files[0]) as fp:
+            magic = fp.read(46)
 
-        txt = t.readto(u'</pre>')
-        re_entities = re.compile("&(\w+?);")
-        txt = re_entities.sub(self._descapeEntity,txt)
-        if not '\r\n' in txt:
-            txt = txt.replace('\n','\r\n')
-        re_tags = re.compile("</?\w{1,3}>")
-        txt = re_tags.sub(u'',txt)
-        return txt + self._extractSFST(files[1:],keepHead=False)
+        if magic == '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">':
+            t = TextReader(files[0], encoding="iso-8859-1")
+            if keepHead:
+                t.cuepast(u'<pre>')
+            else:
+                t.cuepast(u'<hr>')
+
+            txt = t.readto(u'</pre>')
+            re_entities = re.compile("&(\w+?);")
+            txt = re_entities.sub(self._descapeEntity,txt)
+            if not '\r\n' in txt:
+                txt = txt.replace('\n','\r\n')
+            re_tags = re.compile("</?\w{1,3}>")
+            txt = re_tags.sub(u'',txt)
+            return txt + self._extractSFST(files[1:],keepHead=False)
+        else:
+            t = TextReader(files[0], encoding="utf-8")
+            if keepHead:
+                t.cuepast(u'<div class="search-results-content">')
+                # the tagsoup in header needs to be parsed and
+                # made to look similar to what the old files used
+                # for headers.
+                soup = BeautifulSoup(t.readto(u'<div class="result-box-text body-text">'))
+                divs = soup.findAll("div", "result-inner-box")
+                hdict = {'SFS nr': divs[0].text.split(u"\xb7")[1].strip(),
+                         'Rubrik': divs[1].text.strip()}
+                for div in divs[2:]:
+                    if ":" in div.text:
+                        k, v = div.text.split(":", 1)
+                        hdict[k.strip()] = v.strip()
+                header = u"\n"
+                fldmap = {u'SFS nr': u'           SFS nr',
+                          u'Departement': u'     Departement/\n        myndighet',
+                          u'Rubrik': u'           Rubrik',
+                          u'Utf\xe4rdad': u'         Utf\xe4rdad'}
+                for fld in (u'SFS nr', u'Rubrik', u'Departement', u'Utf\xe4rdad'):
+                    if fld in hdict:
+                        header += fldmap[fld] + u": " + hdict[fld] + "\n\n"
+                        del hdict[fld]
+                for k, v in hdict.items():
+                    header += u"\n%17s: %s\n\n" % (k, v)
+                header += "\n\n"
+                t.cuepast(u'<div class="result-box-text body-text">')
+            else:
+                t.cuepast(u'<div class="result-box-text body-text">')
+                header = ""
+            txt = t.readto(u'</div')
+            header = header.replace('\n','\r\n')
+            if '\r\n' not in txt:
+                txt = txt.replace('\n','\r\n')
+            fulltext = header + txt + self._extractSFST(files[1:],keepHead=False)
+            return fulltext
 
     def _descapeEntity(self,m):
         return unichr(htmlentitydefs.name2codepoint[m.group(1)])
@@ -1206,6 +1306,8 @@ class SFSParser(LegalSource.Parser):
                 
 
             elif key == u'Tidsbegränsad':
+                meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+            elif key == u'Ikraft':
                 meta[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
             else:
                 log.warning(u'%s: Obekant nyckel [\'%s\']' % (self.id, key))
