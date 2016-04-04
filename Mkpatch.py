@@ -28,7 +28,7 @@ if __name__ == "__main__":
         sourcefile = file_to_patch.replace("/intermediate/", "/downloaded/sfst/").replace(".txt", ".html")
         print "source %s, basefile %s, sourcefile %s" % (source,basefile,sourcefile)
         plaintext = p._extractSFST([sourcefile])
-        f = codecs.open(file_to_patch, "w",'iso-8859-1')
+        f = codecs.open(file_to_patch, "w",'iso-8859-1', errors="xmlcharrefreplace")
         f.write(plaintext+"\n")
         f.close()
         print "Wrote %s bytes to %s" % (len(plaintext), file_to_patch)
