@@ -1,0 +1,227 @@
+--- data/dv/intermediate/ooxml/HFD/4337-12.xml	1980-01-01 00:00:00.000000000 +0100
++++ /tmp/tmpqJmRso	2016-10-02 22:04:58.528070000 +0200
+@@ -1221,8 +1221,8 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>Fastighetsmäklarnämnden beslutade den 19 februari 2009 att återkalla M.K:s
+-              registrering som fastighetsmäklare. Beslutet grundades på att han i augusti 2008
++              <w:t>Fastighetsmäklarnämnden beslutade 2009 att återkalla A:s
++              registrering som fastighetsmäklare. Beslutet grundades på att han i 2008
+               dömts för bl.a. flera fall av ofredande till fängelse i fem månader.</w:t>
+             </w:r>
+           </w:p>
+@@ -1242,7 +1242,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.K. överklagade Fastighetsmäklarnämndens beslut hos förvaltningsrätten och
++              <w:t>A. överklagade Fastighetsmäklarnämndens beslut hos förvaltningsrätten och
+               yrkade att beslutet skulle undanröjas. Han anförde bl.a. följande. Han är egen
+               företagare och har ett brinnande intresse för sin firma. Han har alltid velat
+               göra sina kunder nöjda. Han har alltid skött sina affärer och tänkt på kundernas
+@@ -1290,7 +1290,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.K. anförde härefter bl.a. följande: Han yrkar i första hand att rätten
++              <w:t>A. anförde härefter bl.a. följande: Han yrkar i första hand att rätten
+               ska undanröjer Fastighetsmäklarnämndens beslut, i andra hand yrkar han att
+               rätten ska ändra nämndens beslut till att enbart meddela honom varning. Han
+               yrkar vidare muntlig förhandling. Han har varit verksam under drygt 10 år som
+@@ -1301,7 +1301,7 @@
+               till rätten redan ingett intyg från kunder som entydigt utvisar att de anser
+               honom redbar och lämplig som fastighetsmäklare. Han åberopar dessa intyg som
+               skriftlig bevisning i målet. Han bestrider att han inte uppfyller de krav på
+-              redbarhet och lämplighet som föreskrivs i fastighetsmäklarlagen. M.K. hänvisade
++              redbarhet och lämplighet som föreskrivs i fastighetsmäklarlagen. A. hänvisade
+               till olika avgöranden från Fastighetsmäklarnämnden.</w:t>
+             </w:r>
+           </w:p>
+@@ -1323,12 +1323,12 @@
+               </w:rPr>
+               <w:t xml:space="preserve">
+ Fastighetsmäklarnämnden anförde i yttranden den 28 maj 2009 och den 25 augusti 2009 bl.a.
+-följande. Saken rör sådana förhållanden som så allvarligt påverkar tilltron till M.K:s förmåga
++följande. Saken rör sådana förhållanden som så allvarligt påverkar tilltron till A:s förmåga
+ att sköta sina uppgifter att Fastighetsmäklarnämnden beslutat om återkallelse av
+ registreringen. Av förarbetena till fastighetsmäklarlagen (prop. 1994/95:14 s. 66) framgår
+ bland annat att det ska beaktas hur långt tillbaka i tiden brottsligheten ligger, brottets art
+ och straffvärde samt om det är fråga om enstaka brott eller flera. En samlad bedömning av
+-samtliga omständigheter ska göras. Nämnden har vid en sådan bedömning funnit att M.K. inte
++samtliga omständigheter ska göras. Nämnden har vid en sådan bedömning funnit att A. inte
+ uppfyller kravet på redbarhet, vilket är en förutsättning för att vara registrerad som
+ fastighetsmäklare. Brottsligheten har ägt rum relativt nyligen och har inte varit en
+ engångsföreteelse. Den visar 
+@@ -1341,7 +1341,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:lastRenderedPageBreak />
+-              <w:t>närmast att M.K. satt sitt olämpliga agerande i system mot ett antal
++              <w:t>närmast att A. satt sitt olämpliga agerande i system mot ett antal
+               personer i sin omgivning. Det stämmer därför inte att hans olämpliga agerande
+               endast berott på vårdnadstvisten. Fastighetsmäklarnämnden anser att
+               brottmålsdomen visar på en stor brist på lyhördhet inför andra människors
+@@ -1371,11 +1371,11 @@
+               ska gälla i fråga om uppdragsavtal som har ingåtts före ikraftträdandet.
+               Förvaltningsrätten har i målet att avgöra om Fastighetsmäklarnämndens beslut är
+               riktigt och finner att ÄFML är tillämplig i målet. - Förvaltningsrättens
+-              bedömning - Frågan i målet är om M.K. kan anses lämplig som fastighetsmäklare.
+-              Förvaltningsrätten finner - i likhet med i Fastighetsmäklarnämnden - att M.K.
++              bedömning - Frågan i målet är om A. kan anses lämplig som fastighetsmäklare.
++              Förvaltningsrätten finner - i likhet med i Fastighetsmäklarnämnden - att A.
+               genom sin brottslighet inte motsvarar de krav som måste kunna ställas på en
+               mäklare mot bakgrund av mäklarens ansvarsfulla förtroendeställning. Någon annan
+-              åtgärd än att avregistrera M.K. kan inte komma ifråga. Nämndens beslut är
++              åtgärd än att avregistrera A. kan inte komma ifråga. Nämndens beslut är
+               riktigt. Överklagandet ska därför avslås. - Förvaltningsrätten avslår
+               överklagandet. - Rättens interimistiska beslut upphör härvid att gälla.</w:t>
+             </w:r>
+@@ -1396,7 +1396,7 @@
+                 <w:sz w:val="18" />
+                 <w:szCs w:val="18" />
+               </w:rPr>
+-              <w:t>M.K. överklagade förvaltningsrättens dom och yrkade, såsom hans talan
++              <w:t>A. överklagade förvaltningsrättens dom och yrkade, såsom hans talan
+               slutligen bestämdes, i första hand att kammarrätten skulle upphäva domen och
+               Fastighetsmäklarnämndens beslut och i andra hand att han i stället för
+               återkallelse av registreringen skulle meddelas en varning. Vidare yrkade han
+@@ -1406,7 +1406,7 @@
+               kvinnofridskränkning, olaga hot, hot mot tjänsteman, stöld, upprepad misshandel
+               och skatte- och bokföringsbrott inte har resulterat i mer än en varning eller
+               rent av avskrivning. Att han har avregistrerats måste ses som en anmärkningsvärd
+-              åtgärd mot den bakgrund som föreligger. M.K. åberopade bl.a. ett skriftligt
++              åtgärd mot den bakgrund som föreligger. A. åberopade bl.a. ett skriftligt
+               intyg från Dr Ingmar Edqvist.</w:t>
+             </w:r>
+           </w:p>
+@@ -1427,16 +1427,16 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t>Fastighetsmäklarnämnden bestred bifall till överklagandet och anförde bl.a.
+-              följande. M.K. har förhalat förvaltningsrättens dom genom att göra sig
+-              oanträffbar. Att M.K. inte har kunnat delges har medfört att förvaltningsrätten
++              följande. A. har förhalat förvaltningsrättens dom genom att göra sig
++              oanträffbar. Att A. inte har kunnat delges har medfört att förvaltningsrätten
+               efter ca två och ett halvt år har fått avgöra målet utan hans närvaro. Han har
+               på så sätt även lyckats vara registrerad under denna period. Detta är ännu ett
+-              agerande som ger stöd för uppfattningen att M.K. är olämplig som
++              agerande som ger stöd för uppfattningen att A. är olämplig som
+               fastighetsmäklare. Vad som anförs i Dr Ingmar Edqvists intyg ger inte något
+-              entydigt svar på frågan om M.K. har förmågan att utföra sina uppdrag på ett
+-              ändamålsenligt sätt. Nämndens uppfattning är att M.K. har svårt att se utöver
++              entydigt svar på frågan om A. har förmågan att utföra sina uppdrag på ett
++              ändamålsenligt sätt. Nämndens uppfattning är att A. har svårt att se utöver
+               det egna perspektivet även i samband med hanteringen av sina förmedlingsuppdrag.
+-              Sammanfattningsvis finner nämnden att M.K:s brottslighet och hans agerande i
++              Sammanfattningsvis finner nämnden att A:s brottslighet och hans agerande i
+               syfte att inte bli delgiven av förvaltningsrätten medför att han ska vara
+               fortsatt avregistrerad.</w:t>
+             </w:r>
+@@ -1482,10 +1482,10 @@
+ juli 2011 upphörde fastighetsmäklarlagen (1995:400) att gälla och en ny fastighetsmäklarlag
+ (2011:666) trädde ikraft. Enligt övergångsbestämmelserna ska den gamla lagen tillämpas på
+ uppdragsavtal som har ingåtts före ikraftträdandet. Till grund för Fastighetsmäklarnämndens
+-återkallande av M.K:s registrering ligger inte något specifikt uppdragsavtal. Kammarrätten
++återkallande av A:s registrering ligger inte något specifikt uppdragsavtal. Kammarrätten
+ finner därför, i motsats till förvaltningsrätten, att den nya fastighetsmäklarlagen ska
+ tillämpas i målet. - Frågan i målet är om Fastighetsmäklarnämnden har haft fog för sitt beslut
+-att återkalla M.K:s registrering som fastighetsmäklare. Vid en sådan bedömning är det främst
++att återkalla A:s registrering som fastighetsmäklare. Vid en sådan bedömning är det främst
+ omständigheterna vid tidpunkten för beslutet som ska beaktas. Sedan Fastighetsmäklarnämndens
+ beslut har dock mer än tre år förflutit och ett bifall 
+ </w:t>
+@@ -1497,7 +1497,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:lastRenderedPageBreak />
+-              <w:t>till M.K:s överklagande skulle medföra att han återfår sin registrering.
++              <w:t>till A:s överklagande skulle medföra att han återfår sin registrering.
+               Kammarrätten finner mot bakgrund av detta att även omständigheter som har
+               tillkommit efter det överklagade beslutet och som kan ha betydelse för frågan om
+               lämplighet i viss mån bör beaktas. - En återkallelse av registrering ska, enligt
+@@ -1519,38 +1519,38 @@
+               registreringen anges inte. Många faktorer påverkar bedömningen. Exempelvis bör
+               beaktas hur lång tid tillbaka brottsligheten ligger, brottets art och svårighet,
+               om det är fråga om ett enstaka brott eller flera och om det har förekommit
+-              upprepade lagföringar (a.a. s. 66). - M.K. har blivit dömd för brott vid tre
++              upprepade lagföringar (a.a. s. 66). - A. har blivit dömd för brott vid tre
+               tillfällen; 2004, 2008 och 2011. Den senaste domen, som meddelades efter det
+               överklagade beslutet, har dock inte vunnit laga kraft än. Tingsrättens dom från
+               2008 avsåg, förutom ofredande mot tre olika kvinnor, även bl.a. sexuellt
+               ofredande, hemfridsbrott, överträdelse av besöksförbud och våldsamt motstånd. Av
+               domen kan konstateras att brottsligheten ifråga sträcker sig över en period om
+               fyra år och riktar sig mot olika personer. Domarna från 2004 och 2011 har även
+-              de gällt ofredande. M.K:s invändning att brottsligheten har sin bakgrund i en
++              de gällt ofredande. A:s invändning att brottsligheten har sin bakgrund i en
+               uppslitande vårdnadstvist med den f.d. sambon kan därmed inte fästas alltför
+-              stor vikt vid. - De brott som M.K. har dömts för är inte den typen av brott som
++              stor vikt vid. - De brott som A. har dömts för är inte den typen av brott som
+               exemplifieras i förarbetena. Rättspraxis avseende denna typ av brottslighet
+               saknas och vid en genomgång av Fastighetsmäklarnämndens praxis framkommer att
+               brottslighet som inte kan anses ha någon koppling till yrkesverksamheten sällan
+               leder till något ingripande från nämndens sida. Inte heller allvarlig
+               brottslighet såsom grov kvinnofridskränkning eller misshandel har lett till mer
+-              än en varning. Även om de brott som M.K. har dömts för, sett var för sig, inte
++              än en varning. Även om de brott som A. har dömts för, sett var för sig, inte
+               är sådana som i allmänhet betraktas som brott av det allvarligare slaget kan
+               kammarrätten dock konstatera att det i förevarande fall är fråga om mycket
+               omfattande brottslighet såtillvida att den har upprepats gång på gång mot flera
+               olika personer under en följd av år. Detta visar enligt kammarrättens mening
+-              tydligt på en bristande förmåga hos M.K. att uppfatta andra människors önskemål.
+-              Med hänsyn till den förtroendeställning och det ansvar som M.K. har som mäklare
++              tydligt på en bristande förmåga hos A. att uppfatta andra människors önskemål.
++              Med hänsyn till den förtroendeställning och det ansvar som A. har som mäklare
+               gentemot sina uppdragsgivare och deras motparter anser kammarrätten att han
+               genom sin brottslighet inte längre uppfyller kravet på redbarhet och lämplighet
+               i fastighetsmäklarlagen. Det finns därför grund för att återkalla hans
+               registrering som fastighetsmäklare och det kan inte anses tillräckligt att han i
+-              stället meddelas en varning. M.K:s överklagande ska därför avslås. - Enligt 29 §
++              stället meddelas en varning. A:s överklagande ska därför avslås. - Enligt 29 §
+               fastighetsmäklarlagen får kammarrätten besluta att en återkallelse ska gälla
+               omedelbart. Förvaltningsrätten beslutade den 27 mars 2009 att det överklagade
+               beslutet tills vidare inte skulle gälla. Därefter har beslutet varit inhiberat
+               nästan oavbrutet under tre års tid, främst på grund av att förvaltningsrätten
+-              inte har lyckats delge M.K. Kammarrätten finner mot denna bakgrund att det finns
++              inte har lyckats delge A. Kammarrätten finner mot denna bakgrund att det finns
+               skäl att förordna att domen ska gälla omedelbart. - Kammarrätten avslår
+               överklagandet. - Domen gäller omedelbart. Kammarrättens intermistiska beslut av
+               den 24 januari 2012 upphör därmed att gälla.</w:t>
+@@ -1573,7 +1573,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t xml:space="preserve">
+-M.K. överklagade kammarrättens dom och yrkade i första hand att Högsta förvaltningsdomstolen
++A. överklagade kammarrättens dom och yrkade i första hand att Högsta förvaltningsdomstolen
+ skulle undanröja domen och tillerkänna honom registrering som fastighetsmäklare och i andra
+ hand att en erinran eller varning 
+ </w:t>
+@@ -1624,8 +1624,8 @@
+               </w:rPr>
+               <w:t>Fastighetsmäklarinspektionen, som ersatt Fastighetsmäklarnämnden, bestred
+               bifall till överklagandet och anförde bl.a. följande. Hovrätten för Västra
+-              Sveriges dom avseende ofredande som M.K. fällts till ansvar för ska också
+-              beaktas vid bedömningen av avregistreringen. M.K:s brottslighet är med beaktande
++              Sveriges dom avseende ofredande som A. fällts till ansvar för ska också
++              beaktas vid bedömningen av avregistreringen. A:s brottslighet är med beaktande
+               av att den upprepas mot olika personer år efter år allvarlig. Han har med
+               anledning av sin upprepade brottslighet visat att han inte motsvarar de högt
+               ställda krav på redbarhet och lämplighet som enligt fastighetsmäklarlagen krävs
+@@ -1688,7 +1688,7 @@
+                 <w:szCs w:val="18" />
+               </w:rPr>
+               <w:t>Högsta förvaltningsdomstolen instämmer i kammarrättens bedömning att det
+-              vid tiden för dess dom fanns grund för att återkalla registreringen för M.K. som
++              vid tiden för dess dom fanns grund för att återkalla registreringen för A. som
+               fastighetsmäklare.</w:t>
+             </w:r>
+           </w:p>
+@@ -1710,7 +1710,7 @@
+               </w:rPr>
+               <w:t>När återkallelsefrågan nu avgörs slutligt har det gått ett år sedan
+               kammarrättens dom meddelades. Högsta förvaltningsdomstolen finner emellertid att
+-              detta inte bör leda till ett annat ställningstagande. M.K:s brottslighet utgör
++              detta inte bör leda till ett annat ställningstagande. A:s brottslighet utgör
+               fortfarande grund för återkallelse av registreringen.</w:t>
+             </w:r>
+           </w:p>
