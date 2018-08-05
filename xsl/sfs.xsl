@@ -59,6 +59,10 @@
   </xsl:template>
 
   <xsl:template name="headmetadata"/>
+  <xsl:template name="banner">
+    <div class="banner">Se denna författning på den nya versionen av lagen.nu -- <a href="http://ferenda.lagen.nu/{//xht2:meta[@property='rinfo:fsNummer']/@content}">klicka här</a>!</div>
+  </xsl:template>
+
 
   <xsl:template match="xht2:dl[@role='contentinfo']"/>
   
@@ -389,9 +393,15 @@
 	  <xsl:value-of select="xht2:dl/xht2:dd[@property='rinfo:fsNummer']"/>
 	</xsl:otherwise>
       </xsl:choose></h2>
-      <xsl:if test="(number($year) > 1998) or (number($year) = 1998 and number($nr) >= 306)">
-
-	<p><a href="http://rkrattsdb.gov.se/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Officiell version (PDF)</a></p>
+      <!-- SFS older than 1998:306 does not exist in PDF anywhere. SFS
+	   1998:306 to 2018:159 exists in unofficial form at
+	   rkrattsdb.gov.se. SFS equal to or newer than 2018:160
+	   exists in official form at svenskforfattningssamling.se -->
+      <xsl:if test="((number($year) > 1998) or (number($year) = 1998 and number($nr) >= 306)) and (2018 > number($year)) or (number($year) = 2018 and 160 > number($nr))">
+	<p><a href="http://rkrattsdb.gov.se/SFSdoc/{substring($year,3,2)}/{substring($year,3,2)}{format-number($nr,'0000')}.PDF">Tryckt format (PDF)</a></p>
+      </xsl:if>
+      <xsl:if test="(number($year) > 2018) or (number($year) = 2018 and number($nr) >= 160)">
+	<p><a href="https://svenskforfattningssamling.se/doc/{$year}{$nr}.html">Officiell autentisk version</a></p>
       </xsl:if>
       <xsl:apply-templates mode="in-paragraf"/>
     </div>

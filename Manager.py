@@ -30,7 +30,7 @@ if not os.path.sep in __file__:
 else:
     __scriptdir__ = os.path.dirname(__file__)
 
-MW_NS = "{http://www.mediawiki.org/xml/export-0.7/}"
+MW_NS = "{http://www.mediawiki.org/xml/export-0.10/}"
 class Manager:
     def __init__(self):
         self.config = ConfigObj(__scriptdir__ + "/conf.ini")

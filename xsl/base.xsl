@@ -129,6 +129,7 @@
 	  <li><a href="/begrepp/index/">Begrepp</a></li>
 	  <li><a href="/om/">Om</a></li>
 	</ul>
+        <xsl:call-template name="banner"/>
 
 	<form action='https://encrypted.google.com/search' id='searchForm'>
 	  <div>

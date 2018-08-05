@@ -67,6 +67,9 @@
     </link>
   </xsl:template>
   <xsl:template name="headmetadata"/>
+  <xsl:template name="banner">
+    <div class="banner">Se detta rättsfall på den nya versionen av lagen.nu -- <a href="http://ferenda.lagen.nu/dom/{substring-after(//xht2:html/@about,'publ/rattsfall/')}">klicka här</a>!</div>
+  </xsl:template>
 
   <xsl:template match="xht2:dl[@role='contentinfo']"/>
 

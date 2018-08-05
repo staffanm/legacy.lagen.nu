@@ -49,9 +49,9 @@ class SesameStore():
             if not (self.context.startswith("<") and self.context.endswith(">")):
                 self.context = "<"+self.context+">"
             self.statements_url = ("%s/repositories/%s/statements?context=%s" %
-                                   (self.url, self.repository, self.context))
+                                   (self.url, self.repository, urllib.quote(self.context)))
             self.endpoint_url =  ("%s/repositories/%s?context=%s&" %
-                                   (self.url, self.repository, self.context))
+                                   (self.url, self.repository, urllib.quote(self.context)))
         else:
             self.statements_url = ("%s/repositories/%s/statements" %
                                    (self.url, self.repository))
@@ -189,7 +189,7 @@ class SesameStore():
             raise SparqlError(e.read())
         
     def clear(self):
-        # print "Deleting all triples from %s" % self.statements_url
+        print "Deleting all triples from %s" % self.statements_url
         req = Request(self.statements_url)
         req.get_method = lambda : "DELETE"
         return self.__urlopen(req)

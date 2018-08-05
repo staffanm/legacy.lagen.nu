@@ -24,6 +24,9 @@
   <xsl:template name="metarobots"/>
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
+  <xsl:template name="banner">
+    <div class="banner">Se detta begrepp på den nya versionen av lagen.nu -- <a href="http://ferenda.lagen.nu/begrepp/{substring-after($annotations/rdf:Description/@rdf:about, 'concept/')}">klicka här</a>!</div>
+  </xsl:template>
 
   <xsl:template match="xht2:h[@property='dct:title']">
     <xsl:variable name="wikidesc" select="$annotations/rdf:Description/dct:description/xht2:div/*"/>

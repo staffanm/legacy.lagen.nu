@@ -151,6 +151,15 @@ blockquote, q {
         border-bottom: none;
 	color: #fff;
       }
+      #vinjett .banner {
+	  position: absolute;
+	  left: 190pt;
+	  top: 14pt;
+	  background: white;
+	  border: solid 1px #687385;
+	  color: black;
+	  padding: 5px;
+      }
       #navigation {
         position: absolute;
   	left:12pt;

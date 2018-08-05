@@ -1,3 +1,16 @@
+2017-12-23 17:01:00 Ny version tillgänglig för testning
+
+Efter många års tystnad finns nu nästa version av lagen.nu
+tillgänglig. Under en testperiod finns den på addressen <a
+href="http://ferenda.lagen.nu/">ferenda.lagen.nu</a>. I den nya
+versionen finns förarbeten, myndighetspraxis och många myndigheters
+författningssamlingar med i tjänsten. Det finns även en inbyggd
+sökfunktion med mer precisa sökningar. Se mer under <a
+href="http://ferenda.lagen.nu/om/nytt">Vad är nytt?</a> och om hur du
+kan hjälpa med att göra tjänsten bättre under <a
+href="http://ferenda.lagen.nu/om/ferenda">Betatestning av nya
+versionen</a>.
+
 2009-10-11 16:31:00 Välkommen till nya versionen!
 
 <p>Efter en sommar och höst full av skrivande och utveckling är vi

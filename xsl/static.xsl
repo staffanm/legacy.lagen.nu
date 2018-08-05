@@ -16,6 +16,9 @@
   <xsl:template name="metarobots"/>
   <xsl:template name="linkalternate"/>
   <xsl:template name="headmetadata"/>
+  <xsl:template name="banner">
+    <div class="banner">Ny version av lagen.nu tillgänglig -- <a href="http://ferenda.lagen.nu/dom/">klicka här</a> för att testa!</div>
+  </xsl:template>
 
   <xsl:template match="xht2:h">
     <xsl:choose>

@@ -38,7 +38,7 @@ log = logging.getLogger(__moduledir__)
 
 
 # MW_NS = "{http://www.mediawiki.org/xml/export-0.3/}"
-MW_NS = "{http://www.mediawiki.org/xml/export-0.7/}"
+MW_NS = "{http://www.mediawiki.org/xml/export-0.10/}"
 class WikiDownloader(LegalSource.Downloader):
     def __init__(self,config):
         super(WikiDownloader,self).__init__(config) # sets config, logging, initializes browser

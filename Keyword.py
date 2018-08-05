@@ -504,6 +504,12 @@ WHERE {
 
         root_node = PET.Element("rdf:RDF")
         for prefix in Util.ns:
+            if prefix == "xht2":
+                # This avoids a bug where the xmlns:xht2 is defined
+                # twice. unfortunately, it results in the xht2 ns not
+                # being bound to a prefix, so it shows up like
+                # <ns0:div> in the markup, but that should be ok.
+                continue
             PET._namespace_map[Util.ns[prefix]] = prefix
             root_node.set("xmlns:" + prefix, Util.ns[prefix])
 

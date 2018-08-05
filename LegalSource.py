@@ -15,6 +15,7 @@ import sys
 import traceback
 import types
 import unicodedata
+from urllib2 import HTTPError
 # 2.5
 import xml.etree.cElementTree as ET
 import xml.dom.minidom
@@ -24,6 +25,7 @@ try:
 except:
     pass
     #print "Multiprocessing module not available, running single instance"
+
 
 # 3rd party modules
 import BeautifulSoup
@@ -338,6 +340,7 @@ class Manager(object):
 
             log.info("Clearing context %s" % context)
             store.clear()
+                
             c = 0
             triples = 0
             log.info("Relating %d documents" % len(files))
@@ -702,8 +705,7 @@ class Manager(object):
 
     def _extract_rdfa(self, filename):
         g = Graph()
-        g.parse(open(filename),format="rdfa",
-                rdfa_version="1.0")
+        g.parse(open(filename),format="rdfa", rdfa_version="1.0")
         self.__tidy_graph(g)
 
         return g

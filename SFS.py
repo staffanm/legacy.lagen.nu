@@ -11,6 +11,7 @@ from time import time,sleep
 import codecs
 import difflib
 import htmlentitydefs
+import HTMLParser
 import logging
 import os
 import re
@@ -255,8 +256,8 @@ class SFSDownloader(LegalSource.Downloader):
                         log.error("Failed to download %s: %s" % (sfsnr, e))
                 # self.browser.back()
             try:
-                self.browser.find_link(text='NÃ¤sta')
-                self.browser.follow_link(text='NÃ¤sta')
+                self.browser.find_link(text=u'Nästa')
+                self.browser.follow_link(text=u'Nästa')
                 pagecnt += 1
             except LinkNotFoundError:
                 log.info(u'Ingen nästa sida-länk, vi är nog klara')
@@ -300,6 +301,7 @@ class SFSDownloader(LegalSource.Downloader):
                 self.download_log.info("%s:%s [%s]" % (year,nr,", ".join(base_sfsnr_list)))
                 for base_sfsnr in base_sfsnr_list: # usually only a 1-elem list
                     uppdaterad_tom = self._downloadSingle(base_sfsnr)
+                    print("uppdaterad_tom %s wanted_sfs_nr %s" % (uppdaterad_tom, wanted_sfs_nr))
                     if base_sfsnr_list[0] == wanted_sfs_nr:
                         # initial grundförfattning - varken
                         # "Uppdaterad T.O.M. eller "Upphävd av" ska
@@ -623,7 +625,6 @@ class SFSParser(LegalSource.Parser):
             for file in filelist:
                 if os.path.getmtime(file) < timestamp:
                     timestamp = os.path.getmtime(file)
-        
         registry = self._parseSFSR(files['sfsr'])
         try:
             plaintext = self._extractSFST(files['sfst'])
@@ -635,6 +636,7 @@ class SFSParser(LegalSource.Parser):
             Util.ensureDir(plaintextfile)
             tmpfile = mktemp()
             f = codecs.open(tmpfile, "w",'iso-8859-1', errors="xmlcharrefreplace")
+            # f = codecs.open(tmpfile, "w",'utf-8', errors="xmlcharrefreplace")
             f.write(plaintext+"\r\n")
             f.close()
 
@@ -883,12 +885,17 @@ class SFSParser(LegalSource.Parser):
                                         raise UpphavdForfattning()
                             p[key] = UnicodeSubject(val,predicate=self.labels[key])
                         elif key == u'Upphävd':
-                            if datetime.strptime(val, '%Y-%m-%d') < datetime.today():
+                            if datetime.strptime(val[:10], u'%Y-%m-%d') < datetime.today():
                                 raise UpphavdForfattning()
                             # p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
                             p[u'Observera'] = UnicodeSubject(u'Författningen är upphävd/skall upphävas: ' + val, predicate=self.labels[u'Observera'])
                         elif key == u'Ikraft':
-                            p[key] = DateSubject(datetime.strptime(val[:10], '%Y-%m-%d'), predicate=self.labels[key])
+                            try:
+                                date = datetime.strptime(val[:10], '%Y-%m-%d')
+                                p[key] = DateSubject(date, predicate=self.labels[key])
+                            except ValueError as e: # eg. val is "den dag regeringen bestammer" or otherwise not a date
+                                p[key] = val  # or just ignore?
+                                
                             #if val.find(u'\xf6verg.best.') != -1):
                             #    p[u'Har övergångsbestämmelse'] = UnicodeSubject(val,predicate
                         elif key == u'Omfattning':
@@ -935,7 +942,6 @@ class SFSParser(LegalSource.Parser):
                                 if not self.keep_expired:
                                     raise UpphavdForfattning()
                         else:
-                            import pudb; pu.db
                             log.warning(u'%s: Obekant nyckel [\'%s\']' % (self.id, key))
                 if p:
                     r.append(p)
@@ -969,7 +975,15 @@ class SFSParser(LegalSource.Parser):
             txt = re_tags.sub(u'',txt)
             return txt + self._extractSFST(files[1:],keepHead=False)
         else:
-            t = TextReader(files[0], encoding="utf-8")
+            # files[0] might very well contain unneeded xml char refs
+            # (ie &#246; instead of o-umlaut). TextReader doesn't
+            # handle these, so we need to deescape them before passing
+            # them to TextReader
+            h = HTMLParser.HTMLParser()
+            with codecs.open(files[0], encoding="utf-8") as fp:
+                escaped = fp.read()
+            unescaped = h.unescape(escaped)
+            t = TextReader(ustring=unescaped)
             if keepHead:
                 t.cuepast(u'<div class="search-results-content">')
                 # the tagsoup in header needs to be parsed and
@@ -1447,6 +1461,9 @@ class SFSParser(LegalSource.Parser):
     
     def makeParagraf(self):
         paragrafnummer = self.idOfParagraf(self.reader.peekline())
+        if paragrafnummer is None:
+            print("idOfParagraf('%s') => None" % self.reader.peekline())
+            paragrafnummer = ""
         self.current_section = paragrafnummer
         firstline = self.reader.peekline()
         log.debug(u"      Ny paragraf: '%s...'" % firstline[:30])
