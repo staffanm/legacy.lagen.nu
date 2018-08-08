@@ -3064,8 +3064,12 @@ class SFSManager(LegalSource.Manager,FilebasedTester.FilebasedTester):
                 # fel vid parseandet.
                 log.warning("File %s not found" % basefile)
                 continue
-            tree,ids = ET.XMLID(open(basefile).read())
-
+            try:
+                tree,ids = ET.XMLID(open(basefile).read())
+            except Exception as e:
+                log.warning("%s: Couldn't parse: %s" % (basefile, e))
+                continue
+            
             if (change != bases[0]) and (not 'L'+change in ids):
                 log.warning("ID %s not found in %s" % ('L'+change,basefile))
                 continue

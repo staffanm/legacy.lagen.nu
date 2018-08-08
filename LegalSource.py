@@ -361,7 +361,11 @@ class Manager(object):
                         graph.parse(data=open(x).read()) # new rdflib (3.x?) required
                 else:
                     log.debug("%s: extracting rdfa" % f)
-                    graph = self._extract_rdfa(f)
+                    try:
+                        graph = self._extract_rdfa(f)
+                    except Exception as e:
+                        log.error("%s: Cannot extract RDFa: %s" % (f, e))
+                        continue
                     Util.ensureDir(x)
                     log.debug("%s: serializing rdf/xml" % x)
                     try:
@@ -372,7 +376,7 @@ class Manager(object):
                         fp.write(graph.serialize(None,format="pretty-xml", encoding="utf-8"))
                         fp.close()
                 relfile = Util.relpath(f)
-                # log.debug("Processing %s " % relfile)
+                log.debug("Processing %s " % relfile)
                 self._add_deps(relfile,graph)
                 
                 triples += len(graph)

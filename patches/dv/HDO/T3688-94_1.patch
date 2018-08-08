@@ -1,0 +1,18 @@
+--- data/dv/intermediate/docbook/HDO/T3688-94_1.xml	2017-02-06 22:40:42.427428679 +0100
++++ /tmp/tmp2tloxa	2017-02-06 22:39:20.391313000 +0100
+@@ -10,7 +10,7 @@
+ 
+  <chapter>
+ <title />
+-  <para>Högsta Domstolen<emphasis role="bold">|</emphasis>NJA 1998 s. 283 (NJA 1998:47) |<emphasis role="bold">|</emphasis>
++  <para>Högsta Domstolen<emphasis role="bold">|</emphasis>NJA 1998 s. 293 (NJA 1998:47) |<emphasis role="bold">|</emphasis>
+    <informaltable colsep="0" frame="none" rowsep="0">
+ 
+     <tgroup cols="4">
+@@ -706,4 +706,4 @@
+ 
+  </chapter>
+ 
+-</book>
+\ No newline at end of file
++</book>
